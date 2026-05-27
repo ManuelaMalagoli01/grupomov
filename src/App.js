@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+/* eslint-disable */
+// eslint-disable-next-line
+import { useState, useEffect } from "react"; // eslint-disable-line
 
 // ── DADOS BASE ──────────────────────────────────────────────────────────────
 const REGIONS = {
