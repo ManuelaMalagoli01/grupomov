@@ -344,6 +344,28 @@ function SaidaModal({onClose,onSave,initial}){
 }
 
 
+
+// ── EXPORTAR EXCEL (CSV) ──────────────────────────────────────────────────────
+const exportCSV = (data, filename, cols) => {
+  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
+  const header = cols.map(c=>c.label).join(";");
+  const rows = data.map(row=>cols.map(c=>{
+    const v = row[c.key]||"";
+    return `"${String(v).replace(/"/g,'""')}"`;
+  }).join(";"));
+  const csv = "\uFEFF" + [header,...rows].join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=filename+".csv"; a.click();
+  URL.revokeObjectURL(url);
+};
+const BtnExcel = ({onClick}) => (
+  <button onClick={onClick} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",fontSize:12,cursor:"pointer",color:"#1A7A3C",fontWeight:700,fontFamily:"inherit"}}>
+    📊 Exportar Excel
+  </button>
+);
+
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 export default function App(){
   const [user,setUser]=useState(null);
@@ -373,6 +395,7 @@ export default function App(){
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   const [showArqReq,setShowArqReq]=useState(false);
+  const [uberPedidos,setUberPedidos]=useState([]);
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -395,6 +418,7 @@ export default function App(){
   const [schedDate,setSchedDate]=useState(TODAY_STR);
   const [schedRegion,setSchedRegion]=useState("metropolitana");
   const [schedType,setSchedType]=useState("preventivo");
+  const [schedFilterTech,setSchedFilterTech]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
   const updateReport=(id,changes)=>{setReports(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
@@ -485,6 +509,7 @@ export default function App(){
             ["emprestimos","🔄 Req. Empréstimo"],
             ["saida_entrada","📦 Saída/Entrada"],
             ["requisicoes","📦 Requisições"],
+            ["uber","🚗 Uber"],
           ].map(([k,l])=>(
             <button key={k} className={`nav-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)}>
               {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:5,background:"#C62828",color:"#FFF",borderRadius:8,fontSize:9,padding:"1px 5px"}}>{empAlerta}</span>}
@@ -533,6 +558,7 @@ export default function App(){
               </button>
               {(filterTipo!=="todos"||filterTech!=="todos"||filterStatus!=="todos"||filterRegion!=="todas"||filterDateFrom||filterDateTo||searchText)&&<BtnG onClick={()=>{setFilterTipo("todos");setFilterTech("todos");setFilterStatus("todos");setFilterRegion("todas");setFilterDateFrom("");setFilterDateTo("");setSearchText("");}}>✕ Limpar</BtnG>}
               <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length} registro(s)</span>
+              <BtnExcel onClick={()=>exportCSV(filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado"),"relatorios_grupomov",[{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data"},{key:"numChamado",label:"Nº Chamado"},{key:"acao",label:"Ação"},{key:"horasTrabalhadas",label:"Horas Trabalhadas"},{key:"status",label:"Status"},{key:"processoStatus",label:"Processo"},{key:"requisicaoPeca",label:"Req. Peça"}])}/>
               <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
             </div>
             {/* Tabela */}
@@ -578,6 +604,7 @@ export default function App(){
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⚠️ Processos Mau Uso</div><div style={{fontSize:13,color:"#888"}}>{processosMU.filter(p=>!showArqMU?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
               <div style={{display:"flex",gap:8}}>
                 <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMU?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMU?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado"),"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"enviadoAprovacao",label:"Enviado Aprov."},{key:"aprovado",label:"Aprovado"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovadoPor",label:"Aprovado por"},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>setModalMU(true)}>+ Novo Processo</BtnY>
               </div>
             </div>
@@ -625,7 +652,7 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Processos A Faturar</div><div style={{fontSize:13,color:"#888"}}>{processosAF.filter(p=>!showArqAF?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqAF?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqAF?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY></div>
+              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqAF?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqAF?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado"),"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"aprovado",label:"Aprovado"},{key:"ov",label:"OV"},{key:"aprovadoPor",label:"Aprovado por"},{key:"servicoExecutado",label:"Serviço Exec."},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/><BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY></div>
             </div>
             {processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado").length===0?(
               <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum processo cadastrado. Clique em "+ Novo Processo" para começar.</div>
@@ -675,7 +702,7 @@ export default function App(){
                 <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔄 Requisições de Empréstimo</div>
                 <div style={{fontSize:13,color:"#888"}}>{emprestimos.length} registros · {empAlerta>0&&<span style={{color:"#C62828",fontWeight:700}}>{empAlerta} com retorno em atraso!</span>}</div>
               </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqEmp?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqEmp?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY></div>
+              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqEmp?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqEmp?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(emprestimos,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Ítem"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"retorno",label:"Retorno"},{key:"dataRetorno",label:"Data Retorno"},{key:"numRelatorio",label:"Nº Relatório"},{key:"observacao",label:"Obs"},{key:"processoStatus",label:"Processo"}])}/><BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY></div>
             </div>
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
@@ -862,50 +889,108 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📅 Escala Diária</div><div style={{fontSize:13,color:"#888"}}>Atendimentos por técnico no dia</div></div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                <select value={schedRegion} onChange={e=>{setSchedRegion(e.target.value);setSchedType("preventivo");}} style={{fontSize:12}}><option value="metropolitana">Metropolitana BH</option><option value="roca">Roca</option><option value="centroOeste">Centro-Oeste</option></select>
-                {schedRegion==="metropolitana"&&<select value={schedType} onChange={e=>setSchedType(e.target.value)} style={{fontSize:12}}><option value="preventivo">Preventiva</option><option value="corretivo">Corretiva</option></select>}
-                <input type="text" value={schedDate} onChange={e=>setSchedDate(e.target.value)} placeholder="YYYY-MM-DD" style={{width:140,fontSize:12}}/>
+                <select value={schedRegion} onChange={e=>{setSchedRegion(e.target.value);setSchedType("preventivo");}} style={{fontSize:12}}>
+                  <option value="todas">🌐 Visão Geral</option>
+                  <option value="metropolitana">Metropolitana BH</option>
+                  <option value="roca">Roca</option>
+                  <option value="centroOeste">Centro-Oeste</option>
+                </select>
+                {schedRegion!=="todas"&&<select value={schedType} onChange={e=>setSchedType(e.target.value)} style={{fontSize:12}}><option value="preventivo">Preventiva</option><option value="corretivo">Corretiva</option></select>}
+                <select value={schedFilterTech||"todos"} onChange={e=>setSchedFilterTech(e.target.value)} style={{fontSize:12}}>
+                  <option value="todos">Todos os técnicos</option>
+                  {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
+                </select>
+                <input type="date" value={schedDate} onChange={e=>setSchedDate(e.target.value)} style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:8}}/>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-              {techsForSched.map(tech=>{
+
+            {/* VISÃO GERAL — todos técnicos escalados no dia */}
+            {schedRegion==="todas"?(()=>{
+              const tecnicosEscalados = ALL_TECHS.filter(tech=>{
+                if(schedFilterTech!=="todos"&&tech!==schedFilterTech) return false;
                 const key=`${tech}__${schedDate}`;
-                const slots=schedule[key]||[];
-                const color=techColor(tech);
-                return(
-                  <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                    <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div>
-                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{slots.length} atendimento(s) · {schedDate}</div>
-                      </div>
-                      <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=prompt("Tipo (preventivo/corretivo):")||"preventivo";setSchedule(p=>({...p,[key]:[...(p[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}]}));notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                return (schedule[key]||[]).length>0;
+              });
+              return(
+                <div>
+                  <div className="card" style={{padding:"16px 20px",marginBottom:16,background:"#FFFBF0",border:"1px solid #FFE8A0"}}>
+                    <div style={{fontSize:12,color:"#C47D00",fontWeight:700,marginBottom:8}}>
+                      📅 {schedDate||"Selecione uma data"} — {tecnicosEscalados.length} técnico(s) escalado(s)
                     </div>
-                    <div style={{padding:"8px 14px"}}>
-                      {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
-                      {slots.map((s,i)=>(
-                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:i<slots.length-1?"1px solid #F8F8F8":"none"}}>
-                          <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,background:s.status==="atendido"?"#1A7A3C":s.type==="corretivo"?"#C62828":"#1565C0"}}/>
-                          <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client}</div>
-                            <div style={{fontSize:10,color:"#AAA"}}>{s.patrimonio} · {s.type}</div>
-                          </div>
-                          <select value={s.status||"pendente"} onChange={e=>{const newSlots=[...slots];newSlots[i]={...s,status:e.target.value};setSchedule(p=>({...p,[key]:newSlots}));}} style={{fontSize:10,padding:"2px 5px",color:s.status==="atendido"?"#1A7A3C":"#888",fontWeight:700,borderRadius:4,border:"1px solid #E0E0E0"}}>
-                            <option value="pendente">Pendente</option>
-                            <option value="atendido">✓ Atendido</option>
-                          </select>
-                        </div>
-                      ))}
-                    </div>
-                    {slots.length>0&&<div style={{padding:"6px 14px 12px"}}>
-                      <div style={{height:4,background:"#F0F0F0",borderRadius:2}}>
-                        <div style={{width:`${slots.filter(s=>s.status==="atendido").length/slots.length*100}%`,height:4,background:color,borderRadius:2,transition:"width .3s"}}/>
+                    {tecnicosEscalados.length===0?(
+                      <div style={{fontSize:13,color:"#AAA"}}>Nenhum técnico escalado nesta data. Selecione uma região para adicionar atendimentos.</div>
+                    ):(
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {tecnicosEscalados.map(tech=>{
+                          const slots=(schedule[`${tech}__${schedDate}`]||[]);
+                          const color=techColor(tech);
+                          const atendidos=slots.filter(s=>s.status==="atendido").length;
+                          return(
+                            <div key={tech} style={{background:"#FFF",border:`2px solid ${color}`,borderRadius:10,padding:"8px 14px",minWidth:160}}>
+                              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                                <span style={{width:8,height:8,borderRadius:"50%",background:color,display:"inline-block"}}/>
+                                <span style={{fontWeight:700,fontSize:13}}>{tech}</span>
+                                <span style={{marginLeft:"auto",fontSize:10,color:"#888"}}>{atendidos}/{slots.length}</span>
+                              </div>
+                              {slots.map((s,i)=>(
+                                <div key={i} style={{fontSize:11,color:"#555",padding:"2px 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                  <span style={{width:5,height:5,borderRadius:"50%",background:s.status==="atendido"?"#1A7A3C":s.type==="corretivo"?"#C62828":"#1565C0",display:"inline-block",marginRight:5}}/>
+                                  {s.client}
+                                </div>
+                              ))}
+                              <div style={{marginTop:6,height:3,background:"#F0F0F0",borderRadius:2}}>
+                                <div style={{width:`${slots.length?atendidos/slots.length*100:0}%`,height:3,background:color,borderRadius:2}}/>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>}
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                  <div style={{fontSize:12,color:"#AAA",textAlign:"center"}}>Selecione uma região no filtro acima para adicionar atendimentos a um técnico específico.</div>
+                </div>
+              );
+            })():(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {techsForSched.filter(t=>schedFilterTech==="todos"||t===schedFilterTech).map(tech=>{
+                  const key=`${tech}__${schedDate}`;
+                  const slots=schedule[key]||[];
+                  const color=techColor(tech);
+                  return(
+                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div>
+                          <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{slots.length} atendimento(s) · {schedDate}</div>
+                        </div>
+                        <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=schedType||"preventivo";setSchedule(p=>({...p,[key]:[...(p[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}]}));notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                      </div>
+                      <div style={{padding:"8px 14px"}}>
+                        {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
+                        {slots.map((s,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:i<slots.length-1?"1px solid #F8F8F8":"none"}}>
+                            <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,background:s.status==="atendido"?"#1A7A3C":s.type==="corretivo"?"#C62828":"#1565C0"}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client}</div>
+                              <div style={{fontSize:10,color:"#AAA"}}>{s.patrimonio} · {s.type}</div>
+                            </div>
+                            <select value={s.status||"pendente"} onChange={e=>{const newSlots=[...slots];newSlots[i]={...s,status:e.target.value};setSchedule(p=>({...p,[key]:newSlots}));}} style={{fontSize:10,padding:"2px 5px",color:s.status==="atendido"?"#1A7A3C":"#888",fontWeight:700,borderRadius:4,border:"1px solid #E0E0E0"}}>
+                              <option value="pendente">Pendente</option>
+                              <option value="atendido">✓ Atendido</option>
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                      {slots.length>0&&<div style={{padding:"6px 14px 12px"}}>
+                        <div style={{height:4,background:"#F0F0F0",borderRadius:2}}>
+                          <div style={{width:`${slots.filter(s=>s.status==="atendido").length/slots.length*100}%`,height:4,background:color,borderRadius:2,transition:"width .3s"}}/>
+                        </div>
+                      </div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -1101,7 +1186,88 @@ export default function App(){
 
       </div>
 
-      {/* MODAIS */}
+        {/* ── UBER ── */}
+        {tab==="uber"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <div>
+                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚗 Pedidos Uber</div>
+                <div style={{fontSize:13,color:"#888"}}>{uberPedidos.length} pedido(s) registrado(s)</div>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(uberPedidos,"uber_grupomov",[
+                  {key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"departamento",label:"Departamento"},
+                  {key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"relatorio",label:"Relatório"},
+                  {key:"endereco",label:"Endereço"},{key:"valor",label:"Valor (R$)"},{key:"status",label:"Status"},{key:"obs",label:"Obs"}
+                ])}/>
+                <BtnY onClick={()=>setUberPedidos(p=>[{
+                  id:`UBR${Date.now()}`,data:TODAY_STR,solicitante:"",departamento:"MANUTENÇÃO",
+                  motivo:"",empresa:"",relatorio:"",endereco:"",valor:"",status:"pendente",obs:""
+                },...p])}>+ Novo Pedido</BtnY>
+              </div>
+            </div>
+
+            {uberPedidos.length===0?(
+              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                <div style={{fontSize:32,marginBottom:12}}>🚗</div>
+                Nenhum pedido. Clique em "+ Novo Pedido" para começar.
+              </div>
+            ):(
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data</th><th>Solicitante</th><th>Departamento</th><th>Motivo</th>
+                        <th>Empresa</th><th>Relatório</th><th>Endereço</th><th>Valor (R$)</th>
+                        <th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uberPedidos.map(p=>(
+                        <tr key={p.id}>
+                          <td><input type="text" value={p.data||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,data:e.target.value}:x))} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={p.solicitante||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,solicitante:e.target.value}:x))} style={{width:110,fontSize:11,padding:"3px 6px"}} placeholder="Nome"/></td>
+                          <td>
+                            <select value={p.departamento||"MANUTENÇÃO"} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,departamento:e.target.value,motivo:e.target.value==="MANUTENÇÃO"?x.motivo:"OUTROS"}:x))} style={{fontSize:11,padding:"3px 5px",fontWeight:600}}>
+                              {["MANUTENÇÃO","RH","COMERCIAL","FROTAS","FINANCEIRO","COMPRAS","ALMOXARIFADO","FISCAL","GILBERTO","GUSTAVO"].map(d=><option key={d}>{d}</option>)}
+                            </select>
+                          </td>
+                          <td>
+                            <select value={p.motivo||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,motivo:e.target.value}:x))} style={{fontSize:11,padding:"3px 5px"}}>
+                              <option value="">Selecione...</option>
+                              {p.departamento==="MANUTENÇÃO"?<option value="ENVIO DE PEÇAS">ENVIO DE PEÇAS</option>:null}
+                              <option value="OUTROS">OUTROS</option>
+                            </select>
+                          </td>
+                          <td><input type="text" value={p.empresa||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,empresa:e.target.value}:x))} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Empresa"/></td>
+                          <td><input type="text" value={p.relatorio||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,relatorio:e.target.value}:x))} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
+                          <td><input type="text" value={p.endereco||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,endereco:e.target.value}:x))} style={{width:150,fontSize:11,padding:"3px 6px"}} placeholder="Rua, número..."/></td>
+                          <td><input type="text" value={p.valor||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,valor:e.target.value}:x))} style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="0,00"/></td>
+                          <td>
+                            <select value={p.status||"pendente"} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,status:e.target.value}:x))}
+                              style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",
+                                color:p.status==="concluido"?"#1A7A3C":p.status==="cancelado"?"#C62828":"#E67E00",
+                                background:p.status==="concluido"?"#F0FFF5":p.status==="cancelado"?"#FFF0F0":"#FFF8F0"}}>
+                              <option value="pendente">⏳ Pendente</option>
+                              <option value="em_andamento">🚗 Em Andamento</option>
+                              <option value="concluido">✅ Concluído</option>
+                              <option value="cancelado">❌ Cancelado</option>
+                            </select>
+                          </td>
+                          <td><input type="text" value={p.obs||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,obs:e.target.value}:x))} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
+                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir pedido?"))setUberPedidos(u=>u.filter(x=>x.id!==p.id));}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+
       {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{setReports(p=>[d,...p]);notify("✅ Relatório salvo!");}}/>}
       {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{setProcessosMU(p=>[d,...p]);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
       {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{setProcessosAF(p=>[d,...p]);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
