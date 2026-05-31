@@ -59,6 +59,7 @@ const PSSelect=({value,onChange})=>(
     <option value="arquivado">📁 Arquivar</option>
   </select>
 );
+const AGENDA_STATUS = {
   "agendada":{color:"#1565C0",bg:"#F0F4FF",dot:"#1565C0",label:"Agendada"},
   "confirmada":{color:"#1A7A3C",bg:"#F0FFF5",dot:"#1A7A3C",label:"Confirmada"},
   "concluida":{color:"#00838F",bg:"#F0FAFA",dot:"#00838F",label:"Concluída"},
@@ -1054,7 +1055,7 @@ export default function App(){
                         <div style={{fontSize:9,color:"#AAA"}}>horas</div>
                       </div>
                     </div>
-                    <div style={{padding:"10px 16px",display:"flex",gap:16"}}>
+                    <div style={{padding:"10px 16px",display:"flex",gap:16}}>
                       <div style={{flex:1,textAlign:"center",padding:"8px 0",background:"#F0F4FF",borderRadius:8}}>
                         <div style={{fontSize:20,fontWeight:700,color:"#1565C0"}}>{prevs}</div>
                         <div style={{fontSize:9,color:"#1565C0",fontWeight:600,textTransform:"uppercase"}}>Prev.</div>
