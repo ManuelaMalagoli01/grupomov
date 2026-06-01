@@ -1,5 +1,39 @@
 /* eslint-disable */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
+const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
+const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
+
+const db = {
+  async get(table) {
+    try {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+      });
+      const rows = await res.json();
+      return rows.map(r => r.data);
+    } catch(e) { console.error("DB get error:", e); return []; }
+  },
+  async save(table, id, data) {
+    try {
+      await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+        body: JSON.stringify({id, data})
+      });
+    } catch(e) { console.error("DB save error:", e); }
+  },
+  async delete(table, id) {
+    try {
+      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+        method: "DELETE",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+      });
+    } catch(e) { console.error("DB delete error:", e); }
+  }
+};
+
+
 
 const USERS = [
   { id:"manuela", name:"Manuela", role:"Gestora",    password:"mov2026", canDelete:true  },
@@ -421,11 +455,38 @@ export default function App(){
   const [schedFilterTech,setSchedFilterTech]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
-  const updateReport=(id,changes)=>{setReports(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
-  const updateEmp=(id,changes)=>{setEmprestimos(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
-  const updateSaida=(id,changes)=>{setSaidaEntrada(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
-  const updateMU=(id,changes)=>{setProcessosMU(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
-  const updateAF=(id,changes)=>{setProcessosAF(p=>p.map(r=>r.id===id?{...r,...changes}:r));notify("Atualizado!");};
+
+  // ── CARREGAR DADOS DO SUPABASE ──
+  useEffect(()=>{
+    const load = async () => {
+      const [rels, mus, afs, emps, saidas, reqs, ubers] = await Promise.all([
+        db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
+        db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
+        db.get("uber_pedidos")
+      ]);
+      if(rels.length>0) setReports(rels);
+      if(mus.length>0) setProcessosMU(mus);
+      if(afs.length>0) setProcessosAF(afs);
+      if(emps.length>0) setEmprestimos(emps);
+      if(saidas.length>0) setSaidaEntrada(saidas);
+      if(reqs.length>0) setRequisicoes(reqs);
+      if(ubers.length>0) setUberPedidos(ubers);
+      notify("✅ Dados carregados!");
+    };
+    load();
+  },[]);
+
+  // ── SALVAR AUTOMATICAMENTE ──
+  const saveDB = async (table, items) => {
+    for(const item of items) {
+      await db.save(table, item.id, item);
+    }
+  };
+  const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateMU=(id,changes)=>{const updated=processosMU.map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
 
   const filteredReports=reports.filter(d=>{
     if(filterTipo!=="todos"&&d.type!==filterTipo)return false;
@@ -1268,11 +1329,11 @@ export default function App(){
         )}
 
 
-      {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{setReports(p=>[d,...p]);notify("✅ Relatório salvo!");}}/>}
-      {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{setProcessosMU(p=>[d,...p]);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
-      {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{setProcessosAF(p=>[d,...p]);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
-      {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{if(editEmp)setEmprestimos(p=>p.map(x=>x.id===d.id?d:x));else setEmprestimos(p=>[d,...p]);notify("✅ Salvo!");}} initial={editEmp}/>}
-      {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===d.id?d:x));else setSaidaEntrada(p=>[d,...p]);notify("✅ Salvo!");}} initial={editSaida}/>}
+      {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{setReports(p=>[d,...p]);db.save("relatorios",d.id,d);notify("✅ Relatório salvo!");}}/>}
+      {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{setProcessosMU(p=>[d,...p]);db.save("processos_mu",d.id,d);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
+      {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{setProcessosAF(p=>[d,...p]);db.save("processos_af",d.id,d);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
+      {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{if(editEmp)setEmprestimos(p=>p.map(x=>x.id===d.id?d:x));else setEmprestimos(p=>[d,...p]);db.save("emprestimos",d.id,d);notify("✅ Salvo!");}} initial={editEmp}/>}
+      {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===d.id?d:x));else setSaidaEntrada(p=>[d,...p]);db.save("saida_entrada",d.id,d);notify("✅ Salvo!");}} initial={editSaida}/>}
     </div>
   );
 }
