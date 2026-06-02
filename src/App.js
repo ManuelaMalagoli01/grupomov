@@ -2,36 +2,70 @@
 import { useState, useRef, useEffect } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
-const SUPA_KEY = "sb_secret_2w-Ttk-rdWesNpWxj9ByCQ_JUe-SiTW";
+const SUPA_ANON = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
+// Usar fetch direto com headers corretos
 const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        headers: {
+          "apikey": SUPA_ANON,
+          "Authorization": `Bearer ${SUPA_ANON}`,
+          "Content-Type": "application/json"
+        }
       });
+      if(!res.ok) { console.error("DB get error:", await res.text()); return []; }
       const rows = await res.json();
-      return rows.map(r => r.data);
+      if(!Array.isArray(rows)) return [];
+      if(table==="agenda"||table==="escala") return rows;
+      return rows.map(r => r.data).filter(Boolean);
     } catch(e) { console.error("DB get error:", e); return []; }
   },
   async save(table, id, data) {
     try {
-      await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
         method: "POST",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+        headers: {
+          "apikey": SUPA_ANON,
+          "Authorization": `Bearer ${SUPA_ANON}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates"
+        },
         body: JSON.stringify({id, data})
       });
+      if(!res.ok) console.error("DB save error:", await res.text());
     } catch(e) { console.error("DB save error:", e); }
+  },
+  async saveKV(table, key, value) {
+    try {
+      const id = encodeURIComponent(key).replace(/[^a-z0-9]/gi,'').slice(0,50)||`k${Date.now()}`;
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPA_ANON,
+          "Authorization": `Bearer ${SUPA_ANON}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify({id, key, value})
+      });
+      if(!res.ok) console.error("DB saveKV error:", await res.text());
+    } catch(e) { console.error("DB saveKV error:", e); }
   },
   async delete(table, id) {
     try {
-      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
         method: "DELETE",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        headers: {
+          "apikey": SUPA_ANON,
+          "Authorization": `Bearer ${SUPA_ANON}`
+        }
       });
     } catch(e) { console.error("DB delete error:", e); }
   }
 };
+
 
 
 
@@ -456,24 +490,37 @@ export default function App(){
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
+  const loadData = async () => {
+    const [rels, mus, afs, emps, saidas, reqs, ubers, agendaRows, escalaRows] = await Promise.all([
+      db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
+      db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
+      db.get("uber_pedidos"), db.get("agenda"), db.get("escala")
+    ]);
+    if(rels.length>0) setReports(rels);
+    if(mus.length>0) setProcessosMU(mus);
+    if(afs.length>0) setProcessosAF(afs);
+    if(emps.length>0) setEmprestimos(emps);
+    if(saidas.length>0) setSaidaEntrada(saidas);
+    if(reqs.length>0) setRequisicoes(reqs);
+    if(ubers.length>0) setUberPedidos(ubers);
+    if(agendaRows.length>0){
+      const obj={};
+      agendaRows.forEach(r=>{obj[r.key]=r.value;});
+      setAgendaItems(obj);
+    }
+    if(escalaRows.length>0){
+      const obj={};
+      escalaRows.forEach(r=>{obj[r.key]=r.value;});
+      setSchedule(obj);
+    }
+  };
+
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
-    const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers] = await Promise.all([
-        db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
-        db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
-        db.get("uber_pedidos")
-      ]);
-      if(rels.length>0) setReports(rels);
-      if(mus.length>0) setProcessosMU(mus);
-      if(afs.length>0) setProcessosAF(afs);
-      if(emps.length>0) setEmprestimos(emps);
-      if(saidas.length>0) setSaidaEntrada(saidas);
-      if(reqs.length>0) setRequisicoes(reqs);
-      if(ubers.length>0) setUberPedidos(ubers);
-      notify("✅ Dados carregados!");
-    };
-    load();
+    loadData().then(()=>notify("✅ Dados carregados!"));
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(()=>loadData(), 30000);
+    return ()=>clearInterval(interval);
   },[]);
 
   // ── SALVAR AUTOMATICAMENTE ──
@@ -1024,7 +1071,7 @@ export default function App(){
                           <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                           <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{slots.length} atendimento(s) · {schedDate}</div>
                         </div>
-                        <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=schedType||"preventivo";setSchedule(p=>({...p,[key]:[...(p[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}]}));notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                        <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=schedType||"preventivo";const newSlots=[...(schedule[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}];setSchedule(p=>({...p,[key]:newSlots}));db.saveKV("escala",key,newSlots);notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
                       </div>
                       <div style={{padding:"8px 14px"}}>
                         {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
@@ -1078,7 +1125,7 @@ export default function App(){
                       <div>{agendaItems[`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`]&&<BtnG onClick={()=>{const k=`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`;setAgendaItems(p=>{const n={...p};delete n[k];return n;});setAgendaModal(null);notify("Removido.");}} style={{color:"#C62828",borderColor:"#FFCCCC"}}>Remover</BtnG>}</div>
                       <div style={{display:"flex",gap:10}}>
                         <BtnG onClick={()=>setAgendaModal(null)}>Cancelar</BtnG>
-                        <BtnY disabled={!agendaForm.empresa} onClick={()=>{setAgendaItems(p=>({...p,[`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`]:agendaForm}));setAgendaModal(null);notify("🗓 Salvo!");}}>Salvar</BtnY>
+                        <BtnY disabled={!agendaForm.empresa} onClick={()=>{const k=`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`;setAgendaItems(p=>({...p,[k]:agendaForm}));db.saveKV("agenda",k,agendaForm);setAgendaModal(null);notify("🗓 Salvo!");}}>Salvar</BtnY>
                       </div>
                     </div>
                   </div>
