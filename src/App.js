@@ -1,71 +1,37 @@
 /* eslint-disable */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
-const SUPA_ANON = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
+const SUPA_KEY = "sb_secret_2w-Ttk-rdWesNpWxj9ByCQ_JUe-SiTW";
 
-// Usar fetch direto com headers corretos
 const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        headers: {
-          "apikey": SUPA_ANON,
-          "Authorization": `Bearer ${SUPA_ANON}`,
-          "Content-Type": "application/json"
-        }
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
       });
-      if(!res.ok) { console.error("DB get error:", await res.text()); return []; }
       const rows = await res.json();
-      if(!Array.isArray(rows)) return [];
-      if(table==="agenda"||table==="escala") return rows;
-      return rows.map(r => r.data).filter(Boolean);
+      return rows.map(r => r.data);
     } catch(e) { console.error("DB get error:", e); return []; }
   },
   async save(table, id, data) {
     try {
-      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      await fetch(`${SUPA_URL}/rest/v1/${table}`, {
         method: "POST",
-        headers: {
-          "apikey": SUPA_ANON,
-          "Authorization": `Bearer ${SUPA_ANON}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates"
-        },
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
         body: JSON.stringify({id, data})
       });
-      if(!res.ok) console.error("DB save error:", await res.text());
     } catch(e) { console.error("DB save error:", e); }
-  },
-  async saveKV(table, key, value) {
-    try {
-      const id = encodeURIComponent(key).replace(/[^a-z0-9]/gi,'').slice(0,50)||`k${Date.now()}`;
-      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
-        method: "POST",
-        headers: {
-          "apikey": SUPA_ANON,
-          "Authorization": `Bearer ${SUPA_ANON}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates"
-        },
-        body: JSON.stringify({id, key, value})
-      });
-      if(!res.ok) console.error("DB saveKV error:", await res.text());
-    } catch(e) { console.error("DB saveKV error:", e); }
   },
   async delete(table, id) {
     try {
-      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
         method: "DELETE",
-        headers: {
-          "apikey": SUPA_ANON,
-          "Authorization": `Bearer ${SUPA_ANON}`
-        }
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
       });
     } catch(e) { console.error("DB delete error:", e); }
   }
 };
-
 
 
 
@@ -82,6 +48,7 @@ const METRO_PREV = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Den
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Denison"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODAY      = new Date();
+const LOGO_MOV = "data:image/jpeg;base64,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";
 const PAD        = n=>String(n).padStart(2,"0");
 const fmtDate    = d=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
 const TODAY_STR  = fmtDate(TODAY);
@@ -129,6 +96,32 @@ const PSSelect=({value,onChange})=>(
     <option value="arquivado">📁 Arquivar</option>
   </select>
 );
+// Status da aba Relatórios (4 opções fixas) — valor = rótulo (facilita import/export)
+const REL_STATUS = {
+  "Preventiva concluída":      {color:"#1A7A3C", bg:"#F0FFF5"},
+  "Preventiva pendente peças": {color:"#E67E00", bg:"#FFF8F0"},
+  "Corretiva concluída":       {color:"#1A7A3C", bg:"#F0FFF5"},
+  "Corretiva pendente peças":  {color:"#E67E00", bg:"#FFF8F0"},
+};
+const REL_STATUS_KEYS = Object.keys(REL_STATUS);
+const isPendentePecas = s => s==="Preventiva pendente peças" || s==="Corretiva pendente peças";
+const EXECUTADO_OPTS = ["", "Sim", "Não", "Devolvido"];
+// Carrega SheetJS sob demanda (sem precisar instalar nada)
+const loadXLSX = () => new Promise((resolve,reject)=>{
+  if(window.XLSX) return resolve(window.XLSX);
+  const sc=document.createElement("script");
+  sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  sc.onload=()=>resolve(window.XLSX);
+  sc.onerror=()=>reject(new Error("Falha ao carregar leitor de Excel"));
+  document.body.appendChild(sc);
+});
+// Mapeia rótulo de Tipo (planilha) para valor interno
+const mapTipo = label => {
+  const t=(label||"").toString().toLowerCase();
+  const found=TIPOS.find(x=>x.l.toLowerCase().includes(t)&&t)||TIPOS.find(x=>t.includes(x.v));
+  return found?found.v:"corretivo";
+};
+
 const AGENDA_STATUS = {
   "agendada":{color:"#1565C0",bg:"#F0F4FF",dot:"#1565C0",label:"Agendada"},
   "confirmada":{color:"#1A7A3C",bg:"#F0FFF5",dot:"#1A7A3C",label:"Confirmada"},
@@ -167,8 +160,7 @@ function LoginScreen({onLogin}){
     <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center"}}>
       <div style={{background:"#FFF",borderRadius:16,padding:40,width:380,boxShadow:"0 20px 60px rgba(0,0,0,.4)"}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{width:56,height:56,background:"#F5C800",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 16px"}}>⚙</div>
-          <div style={{fontWeight:800,fontSize:22}}>GRUPO MOV</div>
+          <img src={LOGO_MOV} alt="Grupo MOV 35 anos" style={{height:64,width:"auto",margin:"0 auto 14px",display:"block"}}/>
           <div style={{fontSize:12,color:"#AAA",marginTop:4}}>Gestão Técnica de Campo</div>
         </div>
         <div style={{marginBottom:14}}>
@@ -193,7 +185,7 @@ function ReportModal({onClose,onSave}){
   const [analyzing,setAnalyzing]=useState(false);
   const [err,setErr]=useState("");
   const fileRef=useRef();
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",tecnico:ALL_TECHS[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"aberto",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
+  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",tecnico:ALL_TECHS[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const analyzeAI=async(content)=>{
     setAnalyzing(true);setErr("");
@@ -247,7 +239,7 @@ function ReportModal({onClose,onSave}){
               <Inp label="Req. Peça" value={form.requisicaoPeca} onChange={v=>upd("requisicaoPeca",v)} placeholder="REQ-001"/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,alignItems:"end"}}>
-              <Sel label="Status" value={form.status} onChange={v=>upd("status",v)} options={Object.entries(statusCfg).map(([v,{label}])=>({v,l:label}))}/>
+              <Sel label="Status" value={form.status} onChange={v=>upd("status",v)} options={[{v:"",l:"— selecionar —"},...REL_STATUS_KEYS.map(v=>({v,l:v}))]}/>
               <div><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Urgente</div><div style={{display:"flex",alignItems:"center",gap:10}}><input type="checkbox" checked={form.urgent} onChange={e=>upd("urgent",e.target.checked)} style={{width:18,height:18}}/><span style={{fontSize:13,color:form.urgent?"#C62828":"#888",fontWeight:form.urgent?700:400}}>{form.urgent?"SIM":"Não"}</span></div></div>
             </div>
             <Inp label="Observações" value={form.obs} onChange={v=>upd("obs",v)} placeholder="Observações adicionais..."/>
@@ -255,6 +247,116 @@ function ReportModal({onClose,onSave}){
           <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:20}}>
             <BtnG onClick={onClose}>Cancelar</BtnG>
             <BtnY onClick={()=>{onSave({...form,id:`R${Date.now()}`});onClose();}} disabled={!form.empresa}>Salvar</BtnY>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MODAL IMPORTAR EXCEL ──────────────────────────────────────────────────────
+const IMPORT_COLS = ["Data","Nº Relatório","Tipo","Empresa","Patrimônio","Técnico","Data Atend.","Chamado","Ação","Horas Trab.","Status"];
+function ImportExcelModal({onClose,onImport}){
+  const [rows,setRows]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const fileRef=useRef();
+
+  const pick=k=>(o)=>{ // pega valor por nome de coluna (tolerante a variações)
+    const keys=Object.keys(o);
+    const found=keys.find(x=>x.trim().toLowerCase()===k.toLowerCase());
+    return found?o[found]:"";
+  };
+  const parseCSV=(txt)=>{
+    const sep=txt.indexOf(";")>-1&&(txt.indexOf(";")<txt.indexOf(",")||txt.indexOf(",")===-1)?";":",";
+    const lines=txt.replace(/\uFEFF/,"").split(/\r?\n/).filter(l=>l.trim());
+    if(!lines.length)return[];
+    const head=lines[0].split(sep).map(h=>h.replace(/^"|"$/g,"").trim());
+    return lines.slice(1).map(l=>{
+      const cells=l.split(sep).map(c=>c.replace(/^"|"$/g,"").trim());
+      const o={}; head.forEach((h,i)=>o[h]=cells[i]||""); return o;
+    });
+  };
+  const onFile=async(f)=>{
+    if(!f)return; setErr(""); setLoading(true); setRows(null);
+    try{
+      if(/\.csv$/i.test(f.name)){
+        const txt=await f.text(); const data=parseCSV(txt);
+        if(!data.length){setErr("Planilha vazia.");}else setRows(data);
+      }else{
+        const XLSX=await loadXLSX();
+        const buf=await f.arrayBuffer();
+        const wb=XLSX.read(buf,{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        if(!data.length){setErr("Planilha vazia.");}else setRows(data);
+      }
+    }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx, .xls ou .csv.");}
+    setLoading(false);
+  };
+  const baixarModelo=async()=>{
+    try{
+      const XLSX=await loadXLSX();
+      const ws=XLSX.utils.json_to_sheet([Object.fromEntries(IMPORT_COLS.map(c=>[c,""]))]);
+      const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Relatórios");
+      XLSX.writeFile(wb,"modelo_relatorios.xlsx");
+    }catch(e){
+      const csv="\uFEFF"+IMPORT_COLS.join(";")+"\n";
+      const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));a.download="modelo_relatorios.csv";a.click();
+    }
+  };
+  const confirmar=()=>{
+    const novos=rows.map((o,i)=>{
+      const st=String(pick("Status")(o)||"").trim();
+      return {
+        id:`R${Date.now()}${i}`,
+        dataReg:String(pick("Data")(o)||""),
+        reportNum:String(pick("Nº Relatório")(o)||pick("No Relatório")(o)||pick("Numero")(o)||""),
+        type:mapTipo(pick("Tipo")(o)),
+        empresa:String(pick("Empresa")(o)||""),
+        patrimonio:String(pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
+        tecnico:String(pick("Técnico")(o)||pick("Tecnico")(o)||""),
+        date:String(pick("Data Atend.")(o)||pick("Data Atendimento")(o)||""),
+        numChamado:String(pick("Chamado")(o)||""),
+        acao:String(pick("Ação")(o)||pick("Acao")(o)||""),
+        horasTrabalhadas:String(pick("Horas Trab.")(o)||pick("Horas")(o)||""),
+        status:REL_STATUS_KEYS.includes(st)?st:"",
+        processoStatus:"em_andamento",
+      };
+    });
+    onImport(novos);
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#FFF",borderRadius:16,width:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>📥 Importar relatórios via Excel</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:22}}>
+          <div style={{fontSize:13,color:"#666",marginBottom:10}}>Selecione uma planilha com estas colunas na primeira aba (a ordem pode variar — eu localizo pelo nome):</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:16}}>
+            {IMPORT_COLS.map(c=><span key={c} style={{fontSize:11,background:"#F5F5F5",border:"1px solid #E8E8E8",borderRadius:20,padding:"3px 10px"}}>{c}</span>)}
+          </div>
+          <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
+            <input type="file" ref={fileRef} accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={e=>onFile(e.target.files[0])}/>
+            <BtnY onClick={()=>fileRef.current.click()}>{loading?"⏳ Lendo...":"📎 Escolher arquivo"}</BtnY>
+            <BtnG onClick={baixarModelo}>⬇️ Baixar modelo</BtnG>
+          </div>
+          {err&&<div style={{fontSize:12,color:"#C62828",marginBottom:12,padding:"8px 12px",background:"#FFF0F0",borderRadius:8}}>{err}</div>}
+          {rows&&(
+            <div style={{border:"1px solid #E8E8E8",borderRadius:10,overflow:"hidden"}}>
+              <div style={{background:"#F8F8F8",padding:"8px 12px",fontSize:12,color:"#666",borderBottom:"1px solid #EEE"}}>Pré-visualização — {rows.length} linha(s)</div>
+              <div style={{overflowX:"auto",maxHeight:200}}>
+                <table style={{minWidth:600}}><thead><tr>{Object.keys(rows[0]).slice(0,8).map(k=><th key={k}>{k}</th>)}</tr></thead>
+                <tbody>{rows.slice(0,5).map((r,i)=><tr key={i}>{Object.keys(rows[0]).slice(0,8).map(k=><td key={k} style={{fontSize:11}}>{String(r[k])}</td>)}</tr>)}</tbody></table>
+              </div>
+            </div>
+          )}
+          <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:20}}>
+            <BtnG onClick={onClose}>Cancelar</BtnG>
+            <BtnY onClick={confirmar} disabled={!rows}>Importar {rows?`(${rows.length})`:""}</BtnY>
           </div>
         </div>
       </div>
@@ -433,6 +535,11 @@ const BtnExcel = ({onClick}) => (
     📊 Exportar Excel
   </button>
 );
+const BtnImport = ({onClick}) => (
+  <button onClick={onClick} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1565C0",background:"#F0F4FF",fontSize:12,cursor:"pointer",color:"#1565C0",fontWeight:700,fontFamily:"inherit"}}>
+    📥 Importar Excel
+  </button>
+);
 
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 export default function App(){
@@ -467,6 +574,7 @@ export default function App(){
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
+  const [modalImport,setModalImport]=useState(false);
   const [modalMU,setModalMU]=useState(false);
   const [modalAF,setModalAF]=useState(false);
   const [modalEmp,setModalEmp]=useState(null);
@@ -490,37 +598,24 @@ export default function App(){
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
-  const loadData = async () => {
-    const [rels, mus, afs, emps, saidas, reqs, ubers, agendaRows, escalaRows] = await Promise.all([
-      db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
-      db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
-      db.get("uber_pedidos"), db.get("agenda"), db.get("escala")
-    ]);
-    if(rels.length>0) setReports(rels);
-    if(mus.length>0) setProcessosMU(mus);
-    if(afs.length>0) setProcessosAF(afs);
-    if(emps.length>0) setEmprestimos(emps);
-    if(saidas.length>0) setSaidaEntrada(saidas);
-    if(reqs.length>0) setRequisicoes(reqs);
-    if(ubers.length>0) setUberPedidos(ubers);
-    if(agendaRows.length>0){
-      const obj={};
-      agendaRows.forEach(r=>{obj[r.key]=r.value;});
-      setAgendaItems(obj);
-    }
-    if(escalaRows.length>0){
-      const obj={};
-      escalaRows.forEach(r=>{obj[r.key]=r.value;});
-      setSchedule(obj);
-    }
-  };
-
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
-    loadData().then(()=>notify("✅ Dados carregados!"));
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(()=>loadData(), 30000);
-    return ()=>clearInterval(interval);
+    const load = async () => {
+      const [rels, mus, afs, emps, saidas, reqs, ubers] = await Promise.all([
+        db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
+        db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
+        db.get("uber_pedidos")
+      ]);
+      if(rels.length>0) setReports(rels);
+      if(mus.length>0) setProcessosMU(mus);
+      if(afs.length>0) setProcessosAF(afs);
+      if(emps.length>0) setEmprestimos(emps);
+      if(saidas.length>0) setSaidaEntrada(saidas);
+      if(reqs.length>0) setRequisicoes(reqs);
+      if(ubers.length>0) setUberPedidos(ubers);
+      notify("✅ Dados carregados!");
+    };
+    load();
   },[]);
 
   // ── SALVAR AUTOMATICAMENTE ──
@@ -595,9 +690,10 @@ export default function App(){
       <div style={{background:"#1A1A1A"}}>
         <div style={{padding:"12px 24px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:34,height:34,background:"#F5C800",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>⚙</div>
+            <div style={{background:"#FFF",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center",flexShrink:0}}>
+              <img src={LOGO_MOV} alt="Grupo MOV 35 anos" style={{height:26,width:"auto",display:"block"}}/>
+            </div>
             <div>
-              <div style={{fontWeight:800,fontSize:17,color:"#FFF",letterSpacing:"-.3px"}}>GRUPO MOV</div>
               <div style={{fontSize:9,color:"#666",letterSpacing:1.5,textTransform:"uppercase"}}>Gestão Técnica de Campo</div>
             </div>
           </div>
@@ -658,7 +754,7 @@ export default function App(){
               <select value={filterTipo} onChange={e=>setFilterTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os tipos</option>{TIPOS.map(t=><option key={t.v} value={t.v}>{t.l}</option>)}</select>
               <select value={filterRegion} onChange={e=>setFilterRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option><option value="metropolitana">Metropolitana BH</option><option value="roca">Roca</option><option value="centroOeste">Centro-Oeste</option></select>
               <select value={filterTech} onChange={e=>setFilterTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option>{Object.entries(statusCfg).map(([v,{label}])=><option key={v} value={v}>{label}</option>)}</select>
+              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option>{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select>
               <input type="text" value={filterDateFrom} onChange={e=>setFilterDateFrom(e.target.value)} placeholder="De: YYYY-MM-DD" style={{width:130,fontSize:12}}/>
               <input type="text" value={filterDateTo} onChange={e=>setFilterDateTo(e.target.value)} placeholder="Até: YYYY-MM-DD" style={{width:130,fontSize:12}}/>
               <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:showArqRel?"#888":"#AAA",fontFamily:"inherit"}}>
@@ -666,36 +762,58 @@ export default function App(){
               </button>
               {(filterTipo!=="todos"||filterTech!=="todos"||filterStatus!=="todos"||filterRegion!=="todas"||filterDateFrom||filterDateTo||searchText)&&<BtnG onClick={()=>{setFilterTipo("todos");setFilterTech("todos");setFilterStatus("todos");setFilterRegion("todas");setFilterDateFrom("");setFilterDateTo("");setSearchText("");}}>✕ Limpar</BtnG>}
               <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length} registro(s)</span>
-              <BtnExcel onClick={()=>exportCSV(filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado"),"relatorios_grupomov",[{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data"},{key:"numChamado",label:"Nº Chamado"},{key:"acao",label:"Ação"},{key:"horasTrabalhadas",label:"Horas Trabalhadas"},{key:"status",label:"Status"},{key:"processoStatus",label:"Processo"},{key:"requisicaoPeca",label:"Req. Peça"}])}/>
+              <BtnImport onClick={()=>setModalImport(true)}/>
+              <BtnExcel onClick={()=>exportCSV(filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado"),"relatorios_grupomov",[{key:"dataReg",label:"Data"},{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data Atend."},{key:"numChamado",label:"Chamado"},{key:"acao",label:"Ação"},{key:"horasTrabalhadas",label:"Horas Trab."},{key:"status",label:"Status"},{key:"requisicaoPeca",label:"Requisição"},{key:"dataPeca",label:"Data Peça"},{key:"execPeca",label:"Executado"},{key:"chamadoPeca",label:"Chamado Peça"},{key:"relatorioPeca",label:"Relatório Peça"},{key:"dataRelPeca",label:"Data Rel. Peça"},{key:"processoStatus",label:"Processo"}])}/>
               <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
             </div>
             {/* Tabela */}
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data</th><th>Chamado</th><th>Ação</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Peças</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Horas Trab.</th><th>Status</th><th>Processo</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
                   <tbody>
-                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={13} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
+                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?13:12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
-                      const sc=statusCfg[d.status]||statusCfg["aberto"];
+                      const sc=REL_STATUS[d.status]||{color:"#888",bg:"#F5F5F5"};
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
+                      const pend=isPendentePecas(d.status);
+                      const nCols=user.canDelete?13:12;
                       return(
-                        <tr key={d.id} style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
+                        <Fragment key={d.id}>
+                        <tr style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
+                          <td><input type="text" value={d.dataReg||""} onChange={e=>updateReport(d.id,{dataReg:e.target.value})} placeholder="YYYY-MM-DD" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.reportNum||""} onChange={e=>updateReport(d.id,{reportNum:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px",fontWeight:700}}/></td>
                           <td><select value={d.type} onChange={e=>updateReport(d.id,{type:e.target.value})} style={{fontSize:10,padding:"3px 5px",color:tc.color,background:tc.bg,border:"none",borderRadius:5,fontWeight:700}}>{TIPOS.map(t=><option key={t.v} value={t.v}>{t.l}</option>)}</select></td>
                           <td><input type="text" value={d.empresa||""} onChange={e=>updateReport(d.id,{empresa:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.patrimonio||""} onChange={e=>updateReport(d.id,{patrimonio:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><select value={d.tecnico||""} onChange={e=>updateReport(d.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td><input type="text" value={d.date||""} onChange={e=>updateReport(d.id,{date:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={d.date||""} onChange={e=>updateReport(d.id,{date:e.target.value})} placeholder="YYYY-MM-DD" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.numChamado||""} onChange={e=>updateReport(d.id,{numChamado:e.target.value})} placeholder="—" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.acao||""} onChange={e=>updateReport(d.id,{acao:e.target.value})} placeholder="Ação..." style={{width:160,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.horasTrabalhadas||""} onChange={e=>updateReport(d.id,{horasTrabalhadas:e.target.value})} placeholder="00:00" style={{width:70,fontSize:11,padding:"3px 6px",textAlign:"center",color:"#C47D00",fontWeight:600}}/></td>
-                          <td><select value={d.status} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700}}>{Object.entries(statusCfg).map(([v,{label}])=><option key={v} value={v}>{label}</option>)}</select></td>
+                          <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
-                          <td><input type="text" value={d.requisicaoPeca||""} onChange={e=>updateReport(d.id,{requisicaoPeca:e.target.value})} placeholder="—" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?"))setReports(p=>p.filter(r=>r.id!==d.id));}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
                         </tr>
+                        {pend&&(
+                          <tr>
+                            <td colSpan={nCols} style={{padding:"0 12px 12px"}}>
+                              <div style={{background:"#FFF7E0",borderLeft:"4px solid #F5C800",borderRadius:8,padding:"10px 14px"}}>
+                                <div style={{fontSize:10,fontWeight:800,color:"#92600A",letterSpacing:.5,marginBottom:8}}>⚠️ PEÇAS PENDENTES — acompanhamento</div>
+                                <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>REQUISIÇÃO</span><input type="text" value={d.requisicaoPeca||""} onChange={e=>updateReport(d.id,{requisicaoPeca:e.target.value})} placeholder="REQ-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA PEÇA</span><input type="text" value={d.dataPeca||""} onChange={e=>updateReport(d.id,{dataPeca:e.target.value})} placeholder="YYYY-MM-DD" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>EXECUTADO</span><select value={d.execPeca||""} onChange={e=>updateReport(d.id,{execPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}>{EXECUTADO_OPTS.map(o=><option key={o} value={o}>{o||"—"}</option>)}</select></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>CHAMADO</span><input type="text" value={d.chamadoPeca||""} onChange={e=>updateReport(d.id,{chamadoPeca:e.target.value})} placeholder="—" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>RELATÓRIO</span><input type="text" value={d.relatorioPeca||""} onChange={e=>updateReport(d.id,{relatorioPeca:e.target.value})} placeholder="REL-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA</span><input type="text" value={d.dataRelPeca||""} onChange={e=>updateReport(d.id,{dataRelPeca:e.target.value})} placeholder="YYYY-MM-DD" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </Fragment>
                       );
                     })}
                   </tbody>
@@ -1071,7 +1189,7 @@ export default function App(){
                           <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                           <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{slots.length} atendimento(s) · {schedDate}</div>
                         </div>
-                        <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=schedType||"preventivo";const newSlots=[...(schedule[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}];setSchedule(p=>({...p,[key]:newSlots}));db.saveKV("escala",key,newSlots);notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                        <BtnG onClick={()=>{const client=prompt(`Adicionar empresa para ${tech}:`);if(client){const pat=prompt("Patrimônio:");const tip=schedType||"preventivo";setSchedule(p=>({...p,[key]:[...(p[key]||[]),{client,patrimonio:pat||"",type:tip,status:"pendente"}]}));notify("Adicionado!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
                       </div>
                       <div style={{padding:"8px 14px"}}>
                         {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
@@ -1125,7 +1243,7 @@ export default function App(){
                       <div>{agendaItems[`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`]&&<BtnG onClick={()=>{const k=`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`;setAgendaItems(p=>{const n={...p};delete n[k];return n;});setAgendaModal(null);notify("Removido.");}} style={{color:"#C62828",borderColor:"#FFCCCC"}}>Remover</BtnG>}</div>
                       <div style={{display:"flex",gap:10}}>
                         <BtnG onClick={()=>setAgendaModal(null)}>Cancelar</BtnG>
-                        <BtnY disabled={!agendaForm.empresa} onClick={()=>{const k=`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`;setAgendaItems(p=>({...p,[k]:agendaForm}));db.saveKV("agenda",k,agendaForm);setAgendaModal(null);notify("🗓 Salvo!");}}>Salvar</BtnY>
+                        <BtnY disabled={!agendaForm.empresa} onClick={()=>{setAgendaItems(p=>({...p,[`${agendaModal.tech}__${agendaModal.date}__${agendaModal.idx}`]:agendaForm}));setAgendaModal(null);notify("🗓 Salvo!");}}>Salvar</BtnY>
                       </div>
                     </div>
                   </div>
@@ -1377,6 +1495,7 @@ export default function App(){
 
 
       {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{setReports(p=>[d,...p]);db.save("relatorios",d.id,d);notify("✅ Relatório salvo!");}}/>}
+      {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{setReports(p=>[...novos,...p]);novos.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${novos.length} relatório(s) importado(s)!`);}}/>}
       {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{setProcessosMU(p=>[d,...p]);db.save("processos_mu",d.id,d);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
       {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{setProcessosAF(p=>[d,...p]);db.save("processos_af",d.id,d);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
       {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{if(editEmp)setEmprestimos(p=>p.map(x=>x.id===d.id?d:x));else setEmprestimos(p=>[d,...p]);db.save("emprestimos",d.id,d);notify("✅ Salvo!");}} initial={editEmp}/>}
