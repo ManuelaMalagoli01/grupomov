@@ -106,6 +106,16 @@ const REL_STATUS = {
 const REL_STATUS_KEYS = Object.keys(REL_STATUS);
 const isPendentePecas = s => s==="Preventiva pendente peças" || s==="Corretiva pendente peças";
 const EXECUTADO_OPTS = ["", "Sim", "Não", "Devolvido"];
+// Calcula Horas Trabalhadas = Saída − Entrada (formato HH:MM)
+const calcHoras = (entrada, saida) => {
+  if(!entrada || !saida) return "";
+  const [h1,m1]=String(entrada).split(":").map(Number);
+  const [h2,m2]=String(saida).split(":").map(Number);
+  if([h1,m1,h2,m2].some(n=>Number.isNaN(n))) return "";
+  let mins=(h2*60+m2)-(h1*60+m1);
+  if(mins<0) mins+=24*60;
+  return `${String(Math.floor(mins/60)).padStart(2,"0")}:${String(mins%60).padStart(2,"0")}`;
+};
 // Carrega SheetJS sob demanda (sem precisar instalar nada)
 const loadXLSX = () => new Promise((resolve,reject)=>{
   if(window.XLSX) return resolve(window.XLSX);
@@ -227,14 +237,14 @@ function ReportModal({onClose,onSave}){
             </div>
             <div><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Ação / O que foi feito</div><textarea value={form.acao} onChange={e=>upd("acao",e.target.value)} rows={3} placeholder="Descreva a ação..." style={{width:"100%",resize:"none"}}/></div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-              <Inp label="Data" value={form.date} onChange={v=>upd("date",v)} placeholder="YYYY-MM-DD"/>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Data</div><input type="date" value={form.date||""} onChange={e=>upd("date",e.target.value)} style={{width:"100%"}}/></div>
               <Inp label="Nº Chamado" value={form.numChamado} onChange={v=>upd("numChamado",v)} placeholder="CHM-001"/>
               <Inp label="Nº Execução/Retorno" value={form.execRelatorio} onChange={v=>upd("execRelatorio",v)} placeholder="EXE-001"/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,background:"#FFFBF0",padding:12,borderRadius:10,border:"1px solid #FFE8A0"}}>
-              <Inp label="Entrada" value={form.horaEntrada} onChange={v=>upd("horaEntrada",v)} placeholder="08:00"/>
-              <Inp label="Saída" value={form.horaSaida} onChange={v=>upd("horaSaida",v)} placeholder="17:30"/>
-              <Inp label="Trabalhadas" value={form.horasTrabalhadas} onChange={v=>upd("horasTrabalhadas",v)} placeholder="08:30"/>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Entrada</div><input type="time" value={form.horaEntrada||""} onChange={e=>upd("horaEntrada",e.target.value)} style={{width:"100%"}}/></div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Saída</div><input type="time" value={form.horaSaida||""} onChange={e=>upd("horaSaida",e.target.value)} style={{width:"100%"}}/></div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}><div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Trabalhadas</div><div style={{padding:"9px 12px",borderRadius:8,background:"#FFFBF0",border:"1px solid #FFE8A0",fontSize:13,fontWeight:700,color:"#C47D00"}}>{calcHoras(form.horaEntrada,form.horaSaida)||"—"}</div></div>
               <Inp label="Deslocamento" value={form.horasDeslocamento} onChange={v=>upd("horasDeslocamento",v)} placeholder="01:00"/>
               <Inp label="Req. Peça" value={form.requisicaoPeca} onChange={v=>upd("requisicaoPeca",v)} placeholder="REQ-001"/>
             </div>
@@ -246,7 +256,7 @@ function ReportModal({onClose,onSave}){
           </div>
           <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:20}}>
             <BtnG onClick={onClose}>Cancelar</BtnG>
-            <BtnY onClick={()=>{onSave({...form,id:`R${Date.now()}`});onClose();}} disabled={!form.empresa}>Salvar</BtnY>
+            <BtnY onClick={()=>{onSave({...form,horasTrabalhadas:calcHoras(form.horaEntrada,form.horaSaida)||form.horasTrabalhadas,id:`R${Date.now()}`});onClose();}} disabled={!form.empresa}>Salvar</BtnY>
           </div>
         </div>
       </div>
@@ -670,8 +680,9 @@ export default function App(){
     .nav-tab:hover:not(.active){color:#FFF;background:#333;}
     select{background:#FFF;color:#1A1A1A;border:1px solid #E0E0E0;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:12px;cursor:pointer;outline:none;}
     select:focus{border-color:#F5C800;}
-    input[type=text],input[type=password],textarea{background:#FFF;color:#1A1A1A;border:1px solid #E0E0E0;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;}
-    input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:#F5C800;box-shadow:0 0 0 3px rgba(245,200,0,.15);}
+    input[type=text],input[type=password],input[type=date],input[type=time],textarea{background:#FFF;color:#1A1A1A;border:1px solid #E0E0E0;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;}
+    input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,input[type=time]:focus,textarea:focus{border-color:#F5C800;box-shadow:0 0 0 3px rgba(245,200,0,.15);}
+    input[type=date],input[type=time]{cursor:pointer;}
     .notif{position:fixed;top:16px;right:16px;background:#1A1A1A;color:#F5C800;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;animation:slideDown .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.2);}
     .tbl-wrap{overflow-x:auto;width:100%;}
     table{width:100%;border-collapse:collapse;min-width:700px;}
@@ -755,43 +766,45 @@ export default function App(){
               <select value={filterRegion} onChange={e=>setFilterRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option><option value="metropolitana">Metropolitana BH</option><option value="roca">Roca</option><option value="centroOeste">Centro-Oeste</option></select>
               <select value={filterTech} onChange={e=>setFilterTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
               <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option>{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select>
-              <input type="text" value={filterDateFrom} onChange={e=>setFilterDateFrom(e.target.value)} placeholder="De: YYYY-MM-DD" style={{width:130,fontSize:12}}/>
-              <input type="text" value={filterDateTo} onChange={e=>setFilterDateTo(e.target.value)} placeholder="Até: YYYY-MM-DD" style={{width:130,fontSize:12}}/>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={filterDateFrom} onChange={e=>setFilterDateFrom(e.target.value)} style={{fontSize:12}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={filterDateTo} onChange={e=>setFilterDateTo(e.target.value)} style={{fontSize:12}}/></div>
               <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:showArqRel?"#888":"#AAA",fontFamily:"inherit"}}>
                 {showArqRel?"✓ Arquivados":"📁 Ver Arquivados"}
               </button>
               {(filterTipo!=="todos"||filterTech!=="todos"||filterStatus!=="todos"||filterRegion!=="todas"||filterDateFrom||filterDateTo||searchText)&&<BtnG onClick={()=>{setFilterTipo("todos");setFilterTech("todos");setFilterStatus("todos");setFilterRegion("todas");setFilterDateFrom("");setFilterDateTo("");setSearchText("");}}>✕ Limpar</BtnG>}
               <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length} registro(s)</span>
               <BtnImport onClick={()=>setModalImport(true)}/>
-              <BtnExcel onClick={()=>exportCSV(filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado"),"relatorios_grupomov",[{key:"dataReg",label:"Data"},{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data Atend."},{key:"numChamado",label:"Chamado"},{key:"acao",label:"Ação"},{key:"horasTrabalhadas",label:"Horas Trab."},{key:"status",label:"Status"},{key:"requisicaoPeca",label:"Requisição"},{key:"dataPeca",label:"Data Peça"},{key:"execPeca",label:"Executado"},{key:"chamadoPeca",label:"Chamado Peça"},{key:"relatorioPeca",label:"Relatório Peça"},{key:"dataRelPeca",label:"Data Rel. Peça"},{key:"processoStatus",label:"Processo"}])}/>
+              <BtnExcel onClick={()=>exportCSV(filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado"),"relatorios_grupomov",[{key:"dataReg",label:"Data"},{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data Atend."},{key:"numChamado",label:"Chamado"},{key:"acao",label:"Ação"},{key:"horaEntrada",label:"Entrada"},{key:"horaSaida",label:"Saída"},{key:"horasTrabalhadas",label:"Horas Trab."},{key:"status",label:"Status"},{key:"requisicaoPeca",label:"Requisição"},{key:"dataPeca",label:"Data Peça"},{key:"execPeca",label:"Executado"},{key:"chamadoPeca",label:"Chamado Peça"},{key:"relatorioPeca",label:"Relatório Peça"},{key:"dataRelPeca",label:"Data Rel. Peça"},{key:"processoStatus",label:"Processo"}])}/>
               <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
             </div>
             {/* Tabela */}
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Horas Trab.</th><th>Status</th><th>Processo</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
                   <tbody>
-                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?13:12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
+                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?15:14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
                       const sc=REL_STATUS[d.status]||{color:"#888",bg:"#F5F5F5"};
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
                       const pend=isPendentePecas(d.status);
-                      const nCols=user.canDelete?13:12;
+                      const nCols=user.canDelete?15:14;
                       return(
                         <Fragment key={d.id}>
                         <tr style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
-                          <td><input type="text" value={d.dataReg||""} onChange={e=>updateReport(d.id,{dataReg:e.target.value})} placeholder="YYYY-MM-DD" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={d.dataReg||""} onChange={e=>updateReport(d.id,{dataReg:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.reportNum||""} onChange={e=>updateReport(d.id,{reportNum:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px",fontWeight:700}}/></td>
                           <td><select value={d.type} onChange={e=>updateReport(d.id,{type:e.target.value})} style={{fontSize:10,padding:"3px 5px",color:tc.color,background:tc.bg,border:"none",borderRadius:5,fontWeight:700}}>{TIPOS.map(t=><option key={t.v} value={t.v}>{t.l}</option>)}</select></td>
                           <td><input type="text" value={d.empresa||""} onChange={e=>updateReport(d.id,{empresa:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.patrimonio||""} onChange={e=>updateReport(d.id,{patrimonio:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><select value={d.tecnico||""} onChange={e=>updateReport(d.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td><input type="text" value={d.date||""} onChange={e=>updateReport(d.id,{date:e.target.value})} placeholder="YYYY-MM-DD" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={d.date||""} onChange={e=>updateReport(d.id,{date:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.numChamado||""} onChange={e=>updateReport(d.id,{numChamado:e.target.value})} placeholder="—" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={d.acao||""} onChange={e=>updateReport(d.id,{acao:e.target.value})} placeholder="Ação..." style={{width:160,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={d.horasTrabalhadas||""} onChange={e=>updateReport(d.id,{horasTrabalhadas:e.target.value})} placeholder="00:00" style={{width:70,fontSize:11,padding:"3px 6px",textAlign:"center",color:"#C47D00",fontWeight:600}}/></td>
+                          <td><input type="time" value={d.horaEntrada||""} onChange={e=>{const v=e.target.value;updateReport(d.id,{horaEntrada:v,horasTrabalhadas:calcHoras(v,d.horaSaida)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="time" value={d.horaSaida||""} onChange={e=>{const v=e.target.value;updateReport(d.id,{horaSaida:v,horasTrabalhadas:calcHoras(d.horaEntrada,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td style={{textAlign:"center"}}><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{d.horasTrabalhadas||calcHoras(d.horaEntrada,d.horaSaida)||"—"}</span></td>
                           <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?"))setReports(p=>p.filter(r=>r.id!==d.id));}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
@@ -803,11 +816,11 @@ export default function App(){
                                 <div style={{fontSize:10,fontWeight:800,color:"#92600A",letterSpacing:.5,marginBottom:8}}>⚠️ PEÇAS PENDENTES — acompanhamento</div>
                                 <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>REQUISIÇÃO</span><input type="text" value={d.requisicaoPeca||""} onChange={e=>updateReport(d.id,{requisicaoPeca:e.target.value})} placeholder="REQ-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
-                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA PEÇA</span><input type="text" value={d.dataPeca||""} onChange={e=>updateReport(d.id,{dataPeca:e.target.value})} placeholder="YYYY-MM-DD" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA PEÇA</span><input type="date" value={d.dataPeca||""} onChange={e=>updateReport(d.id,{dataPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}/></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>EXECUTADO</span><select value={d.execPeca||""} onChange={e=>updateReport(d.id,{execPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}>{EXECUTADO_OPTS.map(o=><option key={o} value={o}>{o||"—"}</option>)}</select></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>CHAMADO</span><input type="text" value={d.chamadoPeca||""} onChange={e=>updateReport(d.id,{chamadoPeca:e.target.value})} placeholder="—" style={{fontSize:11,padding:"4px 6px"}}/></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>RELATÓRIO</span><input type="text" value={d.relatorioPeca||""} onChange={e=>updateReport(d.id,{relatorioPeca:e.target.value})} placeholder="REL-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
-                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA</span><input type="text" value={d.dataRelPeca||""} onChange={e=>updateReport(d.id,{dataRelPeca:e.target.value})} placeholder="YYYY-MM-DD" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA</span><input type="date" value={d.dataRelPeca||""} onChange={e=>updateReport(d.id,{dataRelPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}/></div>
                                 </div>
                               </div>
                             </td>
