@@ -154,7 +154,7 @@ const SAIDA_DATA = [];
 
 // ── COMPONENTES BASE ──────────────────────────────────────────────────────────
 const Tag=({children,color,bg,border})=>(<span style={{display:"inline-block",fontSize:10,fontWeight:700,letterSpacing:.6,padding:"3px 8px",borderRadius:5,color,background:bg,border:`1px solid ${border||bg}`}}>{children}</span>);
-const Inp=({label,value,onChange,placeholder,style={}})=>(<div style={{display:"flex",flexDirection:"column",gap:4,...style}}>{label&&<div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>{label}</div>}<input type="text" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""}/></div>);
+const Inp=({label,value,onChange,placeholder,type="text",style={}})=>(<div style={{display:"flex",flexDirection:"column",gap:4,...style}}>{label&&<div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>{label}</div>}<input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""}/></div>);
 const Sel=({label,value,onChange,options,style={}})=>(<div style={{display:"flex",flexDirection:"column",gap:4,...style}}>{label&&<div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>{label}</div>}<select value={value||""} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={o.v||o} value={o.v||o}>{o.l||o}</option>)}</select></div>);
 const BtnY=({children,onClick,disabled,style={}})=>(<button className="btn btn-primary" onClick={onClick} disabled={disabled} style={style}>{children}</button>);
 const BtnG=({children,onClick,style={}})=>(<button className="btn btn-ghost" onClick={onClick} style={style}>{children}</button>);
@@ -389,7 +389,7 @@ function ProcessoModal({onClose,onSave,tipo}){
         </div>
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-            <Inp label="Data" value={form.date} onChange={v=>upd("date",v)} placeholder="YYYY-MM-DD"/>
+            <Inp type="date" label="Data" value={form.date} onChange={v=>upd("date",v)}/>
             <Inp label="Empresa" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="Nome da empresa"/>
             <Inp label="Patrimônio" value={form.patrimonio} onChange={v=>upd("patrimonio",v)} placeholder="PAT-000"/>
           </div>
@@ -401,7 +401,7 @@ function ProcessoModal({onClose,onSave,tipo}){
             <div style={{fontSize:11,fontWeight:700,color:"#555",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Aprovação</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,alignItems:"end"}}>
               <Sel label="Enviado para Aprovação?" value={form.enviadoAprovacao} onChange={v=>upd("enviadoAprovacao",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim"}]}/>
-              {form.enviadoAprovacao==="sim"?<div><Inp label="Data do Envio" value={form.dataEnvio} onChange={v=>upd("dataEnvio",v)} placeholder="YYYY-MM-DD"/>{sla!==null&&<div style={{marginTop:6,fontSize:11,color:"#888"}}>SLA desde envio: <SlaBadge days={sla}/></div>}</div>:<div style={{fontSize:12,color:"#C62828",fontWeight:600,paddingTop:20}}>⏱ SLA contando — aguardando envio</div>}
+              {form.enviadoAprovacao==="sim"?<div><Inp type="date" label="Data do Envio" value={form.dataEnvio} onChange={v=>upd("dataEnvio",v)}/>{sla!==null&&<div style={{marginTop:6,fontSize:11,color:"#888"}}>SLA desde envio: <SlaBadge days={sla}/></div>}</div>:<div style={{fontSize:12,color:"#C62828",fontWeight:600,paddingTop:20}}>⏱ SLA contando — aguardando envio</div>}
             </div>
             <div style={{marginTop:12,display:"grid",gridTemplateColumns:"1fr",gap:12}}>
               <Sel label="Aprovado?" value={form.aprovado} onChange={v=>upd("aprovado",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim — aprovado"}]}/>
@@ -447,7 +447,7 @@ function EmpModal({onClose,onSave,initial}){
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:12}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Inp label="Nº REQ" value={form.req} onChange={v=>upd("req",v)} placeholder="8821"/>
-            <Inp label="Data" value={form.data} onChange={v=>upd("data",v)} placeholder="YYYY-MM-DD"/>
+            <Inp type="date" label="Data" value={form.data} onChange={v=>upd("data",v)}/>
             <Sel label="Situação" value={form.situacao} onChange={v=>upd("situacao",v)} options={["Aberto","Aprovado","Atendido","Pendente","Parcialmente Atendido"]}/>
           </div>
           <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
@@ -459,7 +459,7 @@ function EmpModal({onClose,onSave,initial}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Inp label="Quantidade" value={form.quant} onChange={v=>upd("quant",v)} placeholder="1"/>
             <Inp label="Nº Retorno" value={form.retorno} onChange={v=>upd("retorno",v)} placeholder="9081"/>
-            <div><Inp label="Data Retorno" value={form.dataRetorno} onChange={v=>upd("dataRetorno",v)} placeholder="YYYY-MM-DD"/>
+            <div><Inp type="date" label="Data Retorno" value={form.dataRetorno} onChange={v=>upd("dataRetorno",v)}/>
               {sla!==null&&<div style={{marginTop:4,fontSize:11,color:"#888"}}>SLA: <SlaBadge days={sla}/></div>}
             </div>
           </div>
@@ -504,9 +504,9 @@ function SaidaModal({onClose,onSave,initial}){
             <Inp label="Descrição" value={form.descricao} onChange={v=>upd("descricao",v)} placeholder="Descrição da peça"/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-            <Inp label="Data Saída Almox" value={form.dataSaida} onChange={v=>upd("dataSaida",v)} placeholder="YYYY-MM-DD"/>
-            <Inp label="Data Entrega" value={form.dataEntrega} onChange={v=>upd("dataEntrega",v)} placeholder="YYYY-MM-DD"/>
-            <Inp label="Data Devolução" value={form.devolucao} onChange={v=>upd("devolucao",v)} placeholder="YYYY-MM-DD"/>
+            <Inp type="date" label="Data Saída Almox" value={form.dataSaida} onChange={v=>upd("dataSaida",v)}/>
+            <Inp type="date" label="Data Entrega" value={form.dataEntrega} onChange={v=>upd("dataEntrega",v)}/>
+            <Inp type="date" label="Data Devolução" value={form.devolucao} onChange={v=>upd("devolucao",v)}/>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Inp label="Nº REQ Retorno" value={form.reqRetorno} onChange={v=>upd("reqRetorno",v)} placeholder="6352"/>
@@ -551,6 +551,30 @@ const BtnImport = ({onClick}) => (
   </button>
 );
 
+// ── GRÁFICOS (Chart.js carregado sob demanda) ─────────────────────────────────
+const loadChartLib = () => new Promise((resolve,reject)=>{
+  if(window.Chart) return resolve(window.Chart);
+  const sc=document.createElement("script");
+  sc.src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js";
+  sc.onload=()=>resolve(window.Chart);
+  sc.onerror=()=>reject(new Error("Falha ao carregar gráficos"));
+  document.body.appendChild(sc);
+});
+function ChartCanvas({type,data,options,height=240}){
+  const ref=useRef(null); const inst=useRef(null);
+  const key=JSON.stringify({type,data,options});
+  useEffect(()=>{
+    let alive=true;
+    loadChartLib().then(Chart=>{
+      if(!alive||!ref.current)return;
+      if(inst.current){inst.current.destroy();inst.current=null;}
+      inst.current=new Chart(ref.current.getContext("2d"),{type,data,options:{...options}});
+    }).catch(()=>{});
+    return ()=>{alive=false;if(inst.current){inst.current.destroy();inst.current=null;}};
+  },[key]);
+  return <div style={{position:"relative",height}}><canvas ref={ref}/></div>;
+}
+
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 export default function App(){
   const [user,setUser]=useState(null);
@@ -573,6 +597,9 @@ export default function App(){
   const [filterDateFrom,setFilterDateFrom]=useState("");
   const [filterDateTo,setFilterDateTo]=useState("");
   const [searchText,setSearchText]=useState("");
+  const [dashRegion,setDashRegion]=useState("todas");
+  const [dashFrom,setDashFrom]=useState("");
+  const [dashTo,setDashTo]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
@@ -607,6 +634,9 @@ export default function App(){
   const [schedFilterTech,setSchedFilterTech]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
+
+  // ── TÍTULO DO APP ──
+  useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
 
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
@@ -1093,7 +1123,7 @@ export default function App(){
                           <td><input type="text" value={r.numRelatorio||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,numRelatorio:e.target.value}:x))} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
                           <td><input type="text" value={r.patrimonio||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,patrimonio:e.target.value}:x))} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
                           <td><select value={r.tecnico||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,tecnico:e.target.value}:x))} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td><input type="text" value={r.dataRequisicao||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataRequisicao:e.target.value}:x))} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={r.dataRequisicao||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataRequisicao:e.target.value}:x))} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td>
                             <select value={r.situacao||"reservada"} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,situacao:e.target.value}:x))}
                               style={{fontSize:11,padding:"3px 6px",color:r.situacao==="ruptura"?"#C62828":r.situacao==="parcial"?"#E67E00":"#1565C0",fontWeight:700,background:r.situacao==="ruptura"?"#FFF0F0":r.situacao==="parcial"?"#FFF8F0":"#F0F4FF",border:"none",borderRadius:5}}>
@@ -1102,13 +1132,13 @@ export default function App(){
                               <option value="ruptura">🚨 Ruptura</option>
                             </select>
                             {(r.situacao==="parcial"||r.situacao==="ruptura")&&
-                              <input type="text" value={r.dataEntregaParcial||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataEntregaParcial:e.target.value}:x))}
+                              <input type="date" value={r.dataEntregaParcial||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataEntregaParcial:e.target.value}:x))}
                                 placeholder="Data entrega" style={{width:100,fontSize:10,padding:"2px 5px",marginTop:3,display:"block",color:"#C62828"}}/>
                             }
                           </td>
                           <td><select value={r.status} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,status:e.target.value}:x))} style={{fontSize:11,padding:"3px 6px",color:r.status==="entregue"?"#1A7A3C":r.status==="ruptura"?"#C62828":"#1565C0",fontWeight:700,background:r.status==="entregue"?"#F0FFF5":r.status==="ruptura"?"#FFF0F0":"#F0F4FF",border:"none",borderRadius:5}}><option value="reservada">🔒 Reservada</option><option value="entregue">✅ Entregue</option><option value="ruptura">🚨 Ruptura</option></select></td>
                           <td><select value={r.tecnicoEntrega||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,tecnicoEntrega:e.target.value}:x))} style={{fontSize:11,padding:"3px 6px"}}><option value="">—</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td><input type="text" value={r.dataEntrega||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataEntrega:e.target.value}:x))} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="DD/MM/AAAA"/></td>
+                          <td><input type="date" value={r.dataEntrega||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,dataEntrega:e.target.value}:x))} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={r.previsaoChegada||""} onChange={e=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,previsaoChegada:e.target.value}:x))} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="DD/MM/AAAA"/></td>
                           <td><PSSelect value={r.processoStatus} onChange={v=>setRequisicoes(p=>p.map(x=>x.id===r.id?{...x,processoStatus:v}:x))}/></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir esta requisição?"))setRequisicoes(p=>p.filter(x=>x.id!==r.id));}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
@@ -1328,6 +1358,68 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:800,fontSize:22,marginBottom:20}}>📊 Dashboard de Atendimentos</div>
 
+            {/* ── FILTRO + GRÁFICOS ── */}
+            {(()=>{
+              const chartTitle={fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12};
+              const inRange=d=>{ if(dashFrom&&(!d.date||d.date<dashFrom))return false; if(dashTo&&(!d.date||d.date>dashTo))return false; return true; };
+              const dashReports=reports.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&inRange(d));
+              const prev=dashReports.filter(r=>r.type==="preventivo").length;
+              const corr=dashReports.filter(r=>r.type==="corretivo").length;
+              const totalPC=prev+corr;
+              const pct=n=>totalPC?Math.round(n/totalPC*100):0;
+              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+              const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
+              const regPrev=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="preventivo").length);
+              const regCorr=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="corretivo").length);
+              const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
+              const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
+              const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0)/60).toFixed(1));
+              const BLU="#1565C0",RED="#C62828",YEL="#F5C800",ORG="#C47D00";
+              return(
+                <>
+                  <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+                    <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1}}>Filtro</span>
+                    <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:12}}/></div>
+                    {(dashRegion!=="todas"||dashFrom||dashTo)&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");}}>✕ Limpar</BtnG>}
+                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} relatório(s) no filtro</span>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
+                    <div className="card" style={{padding:"16px 20px"}}>
+                      <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
+                      <ChartCanvas type="doughnut" height={230}
+                        data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:0}]}}
+                        options={{cutout:"60%",maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
+                      <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:10,fontSize:13}}>
+                        <span style={{color:BLU,fontWeight:700}}>{prev} prev · {pct(prev)}%</span>
+                        <span style={{color:RED,fontWeight:700}}>{corr} corr · {pct(corr)}%</span>
+                      </div>
+                    </div>
+                    <div className="card" style={{padding:"16px 20px"}}>
+                      <div style={chartTitle}>Por região</div>
+                      <ChartCanvas type="bar" height={230}
+                        data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:4},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:4}]}}
+                        options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
+                    </div>
+                    <div className="card" style={{padding:"16px 20px"}}>
+                      <div style={chartTitle}>Relatórios por técnico</div>
+                      {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
+                        data={{labels:techsWith,datasets:[{label:"Relatórios",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                    </div>
+                    <div className="card" style={{padding:"16px 20px"}}>
+                      <div style={chartTitle}>Horas trabalhadas por técnico</div>
+                      {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
+                        data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:4}]}}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                    </div>
+                  </div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os relatórios)</div>
+                </>
+              );
+            })()}
+
             {/* Stats gerais */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
               {[
@@ -1465,7 +1557,7 @@ export default function App(){
                     <tbody>
                       {uberPedidos.map(p=>(
                         <tr key={p.id}>
-                          <td><input type="text" value={p.data||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,data:e.target.value}:x))} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={p.data||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,data:e.target.value}:x))} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={p.solicitante||""} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,solicitante:e.target.value}:x))} style={{width:110,fontSize:11,padding:"3px 6px"}} placeholder="Nome"/></td>
                           <td>
                             <select value={p.departamento||"MANUTENÇÃO"} onChange={e=>setUberPedidos(u=>u.map(x=>x.id===p.id?{...x,departamento:e.target.value,motivo:e.target.value==="MANUTENÇÃO"?x.motivo:"OUTROS"}:x))} style={{fontSize:11,padding:"3px 5px",fontWeight:600}}>
