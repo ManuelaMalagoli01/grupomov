@@ -711,6 +711,14 @@ export default function App(){
   const [schedType,setSchedType]=useState("preventivo");
   const [schedFilterTech,setSchedFilterTech]=useState("todos");
 
+  // Agenda Preventiva (mensal)
+  const [agendaPrev,setAgendaPrev]=useState({});
+  const [agpRegion,setAgpRegion]=useState("metropolitana");
+  const [agpTech,setAgpTech]=useState("todos");
+  const [agpStatus,setAgpStatus]=useState("todos");
+  const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
+  const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
+
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
   // ── TÍTULO DO APP ──
@@ -731,7 +739,7 @@ export default function App(){
       if(saidas.length>0) setSaidaEntrada(saidas);
       if(reqs.length>0) setRequisicoes(reqs);
       if(ubers.length>0) setUberPedidos(ubers);
-      if(escRows.length>0){ const sched={}; escRows.forEach(r=>{ if(r&&r.key) sched[r.key]=r.slots||[]; }); setSchedule(sched); }
+      if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
     };
@@ -746,6 +754,8 @@ export default function App(){
   };
   // Salva a escala de um técnico/dia no banco (visível para todos)
   const saveSched=(key,slots)=>{ setSchedule(p=>({...p,[key]:slots})); db.save("escala", key, {key, slots}); };
+  // Agenda Preventiva (mensal) — salva no banco (prefixo PREV__ na mesma tabela)
+  const saveAgendaPrev=(key,slots)=>{ setAgendaPrev(p=>({...p,[key]:slots})); db.save("escala", "PREV__"+key, {key:"PREV__"+key, slots}); };
 
   const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
@@ -842,6 +852,7 @@ export default function App(){
           {[
             ["relatorios","📋 Relatórios"],
             ["escala","📅 Escala"],
+            ["agenda_prev","🗓 Agenda Preventiva"],
             ["dashboard","📊 Dashboard"],
             ["mau_uso","⚠️ Mau Uso"],
             ["a_faturar","💰 A Faturar"],
@@ -1371,6 +1382,82 @@ export default function App(){
             )}
           </div>
         )}
+
+        {/* ── AGENDA PREVENTIVA (mensal) ── */}
+        {tab==="agenda_prev"&&(()=>{
+          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
+          const techs = agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
+          const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
+          const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
+          const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Preventiva</div><div style={{fontSize:13,color:"#888"}}>Planejamento mensal de preventivas — {MESES[agpMonth]} {agpYear}</div></div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12}}>
+                    <option value="todas">🌐 Todas regiões</option>
+                    <option value="metropolitana">Metropolitana BH</option>
+                    <option value="roca">Roca</option>
+                    <option value="centroOeste">Centro-Oeste</option>
+                  </select>
+                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todas as situações</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {techsList.map(tech=>{
+                  const key=`${tech}__${ym}`;
+                  const all=agendaPrev[key]||[];
+                  const slots=all.filter(matchSt).slice().sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+                  const color=techColor(tech);
+                  const done=all.filter(isDone).length;
+                  return(
+                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div>
+                          <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{all.length} preventiva(s) · {done} concl. · {MESES[agpMonth]}</div>
+                        </div>
+                        <BtnG onClick={()=>{
+                          const client=prompt(`Empresa (preventiva) para ${tech}:`); if(!client)return;
+                          const pat=prompt("Patrimônio(s):");
+                          const dia=prompt("Dia do mês (1 a 31):");
+                          const d=Math.min(Math.max(parseInt(dia)||1,1),31);
+                          const data=`${ym}-${String(d).padStart(2,"0")}`;
+                          saveAgendaPrev(key,[...all,{client,patrimonio:pat||"",data,type:"preventivo",status:"agendada"}]);
+                          notify("✅ Preventiva agendada e salva!");
+                        }} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                      </div>
+                      <div style={{padding:"8px 14px"}}>
+                        {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem preventivas{agpStatus!=="todos"?" nesta situação":""}</div>}
+                        {slots.map((s)=>{const realIdx=all.indexOf(s);const st=escSt(s.status);const dia=(s.data||"").slice(8,10);return(
+                          <div key={realIdx} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia||"?"}</span>
+                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client}</span>
+                              <button onClick={()=>{if(window.confirm("Remover esta preventiva?"))saveAgendaPrev(key,all.filter((_,j)=>j!==realIdx));}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                            </div>
+                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{s.patrimonio||"—"}</b></div>
+                            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                              <input type="date" value={s.data||""} onChange={e=>{const ns=[...all];ns[realIdx]={...s,data:e.target.value};saveAgendaPrev(key,ns);}} style={{fontSize:10,padding:"2px 5px"}}/>
+                              <select value={s.status||"agendada"} onChange={e=>{const ns=[...all];ns[realIdx]={...s,status:e.target.value};saveAgendaPrev(key,ns);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
+                                {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                        );})}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
