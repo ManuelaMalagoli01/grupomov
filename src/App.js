@@ -8,7 +8,7 @@ const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        headers: {"apikey": SUPA_KEY}
       });
       const rows = await res.json();
       return rows.map(r => r.data);
@@ -18,7 +18,7 @@ const db = {
     try {
       await fetch(`${SUPA_URL}/rest/v1/${table}`, {
         method: "POST",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+        headers: {"apikey": SUPA_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
         body: JSON.stringify({id, data})
       });
     } catch(e) { console.error("DB save error:", e); }
@@ -27,7 +27,7 @@ const db = {
     try {
       await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
         method: "DELETE",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        headers: {"apikey": SUPA_KEY}
       });
     } catch(e) { console.error("DB delete error:", e); }
   }
