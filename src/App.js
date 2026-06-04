@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
-const SUPA_KEY = "sb_secret_2w-Ttk-rdWesNpWxj9ByCQ_JUe-SiTW";
+const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
 const db = {
   async get(table) {
