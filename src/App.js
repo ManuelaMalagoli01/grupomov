@@ -736,7 +736,7 @@ export default function App(){
 
   // Agenda Preventiva (mensal)
   const [agendaPrev,setAgendaPrev]=useState({});
-  const [agpRegion,setAgpRegion]=useState("metropolitana");
+  const [agpRegion,setAgpRegion]=useState("todas");
   const [agpTech,setAgpTech]=useState("todos");
   const [agpStatus,setAgpStatus]=useState("todos");
   const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
@@ -1557,14 +1557,16 @@ export default function App(){
         {tab==="agenda_prev"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
-          const techs = (agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS)).filter(t=>!NAO_PREVENTIVA.includes(t));
+          const baseTechs = (agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS)).filter(t=>!NAO_PREVENTIVA.includes(t));
+          const techsComDados = Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:[k.slice(0,i),k.slice(i+2)];}).filter(x=>x&&x[1].startsWith(ym)).map(x=>x[0])));
+          const techs = Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
           const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Preventiva</div><div style={{fontSize:13,color:"#888"}}>Planejamento mensal de preventivas — {MESES[agpMonth]} {agpYear}</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Preventiva</div><div style={{fontSize:13,color:"#888"}}>Agenda do técnico no mês — {MESES[agpMonth]} {agpYear}</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                   <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12}}>
                     <option value="todas">🌐 Todas regiões</option>
@@ -1580,41 +1582,46 @@ export default function App(){
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {techsList.map(tech=>{
-                  const key=`${tech}__${ym}`;
-                  const all=agendaPrev[key]||[];
-                  const slots=all.filter(matchSt).slice().sort((a,b)=>(a.data||"").localeCompare(b.data||""));
                   const color=techColor(tech);
-                  const done=all.filter(isDone).length;
+                  const entries=[];
+                  Object.keys(schedule).forEach(k=>{
+                    const i=k.indexOf("__"); if(i<0) return;
+                    const kt=k.slice(0,i), kd=k.slice(i+2);
+                    if(kt!==tech||!kd.startsWith(ym)) return;
+                    (schedule[k]||[]).forEach((s,si)=>{ if(matchSt(s)) entries.push({s,date:kd,key:k,si}); });
+                  });
+                  entries.sort((a,b)=>a.date.localeCompare(b.date));
+                  const done=entries.filter(e=>isDone(e.s)).length;
                   return(
                     <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
                       <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                         <div>
                           <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{all.length} preventiva(s) · {done} concl. · {MESES[agpMonth]}</div>
+                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {done} concl. · {MESES[agpMonth]}</div>
                         </div>
                         <BtnG onClick={()=>{
-                          const client=prompt(`Empresa (preventiva) para ${tech}:`); if(!client)return;
+                          const client=prompt(`Empresa para ${tech}:`); if(!client)return;
                           const pat=prompt("Patrimônio(s):");
                           const dia=prompt("Dia do mês (1 a 31):");
                           const d=Math.min(Math.max(parseInt(dia)||1,1),31);
-                          const data=`${ym}-${String(d).padStart(2,"0")}`;
-                          saveAgendaPrev(key,[...all,{client,patrimonio:pat||"",data,type:"preventivo",status:"agendada"}]);
-                          notify("✅ Preventiva agendada e salva!");
+                          const key=`${tech}__${ym}-${String(d).padStart(2,"0")}`;
+                          saveSched(key,[...(schedule[key]||[]),{client,patrimonio:pat||"",type:"preventivo",status:"agendada"}]);
+                          notify("✅ Atendimento agendado e salvo!");
                         }} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
                       </div>
                       <div style={{padding:"8px 14px"}}>
-                        {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem preventivas{agpStatus!=="todos"?" nesta situação":""}</div>}
-                        {slots.map((s)=>{const realIdx=all.indexOf(s);const st=escSt(s.status);const dia=(s.data||"").slice(8,10);return(
-                          <div key={realIdx} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
+                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos{agpStatus!=="todos"?" nesta situação":""}</div>}
+                        {entries.map((e,ix)=>{const st=escSt(e.s.status);const dia=e.date.slice(8,10);return(
+                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
                             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                               <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia||"?"}</span>
-                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client}</span>
-                              <button onClick={()=>{if(window.confirm("Remover esta preventiva?"))saveAgendaPrev(key,all.filter((_,j)=>j!==realIdx));}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
+                              <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
                             </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{s.patrimonio||"—"}</b></div>
+                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{e.s.patrimonio||"—"}</b></div>
                             <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                              <input type="date" value={s.data||""} onChange={e=>{const ns=[...all];ns[realIdx]={...s,data:e.target.value};saveAgendaPrev(key,ns);}} style={{fontSize:10,padding:"2px 5px"}}/>
-                              <select value={s.status||"agendada"} onChange={e=>{const ns=[...all];ns[realIdx]={...s,status:e.target.value};saveAgendaPrev(key,ns);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
+                              <input type="date" value={e.date} onChange={ev=>{const nd=ev.target.value;if(!nd||nd===e.date)return;const oldArr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);const nk=`${tech}__${nd}`;const nArr=[...(schedule[nk]||[]),{...e.s}];saveSched(e.key,oldArr);saveSched(nk,nArr);}} style={{fontSize:10,padding:"2px 5px"}}/>
+                              <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
                                 {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                               </select>
                             </div>
