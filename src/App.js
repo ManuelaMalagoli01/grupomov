@@ -746,6 +746,13 @@ export default function App(){
 
   // ── TÍTULO DO APP ──
   useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
+  // Desliga e limpa o cache offline (Service Worker) que prendia versões antigas
+  useEffect(()=>{
+    try{
+      if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
+      if(window.caches&&caches.keys){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
+    }catch(e){}
+  },[]);
 
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
