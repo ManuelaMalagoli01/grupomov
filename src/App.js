@@ -4,24 +4,27 @@ import { useState, useRef, useEffect, Fragment } from "react";
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
+let __dbErrShown=false;
 const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
         headers: {"apikey": SUPA_KEY}
       });
+      if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
       const rows = await res.json();
-      return rows.map(r => r.data);
+      return Array.isArray(rows) ? rows.map(r => r.data) : [];
     } catch(e) { console.error("DB get error:", e); return []; }
   },
   async save(table, id, data) {
     try {
-      await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
         method: "POST",
         headers: {"apikey": SUPA_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
         body: JSON.stringify({id, data})
       });
-    } catch(e) { console.error("DB save error:", e); }
+      if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
+    } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); }
   },
   async delete(table, id) {
     try {
