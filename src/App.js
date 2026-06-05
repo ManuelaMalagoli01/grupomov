@@ -744,6 +744,13 @@ export default function App(){
   const [agpStatus,setAgpStatus]=useState("todos");
   const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
   const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
+  const [agTech,setAgTech]=useState(ALL_TECHS[0]);
+  const [agDate,setAgDate]=useState("");
+  const [agEmpresa,setAgEmpresa]=useState("");
+  const [agPat,setAgPat]=useState("");
+  const [agStatus,setAgStatus]=useState("agendada");
+  const [agTipo,setAgTipo]=useState("preventivo");
+  const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
@@ -918,8 +925,7 @@ export default function App(){
           {[
             ["relatorios","📋 Relatórios"],
             ["oficina","🔧 Oficina"],
-            ["escala","📅 Escala"],
-            ["agenda_prev","🗓 Agenda Preventiva"],
+            ["agenda_prev","🗓 Agenda"],
             ["dashboard","📊 Dashboard"],
             ["mau_uso","⚠️ Mau Uso"],
             ["a_faturar","💰 A Faturar"],
@@ -1443,133 +1449,28 @@ export default function App(){
         )}
 
         {/* ── ESCALA ── */}
-        {tab==="escala"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📅 Escala Diária</div><div style={{fontSize:13,color:"#888"}}>Atendimentos por técnico no dia</div></div>
-              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                <select value={schedRegion} onChange={e=>{setSchedRegion(e.target.value);setSchedType("preventivo");}} style={{fontSize:12}}>
-                  <option value="todas">🌐 Visão Geral</option>
-                  <option value="metropolitana">Metropolitana BH</option>
-                  <option value="roca">Roca</option>
-                  <option value="centroOeste">Centro-Oeste</option>
-                </select>
-                {schedRegion!=="todas"&&<select value={schedType} onChange={e=>setSchedType(e.target.value)} style={{fontSize:12}}><option value="preventivo">Preventiva</option><option value="corretivo">Corretiva</option></select>}
-                <select value={schedFilterTech||"todos"} onChange={e=>setSchedFilterTech(e.target.value)} style={{fontSize:12}}>
-                  <option value="todos">Todos os técnicos</option>
-                  {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
-                </select>
-                <select value={escalaStatusFilter} onChange={e=>setEscalaStatusFilter(e.target.value)} style={{fontSize:12}}>
-                  <option value="todos">Todas as situações</option>
-                  {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
-                </select>
-                <input type="date" value={schedDate} onChange={e=>setSchedDate(e.target.value)} style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:8}}/>
-              </div>
-            </div>
-
-            {/* VISÃO GERAL — todos técnicos escalados no dia */}
-            {schedRegion==="todas"?(()=>{
-              const matchSt=s=>escalaStatusFilter==="todos"||s.status===escalaStatusFilter;
-              const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
-              const tecnicosEscalados = ALL_TECHS.filter(tech=>{
-                if(schedFilterTech!=="todos"&&tech!==schedFilterTech) return false;
-                return (schedule[`${tech}__${schedDate}`]||[]).filter(matchSt).length>0;
-              });
-              return(
-                <div>
-                  <div className="card" style={{padding:"16px 20px",marginBottom:16,background:"#FFFBF0",border:"1px solid #FFE8A0"}}>
-                    <div style={{fontSize:13,color:"#C47D00",fontWeight:800,marginBottom:12}}>
-                      📅 {schedDate||"Selecione uma data"} — {tecnicosEscalados.length} técnico(s) escalado(s)
-                    </div>
-                    {tecnicosEscalados.length===0?(
-                      <div style={{fontSize:13,color:"#AAA"}}>Nenhum atendimento nesta data/filtro. Selecione uma região para adicionar atendimentos.</div>
-                    ):(
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
-                        {tecnicosEscalados.map(tech=>{
-                          const slots=(schedule[`${tech}__${schedDate}`]||[]).filter(matchSt);
-                          const color=techColor(tech);
-                          const done=slots.filter(isDone).length;
-                          return(
-                            <div key={tech} style={{background:"#FFF",border:`2px solid ${color}`,borderRadius:12,padding:"12px 14px"}}>
-                              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
-                                <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>
-                                <span style={{fontWeight:800,fontSize:14}}>{tech}</span>
-                                <span style={{marginLeft:"auto",fontSize:11,color:"#888",fontWeight:700}}>{done}/{slots.length} concl.</span>
-                              </div>
-                              {slots.map((s,i)=>{const st=escSt(s.status);return(
-                                <div key={i} style={{padding:"7px 9px",marginBottom:6,borderRadius:8,background:"#FAFAFA",border:"1px solid #F0F0F0"}}>
-                                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
-                                    <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client||"—"}</span>
-                                    <span style={{fontSize:9,fontWeight:800,color:s.type==="corretivo"?"#C62828":"#1565C0",background:s.type==="corretivo"?"#FFF0F0":"#F0F4FF",padding:"1px 7px",borderRadius:10,textTransform:"uppercase"}}>{s.type==="corretivo"?"Corretiva":"Preventiva"}</span>
-                                  </div>
-                                  <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{s.patrimonio||"—"}</b></div>
-                                  <span style={{fontSize:10,fontWeight:800,color:st.c,background:st.bg,padding:"2px 8px",borderRadius:10}}>{st.l}</span>
-                                </div>
-                              );})}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{fontSize:12,color:"#AAA",textAlign:"center"}}>Selecione uma região no filtro acima para adicionar/editar atendimentos de um técnico.</div>
-                </div>
-              );
-            })():(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {techsForSched.filter(t=>schedFilterTech==="todos"||t===schedFilterTech).map(tech=>{
-                  const key=`${tech}__${schedDate}`;
-                  const allSlots=schedule[key]||[];
-                  const slots=allSlots.filter(s=>escalaStatusFilter==="todos"||s.status===escalaStatusFilter);
-                  const color=techColor(tech);
-                  const done=allSlots.filter(s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida").length;
-                  return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div>
-                          <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{allSlots.length} atendimento(s) · {done} concluído(s) · {schedDate}</div>
-                        </div>
-                        <BtnG onClick={()=>{const client=prompt(`Empresa atendida por ${tech}:`);if(client){const pat=prompt("Patrimônio(s):");const tip=schedType||"preventivo";saveSched(key,[...allSlots,{client,patrimonio:pat||"",type:tip,status:"agendada"}]);notify("✅ Salvo no sistema!");}}} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
-                      </div>
-                      <div style={{padding:"8px 14px"}}>
-                        {slots.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos{escalaStatusFilter!=="todos"?" nesta situação":""}</div>}
-                        {slots.map((s)=>{const realIdx=allSlots.indexOf(s);const st=escSt(s.status);return(
-                          <div key={realIdx} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.client}</span>
-                              <span style={{fontSize:9,fontWeight:800,color:s.type==="corretivo"?"#C62828":"#1565C0",background:s.type==="corretivo"?"#FFF0F0":"#F0F4FF",padding:"1px 7px",borderRadius:10,textTransform:"uppercase"}}>{s.type==="corretivo"?"Corretiva":"Preventiva"}</span>
-                              <button onClick={()=>{if(window.confirm("Remover este atendimento?"))saveSched(key,allSlots.filter((_,j)=>j!==realIdx));}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
-                            </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{s.patrimonio||"—"}</b></div>
-                            <select value={s.status||"agendada"} onChange={e=>{const ns=[...allSlots];ns[realIdx]={...s,status:e.target.value};saveSched(key,ns);}} style={{fontSize:11,padding:"3px 7px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,width:"100%"}}>
-                              {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
-                            </select>
-                          </div>
-                        );})}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── AGENDA PREVENTIVA (mensal) ── */}
+        {/* ── AGENDA (mensal, todos os técnicos) ── */}
         {tab==="agenda_prev"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
-          const baseTechs = (agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS)).filter(t=>!NAO_PREVENTIVA.includes(t));
-          const techsComDados = Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:[k.slice(0,i),k.slice(i+2)];}).filter(x=>x&&x[1].startsWith(ym)).map(x=>x[0])));
-          const techs = Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
+          const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
           const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
+          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:[k.slice(0,i),k.slice(i+2)];}).filter(x=>x&&x[1].startsWith(ym)).map(x=>x[0])));
+          const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
+          const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
+          const addAtend=()=>{
+            if(!agEmpresa||!agDate){alert("Preencha ao menos Empresa e Dia.");return;}
+            const key=`${agTech}__${agDate}`;
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus}]);
+            setAgEmpresa("");setAgPat("");
+            notify("✅ Atendimento salvo!");
+          };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Preventiva</div><div style={{fontSize:13,color:"#888"}}>Agenda do técnico no mês — {MESES[agpMonth]} {agpYear}</div></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda</div><div style={{fontSize:13,color:"#888"}}>Agenda mensal de todos os técnicos — {MESES[agpMonth]} {agpYear}</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                   <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12}}>
                     <option value="todas">🌐 Todas regiões</option>
@@ -1578,11 +1479,26 @@ export default function App(){
                     <option value="centroOeste">Centro-Oeste</option>
                   </select>
                   <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
                   <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todas as situações</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
+
+              <div className="card" style={{padding:14,marginBottom:18}}>
+                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
+                  <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
+                  <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <BtnY onClick={addAtend}>Adicionar</BtnY>
+                </div>
+              </div>
+
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
@@ -1591,37 +1507,26 @@ export default function App(){
                     const i=k.indexOf("__"); if(i<0) return;
                     const kt=k.slice(0,i), kd=k.slice(i+2);
                     if(kt!==tech||!kd.startsWith(ym)) return;
-                    (schedule[k]||[]).forEach((s,si)=>{ if(matchSt(s)) entries.push({s,date:kd,key:k,si}); });
+                    (schedule[k]||[]).forEach((s,si)=>{ if(matchSt(s)&&matchTipo(s)) entries.push({s,date:kd,key:k,si}); });
                   });
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   const done=entries.filter(e=>isDone(e.s)).length;
                   return(
                     <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div>
-                          <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                          <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {done} concl. · {MESES[agpMonth]}</div>
-                        </div>
-                        <BtnG onClick={()=>{
-                          const client=prompt(`Empresa para ${tech}:`); if(!client)return;
-                          const pat=prompt("Patrimônio(s):");
-                          const dia=prompt("Dia do mês (1 a 31):");
-                          const d=Math.min(Math.max(parseInt(dia)||1,1),31);
-                          const key=`${tech}__${ym}-${String(d).padStart(2,"0")}`;
-                          saveSched(key,[...(schedule[key]||[]),{client,patrimonio:pat||"",type:"preventivo",status:"agendada"}]);
-                          notify("✅ Atendimento agendado e salvo!");
-                        }} style={{fontSize:11,padding:"5px 10px"}}>+ Add</BtnG>
+                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {done} concl. · {MESES[agpMonth]}</div>
                       </div>
                       <div style={{padding:"8px 14px"}}>
-                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos{agpStatus!=="todos"?" nesta situação":""}</div>}
-                        {entries.map((e,ix)=>{const st=escSt(e.s.status);const dia=e.date.slice(8,10);return(
+                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
+                        {entries.map((e,ix)=>{const st=escSt(e.s.status);const dia=e.date.slice(8,10);const tipoLbl=(e.s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo";return(
                           <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
                             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                               <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia||"?"}</span>
                               <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
                               <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
                             </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ Patrimônio: <b style={{color:"#555"}}>{e.s.patrimonio||"—"}</b></div>
+                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
                             <div style={{display:"flex",gap:6,alignItems:"center"}}>
                               <input type="date" value={e.date} onChange={ev=>{const nd=ev.target.value;if(!nd||nd===e.date)return;const oldArr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);const nk=`${tech}__${nd}`;const nArr=[...(schedule[nk]||[]),{...e.s}];saveSched(e.key,oldArr);saveSched(nk,nArr);}} style={{fontSize:10,padding:"2px 5px"}}/>
                               <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
