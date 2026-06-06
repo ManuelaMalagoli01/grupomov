@@ -44,12 +44,12 @@ const USERS = [
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:false },
 ];
 const REGIONS = {
-  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Denison"] },
+  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
   roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
   centroOeste:  { label:"Centro-Oeste",      techs:["Bruno","Marcus"] },
 };
-const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme","Denison"];
-const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Denison"];
+const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
+const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
 const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
@@ -750,6 +750,8 @@ export default function App(){
   const [agPat,setAgPat]=useState("");
   const [agStatus,setAgStatus]=useState("agendada");
   const [agTipo,setAgTipo]=useState("preventivo");
+  const [agEntrada,setAgEntrada]=useState("");
+  const [agSaida,setAgSaida]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
@@ -815,11 +817,11 @@ export default function App(){
   const delReq=(id)=>{ setRequisicoes(p=>p.filter(x=>x.id!==id)); db.delete("requisicoes",id); };
   // Uber — salvar no banco
   const updateUber=(id,changes)=>{ setUberPedidos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("uber_pedidos",id,row); return np; }); };
-  const addUber=()=>{ const row={id:`UBR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,solicitante:"",departamento:"MANUTENÇÃO",motivo:"",empresa:"",relatorio:"",endereco:"",valor:"",status:"pendente",obs:""}; setUberPedidos(p=>[row,...p]); db.save("uber_pedidos",row.id,row); notify("✅ Pedido criado e salvo!"); };
+  const addUber=()=>{ const row={id:`UBR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,solicitante:"",departamento:"MANUTENÇÃO",motivo:"",empresa:"",patrimonio:"",relatorio:"",endereco:"",valor:"",status:"pendente",obs:""}; setUberPedidos(p=>[row,...p]); db.save("uber_pedidos",row.id,row); notify("✅ Pedido criado e salvo!"); };
   const delUber=(id)=>{ setUberPedidos(p=>p.filter(x=>x.id!==id)); db.delete("uber_pedidos",id); };
   // Financeiro — salvar no banco
   const updateFin=(id,changes)=>{ setFinanceiro(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("financeiro",id,row); return np; }); };
-  const addFin=()=>{ const row={id:`FIN${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",tecnico:ALL_TECHS[0],solicitacao:"combustivel",atendimento:"",valor:"",situacao:"pendente",acerto:"nao",dataAcerto:"",reembolso:"nao",valorReembolso:"",ticketReembolso:""}; setFinanceiro(p=>[row,...p]); db.save("financeiro",row.id,row); notify("✅ Lançamento criado e salvo!"); };
+  const addFin=()=>{ const row={id:`FIN${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",tecnico:ALL_TECHS[0],solicitacao:"combustivel",atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",dataAcerto:"",reembolso:"nao",valorReembolso:"",ticketReembolso:""}; setFinanceiro(p=>[row,...p]); db.save("financeiro",row.id,row); notify("✅ Lançamento criado e salvo!"); };
   const delFin=(id)=>{ setFinanceiro(p=>p.filter(x=>x.id!==id)); db.delete("financeiro",id); };
   // CRUD genérico (salva no banco) para abas novas
   const mkCrud=(table,setFn)=>({
@@ -864,8 +866,10 @@ export default function App(){
     return d!==null&&d<0;
   }).length;
 
-  const techsForSched=schedRegion==="todas"?ALL_TECHS:schedRegion==="metropolitana"?(schedType==="preventivo"?METRO_PREV:METRO_CORR):(REGIONS[schedRegion]?.techs||[]);
-  const agendaTechs=agendaRegion==="todas"?ALL_TECHS:agendaRegion==="metropolitana"?METRO_PREV:(REGIONS[agendaRegion]?.techs||[]);
+  // Lista achatada dos atendimentos da Agenda (para o Dashboard)
+  const techRegionMap={}; Object.entries(REGIONS).forEach(([rk,rv])=>rv.techs.forEach(t=>{techRegionMap[t]=rk;}));
+  const agendaAtendimentos=[];
+  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas,empresa:s.client||"",patrimonio:s.patrimonio||""})); });
 
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);notify(`Bem-vinda, ${u.name}!`);}}/>;
 
@@ -923,7 +927,7 @@ export default function App(){
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
           {[
-            ["relatorios","📋 Relatórios"],
+            ["relatorios","📋 Conferência de Relatórios"],
             ["oficina","🔧 Oficina"],
             ["agenda_prev","🗓 Agenda"],
             ["dashboard","📊 Dashboard"],
@@ -931,7 +935,6 @@ export default function App(){
             ["a_faturar","💰 A Faturar"],
             ["emprestimos","🔄 Req. Empréstimo"],
             ["saida_entrada","📦 Saída/Entrada"],
-            ["requisicoes","📦 Requisições"],
             ["uber","🚗 Uber"],
             ["financeiro","💰 Financeiro"],
             ["pendencias_frota","🚜 Pendências Frota"],
@@ -994,15 +997,15 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
                   <tbody>
-                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
+                    {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?15:14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
                       const sc=REL_STATUS[d.status]||{color:"#888",bg:"#F5F5F5"};
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
                       const pend=isPendentePecas(d.status);
-                      const nCols=user.canDelete?16:15;
+                      const nCols=user.canDelete?15:14;
                       return(
                         <Fragment key={d.id}>
                         <tr style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
@@ -1017,7 +1020,6 @@ export default function App(){
                           <td><input type="text" value={d.acao||""} onChange={e=>updateReport(d.id,{acao:e.target.value})} placeholder="Ação..." style={{width:160,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="time" value={d.horaEntrada||""} onChange={e=>{const v=e.target.value;updateReport(d.id,{horaEntrada:v,horasTrabalhadas:calcHoras(v,d.horaSaida)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="time" value={d.horaSaida||""} onChange={e=>{const v=e.target.value;updateReport(d.id,{horaSaida:v,horasTrabalhadas:calcHoras(d.horaEntrada,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td style={{textAlign:"center"}}><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{d.horasTrabalhadas||calcHoras(d.horaEntrada,d.horaSaida)||"—"}</span></td>
                           <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
@@ -1028,8 +1030,12 @@ export default function App(){
                             <td colSpan={nCols} style={{padding:"0 12px 12px"}}>
                               <div style={{background:"#FFF7E0",borderLeft:"4px solid #F5C800",borderRadius:8,padding:"10px 14px"}}>
                                 <div style={{fontSize:10,fontWeight:800,color:"#92600A",letterSpacing:.5,marginBottom:8}}>⚠️ PEÇAS PENDENTES — acompanhamento</div>
-                                <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
+                                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10}}>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>REQUISIÇÃO</span><input type="text" value={d.requisicaoPeca||""} onChange={e=>updateReport(d.id,{requisicaoPeca:e.target.value})} placeholder="REQ-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>QUANTIDADE</span><input type="number" min="0" value={d.qtdPeca||""} onChange={e=>updateReport(d.id,{qtdPeca:e.target.value})} placeholder="0" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>CÓDIGO</span><input type="text" value={d.codPeca||""} onChange={e=>updateReport(d.id,{codPeca:e.target.value})} placeholder="COD-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>PEÇA</span><input type="text" value={d.pecaNome||""} onChange={e=>updateReport(d.id,{pecaNome:e.target.value})} placeholder="Nome da peça" style={{fontSize:11,padding:"4px 6px"}}/></div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>STATUS PEÇA</span><select value={d.statusPeca||"separada"} onChange={e=>updateReport(d.id,{statusPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px",fontWeight:700,color:d.statusPeca==="ruptura"?"#C62828":d.statusPeca==="atendido"?"#1A7A3C":"#1565C0"}}><option value="separada">Separada</option><option value="ruptura">Ruptura</option><option value="atendido">Atendido</option></select></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>DATA PEÇA</span><input type="date" value={d.dataPeca||""} onChange={e=>updateReport(d.id,{dataPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}/></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>EXECUTADO</span><select value={d.execPeca||""} onChange={e=>updateReport(d.id,{execPeca:e.target.value})} style={{fontSize:11,padding:"4px 6px"}}>{EXECUTADO_OPTS.map(o=><option key={o} value={o}>{o||"—"}</option>)}</select></div>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>CHAMADO</span><input type="text" value={d.chamadoPeca||""} onChange={e=>updateReport(d.id,{chamadoPeca:e.target.value})} placeholder="—" style={{fontSize:11,padding:"4px 6px"}}/></div>
@@ -1342,113 +1348,6 @@ export default function App(){
         )}
 
         {/* ── REQUISIÇÕES ── */}
-        {tab==="requisicoes"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições de Peças</div>
-                <div style={{fontSize:13,color:"#888"}}>{requisicoes.length} requisição(ões)</div>
-              </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqReq(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqReq?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqReq?"✓ Ver Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={addReq}>+ Nova Requisição</BtnY></div>
-            </div>
-
-            {/* Filtros */}
-            <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
-              <span style={{fontSize:11,color:"#999",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>Filtrar:</span>
-              {[
-                {v:"todos",l:"Todas"},
-                {v:"reservada",l:"🔒 Reservadas"},
-                {v:"entregue",l:"✅ Entregues"},
-                {v:"ruptura",l:"🚨 Ruptura"},
-                {v:"sem_retorno",l:"⚠️ Sem Retorno"},
-              ].map(f=>{
-                const count = f.v==="todos" ? requisicoes.length
-                  : f.v==="sem_retorno" ? requisicoes.filter(r=>r.status==="entregue"&&!r.dataEntrega).length
-                  : requisicoes.filter(r=>r.status===f.v).length;
-                const active = (filterReqStatus||"todos")===f.v;
-                return(
-                  <button key={f.v} onClick={()=>setFilterReqStatus(f.v==="todos"?"todos":f.v)}
-                    style={{padding:"6px 14px",borderRadius:8,border:`2px solid ${active?"#F5C800":"#E0E0E0"}`,background:active?"#FFFBF0":"#FFF",fontWeight:600,fontSize:12,cursor:"pointer",color:active?"#C47D00":"#888",fontFamily:"inherit"}}>
-                    {f.l} <span style={{fontSize:10,background:active?"#F5C800":"#F0F0F0",color:active?"#1A1A1A":"#888",borderRadius:10,padding:"1px 6px",marginLeft:4}}>{count}</span>
-                  </button>
-                );
-              })}
-              {filterReqStatus&&filterReqStatus!=="todos"&&<BtnG onClick={()=>setFilterReqStatus("todos")} style={{fontSize:11}}>✕ Limpar</BtnG>}
-            </div>
-
-            {/* Alerta sem retorno */}
-            {(()=>{
-              const semRetorno=requisicoes.filter(r=>r.status==="entregue"&&!r.dataEntrega);
-              return semRetorno.length>0?(
-                <div style={{background:"#FFF8F0",border:"1px solid #FFE8A0",borderRadius:10,padding:"10px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:14}}>⚠️</span>
-                  <span style={{fontSize:13,color:"#C47D00",fontWeight:600}}>{semRetorno.length} requisição(ões) entregue(s) sem data de retorno — peças a devolver ao estoque!</span>
-                </div>
-              ):null;
-            })()}
-
-            {requisicoes.length===0?(
-              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma requisição. Clique em "+ Nova Requisição".</div>
-            ):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead><tr><th>Data</th><th>Nº Req.</th><th>Nome Peça</th><th>Código</th><th>Qtd.</th><th>Atendimento</th><th>Nº Relatório</th><th>Patrimônio</th><th>Técnico</th><th>Situação</th><th>Status</th><th>Execução</th><th>Técnico Entrega</th><th>Data Entrega</th><th>Previsão</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                    <tbody>
-                      {requisicoes.filter(r=>{
-                        const f=filterReqStatus||"sem_retorno";
-                        if(f==="todos") return true;
-                        if(f==="sem_retorno") return r.status!=="entregue"||(r.status==="entregue"&&!r.dataEntrega);
-                        return r.status===f;
-                      }).map(r=>(
-                        <tr key={r.id} style={{background:r.status==="entregue"&&!r.dataEntrega?"#FFFBF0":""}}>
-                          <td><input type="date" value={r.dataRequisicao||""} onChange={e=>updateReq(r.id,{dataRequisicao:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={r.numRequisicao||""} onChange={e=>updateReq(r.id,{numRequisicao:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="REQ-001"/></td>
-                          <td><input type="text" value={r.nomePeca||""} onChange={e=>updateReq(r.id,{nomePeca:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}} placeholder="Nome da peça"/></td>
-                          <td><input type="text" value={r.codigoPeca||""} onChange={e=>updateReq(r.id,{codigoPeca:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="COD-001"/></td>
-                          <td><input type="number" min="0" value={r.quantidade||""} onChange={e=>updateReq(r.id,{quantidade:e.target.value})} style={{width:60,fontSize:11,padding:"3px 6px"}} placeholder="0"/></td>
-                          <td><select value={r.atendimento||"corretivo"} onChange={e=>updateReq(r.id,{atendimento:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option><option value="mau_uso">Mau Uso</option><option value="a_faturar">A Faturar</option></select></td>
-                          <td><input type="text" value={r.numRelatorio||""} onChange={e=>updateReq(r.id,{numRelatorio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
-                          <td><input type="text" value={r.patrimonio||""} onChange={e=>updateReq(r.id,{patrimonio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
-                          <td><select value={r.tecnico||""} onChange={e=>updateReq(r.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td>
-                            <select value={r.situacao||"reservada"} onChange={e=>updateReq(r.id,{situacao:e.target.value})}
-                              style={{fontSize:11,padding:"3px 6px",color:r.situacao==="ruptura"?"#C62828":r.situacao==="parcial"?"#E67E00":"#1565C0",fontWeight:700,background:r.situacao==="ruptura"?"#FFF0F0":r.situacao==="parcial"?"#FFF8F0":"#F0F4FF",border:"none",borderRadius:5}}>
-                              <option value="reservada">🔒 Reservada no Suporte</option>
-                              <option value="parcial">⚠️ Parcialmente Atendida</option>
-                              <option value="ruptura">🚨 Ruptura</option>
-                            </select>
-                            {(r.situacao==="parcial"||r.situacao==="ruptura")&&
-                              <input type="date" value={r.dataEntregaParcial||""} onChange={e=>updateReq(r.id,{dataEntregaParcial:e.target.value})}
-                                placeholder="Data entrega" style={{width:120,fontSize:10,padding:"2px 5px",marginTop:3,display:"block",color:"#C62828"}}/>
-                            }
-                          </td>
-                          <td><select value={r.status} onChange={e=>updateReq(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:r.status==="entregue"?"#1A7A3C":r.status==="ruptura"?"#C62828":"#1565C0",fontWeight:700,background:r.status==="entregue"?"#F0FFF5":r.status==="ruptura"?"#FFF0F0":"#F0F4FF",border:"none",borderRadius:5}}><option value="reservada">🔒 Reservada no Suporte</option><option value="entregue">✅ Entregue</option><option value="ruptura">🚨 Ruptura</option></select></td>
-                          <td>
-                            <div style={{display:"flex",flexDirection:"column",gap:3,minWidth:150}}>
-                              <input type="date" value={r.dataExecucao||""} onChange={e=>updateReq(r.id,{dataExecucao:e.target.value})} title="Data de execução" style={{fontSize:10,padding:"2px 5px"}}/>
-                              <select value={r.tecnicoExecucao||""} onChange={e=>updateReq(r.id,{tecnicoExecucao:e.target.value})} title="Técnico" style={{fontSize:10,padding:"2px 5px"}}><option value="">Técnico…</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                              <input type="text" value={r.relatorioExecucao||""} onChange={e=>updateReq(r.id,{relatorioExecucao:e.target.value})} title="Relatório" placeholder="Relatório" style={{fontSize:10,padding:"2px 5px"}}/>
-                              <select value={r.concluido||"pendente"} onChange={e=>updateReq(r.id,{concluido:e.target.value})} style={{fontSize:10,padding:"2px 5px",fontWeight:700,color:r.concluido==="concluido"?"#1A7A3C":"#888",background:r.concluido==="concluido"?"#F0FFF5":"#F5F5F5",border:"none",borderRadius:4}}><option value="pendente">Pendente</option><option value="concluido">✅ Concluído</option></select>
-                            </div>
-                          </td>
-                          <td><select value={r.tecnicoEntrega||""} onChange={e=>updateReq(r.id,{tecnicoEntrega:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="">—</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                          <td><input type="date" value={r.dataEntrega||""} onChange={e=>updateReq(r.id,{dataEntrega:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={r.previsaoChegada||""} onChange={e=>updateReq(r.id,{previsaoChegada:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="DD/MM/AAAA"/></td>
-                          <td><PSSelect value={r.processoStatus} onChange={v=>updateReq(r.id,{processoStatus:v})}/></td>
-                          <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir esta requisição?"))delReq(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── ESCALA ── */}
         {/* ── AGENDA (mensal, todos os técnicos) ── */}
         {tab==="agenda_prev"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -1461,10 +1360,11 @@ export default function App(){
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
           const addAtend=()=>{
-            if(!agEmpresa||!agDate){alert("Preencha ao menos Empresa e Dia.");return;}
-            const key=`${agTech}__${agDate}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus}]);
-            setAgEmpresa("");setAgPat("");
+            const dataFinal=agDate||`${ym}-01`;
+            if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
+            const key=`${agTech}__${dataFinal}`;
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
+            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -1493,6 +1393,8 @@ export default function App(){
                   <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
                   <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
                   <select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <BtnY onClick={addAtend}>Adicionar</BtnY>
@@ -1527,6 +1429,11 @@ export default function App(){
                               <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
                             </div>
                             <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
+                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
+                              <input type="time" value={e.s.horaEntrada||""} title="Entrada" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <input type="time" value={e.s.horaSaida||""} title="Saída" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
+                            </div>
                             <div style={{display:"flex",gap:6,alignItems:"center"}}>
                               <input type="date" value={e.date} onChange={ev=>{const nd=ev.target.value;if(!nd||nd===e.date)return;const oldArr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);const nk=`${tech}__${nd}`;const nArr=[...(schedule[nk]||[]),{...e.s}];saveSched(e.key,oldArr);saveSched(nk,nArr);}} style={{fontSize:10,padding:"2px 5px"}}/>
                               <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
@@ -1553,7 +1460,7 @@ export default function App(){
             {(()=>{
               const chartTitle={fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.date||d.date<dashFrom))return false; if(dashTo&&(!d.date||d.date>dashTo))return false; return true; };
-              const dashReports=reports.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&inRange(d));
+              const dashReports=agendaAtendimentos.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&inRange(d));
               const prev=dashReports.filter(r=>r.type==="preventivo").length;
               const corr=dashReports.filter(r=>r.type==="corretivo").length;
               const totalPC=prev+corr;
@@ -1574,7 +1481,7 @@ export default function App(){
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:12}}/></div>
                     {(dashRegion!=="todas"||dashFrom||dashTo)&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");}}>✕ Limpar</BtnG>}
-                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} relatório(s) no filtro</span>
+                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} atendimento(s) no filtro</span>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
                     <div className="card" style={{padding:"16px 20px"}}>
@@ -1594,9 +1501,9 @@ export default function App(){
                         options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
                     </div>
                     <div className="card" style={{padding:"16px 20px"}}>
-                      <div style={chartTitle}>Relatórios por técnico</div>
+                      <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
-                        data={{labels:techsWith,datasets:[{label:"Relatórios",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
+                        data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"16px 20px"}}>
@@ -1606,7 +1513,7 @@ export default function App(){
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                   </div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os relatórios)</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
                 </>
               );
             })()}
@@ -1614,9 +1521,9 @@ export default function App(){
             {/* Stats gerais */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
               {[
-                {l:"Total Relatórios",v:reports.length,c:"#1A1A1A"},
-                {l:"Preventivos",v:reports.filter(r=>r.type==="preventivo").length,c:"#1565C0"},
-                {l:"Corretivos",v:reports.filter(r=>r.type==="corretivo").length,c:"#C62828"},
+                {l:"Total Atendimentos",v:agendaAtendimentos.length,c:"#1A1A1A"},
+                {l:"Preventivos",v:agendaAtendimentos.filter(r=>r.type==="preventivo").length,c:"#1565C0"},
+                {l:"Corretivos",v:agendaAtendimentos.filter(r=>r.type==="corretivo").length,c:"#C62828"},
                 {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
               ].map((s,i)=>(
                 <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
@@ -1630,7 +1537,7 @@ export default function App(){
             {(()=>{
               const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-              const mesReps=reports.filter(r=>r.date&&r.date.startsWith(mesAtual));
+              const mesReps=agendaAtendimentos.filter(r=>r.date&&r.date.startsWith(mesAtual));
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
               const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
               return(
@@ -1662,7 +1569,7 @@ export default function App(){
                 const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
                 const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"—";
                 const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-                const techReps=reports.filter(r=>r.tecnico===tech&&r.date&&r.date.startsWith(mesAtual));
+                const techReps=agendaAtendimentos.filter(r=>r.tecnico===tech&&r.date&&r.date.startsWith(mesAtual));
                 const totalMin=techReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
                 const prevs=techReps.filter(r=>r.type==="preventivo").length;
                 const corrs=techReps.filter(r=>r.type==="corretivo").length;
@@ -1738,7 +1645,7 @@ export default function App(){
                     <thead>
                       <tr>
                         <th>Data</th><th>Solicitante</th><th>Departamento</th><th>Motivo</th>
-                        <th>Empresa</th><th>Relatório</th><th>Endereço</th><th>Valor (R$)</th>
+                        <th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Endereço</th><th>Valor (R$)</th>
                         <th>Status</th><th>Obs</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}
                       </tr>
                     </thead>
@@ -1760,6 +1667,7 @@ export default function App(){
                             </select>
                           </td>
                           <td><input type="text" value={p.empresa||""} onChange={e=>updateUber(p.id,{empresa:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Empresa"/></td>
+                          <td><input type="text" value={p.patrimonio||""} onChange={e=>updateUber(p.id,{patrimonio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
                           <td><input type="text" value={p.relatorio||""} onChange={e=>updateUber(p.id,{relatorio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
                           <td><input type="text" value={p.endereco||""} onChange={e=>updateUber(p.id,{endereco:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}} placeholder="Rua, número..."/></td>
                           <td><input type="text" value={p.valor||""} onChange={e=>updateUber(p.id,{valor:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="0,00"/></td>
@@ -1797,7 +1705,7 @@ export default function App(){
                 <div style={{fontSize:13,color:"#888"}}>{financeiro.length} lançamento(s)</div>
               </div>
               <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(financeiro,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Data Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Valor Reembolso"},{key:"ticketReembolso",label:"Ticket Reembolso"},{key:"registradoPor",label:"Registrado por"}])}/>
+                <BtnExcel onClick={()=>exportCSV(financeiro,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"Patrimônio"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Data Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Valor Reembolso"},{key:"ticketReembolso",label:"Ticket Reembolso"},{key:"registradoPor",label:"Registrado por"}])}/>
                 <BtnY onClick={addFin}>+ Novo Lançamento</BtnY>
               </div>
             </div>
@@ -1811,7 +1719,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap">
                   <table>
-                    <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                    <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Patrimônio</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                     <tbody>
                       {financeiro.map(f=>{
                         const pend=f.situacao==="pendente";
@@ -1823,6 +1731,7 @@ export default function App(){
                             <td><select value={f.tecnico||""} onChange={e=>updateFin(f.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
                             <td><select value={f.solicitacao||"combustivel"} onChange={e=>updateFin(f.id,{solicitacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="combustivel">⛽ Combustível</option><option value="alimentacao">🍽️ Alimentação</option><option value="viagem">✈️ Viagem</option><option value="outros">📦 Outros</option></select></td>
                             <td><input type="text" value={f.atendimento||""} onChange={e=>updateFin(f.id,{atendimento:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}} placeholder="Atendimento"/></td>
+                            <td><input type="text" value={f.patrimonio||""} onChange={e=>updateFin(f.id,{patrimonio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
                             <td><input type="text" value={f.valor||""} onChange={e=>updateFin(f.id,{valor:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="R$ 0,00"/></td>
                             <td><select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:pend?"#C62828":"#1A7A3C",background:pend?"#FFF0F0":"#F0FFF5"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select></td>
                             <td><select value={f.acerto||"nao"} onChange={e=>updateFin(f.id,{acerto:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:semAcerto?"#C62828":"#1A7A3C",background:semAcerto?"#FFF0F0":"#F0FFF5"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
@@ -1852,19 +1761,18 @@ export default function App(){
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqFro?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqFro?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],substituicao:"",pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
+                  <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
                 </div>
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data Envio</th><th>Rel</th><th>Empresa</th><th>Técnico</th><th>Substituição</th><th>PAT</th><th>Tipo</th><th>Resolvido</th><th>Novo PAT</th><th>Data</th><th>NF</th><th>Rel Entrega</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data Envio</th><th>Rel</th><th>Empresa</th><th>Técnico</th><th>PAT</th><th>Tipo</th><th>Resolvido</th><th>Novo PAT</th><th>Data</th><th>NF</th><th>Rel Entrega</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>{list.map(r=>{const ok=r.resolvido==="sim";return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.dataEnvio||""} onChange={e=>froCrud.update(r.id,{dataEnvio:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><input type="text" value={r.rel||""} onChange={e=>froCrud.update(r.id,{rel:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
                       <td><input type="text" value={r.empresa||""} onChange={e=>froCrud.update(r.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><select value={r.tecnico||""} onChange={e=>froCrud.update(r.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                      <td><input type="text" value={r.substituicao||""} onChange={e=>froCrud.update(r.id,{substituicao:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><input type="text" value={r.pat||""} onChange={e=>froCrud.update(r.id,{pat:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
                       <td><select value={r.patTipo||"bateria"} onChange={e=>froCrud.update(r.id,{patTipo:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="bateria">🔋 Bateria</option><option value="carregador">🔌 Carregador</option><option value="estrado">🟫 Estrado</option><option value="maquina">🏗️ Máquina</option></select></td>
                       <td><select value={r.resolvido||"nao"} onChange={e=>froCrud.update(r.id,{resolvido:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:ok?"#1A7A3C":"#C62828",background:ok?"#F0FFF5":"#FFF0F0"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
