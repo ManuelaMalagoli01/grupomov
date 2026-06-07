@@ -1,4 +1,4 @@
-/* eslint-disable */
+    /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
@@ -712,6 +712,7 @@ export default function App(){
   const [showArqPri,setShowArqPri]=useState(false);
   const [showArqRh,setShowArqRh]=useState(false);
   const [showArqGus,setShowArqGus]=useState(false);
+  const [dashReqTab,setDashReqTab]=useState("visao_geral");
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -933,8 +934,9 @@ export default function App(){
             ["dashboard","📊 Dashboard"],
             ["mau_uso","⚠️ Mau Uso"],
             ["a_faturar","💰 A Faturar"],
-            ["emprestimos","🔄 Req. Empréstimo"],
-            ["saida_entrada","📦 Saída/Entrada"],
+            ["emprestimos","🔄 Req. Empréstimo e Retorno"],
+            ["saida_entrada","📦 Req. Entrada/Saída"],
+            ["dashboard_req","📊 Dashboard Requisições"],
             ["uber","🚗 Uber"],
             ["financeiro","💰 Financeiro"],
             ["pendencias_frota","🚜 Pendências Frota"],
@@ -955,26 +957,6 @@ export default function App(){
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-              {TIPOS.slice(0,4).map(t=>{
-                const total=t.v==="preventivo"?DB_STATS.preventivos:t.v==="corretivo"?DB_STATS.corretivos:t.v==="a_faturar"?DB_STATS.a_faturar:t.v==="mau_uso"?DB_STATS.mau_uso:reports.filter(r=>r.type===t.v).length;
-                return(
-                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
-                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{filterTipo===t.v?filteredReports.filter(r=>r.type===t.v).length:total}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
-              {TIPOS.slice(4).map(t=>(
-                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
-                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
-                  <div style={{fontSize:24,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{reports.filter(r=>r.type===t.v).length}</div>
-                </div>
-              ))}
-            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={searchText} onChange={e=>setSearchText(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1059,26 +1041,6 @@ export default function App(){
         {/* ── OFICINA (clone de Relatórios, técnicos próprios) ── */}
         {tab==="oficina"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-              {TIPOS.slice(0,4).map(t=>{
-                const total=oficina.filter(r=>r.type===t.v).length;
-                return(
-                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
-                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{ofiTipo===t.v?filteredOficina.filter(r=>r.type===t.v).length:total}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
-              {TIPOS.slice(4).map(t=>(
-                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
-                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
-                  <div style={{fontSize:24,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{oficina.filter(r=>r.type===t.v).length}</div>
-                </div>
-              ))}
-            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={ofiSearch} onChange={e=>setOfiSearch(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1267,7 +1229,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA</th><th>Nº Relatório</th><th>Obs</th><th>Ret.Almox</th><th>Ret.Sistema</th><th>Processo</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1286,12 +1248,10 @@ export default function App(){
                           <td style={{fontSize:11}}>{e.retorno}</td>
                           <td style={{whiteSpace:"nowrap",color:atrasado?"#C62828":"#888",fontWeight:atrasado?700:400,fontSize:11}}>{e.dataRetorno}</td>
                           <td><SlaBadge days={sla}/></td>
-                          <td><input type="text" value={e.numRelatorio||""} onChange={ev=>updateEmp(e.id,{numRelatorio:ev.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.retornoAlmox||""} onChange={ev=>updateEmp(e.id,{retornoAlmox:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.retornoSistema||""} onChange={ev=>updateEmp(e.id,{retornoSistema:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><PSSelect value={e.processoStatus} onChange={v=>updateEmp(e.id,{processoStatus:v})}/></td>
-                          <td><BtnG onClick={()=>{setEditEmp(e);setModalEmp(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
+                          <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={e.dataAplicacao||""} onChange={ev=>updateEmp(e.id,{dataAplicacao:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><select value={e.statusEmp||"pendente"} onChange={ev=>updateEmp(e.id,{statusEmp:ev.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:e.statusEmp==="concluido"?"#1A7A3C":"#C62828",background:e.statusEmp==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
+                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1308,34 +1268,48 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Saída/Entrada</div>
+                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Entrada/Saída</div>
                 <div style={{fontSize:13,color:"#888"}}>{saidaEntrada.length} registros</div>
               </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{setEditSaida(null);setModalSaida(true);}}>+ Nova Saída/Entrada</BtnY></div>
+              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{const row={id:`SAI${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Nova Entrada/Saída</BtnY></div>
             </div>
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Empresa</th><th>Requerente</th><th>Código</th><th>Descrição</th><th>Data Saída</th><th>Data Entrega</th><th>Mês</th><th>REQ Retorno</th><th>Devolução</th><th>Status</th><th>Processo</th><th>Obs</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado").map(s=>{
-                      const devolvido=s.status==="devolvido";
+                      const isRuptura=s.statusReq==="ruptura";
+                      const isAtendido=s.statusReq==="atendido";
+                      const slaRuptura=s.data?diffDays(s.data):null;
                       return(
                         <tr key={s.id}>
-                          <td style={{fontWeight:700}}>{s.req}</td>
-                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.empresa}</td>
-                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.requerente}</td>
-                          <td style={{fontSize:11,color:"#888"}}>{s.codigo}</td>
-                          <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.descricao}</td>
-                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataSaida}</td>
-                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataEntrega}</td>
-                          <td style={{fontSize:11,color:"#888"}}>{s.mes}</td>
-                          <td style={{fontSize:11}}>{s.reqRetorno}</td>
-                          <td style={{whiteSpace:"nowrap",color:devolvido?"#1A7A3C":"#888",fontSize:11}}>{s.devolucao||"—"}</td>
-                          <td><select value={s.status} onChange={e=>updateSaida(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:devolvido?"#1A7A3C":s.status==="em_uso"?"#E67E00":"#C62828",fontWeight:700,background:devolvido?"#F0FFF5":s.status==="em_uso"?"#FFF8F0":"#FFF0F0",border:"none",borderRadius:5}}><option value="pendente">Pendente</option><option value="em_uso">Em Uso</option><option value="devolvido">Devolvido</option></select></td>
-                          <td><input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={s.data||""} onChange={e=>updateSaida(s.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.empresa||""} onChange={e=>updateSaida(s.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.peca||""} onChange={e=>updateSaida(s.id,{peca:e.target.value})} placeholder="Nome da peça" style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.codigo||""} onChange={e=>updateSaida(s.id,{codigo:e.target.value})} placeholder="Cód" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.quantidade||""} onChange={e=>updateSaida(s.id,{quantidade:e.target.value})} placeholder="1" style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
+                          <td><input type="text" value={s.req||""} onChange={e=>updateSaida(s.id,{req:e.target.value})} placeholder="REQ" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td>
+                            <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})}
+                              style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",
+                                color:s.statusReq==="atendido"?"#1A7A3C":s.statusReq==="ruptura"?"#C62828":"#888",
+                                background:s.statusReq==="atendido"?"#F0FFF5":s.statusReq==="ruptura"?"#FFF0F0":"#F8F8F8"}}>
+                              <option value="">Selecione...</option>
+                              <option value="atendido">✅ Atendido</option>
+                              <option value="ruptura">🔴 Ruptura</option>
+                            </select>
+                          </td>
+                          <td>{isRuptura?<SlaBadge days={slaRuptura}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="date" value={s.dataAtendimento||""} onChange={e=>updateSaida(s.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<select value={s.localPeca||""} onChange={e=>updateSaida(s.id,{localPeca:e.target.value})} style={{fontSize:11,padding:"3px 5px",borderRadius:5}}><option value="">Selecione...</option><option value="suporte">📦 Suporte</option><option value="entregue_tecnico">🧑‍🔧 Entregue ao Técnico</option></select>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="date" value={s.dataEntregaTecnico||""} onChange={e=>updateSaida(s.id,{dataEntregaTecnico:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{(isAtendido||isRuptura)?<input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:110,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:s.statusFinal==="concluido"?"#1A7A3C":"#C62828",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td><PSSelect value={s.processoStatus} onChange={v=>updateSaida(s.id,{processoStatus:v})}/></td>
-                          <td><BtnG onClick={()=>{setEditSaida(s);setModalSaida(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1893,6 +1867,122 @@ export default function App(){
           );
         })()}
 
+      {/* ── DASHBOARD REQUISIÇÕES ── */}
+        {tab==="dashboard_req"&&(()=>{
+          const allReqs=[...emprestimos,...saidaEntrada];
+          const totalEmp=emprestimos.length;
+          const totalSai=saidaEntrada.length;
+          const total=allReqs.length;
+          // Rupturas (saída/entrada)
+          const rupturas=saidaEntrada.filter(s=>s.statusReq==="ruptura");
+          const rupturasInfo=rupturas.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
+          // Atendidos
+          const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
+          // Pendentes
+          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length + saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
+          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length + saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
+          // Por técnico (requerente)
+          const byTech={};
+          emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          // Peças aplicadas por relatório
+          const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
+          const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
+          const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
+          // Gráfico: status empréstimos
+          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5"],borderColor:["#C62828","#1A7A3C"],borderWidth:2}]};
+          // Gráfico: status saída/entrada
+          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5","#FFF8F0","#F0F4FF"],borderColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:2}]};
+          // Gráfico: por técnico
+          const techLabels=Object.keys(byTech);
+          const techValues=techLabels.map(t=>byTech[t]);
+          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C800",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
+
+          const KPI=({label,value,color="#1A1A1A",bg="#FFF",icon})=>(
+            <div className="card" style={{padding:"16px 20px",background:bg,display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
+              <div style={{fontSize:32,fontWeight:800,color,lineHeight:1}}>{value}</div>
+            </div>
+          );
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Requisições</div>
+
+              {/* KPIs */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
+                <KPI icon="📦" label="Total Requisições" value={total}/>
+                <KPI icon="🔄" label="Empréstimo e Retorno" value={totalEmp}/>
+                <KPI icon="📤" label="Entrada/Saída" value={totalSai}/>
+                <KPI icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF0F0"/>
+                <KPI icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+                <KPI icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
+                <KPI icon="✅" label="Atendidos (S/E)" value={atendidos} color="#1A7A3C" bg="#F0FFF5"/>
+                <KPI icon="🔧" label="Peças Aplicadas c/ Relatório" value={todasPecasAplicadas.length}/>
+              </div>
+
+              {/* Gráficos */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:20}}>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Empréstimo e Retorno</div>
+                  <ChartCanvas type="doughnut" data={chartStatusEmpData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Entrada/Saída</div>
+                  <ChartCanvas type="doughnut" data={chartStatusSaiData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Requisições por Técnico/Requerente</div>
+                  <ChartCanvas type="bar" data={chartTechData} options={{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},indexAxis:"y"}} height={200}/>
+                </div>
+              </div>
+
+              {/* Rupturas detalhadas */}
+              {rupturas.length>0&&(
+                <div className="card" style={{padding:16,marginBottom:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas — Detalhamento ({rupturas.length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias em ruptura)</th></tr></thead>
+                    <tbody>{rupturasInfo.map((r,i)=>(
+                      <tr key={i}>
+                        <td style={{fontWeight:700}}>{r.peca}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{r.codigo}</td>
+                        <td>{r.empresa}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{rupturas[i]?.data||"—"}</td>
+                        <td><SlaBadge days={r.dias}/></td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+
+              {/* Peças aplicadas por relatório */}
+              {todasPecasAplicadas.length>0&&(
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Peças Aplicadas por Relatório ({todasPecasAplicadas.length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Relatório</th><th>Peça</th><th>Empresa/Requerente</th></tr></thead>
+                    <tbody>{todasPecasAplicadas.map((p,i)=>(
+                      <tr key={i}>
+                        <td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td>
+                        <td>{p.peca}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{p.empresa}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+              {todasPecasAplicadas.length===0&&rupturas.length===0&&total===0&&(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                  Nenhuma requisição cadastrada ainda.
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
       {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
       {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
@@ -1905,3 +1995,5 @@ export default function App(){
     </div>
   );
 }
+
+    
