@@ -964,7 +964,6 @@ export default function App(){
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
           {[
             ["relatorios","📋 Conferência de Relatórios",false,true],
-            ["oficina","🔧 Oficina",false,false],
             ["apontamentos_oficina","📝 Apontamentos Oficina",false,false],
             ["agenda_ofi","🗓 Agenda Oficina",false,false],
             ["dashboard_ofi","📊 Dashboard Oficina",false,false],
