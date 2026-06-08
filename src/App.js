@@ -665,6 +665,7 @@ export default function App(){
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
+  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
   const [processosAF,setProcessosAF]=useState([]);
