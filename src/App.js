@@ -740,6 +740,7 @@ export default function App(){
   const [ofiNovaTech,setOfiNovaTech]=useState("todos");
   const [ofiNovaServ,setOfiNovaServ]=useState("todos");
   const [apontamentos,setApontamentos]=useState([]);
+  const [sas,setSas]=useState([]);
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -797,12 +798,12 @@ export default function App(){
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
     const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows] = await Promise.all([
         db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
         db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
         db.get("uber_pedidos"), db.get("escala"), db.get("usuarios"), db.get("financeiro"),
         db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina"),
-        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina")
+        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina"), db.get("sas"), db.get("carros")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -820,6 +821,8 @@ export default function App(){
       if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi(ao); }
       if(hebRows.length>0) setPendHebert(hebRows);
       if(apRows.length>0) setApontamentos(apRows);
+      if(sasRows.length>0) setSas(sasRows);
+      if(carrosRows.length>0) setCarros(carrosRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
@@ -866,6 +869,13 @@ export default function App(){
   const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
   const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
+  const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
+  const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
+  const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
+  const [carros,setCarros]=useState([]);
+  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
+  const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:"",tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:""}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); notify("✅ Registro criado!"); };
+  const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
@@ -963,27 +973,30 @@ export default function App(){
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
           {[
-            ["relatorios","📋 Conferência de Relatórios",false,true],
-            ["apontamentos_oficina","📝 Apontamentos Oficina",false,false],
-            ["agenda_ofi","🗓 Agenda Oficina",false,false],
-            ["dashboard_ofi","📊 Dashboard Oficina",false,false],
-            ["agenda_prev","🗓 Agenda",false,true],
-            ["dashboard","📊 Dashboard",false,true],
-            ["mau_uso","⚠️ Mau Uso",false,true],
-            ["a_faturar","💰 A Faturar",false,true],
-            ["emprestimos","🔄 Req. Empréstimo e Retorno",false,true],
-            ["saida_entrada","📦 Req. Entrada/Saída",false,true],
-            ["dashboard_req","📊 Dashboard Requisições",false,true],
-            ["uber","🚗 Uber",false,true],
-            ["financeiro","💰 Financeiro",false,true],
-            ["pendencias_frota","🚜 Pendências Frota",false,true],
-            ["prioridades_clientes","⭐ Prioridades Clientes",true,true],
-            ["rh_fiscal","🧾 RH-Fiscal",true,true],
-            ["pendencias_gustavo","📌 Pendências Gustavo",true,true],
-            ["pendencias_hebert","🔧 Pendências Hebert",false,false,true],
-          ].filter(([k,l,somanuela,naoOfi,hebOk])=>{
-            if(user.apenasOficina) return !naoOfi&&(hebOk||["oficina","apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k));
-            if(somanuela) return user.id==="manuela";
+            ["relatorios","📋 Conf. Relatórios","normal"],
+            ["agenda_prev","🗓 Agenda","normal"],
+            ["dashboard","📊 Dashboard","normal"],
+            ["apontamentos_oficina","📝 Apontamentos Oficina","oficina"],
+            ["agenda_ofi","🗓 Agenda Oficina","oficina"],
+            ["dashboard_ofi","📊 Dashboard Oficina","oficina"],
+            ["mau_uso","⚠️ Mau Uso","normal"],
+            ["a_faturar","💰 A Faturar","normal"],
+            ["emprestimos","🔄 Req. Empréstimo e Retorno","normal"],
+            ["saida_entrada","📦 Req. Entrada/Saída","normal"],
+            ["dashboard_req","📊 Dashboard Requisições","normal"],
+            ["sas","📄 SAS","normal"],
+            ["carros","🚙 Carros","normal"],
+            ["uber","🚗 Uber","normal"],
+            ["financeiro","💰 Financeiro","normal"],
+            ["pendencias_frota","🚜 Pendências Frota","normal"],
+            ["prioridades_clientes","⭐ Prioridades Clientes","somanuela"],
+            ["rh_fiscal","🧾 RH-Fiscal","somanuela"],
+            ["pendencias_gustavo","📌 Pendências Gustavo","somanuela"],
+            ["pendencias_hebert","🔧 Pendências Hebert","hebert"],
+          ].filter(([k,l,tipo])=>{
+            if(user.apenasOficina) return ["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k);
+            if(tipo==="somanuela") return user.id==="manuela";
+            if(tipo==="hebert") return user.id==="manuela"||user.id==="hebert_ofi";
             return true;
           }).map(([k,l])=>(
             <button key={k} className={`nav-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)}>
@@ -2273,6 +2286,92 @@ export default function App(){
             </div>
           );
         })()}
+
+        {/* ── SAS ── */}
+        {tab==="sas"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📄 SAS</div><div style={{fontSize:13,color:"#888"}}>{sas.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(sas,"sas_grupomov",[{key:"dataSolicitacao",label:"Data Solicitação"},{key:"email",label:"E-mail"},{key:"nfNum",label:"Nº NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"tel",label:"Tel"},{key:"emailContato",label:"Email Contato"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Data Realização"},{key:"relatorioMov",label:"Relatório MOV"},{key:"envioFaturamento",label:"Envio Faturamento"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"dataEnvioSas",label:"Data Envio SAS"}])}/>
+                <BtnY onClick={addSas}>+ Novo SAS</BtnY>
+              </div>
+            </div>
+            <div className="card" style={{overflow:"hidden"}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>
+                    {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
+                    {sas.map(s=>{
+                      const isPend=s.status==="pendente";
+                      const slaVal=isPend&&s.dataSolicitacao?diffDays(s.dataSolicitacao):null;
+                      return(
+                        <tr key={s.id}>
+                          <td><input type="date" value={s.dataSolicitacao||""} onChange={e=>updateSas(s.id,{dataSolicitacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.email||""} onChange={e=>updateSas(s.id,{email:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.nfNum||""} onChange={e=>updateSas(s.id,{nfNum:e.target.value})} placeholder="NF-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equipamento" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.cliente||""} onChange={e=>updateSas(s.id,{cliente:e.target.value})} placeholder="Cliente" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.nome||""} onChange={e=>updateSas(s.id,{nome:e.target.value})} placeholder="Nome" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.tel||""} onChange={e=>updateSas(s.id,{tel:e.target.value})} placeholder="Tel" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.emailContato||""} onChange={e=>updateSas(s.id,{emailContato:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><select value={s.servico||"entrega_tecnica"} onChange={e=>updateSas(s.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}><option value="entrega_tecnica">📦 Entrega Técnica</option><option value="manutencao_externa">🔧 Manutenção Externa</option></select></td>
+                          <td><input type="date" value={s.dataRealizacao||""} onChange={e=>updateSas(s.id,{dataRealizacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.envioFaturamento||""} onChange={e=>updateSas(s.id,{envioFaturamento:e.target.value})} placeholder="Info..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.valor||""} onChange={e=>updateSas(s.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
+                          <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
+                          <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
+                          <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
+                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── CARROS ── */}
+        {tab==="carros"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{carros.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(carros,"carros_grupomov",[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"tecnico",label:"Técnico"},{key:"manutencao",label:"Manutenção"},{key:"valor",label:"Valor"},{key:"aprovadoGustavo",label:"Aprovado Gustavo"},{key:"dataExecucao",label:"Data Execução"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={addCarro}>+ Novo Registro</BtnY>
+              </div>
+            </div>
+            <div className="card" style={{overflow:"hidden"}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Data</th><th>Placa</th><th>Técnico</th><th>Manutenção</th><th>Valor</th><th>Aprov. Gustavo</th><th>Data Execução</th><th>Oficina</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>
+                    {carros.length===0&&<tr><td colSpan={11} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Registro".</td></tr>}
+                    {carros.map(c=>(
+                      <tr key={c.id}>
+                        <td><input type="date" value={c.data||""} onChange={e=>updateCarro(c.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.placa||""} onChange={e=>updateCarro(c.id,{placa:e.target.value})} placeholder="ABC-1234" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><select value={c.tecnico||ALL_TECHS[0]} onChange={e=>updateCarro(c.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{[...ALL_TECHS,...OFICINA_TECHS].map(t=><option key={t}>{t}</option>)}</select></td>
+                        <td><input type="text" value={c.manutencao||""} onChange={e=>updateCarro(c.id,{manutencao:e.target.value})} placeholder="Descreva a manutenção..." style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.valor||""} onChange={e=>updateCarro(c.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
+                        <td><select value={c.aprovadoGustavo||"nao"} onChange={e=>updateCarro(c.id,{aprovadoGustavo:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:c.aprovadoGustavo==="sim"?"#1A7A3C":"#C62828",background:c.aprovadoGustavo==="sim"?"#F0FFF5":"#FFF0F0"}}><option value="nao">❌ Não</option><option value="sim">✅ Sim</option></select></td>
+                        <td>{c.aprovadoGustavo==="sim"?<input type="date" value={c.dataExecucao||""} onChange={e=>updateCarro(c.id,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                        <td>{c.aprovadoGustavo==="sim"?<input type="text" value={c.oficina||""} onChange={e=>updateCarro(c.id,{oficina:e.target.value})} placeholder="Oficina..." style={{width:120,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                        <td><input type="text" value={c.obs||""} onChange={e=>updateCarro(c.id,{obs:e.target.value})} placeholder="Obs..." style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
+                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delCarro(c.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
       {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
       {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
