@@ -759,6 +759,7 @@ export default function App(){
   const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
   const [agOfi150Saida,setAgOfi150Saida]=useState("");
   const [agOfi150Obs,setAgOfi150Obs]=useState("");
+  const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
   const [pendMatheus,setPendMatheus]=useState([]);
   const [showArqMat,setShowArqMat]=useState(false);
   const [ofi150Data,setOfi150Data]=useState("");
@@ -2478,7 +2479,6 @@ export default function App(){
         {tab==="agenda_ofi_150"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const [agOfi150Relatorio, setAgOfi150Relatorio] = useState("");
           const addAtend150=()=>{
             const dataFinal=agOfi150Date||`${ym}-01`;
             if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
