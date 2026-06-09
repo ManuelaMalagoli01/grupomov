@@ -809,6 +809,9 @@ export default function App(){
   const [agEntrada,setAgEntrada]=useState("");
   const [agSaida,setAgSaida]=useState("");
   const [agRelatorio,setAgRelatorio]=useState("");
+  const [agViewH,setAgViewH]=useState(false);
+  const [agOfiViewH,setAgOfiViewH]=useState(false);
+  const [ag150ViewH,setAg150ViewH]=useState(false);
   const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
@@ -1215,10 +1218,7 @@ export default function App(){
                   <select value={agOfiServico} onChange={e=>setAgOfiServico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-                </div>
-              </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
+                  <button onClick={()=>setAgOfiViewH(p=>!p)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E0E0E0",background:agOfiViewH?"#F5C800":"#FFF",fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>{agOfiViewH?"📋 Cards":"📅 Horizontal"}</button>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
@@ -1232,6 +1232,44 @@ export default function App(){
                   <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
                 </div>
               </div>
+              {agOfiViewH?(()=>{
+                const diasNoMes=new Date(agOfiYear,agOfiMonth+1,0).getDate();
+                const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
+                const techsList2=OFICINA_TECHS.filter(t=>agOfiTech==="todos"||t===agOfiTech);
+                return(
+                  <div className="card" style={{overflow:"auto"}}>
+                    <table style={{borderCollapse:"collapse",fontSize:10,minWidth:diasNoMes*80+160}}>
+                      <thead><tr style={{background:"#1A1A1A",color:"#FFF"}}>
+                        <th style={{padding:"8px 12px",textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:140}}>Técnico</th>
+                        {dias.map(d=><th key={d} style={{padding:"6px 4px",textAlign:"center",minWidth:80,fontWeight:600}}>{d}/{String(agOfiMonth+1).padStart(2,"0")}</th>)}
+                      </tr></thead>
+                      <tbody>{techsList2.map((tech,ti)=>{
+                        const color=techColor(tech);
+                        return(<tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF"}}>
+                          <td style={{padding:"6px 12px",fontWeight:700,fontSize:11,whiteSpace:"nowrap",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderRight:"2px solid #E0E0E0"}}>
+                            <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:color,marginRight:5}}/>{tech}
+                          </td>
+                          {dias.map(d=>{
+                            const key=`${tech}__${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}-${d}`;
+                            const slots=(agendaOfi[key]||[]).filter(s=>agOfiServico==="todos"||s.servico===agOfiServico);
+                            return(<td key={d} style={{padding:"3px 4px",verticalAlign:"top",borderLeft:"1px solid #F0F0F0",minWidth:80}}>
+                              {slots.map((s,si)=>(
+                                <div key={si} style={{background:"#F0F4FF",border:"1px solid #1565C033",borderRadius:5,padding:"3px 5px",marginBottom:2}}>
+                                  <div style={{fontWeight:700,fontSize:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:72}}>{s.client}</div>
+                                  {s.servico&&<div style={{fontSize:9,color:"#1565C0",fontWeight:600}}>{s.servico}</div>}
+                                  {s.relatorio&&<div style={{fontSize:9,color:"#C47D00",fontWeight:600}}>📄 {s.relatorio}</div>}
+                                  {s.horasTrabalhadas&&<div style={{fontSize:9,color:"#C47D00"}}>⏱ {s.horasTrabalhadas}</div>}
+                                </div>
+                              ))}
+                              {slots.length===0&&<div style={{color:"#DDD",fontSize:10,textAlign:"center",padding:"4px 0"}}>—</div>}
+                            </td>);
+                          })}
+                        </tr>);
+                      })}</tbody>
+                    </table>
+                  </div>
+                );
+              })():(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
@@ -1285,6 +1323,7 @@ export default function App(){
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })()}
@@ -1708,6 +1747,7 @@ export default function App(){
                   <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todas as situações</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                  <button onClick={()=>setAgViewH(p=>!p)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E0E0E0",background:agViewH?"#F5C800":"#FFF",fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>{agViewH?"📋 Cards":"📅 Horizontal"}</button>
                 </div>
               </div>
 
@@ -1727,6 +1767,52 @@ export default function App(){
                 </div>
               </div>
 
+              {agViewH?(()=>{
+                const diasNoMes=new Date(agpYear,agpMonth+1,0).getDate();
+                const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
+                return(
+                  <div className="card" style={{overflow:"auto"}}>
+                    <table style={{borderCollapse:"collapse",fontSize:10,minWidth:diasNoMes*80+160}}>
+                      <thead>
+                        <tr style={{background:"#1A1A1A",color:"#FFF"}}>
+                          <th style={{padding:"8px 12px",textAlign:"left",whiteSpace:"nowrap",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:140}}>Técnico</th>
+                          {dias.map(d=><th key={d} style={{padding:"6px 4px",textAlign:"center",minWidth:75,fontWeight:600}}>{d}/{String(agpMonth+1).padStart(2,"0")}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {techsList.map((tech,ti)=>{
+                          const color=techColor(tech);
+                          return(
+                            <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF"}}>
+                              <td style={{padding:"6px 12px",fontWeight:700,fontSize:11,whiteSpace:"nowrap",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderRight:"2px solid #E0E0E0"}}>
+                                <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:color,marginRight:5}}/>{tech}
+                              </td>
+                              {dias.map(d=>{
+                                const key=`${tech}__${agpYear}-${String(agpMonth+1).padStart(2,"0")}-${d}`;
+                                const slots=(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s));
+                                return(
+                                  <td key={d} style={{padding:"3px 4px",verticalAlign:"top",borderLeft:"1px solid #F0F0F0",minWidth:75}}>
+                                    {slots.map((s,si)=>{const st=escSt(s.status);return(
+                                      <div key={si} style={{background:st.bg,border:`1px solid ${st.c}33`,borderRadius:5,padding:"3px 5px",marginBottom:2}}>
+                                        <div style={{fontWeight:700,fontSize:10,color:"#222",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:68}}>{s.client}</div>
+                                        {s.patrimonio&&<div style={{fontSize:9,color:"#888",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.patrimonio}</div>}
+                                        {s.relatorio&&<div style={{fontSize:9,color:"#1565C0",fontWeight:600}}>📄 {s.relatorio}</div>}
+                                        <div style={{fontSize:9,color:st.c,fontWeight:700}}>{st.l}</div>
+                                        {s.horasTrabalhadas&&<div style={{fontSize:9,color:"#C47D00",fontWeight:600}}>⏱ {s.horasTrabalhadas}</div>}
+                                      </div>
+                                    );})}
+                                    {slots.length===0&&<div style={{color:"#DDD",fontSize:10,textAlign:"center",padding:"4px 0"}}>—</div>}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })():(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
@@ -1776,6 +1862,7 @@ export default function App(){
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })()}
@@ -2496,10 +2583,7 @@ export default function App(){
                   <select value={agOfi150Servico} onChange={e=>setAgOfi150Servico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-                </div>
-              </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
+                  <button onClick={()=>setAg150ViewH(p=>!p)} style={{padding:"6px 12px",borderRadius:8,border:"1px solid #E0E0E0",background:ag150ViewH?"#F5C800":"#FFF",fontSize:11,cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>{ag150ViewH?"📋 Cards":"📅 Horizontal"}</button>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
@@ -2513,6 +2597,44 @@ export default function App(){
                   <BtnY onClick={addAtend150}>Adicionar</BtnY>
                 </div>
               </div>
+              {ag150ViewH?(()=>{
+                const diasNoMes=new Date(agOfi150Year,agOfi150Month+1,0).getDate();
+                const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
+                const techs150=OFICINA_150_TECHS.filter(t=>agOfi150Tech==="todos"||t===agOfi150Tech);
+                return(
+                  <div className="card" style={{overflow:"auto"}}>
+                    <table style={{borderCollapse:"collapse",fontSize:10,minWidth:diasNoMes*80+160}}>
+                      <thead><tr style={{background:"#1A1A1A",color:"#FFF"}}>
+                        <th style={{padding:"8px 12px",textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:140}}>Técnico</th>
+                        {dias.map(d=><th key={d} style={{padding:"6px 4px",textAlign:"center",minWidth:80,fontWeight:600}}>{d}/{String(agOfi150Month+1).padStart(2,"0")}</th>)}
+                      </tr></thead>
+                      <tbody>{techs150.map((tech,ti)=>{
+                        const color=techColor(tech);
+                        return(<tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF"}}>
+                          <td style={{padding:"6px 12px",fontWeight:700,fontSize:11,whiteSpace:"nowrap",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderRight:"2px solid #E0E0E0"}}>
+                            <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:color,marginRight:5}}/>{tech}
+                          </td>
+                          {dias.map(d=>{
+                            const key=`${tech}__${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}-${d}`;
+                            const slots=(agendaOfi150[key]||[]).filter(s=>agOfi150Servico==="todos"||s.servico===agOfi150Servico);
+                            return(<td key={d} style={{padding:"3px 4px",verticalAlign:"top",borderLeft:"1px solid #F0F0F0",minWidth:80}}>
+                              {slots.map((s,si)=>(
+                                <div key={si} style={{background:"#F0FFF5",border:"1px solid #1A7A3C33",borderRadius:5,padding:"3px 5px",marginBottom:2}}>
+                                  <div style={{fontWeight:700,fontSize:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:72}}>{s.client}</div>
+                                  {s.servico&&<div style={{fontSize:9,color:"#1A7A3C",fontWeight:600}}>{s.servico}</div>}
+                                  {s.relatorio&&<div style={{fontSize:9,color:"#C47D00",fontWeight:600}}>📄 {s.relatorio}</div>}
+                                  {s.horasTrabalhadas&&<div style={{fontSize:9,color:"#C47D00"}}>⏱ {s.horasTrabalhadas}</div>}
+                                </div>
+                              ))}
+                              {slots.length===0&&<div style={{color:"#DDD",fontSize:10,textAlign:"center",padding:"4px 0"}}>—</div>}
+                            </td>);
+                          })}
+                        </tr>);
+                      })}</tbody>
+                    </table>
+                  </div>
+                );
+              })():(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {OFICINA_150_TECHS.filter(t=>agOfi150Tech==="todos"||t===agOfi150Tech).map(tech=>{
                   const color=techColor(tech);
@@ -2559,6 +2681,7 @@ export default function App(){
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })()}
