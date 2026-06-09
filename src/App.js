@@ -42,12 +42,7 @@ const USERS = [
   { id:"manuela", name:"Manuela", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"gustavo", name:"Gustavo Coelho", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:false },
-  { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:false, apenasOficina:true },
-  { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:false, apenasOfi150:true },
 ];
-const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
-const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
-const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
   metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
   roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
@@ -56,7 +51,7 @@ const REGIONS = {
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
-const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel","Reginaldo"];
+const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODAY      = new Date();
 const LOGO_MOV = "data:image/jpeg;base64,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";
@@ -667,8 +662,6 @@ export default function App(){
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
-  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
   const [processosAF,setProcessosAF]=useState([]);
@@ -719,55 +712,6 @@ export default function App(){
   const [showArqPri,setShowArqPri]=useState(false);
   const [showArqRh,setShowArqRh]=useState(false);
   const [showArqGus,setShowArqGus]=useState(false);
-  const [dashReqTab,setDashReqTab]=useState("visao_geral");
-  const [schedOfiDate,setSchedOfiDate]=useState(TODAY_STR);
-  const [agendaOfi,setAgendaOfi]=useState({});
-  const [agOfiMonth,setAgOfiMonth]=useState(TODAY.getMonth());
-  const [agOfiYear,setAgOfiYear]=useState(TODAY.getFullYear());
-  const [agOfiTech,setAgOfiTech]=useState("todos");
-  const [agOfiServico,setAgOfiServico]=useState("todos");
-  const [agOfiStatus,setAgOfiStatus]=useState("todos");
-  const [agOfiEmpresa,setAgOfiEmpresa]=useState("");
-  const [agOfiPat,setAgOfiPat]=useState("");
-  const [agOfiTechSel,setAgOfiTechSel]=useState(OFICINA_TECHS[0]);
-  const [agOfiDate,setAgOfiDate]=useState("");
-  const [agOfiServSel,setAgOfiServSel]=useState(SERVICOS_OFICINA[0]);
-  const [agOfiEntrada,setAgOfiEntrada]=useState("");
-  const [agOfiSaida,setAgOfiSaida]=useState("");
-  const [agOfiObs,setAgOfiObs]=useState("");
-  const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
-  const [pendHebert,setPendHebert]=useState([]);
-  const [showArqHeb,setShowArqHeb]=useState(false);
-  // Filtros nova aba oficina
-  const [ofiNovaData,setOfiNovaData]=useState("");
-  const [ofiNovaOS,setOfiNovaOS]=useState("");
-  const [ofiNovaPat,setOfiNovaPat]=useState("");
-  const [ofiNovaTech,setOfiNovaTech]=useState("todos");
-  const [ofiNovaServ,setOfiNovaServ]=useState("todos");
-  const [apontamentos,setApontamentos]=useState([]);
-  const [apontamentos150,setApontamentos150]=useState([]);
-  const [agendaOfi150,setAgendaOfi150]=useState({});
-  const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
-  const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
-  const [agOfi150Tech,setAgOfi150Tech]=useState("todos");
-  const [agOfi150Servico,setAgOfi150Servico]=useState("todos");
-  const [agOfi150TechSel,setAgOfi150TechSel]=useState("Matheus");
-  const [agOfi150Date,setAgOfi150Date]=useState("");
-  const [agOfi150Empresa,setAgOfi150Empresa]=useState("");
-  const [agOfi150Pat,setAgOfi150Pat]=useState("");
-  const [agOfi150ServSel,setAgOfi150ServSel]=useState(SERVICOS_OFICINA[0]);
-  const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
-  const [agOfi150Saida,setAgOfi150Saida]=useState("");
-  const [agOfi150Obs,setAgOfi150Obs]=useState("");
-  const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
-  const [pendMatheus,setPendMatheus]=useState([]);
-  const [showArqMat,setShowArqMat]=useState(false);
-  const [ofi150Data,setOfi150Data]=useState("");
-  const [ofi150OS,setOfi150OS]=useState("");
-  const [ofi150Pat,setOfi150Pat]=useState("");
-  const [ofi150Tech,setOfi150Tech]=useState("todos");
-  const [ofi150Serv,setOfi150Serv]=useState("todos");
-  const [sas,setSas]=useState([]);
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -808,7 +752,6 @@ export default function App(){
   const [agTipo,setAgTipo]=useState("preventivo");
   const [agEntrada,setAgEntrada]=useState("");
   const [agSaida,setAgSaida]=useState("");
-  const [agRelatorio,setAgRelatorio]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
@@ -826,12 +769,11 @@ export default function App(){
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
     const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis] = await Promise.all([
         db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
         db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
         db.get("uber_pedidos"), db.get("escala"), db.get("usuarios"), db.get("financeiro"),
-        db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina"),
-        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina"), db.get("sas"), db.get("carros"), db.get("apontamentos_150"), db.get("agenda_ofi_150"), db.get("pendencias_matheus")
+        db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -846,14 +788,6 @@ export default function App(){
       if(rhs.length>0) setRhFiscal(rhs);
       if(guss.length>0) setPendGustavo(guss);
       if(ofis.length>0) setOficina(ofis);
-      if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi(ao); }
-      if(hebRows.length>0) setPendHebert(hebRows);
-      if(apRows.length>0) setApontamentos(apRows);
-      if(sasRows.length>0) setSas(sasRows);
-      if(carrosRows.length>0) setCarros(carrosRows);
-      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
-      if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi150(ao); }
-      if(matRows.length>0) setPendMatheus(matRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
@@ -895,23 +829,7 @@ export default function App(){
     add:(base)=>{ const r={id:`${table.slice(0,3).toUpperCase()}${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...base}; setFn(p=>[r,...p]); db.save(table,r.id,r); notify("✅ Criado e salvo!"); },
     del:(id)=>{ setFn(p=>p.filter(x=>x.id!==id)); db.delete(table,id); },
   });
-  const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
-  const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
-  const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
-  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
-  const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
-  const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
-  const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
-  const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
-  const [carros,setCarros]=useState([]);
-  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
-  const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:"",tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:""}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); notify("✅ Registro criado!"); };
-  const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
-  const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
-  const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
-  const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
-  const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
-  const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
+  const froCrud=mkCrud("pendencias_frota",setFrota);
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
@@ -951,7 +869,7 @@ export default function App(){
   // Lista achatada dos atendimentos da Agenda (para o Dashboard)
   const techRegionMap={}; Object.entries(REGIONS).forEach(([rk,rv])=>rv.techs.forEach(t=>{techRegionMap[t]=rk;}));
   const agendaAtendimentos=[];
-  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
+  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas,empresa:s.client||"",patrimonio:s.patrimonio||""})); });
 
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);notify(`Bem-vinda, ${u.name}!`);}}/>;
 
@@ -1009,40 +927,21 @@ export default function App(){
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
           {[
-            ["relatorios","📋 Conf. Relatórios","normal"],
-            ["agenda_prev","🗓 Agenda","normal"],
-            ["dashboard","📊 Dashboard","normal"],
-            ["apontamentos_oficina","📝 Apontamentos Oficina","oficina"],
-            ["agenda_ofi","🗓 Agenda Oficina","oficina"],
-            ["dashboard_ofi","📊 Dashboard Oficina","oficina"],
-            ["apontamentos_150","📝 Apontamentos Oficina 150","ofi150"],
-            ["agenda_ofi_150","🗓 Agenda Oficina 150","ofi150"],
-            ["dashboard_ofi_150","📊 Dashboard Oficina 150","ofi150"],
-            ["mau_uso","⚠️ Mau Uso","normal"],
-            ["a_faturar","💰 A Faturar","normal"],
-            ["emprestimos","🔄 Req. Empréstimo e Retorno","normal"],
-            ["saida_entrada","📦 Req. Entrada/Saída","normal"],
-            ["dashboard_req","📊 Dashboard Requisições","normal"],
-            ["sas","📄 SAS","normal"],
-            ["carros","🚙 Carros","normal"],
-            ["uber","🚗 Uber","normal"],
-            ["financeiro","💰 Financeiro","normal"],
-            ["pendencias_frota","🚜 Pendências Frota","normal"],
-            ["prioridades_clientes","⭐ Prioridades Clientes","somanuela"],
-            ["rh_fiscal","🧾 RH-Fiscal","somanuela"],
-            ["pendencias_gustavo","📌 Pendências Gustavo","somanuela"],
-            ["pendencias_hebert","🔧 Pendências Hebert","hebert"],
-            ["pendencias_matheus","🔧 Pendências Matheus","matheus"],
-          ].filter(([k,l,tipo])=>{
-            if(user.apenasOficina) return ["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k);
-            if(user.apenasOfi150) return ["apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_matheus"].includes(k);
-            if(tipo==="somanuela") return user.id==="manuela";
-            if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
-            if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
-            if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
-            if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
-            return true;
-          }).map(([k,l])=>(
+            ["relatorios","📋 Conferência de Relatórios"],
+            ["oficina","🔧 Oficina"],
+            ["agenda_prev","🗓 Agenda"],
+            ["dashboard","📊 Dashboard"],
+            ["mau_uso","⚠️ Mau Uso"],
+            ["a_faturar","💰 A Faturar"],
+            ["emprestimos","🔄 Req. Empréstimo"],
+            ["saida_entrada","📦 Saída/Entrada"],
+            ["uber","🚗 Uber"],
+            ["financeiro","💰 Financeiro"],
+            ["pendencias_frota","🚜 Pendências Frota"],
+            ["prioridades_clientes","⭐ Prioridades Clientes",true],
+            ["rh_fiscal","🧾 RH-Fiscal",true],
+            ["pendencias_gustavo","📌 Pendências Gustavo",true],
+          ].filter(([k,l,only])=>!only||user.id==="manuela").map(([k,l])=>(
             <button key={k} className={`nav-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)}>
               {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:5,background:"#C62828",color:"#FFF",borderRadius:8,fontSize:9,padding:"1px 5px"}}>{empAlerta}</span>}
             </button>
@@ -1056,6 +955,26 @@ export default function App(){
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+              {TIPOS.slice(0,4).map(t=>{
+                const total=t.v==="preventivo"?DB_STATS.preventivos:t.v==="corretivo"?DB_STATS.corretivos:t.v==="a_faturar"?DB_STATS.a_faturar:t.v==="mau_uso"?DB_STATS.mau_uso:reports.filter(r=>r.type===t.v).length;
+                return(
+                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
+                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{filterTipo===t.v?filteredReports.filter(r=>r.type===t.v).length:total}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
+              {TIPOS.slice(4).map(t=>(
+                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
+                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
+                  <div style={{fontSize:24,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{reports.filter(r=>r.type===t.v).length}</div>
+                </div>
+              ))}
+            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={searchText} onChange={e=>setSearchText(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1137,261 +1056,29 @@ export default function App(){
           </div>
         )}
 
-        {/* ── APONTAMENTOS OFICINA ── */}
-        {tab==="apontamentos_oficina"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina</div><div style={{fontSize:13,color:"#888"}}>{apontamentos.length} registro(s)</div></div>
-              <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(apontamentos,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={addApon}>+ Novo Apontamento</BtnY>
-              </div>
-            </div>
-            {/* Filtros */}
-            <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-              <input type="date" value={ofiNovaData} onChange={e=>setOfiNovaData(e.target.value)} style={{fontSize:12}} title="Filtrar por data"/>
-              <input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="🔍 OS" style={{width:100,fontSize:12}}/>
-              <input type="text" value={ofiNovaPat} onChange={e=>setOfiNovaPat(e.target.value)} placeholder="🔍 Patrimônio" style={{width:130,fontSize:12}}/>
-              <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-              {(ofiNovaData||ofiNovaOS||ofiNovaPat||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<BtnG onClick={()=>{setOfiNovaData("");setOfiNovaOS("");setOfiNovaPat("");setOfiNovaTech("todos");setOfiNovaServ("todos");}}>✕ Limpar</BtnG>}
-            </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                  <tbody>
-                    {apontamentos.filter(a=>{
-                      if(ofiNovaData&&a.data!==ofiNovaData)return false;
-                      if(ofiNovaOS&&!( a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
-                      if(ofiNovaPat&&!(a.patrimonio||"").toLowerCase().includes(ofiNovaPat.toLowerCase()))return false;
-                      if(ofiNovaTech!=="todos"&&a.tecnico!==ofiNovaTech)return false;
-                      if(ofiNovaServ!=="todos"&&a.servico!==ofiNovaServ)return false;
-                      return true;
-                    }).map(a=>(
-                      <tr key={a.id}>
-                        <td><input type="date" value={a.data||""} onChange={e=>updateApon(a.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={a.os||""} onChange={e=>updateApon(a.id,{os:e.target.value})} placeholder="OS-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={a.patrimonio||""} onChange={e=>updateApon(a.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><select value={a.tecnico||OFICINA_TECHS[0]} onChange={e=>updateApon(a.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                        <td><select value={a.servico||SERVICOS_OFICINA[0]} onChange={e=>updateApon(a.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></td>
-                        <td><input type="time" value={a.inicio||""} onChange={e=>{const v=e.target.value;updateApon(a.id,{inicio:v,total:calcHoras(v,a.termino)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="time" value={a.termino||""} onChange={e=>{const v=e.target.value;updateApon(a.id,{termino:v,total:calcHoras(a.inicio,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{a.total||calcHoras(a.inicio,a.termino)||"—"}</span></td>
-                        <td><select value={a.oficina||"1340"} onChange={e=>updateApon(a.id,{oficina:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700}}>{OFICINAS_UNID.map(o=><option key={o}>{o}</option>)}</select></td>
-                        <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={a.obs||""} onChange={e=>updateApon(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
-                      </tr>
-                    ))}
-                    {apontamentos.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── AGENDA OFICINA ── */}
-        {tab==="agenda_ofi"&&(()=>{
-          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
-          const techsList=OFICINA_TECHS.filter(t=>agOfiTech==="todos"||t===agOfiTech);
-          const addAtendOfi=()=>{
-            const dataFinal=agOfiDate||`${ym}-01`;
-            if(!agOfiEmpresa){alert("Preencha ao menos a Empresa.");return;}
-            const key=`${agOfiTechSel}__${dataFinal}`;
-            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,patrimonio:agOfiPat||"",servico:agOfiServSel,status:"agendada",horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida),obs:agOfiObs,relatorio:agOfiRelatorio||""}]);
-            setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");setAgOfiObs("");setAgOfiRelatorio("");
-            notify("✅ Atendimento Oficina salvo!");
-          };
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina</div><div style={{fontSize:13,color:"#888"}}>Agenda mensal dos técnicos de oficina — {MESES[agOfiMonth]} {agOfiYear}</div></div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <select value={agOfiTech} onChange={e=>setAgOfiTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agOfiServico} onChange={e=>setAgOfiServico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-                </div>
-              </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
-                  <input type="text" placeholder="Empresa/Serviço" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
-                  <input type="text" placeholder="Patrimônio" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <select value={agOfiServSel} onChange={e=>setAgOfiServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfiEntrada} onChange={e=>setAgOfiEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfiSaida} onChange={e=>setAgOfiSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <input type="text" placeholder="Obs..." value={agOfiObs} onChange={e=>setAgOfiObs(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
-                  <input type="text" placeholder="Nº Relatório" value={agOfiRelatorio||""} onChange={e=>setAgOfiRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {techsList.map(tech=>{
-                  const color=techColor(tech);
-                  const entries=[];
-                  Object.keys(agendaOfi).forEach(k=>{
-                    const i=k.indexOf("__"); if(i<0) return;
-                    const kt=k.slice(0,i), kd=k.slice(i+2);
-                    if(kt!==tech||!kd.startsWith(ym)) return;
-                    (agendaOfi[k]||[]).forEach((s,si)=>{
-                      if(agOfiServico==="todos"||s.servico===agOfiServico) entries.push({s,date:kd,key:k,si});
-                    });
-                  });
-                  entries.sort((a,b)=>a.date.localeCompare(b.date));
-                  return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
-                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfiMonth]}</div>
-                      </div>
-                      <div style={{padding:"8px 14px"}}>
-                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
-                        {entries.map((e,ix)=>{const dia=e.date.slice(8,10);return(
-                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
-                              <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              <button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
-                            </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
-                            <div style={{marginBottom:4}}>
-                              <input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
-                            </div>
-                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:4}}>
-                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||"—"}</span>
-                            </div>
-                            {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic"}}>{e.s.obs}</div>}
-                            <div style={{marginTop:4}}>
-                              <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
-                                <option value="agendada">Agendada</option>
-                                <option value="concluida">Concluída</option>
-                                <option value="cancelada">Cancelada</option>
-                                <option value="remarcada">Remarcada</option>
-                              </select>
-                            </div>
-                          </div>
-                        );})}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── DASHBOARD OFICINA ── */}
-        {tab==="dashboard_ofi"&&(()=>{
-          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
-          const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          // Apontamentos do mês
-          const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-          const apMes=apontamentos.filter(a=>a.data&&a.data.startsWith(mesAtual));
-          const totalMinMes=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-          // Por técnico
-          const byTech={}; OFICINA_TECHS.forEach(t=>{byTech[t]=apMes.filter(a=>a.tecnico===t);});
-          const techHorasData={labels:OFICINA_TECHS,datasets:[{label:"Horas",data:OFICINA_TECHS.map(t=>+(byTech[t].reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
-          // Por serviço
-          const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
-          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
-          // Agenda oficina do mês
-          const agOfiAtend=[];
-          Object.keys(agendaOfi).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi[k]||[]).forEach(s=>agOfiAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas}));});
-          const concluidos=agOfiAtend.filter(a=>a.status==="concluida").length;
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina — {MESES[agOfiMonth]} {agOfiYear}</div>
-              <div style={{display:"flex",gap:8,marginBottom:16,alignItems:"center"}}>
-                <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-                {[{l:"Apontamentos (mês)",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais (mês)",v:fmtMin(totalMinMes),c:"#C47D00"},{l:"Agendados",v:agOfiAtend.length,c:"#1565C0"},{l:"Concluídos",v:concluidos,c:"#1A7A3C"}].map((s,i)=>(
-                  <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
-                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>⏱ Horas por Técnico (mês)</div>
-                  <ChartCanvas type="bar" data={techHorasData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},maintainAspectRatio:false}} height={Math.max(160,OFICINA_TECHS.length*34)}/>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Serviços Realizados (mês)</div>
-                  <ChartCanvas type="bar" data={servData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}} height={Math.max(160,SERVICOS_OFICINA.length*34)}/>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {OFICINA_TECHS.map(tech=>{
-                  const color=techColor(tech);
-                  const techAp=apMes.filter(a=>a.tecnico===tech);
-                  const totalMin=techAp.reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0);
-                  return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,padding:"14px 16px"}}>
-                      <div style={{fontWeight:700,fontSize:14,marginBottom:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Horas: <b style={{color:"#C47D00"}}>{fmtMin(totalMin)}</b></div>
-                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Apontamentos: <b style={{color:"#1A1A1A"}}>{techAp.length}</b></div>
-                      <div style={{fontSize:11,color:"#AAA"}}>Serviços: {[...new Set(techAp.map(a=>a.servico))].join(", ")||"—"}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
-        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
-          const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Hebert Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
-              </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{
-                    const p=PRIO[r.prioridade||"medio"];
-                    const res=r.status==="resolvido";
-                    return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>hebCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>hebCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva a pendência..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>hebCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>hebCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>hebCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>hebCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))hebCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
-            </div>
-          );
-        })()}
-
         {/* ── OFICINA (clone de Relatórios, técnicos próprios) ── */}
         {tab==="oficina"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+              {TIPOS.slice(0,4).map(t=>{
+                const total=oficina.filter(r=>r.type===t.v).length;
+                return(
+                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
+                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{ofiTipo===t.v?filteredOficina.filter(r=>r.type===t.v).length:total}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
+              {TIPOS.slice(4).map(t=>(
+                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
+                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
+                  <div style={{fontSize:24,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{oficina.filter(r=>r.type===t.v).length}</div>
+                </div>
+              ))}
+            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={ofiSearch} onChange={e=>setOfiSearch(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1580,7 +1267,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA</th><th>Nº Relatório</th><th>Obs</th><th>Ret.Almox</th><th>Ret.Sistema</th><th>Processo</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1599,10 +1286,12 @@ export default function App(){
                           <td style={{fontSize:11}}>{e.retorno}</td>
                           <td style={{whiteSpace:"nowrap",color:atrasado?"#C62828":"#888",fontWeight:atrasado?700:400,fontSize:11}}>{e.dataRetorno}</td>
                           <td><SlaBadge days={sla}/></td>
-                          <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="date" value={e.dataAplicacao||""} onChange={ev=>updateEmp(e.id,{dataAplicacao:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><select value={e.statusEmp||"pendente"} onChange={ev=>updateEmp(e.id,{statusEmp:ev.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:e.statusEmp==="concluido"?"#1A7A3C":"#C62828",background:e.statusEmp==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
-                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={e.numRelatorio||""} onChange={ev=>updateEmp(e.id,{numRelatorio:ev.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={e.retornoAlmox||""} onChange={ev=>updateEmp(e.id,{retornoAlmox:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={e.retornoSistema||""} onChange={ev=>updateEmp(e.id,{retornoSistema:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><PSSelect value={e.processoStatus} onChange={v=>updateEmp(e.id,{processoStatus:v})}/></td>
+                          <td><BtnG onClick={()=>{setEditEmp(e);setModalEmp(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1619,48 +1308,34 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Entrada/Saída</div>
+                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Saída/Entrada</div>
                 <div style={{fontSize:13,color:"#888"}}>{saidaEntrada.length} registros</div>
               </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{const row={id:`SAI${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Nova Entrada/Saída</BtnY></div>
+              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{setEditSaida(null);setModalSaida(true);}}>+ Nova Saída/Entrada</BtnY></div>
             </div>
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Empresa</th><th>Requerente</th><th>Código</th><th>Descrição</th><th>Data Saída</th><th>Data Entrega</th><th>Mês</th><th>REQ Retorno</th><th>Devolução</th><th>Status</th><th>Processo</th><th>Obs</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado").map(s=>{
-                      const isRuptura=s.statusReq==="ruptura";
-                      const isAtendido=s.statusReq==="atendido";
-                      const slaRuptura=s.data?diffDays(s.data):null;
+                      const devolvido=s.status==="devolvido";
                       return(
                         <tr key={s.id}>
-                          <td><input type="date" value={s.data||""} onChange={e=>updateSaida(s.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.empresa||""} onChange={e=>updateSaida(s.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.peca||""} onChange={e=>updateSaida(s.id,{peca:e.target.value})} placeholder="Nome da peça" style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.codigo||""} onChange={e=>updateSaida(s.id,{codigo:e.target.value})} placeholder="Cód" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.quantidade||""} onChange={e=>updateSaida(s.id,{quantidade:e.target.value})} placeholder="1" style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                          <td><input type="text" value={s.req||""} onChange={e=>updateSaida(s.id,{req:e.target.value})} placeholder="REQ" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td>
-                            <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})}
-                              style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",
-                                color:s.statusReq==="atendido"?"#1A7A3C":s.statusReq==="ruptura"?"#C62828":"#888",
-                                background:s.statusReq==="atendido"?"#F0FFF5":s.statusReq==="ruptura"?"#FFF0F0":"#F8F8F8"}}>
-                              <option value="">Selecione...</option>
-                              <option value="atendido">✅ Atendido</option>
-                              <option value="ruptura">🔴 Ruptura</option>
-                            </select>
-                          </td>
-                          <td>{isRuptura?<SlaBadge days={slaRuptura}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="date" value={s.dataAtendimento||""} onChange={e=>updateSaida(s.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<select value={s.localPeca||""} onChange={e=>updateSaida(s.id,{localPeca:e.target.value})} style={{fontSize:11,padding:"3px 5px",borderRadius:5}}><option value="">Selecione...</option><option value="suporte">📦 Suporte</option><option value="entregue_tecnico">🧑‍🔧 Entregue ao Técnico</option></select>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="date" value={s.dataEntregaTecnico||""} onChange={e=>updateSaida(s.id,{dataEntregaTecnico:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{(isAtendido||isRuptura)?<input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:110,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:s.statusFinal==="concluido"?"#1A7A3C":"#C62828",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
+                          <td style={{fontWeight:700}}>{s.req}</td>
+                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.empresa}</td>
+                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.requerente}</td>
+                          <td style={{fontSize:11,color:"#888"}}>{s.codigo}</td>
+                          <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.descricao}</td>
+                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataSaida}</td>
+                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataEntrega}</td>
+                          <td style={{fontSize:11,color:"#888"}}>{s.mes}</td>
+                          <td style={{fontSize:11}}>{s.reqRetorno}</td>
+                          <td style={{whiteSpace:"nowrap",color:devolvido?"#1A7A3C":"#888",fontSize:11}}>{s.devolucao||"—"}</td>
+                          <td><select value={s.status} onChange={e=>updateSaida(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:devolvido?"#1A7A3C":s.status==="em_uso"?"#E67E00":"#C62828",fontWeight:700,background:devolvido?"#F0FFF5":s.status==="em_uso"?"#FFF8F0":"#FFF0F0",border:"none",borderRadius:5}}><option value="pendente">Pendente</option><option value="em_uso">Em Uso</option><option value="devolvido">Devolvido</option></select></td>
+                          <td><input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><PSSelect value={s.processoStatus} onChange={v=>updateSaida(s.id,{processoStatus:v})}/></td>
+                          <td><BtnG onClick={()=>{setEditSaida(s);setModalSaida(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1688,8 +1363,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
-            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
+            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -1718,7 +1393,6 @@ export default function App(){
                   <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
-                  <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
                   <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
@@ -1755,9 +1429,6 @@ export default function App(){
                               <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
                             </div>
                             <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
-                            <div style={{marginBottom:5}}>
-                              <input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveSched(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
-                            </div>
                             <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
                               <input type="time" value={e.s.horaEntrada||""} title="Entrada" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
                               <input type="time" value={e.s.horaSaida||""} title="Saída" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
@@ -1794,7 +1465,7 @@ export default function App(){
               const corr=dashReports.filter(r=>r.type==="corretivo").length;
               const totalPC=prev+corr;
               const pct=n=>totalPC?Math.round(n/totalPC*100):0;
-              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
               const regPrev=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="preventivo").length);
               const regCorr=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="corretivo").length);
@@ -1864,7 +1535,7 @@ export default function App(){
 
             {/* Horas totais do mês */}
             {(()=>{
-              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+              const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
               const mesReps=agendaAtendimentos.filter(r=>r.date&&r.date.startsWith(mesAtual));
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
@@ -1895,7 +1566,7 @@ export default function App(){
             {/* Cards por técnico */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
               {ALL_TECHS.map(tech=>{
-                const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+                const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
                 const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"—";
                 const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
                 const techReps=agendaAtendimentos.filter(r=>r.tecnico===tech&&r.date&&r.date.startsWith(mesAtual));
@@ -2193,23 +1864,21 @@ export default function App(){
           const list=pendGustavo.filter(r=>showArqGus||!r.arquivado);
           const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
           const STS={resolvido:"Resolvido",diretoria:"Diretoria",em_andamento:"Em Andamento",pendente:"Pendente"};
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📌 Pendências Gustavo</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqGus(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqGus?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqGus?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>gusCrud.add({data:TODAY_STR,solicitacao:"cliente",empresa:"",demanda:"email",status:"pendente",prioridade:"medio",obs:""})}>+ Nova Pendência</BtnY>
+                  <BtnY onClick={()=>gusCrud.add({data:TODAY_STR,solicitacao:"cliente",empresa:"",demanda:"email",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
                 </div>
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Prioridade</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                  <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";const p=PRIO[r.prioridade||"medio"];return(
+                  <thead><tr><th>Data</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.data||""} onChange={e=>gusCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>gusCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
                       <td><select value={r.solicitacao||"cliente"} onChange={e=>gusCrud.update(r.id,{solicitacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}>{Object.entries(SOL).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
                       <td><input type="text" value={r.empresa||""} onChange={e=>gusCrud.update(r.id,{empresa:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><select value={r.demanda||"email"} onChange={e=>gusCrud.update(r.id,{demanda:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="email">📧 Email</option><option value="whatsapp">💬 WhatsApp</option></select></td>
@@ -2217,429 +1886,6 @@ export default function App(){
                       <td><input type="text" value={r.obs||""} onChange={e=>gusCrud.update(r.id,{obs:e.target.value})} style={{width:240,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
                       {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>gusCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))gusCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
-            </div>
-          );
-        })()}
-
-      {/* ── DASHBOARD REQUISIÇÕES ── */}
-        {tab==="dashboard_req"&&(()=>{
-          const allReqs=[...emprestimos,...saidaEntrada];
-          const totalEmp=emprestimos.length;
-          const totalSai=saidaEntrada.length;
-          const total=allReqs.length;
-          // Rupturas (saída/entrada)
-          const rupturas=saidaEntrada.filter(s=>s.statusReq==="ruptura");
-          const rupturasInfo=rupturas.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
-          // Atendidos
-          const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
-          // Pendentes
-          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length + saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
-          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length + saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
-          // Por técnico (requerente)
-          const byTech={};
-          emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
-          saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
-          // Peças aplicadas por relatório
-          const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
-          const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
-          const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
-          // Gráfico: status empréstimos
-          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5"],borderColor:["#C62828","#1A7A3C"],borderWidth:2}]};
-          // Gráfico: status saída/entrada
-          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5","#FFF8F0","#F0F4FF"],borderColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:2}]};
-          // Gráfico: por técnico
-          const techLabels=Object.keys(byTech);
-          const techValues=techLabels.map(t=>byTech[t]);
-          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C800",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
-
-          const KPI=({label,value,color="#1A1A1A",bg="#FFF",icon})=>(
-            <div className="card" style={{padding:"16px 20px",background:bg,display:"flex",flexDirection:"column",gap:4}}>
-              <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
-              <div style={{fontSize:32,fontWeight:800,color,lineHeight:1}}>{value}</div>
-            </div>
-          );
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Requisições</div>
-
-              {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
-                <KPI icon="📦" label="Total Requisições" value={total}/>
-                <KPI icon="🔄" label="Empréstimo e Retorno" value={totalEmp}/>
-                <KPI icon="📤" label="Entrada/Saída" value={totalSai}/>
-                <KPI icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF0F0"/>
-                <KPI icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
-                <KPI icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
-                <KPI icon="✅" label="Atendidos (S/E)" value={atendidos} color="#1A7A3C" bg="#F0FFF5"/>
-                <KPI icon="🔧" label="Peças Aplicadas c/ Relatório" value={todasPecasAplicadas.length}/>
-              </div>
-
-              {/* Gráficos */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:20}}>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Empréstimo e Retorno</div>
-                  <ChartCanvas type="doughnut" data={chartStatusEmpData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Entrada/Saída</div>
-                  <ChartCanvas type="doughnut" data={chartStatusSaiData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Requisições por Técnico/Requerente</div>
-                  <ChartCanvas type="bar" data={chartTechData} options={{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},indexAxis:"y"}} height={200}/>
-                </div>
-              </div>
-
-              {/* Rupturas detalhadas */}
-              {rupturas.length>0&&(
-                <div className="card" style={{padding:16,marginBottom:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas — Detalhamento ({rupturas.length})</div>
-                  <div className="tbl-wrap"><table>
-                    <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias em ruptura)</th></tr></thead>
-                    <tbody>{rupturasInfo.map((r,i)=>(
-                      <tr key={i}>
-                        <td style={{fontWeight:700}}>{r.peca}</td>
-                        <td style={{fontSize:11,color:"#888"}}>{r.codigo}</td>
-                        <td>{r.empresa}</td>
-                        <td style={{fontSize:11,color:"#888"}}>{rupturas[i]?.data||"—"}</td>
-                        <td><SlaBadge days={r.dias}/></td>
-                      </tr>
-                    ))}</tbody>
-                  </table></div>
-                </div>
-              )}
-
-              {/* Peças aplicadas por relatório */}
-              {todasPecasAplicadas.length>0&&(
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Peças Aplicadas por Relatório ({todasPecasAplicadas.length})</div>
-                  <div className="tbl-wrap"><table>
-                    <thead><tr><th>Relatório</th><th>Peça</th><th>Empresa/Requerente</th></tr></thead>
-                    <tbody>{todasPecasAplicadas.map((p,i)=>(
-                      <tr key={i}>
-                        <td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td>
-                        <td>{p.peca}</td>
-                        <td style={{fontSize:11,color:"#888"}}>{p.empresa}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table></div>
-                </div>
-              )}
-              {todasPecasAplicadas.length===0&&rupturas.length===0&&total===0&&(
-                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
-                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
-                  Nenhuma requisição cadastrada ainda.
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* ── SAS ── */}
-        {tab==="sas"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📄 SAS</div><div style={{fontSize:13,color:"#888"}}>{sas.length} registro(s)</div></div>
-              <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(sas,"sas_grupomov",[{key:"dataSolicitacao",label:"Data Solicitação"},{key:"email",label:"E-mail"},{key:"nfNum",label:"Nº NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"tel",label:"Tel"},{key:"emailContato",label:"Email Contato"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Data Realização"},{key:"relatorioMov",label:"Relatório MOV"},{key:"envioFaturamento",label:"Envio Faturamento"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"dataEnvioSas",label:"Data Envio SAS"}])}/>
-                <BtnY onClick={addSas}>+ Novo SAS</BtnY>
-              </div>
-            </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                  <tbody>
-                    {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
-                    {sas.map(s=>{
-                      const isPend=s.status==="pendente";
-                      const slaVal=isPend&&s.dataSolicitacao?diffDays(s.dataSolicitacao):null;
-                      return(
-                        <tr key={s.id}>
-                          <td><input type="date" value={s.dataSolicitacao||""} onChange={e=>updateSas(s.id,{dataSolicitacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.email||""} onChange={e=>updateSas(s.id,{email:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.nfNum||""} onChange={e=>updateSas(s.id,{nfNum:e.target.value})} placeholder="NF-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equipamento" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.cliente||""} onChange={e=>updateSas(s.id,{cliente:e.target.value})} placeholder="Cliente" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.nome||""} onChange={e=>updateSas(s.id,{nome:e.target.value})} placeholder="Nome" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.tel||""} onChange={e=>updateSas(s.id,{tel:e.target.value})} placeholder="Tel" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.emailContato||""} onChange={e=>updateSas(s.id,{emailContato:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><select value={s.servico||"entrega_tecnica"} onChange={e=>updateSas(s.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}><option value="entrega_tecnica">📦 Entrega Técnica</option><option value="manutencao_externa">🔧 Manutenção Externa</option></select></td>
-                          <td><input type="date" value={s.dataRealizacao||""} onChange={e=>updateSas(s.id,{dataRealizacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.envioFaturamento||""} onChange={e=>updateSas(s.id,{envioFaturamento:e.target.value})} placeholder="Info..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.valor||""} onChange={e=>updateSas(s.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
-                          <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
-                          <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
-                          <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── CARROS ── */}
-        {tab==="carros"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{carros.length} registro(s)</div></div>
-              <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(carros,"carros_grupomov",[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"tecnico",label:"Técnico"},{key:"manutencao",label:"Manutenção"},{key:"valor",label:"Valor"},{key:"aprovadoGustavo",label:"Aprovado Gustavo"},{key:"dataExecucao",label:"Data Execução"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={addCarro}>+ Novo Registro</BtnY>
-              </div>
-            </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>Data</th><th>Placa</th><th>Técnico</th><th>Manutenção</th><th>Valor</th><th>Aprov. Gustavo</th><th>Data Execução</th><th>Oficina</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                  <tbody>
-                    {carros.length===0&&<tr><td colSpan={11} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Registro".</td></tr>}
-                    {carros.map(c=>(
-                      <tr key={c.id}>
-                        <td><input type="date" value={c.data||""} onChange={e=>updateCarro(c.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={c.placa||""} onChange={e=>updateCarro(c.id,{placa:e.target.value})} placeholder="ABC-1234" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><select value={c.tecnico||ALL_TECHS[0]} onChange={e=>updateCarro(c.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{[...ALL_TECHS,...OFICINA_TECHS].map(t=><option key={t}>{t}</option>)}</select></td>
-                        <td><input type="text" value={c.manutencao||""} onChange={e=>updateCarro(c.id,{manutencao:e.target.value})} placeholder="Descreva a manutenção..." style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={c.valor||""} onChange={e=>updateCarro(c.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
-                        <td><select value={c.aprovadoGustavo||"nao"} onChange={e=>updateCarro(c.id,{aprovadoGustavo:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:c.aprovadoGustavo==="sim"?"#1A7A3C":"#C62828",background:c.aprovadoGustavo==="sim"?"#F0FFF5":"#FFF0F0"}}><option value="nao">❌ Não</option><option value="sim">✅ Sim</option></select></td>
-                        <td>{c.aprovadoGustavo==="sim"?<input type="date" value={c.dataExecucao||""} onChange={e=>updateCarro(c.id,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                        <td>{c.aprovadoGustavo==="sim"?<input type="text" value={c.oficina||""} onChange={e=>updateCarro(c.id,{oficina:e.target.value})} placeholder="Oficina..." style={{width:120,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                        <td><input type="text" value={c.obs||""} onChange={e=>updateCarro(c.id,{obs:e.target.value})} placeholder="Obs..." style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
-                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delCarro(c.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── APONTAMENTOS OFICINA 150 ── */}
-        {tab==="apontamentos_150"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{apontamentos150.length} registro(s) · Matheus, Pedro Souza, Pedro Pimentel</div></div>
-              <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(apontamentos150,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={addApon150}>+ Novo Apontamento</BtnY>
-              </div>
-            </div>
-            <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-              <input type="date" value={ofi150Data} onChange={e=>setOfi150Data(e.target.value)} style={{fontSize:12}}/>
-              <input type="text" value={ofi150OS} onChange={e=>setOfi150OS(e.target.value)} placeholder="🔍 OS" style={{width:100,fontSize:12}}/>
-              <input type="text" value={ofi150Pat} onChange={e=>setOfi150Pat(e.target.value)} placeholder="🔍 Patrimônio" style={{width:130,fontSize:12}}/>
-              <select value={ofi150Tech} onChange={e=>setOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={ofi150Serv} onChange={e=>setOfi150Serv(e.target.value)} style={{fontSize:12}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-            </div>
-            <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-              <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Relatório</th><th>Obs</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-              <tbody>
-                {apontamentos150.filter(a=>{
-                  if(ofi150Data&&a.data!==ofi150Data)return false;
-                  if(ofi150OS&&!(a.os||"").toLowerCase().includes(ofi150OS.toLowerCase()))return false;
-                  if(ofi150Pat&&!(a.patrimonio||"").toLowerCase().includes(ofi150Pat.toLowerCase()))return false;
-                  if(ofi150Tech!=="todos"&&a.tecnico!==ofi150Tech)return false;
-                  if(ofi150Serv!=="todos"&&a.servico!==ofi150Serv)return false;
-                  return true;
-                }).map(a=>(
-                  <tr key={a.id}>
-                    <td><input type="date" value={a.data||""} onChange={e=>updateApon150(a.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><input type="text" value={a.os||""} onChange={e=>updateApon150(a.id,{os:e.target.value})} placeholder="OS-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><input type="text" value={a.patrimonio||""} onChange={e=>updateApon150(a.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><select value={a.tecnico||"Matheus"} onChange={e=>updateApon150(a.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                    <td><select value={a.servico||SERVICOS_OFICINA[0]} onChange={e=>updateApon150(a.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></td>
-                    <td><input type="time" value={a.inicio||""} onChange={e=>{const v=e.target.value;updateApon150(a.id,{inicio:v,total:calcHoras(v,a.termino)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><input type="time" value={a.termino||""} onChange={e=>{const v=e.target.value;updateApon150(a.id,{termino:v,total:calcHoras(a.inicio,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{a.total||calcHoras(a.inicio,a.termino)||"—"}</span></td>
-                    <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon150(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td><input type="text" value={a.obs||""} onChange={e=>updateApon150(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                    <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                    {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
-                  </tr>
-                ))}
-                {apontamentos150.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
-              </tbody>
-            </table></div></div>
-          </div>
-        )}
-
-        {/* ── AGENDA OFICINA 150 ── */}
-        {tab==="agenda_ofi_150"&&(()=>{
-          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const addAtend150=()=>{
-            const dataFinal=agOfi150Date||`${ym}-01`;
-            if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
-            const key=`${agOfi150TechSel}__${dataFinal}`;
-            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:"agendada",horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida),obs:agOfi150Obs,relatorio:agOfi150Relatorio||""}]);
-            setAgOfi150Empresa("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");setAgOfi150Obs("");setAgOfi150Relatorio("");
-            notify("✅ Atendimento Oficina 150 salvo!");
-          };
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina 150</div><div style={{fontSize:13,color:"#888"}}>Matheus · Pedro Souza · Pedro Pimentel — {MESES[agOfi150Month]} {agOfi150Year}</div></div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <select value={agOfi150Tech} onChange={e=>setAgOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agOfi150Servico} onChange={e=>setAgOfi150Servico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-                </div>
-              </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
-                  <input type="text" placeholder="Empresa/Serviço" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
-                  <input type="text" placeholder="Patrimônio" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <select value={agOfi150ServSel} onChange={e=>setAgOfi150ServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfi150Entrada} onChange={e=>setAgOfi150Entrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfi150Saida} onChange={e=>setAgOfi150Saida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <input type="text" placeholder="Obs..." value={agOfi150Obs} onChange={e=>setAgOfi150Obs(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <input type="text" placeholder="Nº Relatório" value={agOfi150Relatorio||""} onChange={e=>setAgOfi150Relatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <BtnY onClick={addAtend150}>Adicionar</BtnY>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {OFICINA_150_TECHS.filter(t=>agOfi150Tech==="todos"||t===agOfi150Tech).map(tech=>{
-                  const color=techColor(tech);
-                  const entries=[];
-                  Object.keys(agendaOfi150).forEach(k=>{
-                    const i=k.indexOf("__"); if(i<0) return;
-                    const kt=k.slice(0,i), kd=k.slice(i+2);
-                    if(kt!==tech||!kd.startsWith(ym)) return;
-                    (agendaOfi150[k]||[]).forEach((s,si)=>{
-                      if(agOfi150Servico==="todos"||s.servico===agOfi150Servico) entries.push({s,date:kd,key:k,si});
-                    });
-                  });
-                  entries.sort((a,b)=>a.date.localeCompare(b.date));
-                  return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
-                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfi150Month]}</div>
-                      </div>
-                      <div style={{padding:"8px 14px"}}>
-                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
-                        {entries.map((e,ix)=>{const dia=e.date.slice(8,10);return(
-                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
-                              <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              <button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi150[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi150(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
-                            </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
-                            <div style={{marginBottom:4}}><input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/></div>
-                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:4}}>
-                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
-                            </div>
-                            {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>{e.s.obs}</div>}
-                            <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
-                              <option value="agendada">Agendada</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option><option value="remarcada">Remarcada</option>
-                            </select>
-                          </div>
-                        );})}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── DASHBOARD OFICINA 150 ── */}
-        {tab==="dashboard_ofi_150"&&(()=>{
-          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
-          const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-          const apMes=apontamentos150.filter(a=>a.data&&a.data.startsWith(mesAtual));
-          const totalMin=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-          const agAtend=[];
-          Object.keys(agendaOfi150).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi150[k]||[]).forEach(s=>agAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida)}));});
-          const concluidos=agAtend.filter(a=>a.status==="concluida").length;
-          const techHorasData={labels:OFICINA_150_TECHS,datasets:[{label:"Horas",data:OFICINA_150_TECHS.map(t=>+(apMes.filter(a=>a.tecnico===t).reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
-          const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
-          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina 150 — {MESES[agOfi150Month]} {agOfi150Year}</div>
-              <div style={{display:"flex",gap:8,marginBottom:16}}>
-                <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-                {[{l:"Apontamentos (mês)",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais (mês)",v:fmtMin(totalMin),c:"#C47D00"},{l:"Agendados",v:agAtend.length,c:"#1565C0"},{l:"Concluídos",v:concluidos,c:"#1A7A3C"}].map((s,i)=>(
-                  <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
-                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>⏱ Horas por Técnico</div><ChartCanvas type="bar" data={techHorasData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},maintainAspectRatio:false}} height={160}/></div>
-                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Serviços Realizados</div><ChartCanvas type="bar" data={servData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}} height={240}/></div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {OFICINA_150_TECHS.map(tech=>{
-                  const color=techColor(tech);
-                  const techAp=apMes.filter(a=>a.tecnico===tech);
-                  const totalM=techAp.reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0);
-                  return(<div key={tech} className="card" style={{borderTop:`3px solid ${color}`,padding:"14px 16px"}}>
-                    <div style={{fontWeight:700,fontSize:14,marginBottom:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                    <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Horas: <b style={{color:"#C47D00"}}>{fmtMin(totalM)}</b></div>
-                    <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Apontamentos: <b>{techAp.length}</b></div>
-                    <div style={{fontSize:11,color:"#AAA"}}>Serviços: {[...new Set(techAp.map(a=>a.servico))].join(", ")||"—"}</div>
-                  </div>);
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── PENDÊNCIAS MATHEUS ── */}
-        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
-          const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Matheus</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
-              </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{const p=PRIO[r.prioridade||"medio"];const res=r.status==="resolvido";return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>mathCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>mathCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>mathCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>mathCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>mathCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>mathCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))mathCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
