@@ -43,7 +43,9 @@ const USERS = [
   { id:"gustavo", name:"Gustavo Coelho", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:false },
   { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:false, apenasOficina:true },
+  { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:false, apenasOfi150:true },
 ];
+const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
@@ -741,6 +743,27 @@ export default function App(){
   const [ofiNovaTech,setOfiNovaTech]=useState("todos");
   const [ofiNovaServ,setOfiNovaServ]=useState("todos");
   const [apontamentos,setApontamentos]=useState([]);
+  const [apontamentos150,setApontamentos150]=useState([]);
+  const [agendaOfi150,setAgendaOfi150]=useState({});
+  const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
+  const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
+  const [agOfi150Tech,setAgOfi150Tech]=useState("todos");
+  const [agOfi150Servico,setAgOfi150Servico]=useState("todos");
+  const [agOfi150TechSel,setAgOfi150TechSel]=useState("Matheus");
+  const [agOfi150Date,setAgOfi150Date]=useState("");
+  const [agOfi150Empresa,setAgOfi150Empresa]=useState("");
+  const [agOfi150Pat,setAgOfi150Pat]=useState("");
+  const [agOfi150ServSel,setAgOfi150ServSel]=useState(SERVICOS_OFICINA[0]);
+  const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
+  const [agOfi150Saida,setAgOfi150Saida]=useState("");
+  const [agOfi150Obs,setAgOfi150Obs]=useState("");
+  const [pendMatheus,setPendMatheus]=useState([]);
+  const [showArqMat,setShowArqMat]=useState(false);
+  const [ofi150Data,setOfi150Data]=useState("");
+  const [ofi150OS,setOfi150OS]=useState("");
+  const [ofi150Pat,setOfi150Pat]=useState("");
+  const [ofi150Tech,setOfi150Tech]=useState("todos");
+  const [ofi150Serv,setOfi150Serv]=useState("todos");
   const [sas,setSas]=useState([]);
 
   // Modais
@@ -799,12 +822,12 @@ export default function App(){
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
     const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
         db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
         db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
         db.get("uber_pedidos"), db.get("escala"), db.get("usuarios"), db.get("financeiro"),
         db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina"),
-        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina"), db.get("sas"), db.get("carros")
+        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina"), db.get("sas"), db.get("carros"), db.get("apontamentos_150"), db.get("agenda_ofi_150"), db.get("pendencias_matheus")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -824,6 +847,9 @@ export default function App(){
       if(apRows.length>0) setApontamentos(apRows);
       if(sasRows.length>0) setSas(sasRows);
       if(carrosRows.length>0) setCarros(carrosRows);
+      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
+      if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi150(ao); }
+      if(matRows.length>0) setPendMatheus(matRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
@@ -868,7 +894,7 @@ export default function App(){
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
-  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
+  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
   const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
   const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
@@ -877,6 +903,11 @@ export default function App(){
   const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
   const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:"",tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:""}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); notify("✅ Registro criado!"); };
   const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
+  const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
+  const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
+  const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
+  const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
+  const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
@@ -1116,7 +1147,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {apontamentos.filter(a=>{
                       if(ofiNovaData&&a.data!==ofiNovaData)return false;
@@ -1136,6 +1167,7 @@ export default function App(){
                         <td><input type="time" value={a.termino||""} onChange={e=>{const v=e.target.value;updateApon(a.id,{termino:v,total:calcHoras(a.inicio,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
                         <td><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{a.total||calcHoras(a.inicio,a.termino)||"—"}</span></td>
                         <td><select value={a.oficina||"1340"} onChange={e=>updateApon(a.id,{oficina:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700}}>{OFICINAS_UNID.map(o=><option key={o}>{o}</option>)}</select></td>
+                        <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                         <td><input type="text" value={a.obs||""} onChange={e=>updateApon(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                         <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
