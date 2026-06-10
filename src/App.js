@@ -1292,7 +1292,7 @@ export default function App(){
             const dataFinal=agOfiDate||`${ym}-01`;
             if(!agOfiEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfiTechSel}__${dataFinal}`;
-            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,patrimonio:agOfiPat||"",servico:agOfiServSel,status:"agendada",horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida),obs:agOfiObs,relatorio:agOfiRelatorio||""}]);
+            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,horimetro:agOfiHorimetro||"",patrimonio:agOfiPat||"",servico:agOfiServSel,status:"agendada",horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida),obs:agOfiObs,relatorio:agOfiRelatorio||""}]);
             setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");setAgOfiObs("");setAgOfiRelatorio("");
             notify("✅ Atendimento Oficina salvo!");
           };
@@ -1313,6 +1313,7 @@ export default function App(){
                   <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa/Serviço" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Horímetro" value={agOfiHorimetro||""} onChange={e=>setAgOfiHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:100}}/>
                   <input type="text" placeholder="Patrimônio" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <select value={agOfiServSel} onChange={e=>setAgOfiServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfiEntrada} onChange={e=>setAgOfiEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
@@ -1885,7 +1886,7 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,horimetro:agHorimetro||"",patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
             setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
             notify("✅ Atendimento salvo!");
           };
@@ -1914,6 +1915,7 @@ export default function App(){
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Horímetro" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:100}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
                   <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
@@ -2686,7 +2688,7 @@ export default function App(){
             const dataFinal=agOfi150Date||`${ym}-01`;
             if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfi150TechSel}__${dataFinal}`;
-            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:"agendada",horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida),obs:agOfi150Obs,relatorio:agOfi150Relatorio||""}]);
+            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,horimetro:agOfi150Horimetro||"",patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:"agendada",horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida),obs:agOfi150Obs,relatorio:agOfi150Relatorio||""}]);
             setAgOfi150Empresa("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");setAgOfi150Obs("");setAgOfi150Relatorio("");
             notify("✅ Atendimento Oficina 150 salvo!");
           };
@@ -2707,6 +2709,7 @@ export default function App(){
                   <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa/Serviço" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Horímetro" value={agOfi150Horimetro||""} onChange={e=>setAgOfi150Horimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:100}}/>
                   <input type="text" placeholder="Patrimônio" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <select value={agOfi150ServSel} onChange={e=>setAgOfi150ServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfi150Entrada} onChange={e=>setAgOfi150Entrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
