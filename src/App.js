@@ -1,4 +1,4 @@
-    /* eslint-disable */
+        /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
@@ -41,8 +41,13 @@ const db = {
 const USERS = [
   { id:"manuela", name:"Manuela", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"gustavo", name:"Gustavo Coelho", role:"ADM", password:"mov2026", canDelete:true  },
-  { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:false },
+  { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:true  },
+  { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:true,  apenasOficina:true },
+  { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:true,  apenasOfi150:true },
 ];
+const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
+const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
+const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
   metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
   roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
@@ -51,34 +56,23 @@ const REGIONS = {
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
-const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel"];
+const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel","Reginaldo"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
-
-// ── ITENS DE REVISÃO ──────────────────────────────────────────────────────────
 const ITENS_REVISAO = [
-  {v:"oleo_motor",l:"Óleo Motor"},
-  {v:"oleo_cambio",l:"Óleo do Câmbio"},
-  {v:"oleo_freio",l:"Óleo de Freio"},
-  {v:"oleo_embreagem",l:"Óleo Embreagem"},
-  {v:"filtro_oleo_motor",l:"Filtro de Óleo Motor"},
-  {v:"filtro_ar_cond",l:"Filtro Ar Condicionado"},
-  {v:"filtro_ar_motor",l:"Filtro Ar do Motor"},
-  {v:"higienizador",l:"Higienizador"},
-  {v:"cabo_velas",l:"Cabo e Velas"},
-  {v:"correia_dentada",l:"Correia Dentada"},
-  {v:"correia_alternador",l:"Correia do Alternador"},
-  {v:"correia_dh",l:"Correia DH"},
-  {v:"correia_servico",l:"Correia de Serviço"},
-  {v:"tensor_correias",l:"Tensor de Correias"},
-  {v:"outros",l:"Outros"},
+  {v:"oleo_motor",l:"Óleo Motor"},{v:"oleo_cambio",l:"Óleo Câmbio"},{v:"oleo_freio",l:"Óleo Freio"},
+  {v:"oleo_embreagem",l:"Óleo Embreagem"},{v:"filtro_oleo_motor",l:"Filtro Óleo Motor"},{v:"filtro_ar_cond",l:"Filtro Ar Cond."},
+  {v:"filtro_ar_motor",l:"Filtro Ar Motor"},{v:"higienizador",l:"Higienizador"},{v:"cabo_velas",l:"Cabo e Velas"},
+  {v:"correia_dentada",l:"Correia Dentada"},{v:"correia_alternador",l:"Correia Alternador"},{v:"correia_dh",l:"Correia DH"},
+  {v:"correia_servico",l:"Correia Serviço"},{v:"tensor_correias",l:"Tensor Correias"},{v:"outros",l:"Outros"},
 ];
 const CARRO_STATUS = {
-  orcamento_pendente: {l:"Orçamento Pendente",c:"#C62828",bg:"#FFF0F0"},
-  oficina:            {l:"Oficina",            c:"#E67E00",bg:"#FFF8F0"},
-  liberado:           {l:"Liberado",           c:"#1A7A3C",bg:"#F0FFF5"},
+  orcamento_pendente:{l:"Orçamento Pendente",c:"#C62828",bg:"#FFF0F0"},
+  oficina:{l:"Oficina",c:"#E67E00",bg:"#FFF8F0"},
+  liberado:{l:"Liberado",c:"#1A7A3C",bg:"#F0FFF5"},
 };
+const PEND_ACOES = ["Reunião","Envio de Email","Treinamento","Feedback","Retorno para Cliente","Diretoria","Gustavo","Gilberto","Almox","Relatórios","Escala Técnica","Outros"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODAY      = new Date();
 const LOGO_MOV = "data:image/jpeg;base64,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";
@@ -105,10 +99,10 @@ const statusCfg = {
   "concluído":{color:"#1A7A3C",bg:"#F0FFF5",label:"Concluído"},
 };
 const empSitCfg = {
-  "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
   "Atendido":{color:"#1A7A3C",bg:"#F0FFF5"},
   "Pendente":{color:"#C62828",bg:"#FFF0F0"},
   "Parcialmente Atendido":{color:"#E67E00",bg:"#FFF8F0"},
+  "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
   "Retorno Concluído":{color:"#00838F",bg:"#E0F7FA"},
 };
 const PROCESS_STATUS = {
@@ -246,7 +240,7 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS}){
   const [analyzing,setAnalyzing]=useState(false);
   const [err,setErr]=useState("");
   const fileRef=useRef();
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",cidade:"",horimetro:"",patrimonio:"",tecnico:techs[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
+  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",tecnico:techs[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const analyzeAI=async(content)=>{
     setAnalyzing(true);setErr("");
@@ -279,10 +273,6 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS}){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
               <Inp label="Nº Relatório" value={form.reportNum} onChange={v=>upd("reportNum",v)} placeholder="REL-2026-001"/>
               <Inp label="Empresa/Cliente" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="Nome da empresa"/>
-              <Inp label="Cidade" value={form.cidade} onChange={v=>upd("cidade",v)} placeholder="Cidade"/>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-              <Inp label="Horímetro" value={form.horimetro} onChange={v=>upd("horimetro",v)} placeholder="Ex: 12350"/>
               <Inp label="Patrimônio" value={form.patrimonio} onChange={v=>upd("patrimonio",v)} placeholder="PAT-000"/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
@@ -432,7 +422,7 @@ function ImportExcelModal({onClose,onImport}){
 // ── MODAL PROCESSO (Mau Uso / A Faturar) ─────────────────────────────────────
 function ProcessoModal({onClose,onSave,tipo}){
   const isMU=tipo==="mau_uso";
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",horimetro:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
+  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const sla=form.enviadoAprovacao==="sim"&&form.dataEnvio?diffDays(form.dataEnvio):null;
   return(
@@ -448,8 +438,7 @@ function ProcessoModal({onClose,onSave,tipo}){
             <Inp label="Empresa" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="Nome da empresa"/>
             <Inp label="Patrimônio" value={form.patrimonio} onChange={v=>upd("patrimonio",v)} placeholder="PAT-000"/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-            <Inp label="Horímetro" value={form.horimetro} onChange={v=>upd("horimetro",v)} placeholder="Ex: 12350"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Inp label="Nº Relatório" value={form.relatorio} onChange={v=>upd("relatorio",v)} placeholder="REL-2026-001"/>
             <Inp label="Chamado" value={form.chamado} onChange={v=>upd("chamado",v)} placeholder="CHM-001"/>
           </div>
@@ -587,70 +576,6 @@ function SaidaModal({onClose,onSave,initial}){
 
 
 
-
-// ── MODAL REVISÃO CARRO ───────────────────────────────────────────────────────
-function CarroRevisaoModal({onClose, onSave, placa, initial}){
-  const emptyForm = {placa:placa||PLACAS_CARROS[0],status:"liberado",data:TODAY_STR,responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],proximaRevisaoData:"",oficina:"",obs:"",obsOutros:"",obsOutrosProx:""};
-  const [form,setForm]=useState(initial&&initial.id?initial:emptyForm);
-  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const toggleItem=(list,v)=>list.includes(v)?list.filter(x=>x!==v):[...list,v];
-  const stCfg=CARRO_STATUS[form.status]||CARRO_STATUS.liberado;
-  return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
-      <div style={{background:"#FFF",borderRadius:16,width:720,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
-        <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>🚗 Revisão — {form.placa}</div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
-        </div>
-        <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-            <Sel label="Placa" value={form.placa} onChange={v=>upd("placa",v)} options={PLACAS_CARROS.map(p=>({v:p,l:p}))}/>
-            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-              <div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Status</div>
-              <select value={form.status} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"7px 10px",color:stCfg.c,background:stCfg.bg,border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>
-                <option value="orcamento_pendente">Orçamento Pendente</option>
-                <option value="oficina">Oficina</option>
-                <option value="liberado">Liberado</option>
-              </select>
-            </div>
-            <Inp type="date" label="Data" value={form.data} onChange={v=>upd("data",v)}/>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-            <Inp label="Responsável" value={form.responsavel} onChange={v=>upd("responsavel",v)} placeholder="Nome"/>
-            <Inp label="Oficina" value={form.oficina} onChange={v=>upd("oficina",v)} placeholder="Nome da oficina"/>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-            <Inp type="date" label="Última Revisão" value={form.ultimaRevisaoData} onChange={v=>upd("ultimaRevisaoData",v)}/>
-            <Inp label="KM Última Revisão" value={form.kmUltimaRevisao} onChange={v=>upd("kmUltimaRevisao",v)} placeholder="Ex: 45000"/>
-            <Inp label="Valor Última Revisão" value={form.valorUltimaRevisao} onChange={v=>upd("valorUltimaRevisao",v)} placeholder="R$ 0,00"/>
-          </div>
-          <Inp label="KM Atual" value={form.kmAtual} onChange={v=>upd("kmAtual",v)} placeholder="Ex: 52000"/>
-          <div style={{background:"#F0F4FF",borderRadius:10,padding:14,border:"1px solid #C5D8FF"}}>
-            <div style={{fontSize:11,fontWeight:700,color:"#1565C0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>✅ Itens Substituídos</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-              {ITENS_REVISAO.map(it=>(<label key={it.v} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",padding:"4px 6px",borderRadius:6,background:form.itensSubstituidos.includes(it.v)?"#D6E4FF":"transparent"}}><input type="checkbox" checked={form.itensSubstituidos.includes(it.v)} onChange={()=>upd("itensSubstituidos",toggleItem(form.itensSubstituidos,it.v))} style={{width:14,height:14}}/>{it.l}</label>))}
-            </div>
-            {form.itensSubstituidos.includes("outros")&&<div style={{marginTop:8}}><Inp label="Outros (descrição)" value={form.obsOutros} onChange={v=>upd("obsOutros",v)} placeholder="Descreva..."/></div>}
-          </div>
-          <div style={{background:"#F0FFF5",borderRadius:10,padding:14,border:"1px solid #A0DDBB"}}>
-            <div style={{fontSize:11,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>🔜 Itens Próxima Revisão</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-              {ITENS_REVISAO.map(it=>(<label key={it.v} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",padding:"4px 6px",borderRadius:6,background:form.itensProximaRevisao.includes(it.v)?"#C8F0D8":"transparent"}}><input type="checkbox" checked={form.itensProximaRevisao.includes(it.v)} onChange={()=>upd("itensProximaRevisao",toggleItem(form.itensProximaRevisao,it.v))} style={{width:14,height:14}}/>{it.l}</label>))}
-            </div>
-            {form.itensProximaRevisao.includes("outros")&&<div style={{marginTop:8}}><Inp label="Outros próxima (descrição)" value={form.obsOutrosProx} onChange={v=>upd("obsOutrosProx",v)} placeholder="Descreva..."/></div>}
-          </div>
-          <Inp type="date" label="Próxima Revisão (Data Prevista)" value={form.proximaRevisaoData} onChange={v=>upd("proximaRevisaoData",v)}/>
-          <Inp label="Observações" value={form.obs} onChange={v=>upd("obs",v)} placeholder="Observações gerais..."/>
-          <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:8}}>
-            <BtnG onClick={onClose}>Cancelar</BtnG>
-            <BtnY onClick={()=>{onSave({...form,id:form.id||`CAR${Date.now()}`});onClose();}}>Salvar</BtnY>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── EXPORTAR EXCEL (CSV) ──────────────────────────────────────────────────────
 const exportCSV = (data, filename, cols) => {
   if(!data||data.length===0){alert("Sem dados para exportar!");return;}
@@ -764,6 +689,8 @@ export default function App(){
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
+  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
   const [processosAF,setProcessosAF]=useState([]);
@@ -801,11 +728,15 @@ export default function App(){
   const [pendGustavo,setPendGustavo]=useState([]);
   const [oficina,setOficina]=useState([]);
   const [carros,setCarros]=useState([]);
+  const [pendManuela,setPendManuela]=useState([]);
   const [modalCarroRevisao,setModalCarroRevisao]=useState(null);
   const [carroFiltroPlaca,setCarroFiltroPlaca]=useState("todas");
   const [carroFiltroData,setCarroFiltroData]=useState("");
   const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
   const [showArqCarros,setShowArqCarros]=useState(false);
+  const [showArqPendMan,setShowArqPendMan]=useState(false);
+  const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
+  const [editPendMan,setEditPendMan]=useState(null);
   const [modalOfi,setModalOfi]=useState(false);
   const [modalImportOfi,setModalImportOfi]=useState(false);
   const [showArqOfi,setShowArqOfi]=useState(false);
@@ -820,6 +751,57 @@ export default function App(){
   const [showArqPri,setShowArqPri]=useState(false);
   const [showArqRh,setShowArqRh]=useState(false);
   const [showArqGus,setShowArqGus]=useState(false);
+  const [dashReqTab,setDashReqTab]=useState("visao_geral");
+  const [schedOfiDate,setSchedOfiDate]=useState(TODAY_STR);
+  const [agendaOfi,setAgendaOfi]=useState({});
+  const [agOfiMonth,setAgOfiMonth]=useState(TODAY.getMonth());
+  const [agOfiYear,setAgOfiYear]=useState(TODAY.getFullYear());
+  const [agOfiTech,setAgOfiTech]=useState("todos");
+  const [agOfiServico,setAgOfiServico]=useState("todos");
+  const [agOfiStatus,setAgOfiStatus]=useState("todos");
+  const [agOfiEmpresa,setAgOfiEmpresa]=useState("");
+  const [agOfiPat,setAgOfiPat]=useState("");
+  const [agOfiTechSel,setAgOfiTechSel]=useState(OFICINA_TECHS[0]);
+  const [agOfiDate,setAgOfiDate]=useState("");
+  const [agOfiServSel,setAgOfiServSel]=useState(SERVICOS_OFICINA[0]);
+  const [agOfiEntrada,setAgOfiEntrada]=useState("");
+  const [agOfiSaida,setAgOfiSaida]=useState("");
+  const [agOfiObs,setAgOfiObs]=useState("");
+  const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
+  const [pendHebert,setPendHebert]=useState([]);
+  const [showArqHeb,setShowArqHeb]=useState(false);
+  // Filtros nova aba oficina
+  const [ofiNovaData,setOfiNovaData]=useState("");
+  const [ofiNovaOS,setOfiNovaOS]=useState("");
+  const [ofiNovaPat,setOfiNovaPat]=useState("");
+  const [ofiNovaTech,setOfiNovaTech]=useState("todos");
+  const [ofiNovaServ,setOfiNovaServ]=useState("todos");
+  const [apontamentos,setApontamentos]=useState([]);
+  const [apontamentos150,setApontamentos150]=useState([]);
+  const [agendaOfi150,setAgendaOfi150]=useState({});
+  const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
+  const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
+  const [agOfi150Tech,setAgOfi150Tech]=useState("todos");
+  const [agOfi150Servico,setAgOfi150Servico]=useState("todos");
+  const [agOfi150TechSel,setAgOfi150TechSel]=useState("Matheus");
+  const [agOfi150Date,setAgOfi150Date]=useState("");
+  const [agOfi150Empresa,setAgOfi150Empresa]=useState("");
+  const [agOfi150Pat,setAgOfi150Pat]=useState("");
+  const [agOfi150ServSel,setAgOfi150ServSel]=useState(SERVICOS_OFICINA[0]);
+  const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
+  const [agOfi150Saida,setAgOfi150Saida]=useState("");
+  const [agOfi150Obs,setAgOfi150Obs]=useState("");
+  const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
+  const [agOfi150Tipo,setAgOfi150Tipo]=useState("preventivo");
+  const [agOfi150Status,setAgOfi150Status]=useState("agendada");
+  const [pendMatheus,setPendMatheus]=useState([]);
+  const [showArqMat,setShowArqMat]=useState(false);
+  const [ofi150Data,setOfi150Data]=useState("");
+  const [ofi150OS,setOfi150OS]=useState("");
+  const [ofi150Pat,setOfi150Pat]=useState("");
+  const [ofi150Tech,setOfi150Tech]=useState("todos");
+  const [ofi150Serv,setOfi150Serv]=useState("todos");
+  const [sas,setSas]=useState([]);
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -858,10 +840,9 @@ export default function App(){
   const [agPat,setAgPat]=useState("");
   const [agStatus,setAgStatus]=useState("agendada");
   const [agTipo,setAgTipo]=useState("preventivo");
-  const [agCidade,setAgCidade]=useState("");
-  const [agHorimetro,setAgHorimetro]=useState("");
   const [agEntrada,setAgEntrada]=useState("");
   const [agSaida,setAgSaida]=useState("");
+  const [agRelatorio,setAgRelatorio]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
@@ -879,12 +860,12 @@ export default function App(){
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
     const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, carrosRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, uberRows, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
         db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
         db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
         db.get("uber_pedidos"), db.get("escala"), db.get("usuarios"), db.get("financeiro"),
         db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina"),
-        db.get("carros")
+        db.get("agenda_oficina"), db.get("pendencias_hebert"), db.get("apontamentos_oficina"), db.get("sas"), db.get("carros"), db.get("pendencias_manuela"), db.get("apontamentos_150"), db.get("agenda_ofi_150"), db.get("pendencias_matheus")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -899,7 +880,15 @@ export default function App(){
       if(rhs.length>0) setRhFiscal(rhs);
       if(guss.length>0) setPendGustavo(guss);
       if(ofis.length>0) setOficina(ofis);
+      if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi(ao); }
+      if(hebRows.length>0) setPendHebert(hebRows);
+      if(apRows.length>0) setApontamentos(apRows);
+      if(sasRows.length>0) setSas(sasRows);
       if(carrosRows.length>0) setCarros(carrosRows);
+      if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
+      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
+      if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; }); setAgendaOfi150(ao); }
+      if(matRows.length>0) setPendMatheus(matRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
@@ -941,12 +930,30 @@ export default function App(){
     add:(base)=>{ const r={id:`${table.slice(0,3).toUpperCase()}${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...base}; setFn(p=>[r,...p]); db.save(table,r.id,r); notify("✅ Criado e salvo!"); },
     del:(id)=>{ setFn(p=>p.filter(x=>x.id!==id)); db.delete(table,id); },
   });
-  const froCrud=mkCrud("pendencias_frota",setFrota);
+  const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
+  const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
+  const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
+  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
+  const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
+  const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
+  const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
+  const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
+
+  const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
+  const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
+  const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
+  const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
+  const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
+  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
+  const pendManCrud={
+    add:(d)=>{ const row={...d,id:`PM${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}; setPendManuela(p=>[row,...p]); db.save("pendencias_manuela",row.id,row); notify("✅ Salvo!"); },
+    update:(id,ch)=>{ setPendManuela(prev=>{ const np=prev.map(x=>x.id===id?{...x,...ch}:x); const row=np.find(x=>x.id===id); db.save("pendencias_manuela",id,row); return np; }); },
+    del:(id)=>{ setPendManuela(p=>p.filter(x=>x.id!==id)); db.delete("pendencias_manuela",id); notify("🗑 Excluído!"); },
+  };
   const updateOfi=(id,changes)=>{ setOficina(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("oficina",id,row); return np; }); };
-  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); notify("✅ Salvo!"); };
   // Usuários (gerenciados pela gestora)
   const saveUser=(u)=>{ setUsers(prev=>{ const ex=prev.find(x=>x.id===u.id); return ex?prev.map(x=>x.id===u.id?u:x):[...prev,u]; }); db.save("usuarios",u.id,u); notify("✅ Usuário salvo!"); };
   const deleteUser=(id)=>{ if(id==="manuela"){alert("Não é possível excluir a gestora principal.");return;} setUsers(prev=>prev.filter(x=>x.id!==id)); db.delete("usuarios",id); notify("Usuário removido."); };
@@ -982,7 +989,7 @@ export default function App(){
   // Lista achatada dos atendimentos da Agenda (para o Dashboard)
   const techRegionMap={}; Object.entries(REGIONS).forEach(([rk,rv])=>rv.techs.forEach(t=>{techRegionMap[t]=rk;}));
   const agendaAtendimentos=[];
-  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas,empresa:s.client||"",patrimonio:s.patrimonio||""})); });
+  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);notify(`Bem-vinda, ${u.name}!`);}}/>;
 
@@ -1040,22 +1047,42 @@ export default function App(){
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
           {[
-            ["relatorios","📋 Conferência de Relatórios"],
-            ["oficina","🔧 Oficina"],
-            ["agenda_prev","🗓 Agenda"],
-            ["dashboard","📊 Dashboard"],
-            ["mau_uso","⚠️ Mau Uso"],
-            ["a_faturar","💰 A Faturar"],
-            ["emprestimos","🔄 Req. Empréstimo"],
-            ["saida_entrada","📦 Saída/Entrada"],
-            ["uber","🚗 Uber"],
-            ["carros","🚙 Carros"],
-            ["financeiro","💰 Financeiro"],
-            ["pendencias_frota","🚜 Pendências Frota"],
-            ["prioridades_clientes","⭐ Prioridades Clientes",true],
-            ["rh_fiscal","🧾 RH-Fiscal",true],
-            ["pendencias_gustavo","📌 Pendências Gustavo",true],
-          ].filter(([k,l,only])=>!only||user.id==="manuela").map(([k,l])=>(
+            ["relatorios","📋 Conf. Relatórios","normal"],
+            ["agenda_prev","🗓 Agenda","normal"],
+            ["dashboard","📊 Dashboard","normal"],
+            ["apontamentos_oficina","📝 Apontamentos Oficina","oficina"],
+            ["agenda_ofi","🗓 Agenda Oficina","oficina"],
+            ["dashboard_ofi","📊 Dashboard Oficina","oficina"],
+            ["apontamentos_150","📝 Apontamentos Oficina 150","ofi150"],
+            ["agenda_ofi_150","🗓 Agenda Oficina 150","ofi150"],
+            ["dashboard_ofi_150","📊 Dashboard Oficina 150","ofi150"],
+            ["mau_uso","⚠️ Mau Uso","normal"],
+            ["a_faturar","💰 A Faturar","normal"],
+            ["emprestimos","🔄 Req. Empréstimo e Retorno","normal"],
+            ["saida_entrada","📦 Req. Entrada/Saída","normal"],
+            ["dashboard_req","📊 Dashboard Requisições","normal"],
+            ["sas","📄 SAS","normal"],
+            ["carros","🚙 Carros","normal"],
+            ["uber","🚗 Uber","normal"],
+            ["financeiro","💰 Financeiro","normal"],
+            ["pendencias_frota","🚜 Pendências Frota","normal"],
+            ["prioridades_clientes","⭐ Prioridades Clientes","somanuela"],
+            ["rh_fiscal","🧾 RH-Fiscal","somanuela"],
+            ["pendencias_gustavo","📌 Pendências Gustavo","sogusnao"],
+            ["pendencias_hebert","🔧 Pendências Hebert","hebert"],
+            ["pendencias_manuela_tab","📋 Pendências Manuela","somanuela"],
+            ["pendencias_matheus","🔧 Pendências Matheus","matheus"],
+          ].filter(([k,l,tipo])=>{
+            if(user.apenasOficina) return ["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k);
+            if(user.apenasOfi150) return ["apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_matheus"].includes(k);
+            if(tipo==="somanuela") return user.id==="manuela";
+            if(tipo==="sogusnao") return user.id!=="gustavo";
+            if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
+            if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
+            if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
+            if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
+            return true;
+          }).map(([k,l])=>(
             <button key={k} className={`nav-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)}>
               {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:5,background:"#C62828",color:"#FFF",borderRadius:8,fontSize:9,padding:"1px 5px"}}>{empAlerta}</span>}
             </button>
@@ -1069,26 +1096,6 @@ export default function App(){
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-              {TIPOS.slice(0,4).map(t=>{
-                const total=t.v==="preventivo"?DB_STATS.preventivos:t.v==="corretivo"?DB_STATS.corretivos:t.v==="a_faturar"?DB_STATS.a_faturar:t.v==="mau_uso"?DB_STATS.mau_uso:reports.filter(r=>r.type===t.v).length;
-                return(
-                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
-                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{filterTipo===t.v?filteredReports.filter(r=>r.type===t.v).length:total}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
-              {TIPOS.slice(4).map(t=>(
-                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setFilterTipo(filterTipo===t.v?"todos":t.v)}>
-                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
-                  <div style={{fontSize:24,fontWeight:700,color:filterTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{reports.filter(r=>r.type===t.v).length}</div>
-                </div>
-              ))}
-            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={searchText} onChange={e=>setSearchText(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1111,7 +1118,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
                   <tbody>
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?15:14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
@@ -1137,7 +1144,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>{const ps=d.processoStatus==="arquivado"?"em_andamento":"arquivado";updateReport(d.id,{processoStatus:ps});}} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
                         </tr>
                         {pend&&(
                           <tr>
@@ -1170,29 +1177,300 @@ export default function App(){
           </div>
         )}
 
+        {/* ── APONTAMENTOS OFICINA ── */}
+        {tab==="apontamentos_oficina"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina</div><div style={{fontSize:13,color:"#888"}}>{apontamentos.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(apontamentos,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={addApon}>+ Novo Apontamento</BtnY>
+              </div>
+            </div>
+            {/* Filtros */}
+            <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
+              <input type="date" value={ofiNovaData} onChange={e=>setOfiNovaData(e.target.value)} style={{fontSize:12}} title="Filtrar por data"/>
+              <input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="🔍 OS" style={{width:100,fontSize:12}}/>
+              <input type="text" value={ofiNovaPat} onChange={e=>setOfiNovaPat(e.target.value)} placeholder="🔍 Patrimônio" style={{width:130,fontSize:12}}/>
+              <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+              {(ofiNovaData||ofiNovaOS||ofiNovaPat||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<BtnG onClick={()=>{setOfiNovaData("");setOfiNovaOS("");setOfiNovaPat("");setOfiNovaTech("todos");setOfiNovaServ("todos");}}>✕ Limpar</BtnG>}
+            </div>
+            <div className="card" style={{overflow:"hidden"}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>
+                    {apontamentos.filter(a=>{
+                      if(ofiNovaData&&a.data!==ofiNovaData)return false;
+                      if(ofiNovaOS&&!( a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
+                      if(ofiNovaPat&&!(a.patrimonio||"").toLowerCase().includes(ofiNovaPat.toLowerCase()))return false;
+                      if(ofiNovaTech!=="todos"&&a.tecnico!==ofiNovaTech)return false;
+                      if(ofiNovaServ!=="todos"&&a.servico!==ofiNovaServ)return false;
+                      return true;
+                    }).map(a=>(
+                      <tr key={a.id}>
+                        <td><input type="date" value={a.data||""} onChange={e=>updateApon(a.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={a.os||""} onChange={e=>updateApon(a.id,{os:e.target.value})} placeholder="OS-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={a.patrimonio||""} onChange={e=>updateApon(a.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><select value={a.tecnico||OFICINA_TECHS[0]} onChange={e=>updateApon(a.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
+                        <td><select value={a.servico||SERVICOS_OFICINA[0]} onChange={e=>updateApon(a.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></td>
+                        <td><input type="time" value={a.inicio||""} onChange={e=>{const v=e.target.value;updateApon(a.id,{inicio:v,total:calcHoras(v,a.termino)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="time" value={a.termino||""} onChange={e=>{const v=e.target.value;updateApon(a.id,{termino:v,total:calcHoras(a.inicio,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{a.total||calcHoras(a.inicio,a.termino)||"—"}</span></td>
+                        <td><select value={a.oficina||"1340"} onChange={e=>updateApon(a.id,{oficina:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700}}>{OFICINAS_UNID.map(o=><option key={o}>{o}</option>)}</select></td>
+                        <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={a.obs||""} onChange={e=>updateApon(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
+                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                      </tr>
+                    ))}
+                    {apontamentos.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── AGENDA OFICINA ── */}
+        {tab==="agenda_ofi"&&(()=>{
+          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
+          const diasNoMes=new Date(agOfiYear,agOfiMonth+1,0).getDate();
+          const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
+          const techsList=OFICINA_TECHS.filter(t=>agOfiTech==="todos"||t===agOfiTech);
+          const addAtendOfi=()=>{
+            const dataFinal=agOfiDate||`${ym}-01`;
+            if(!agOfiEmpresa){alert("Preencha ao menos a Empresa.");return;}
+            const key=`${agOfiTechSel}__${dataFinal}`;
+            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,patrimonio:agOfiPat||"",type:agOfiTipo,status:agOfiStatus,horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida)}]);
+            setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");
+            notify("✅ Atendimento salvo!");
+          };
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina</div><div style={{fontSize:13,color:"#888"}}>{techsList.length} técnico(s)</div></div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={agOfiTech} onChange={e=>setAgOfiTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                  <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                </div>
+              </div>
+              <div className="card" style={{padding:14,marginBottom:18}}>
+                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
+                  <input type="text" placeholder="Empresa" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio(s)" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfiEntrada} onChange={e=>setAgOfiEntrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfiSaida} onChange={e=>setAgOfiSaida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <select value={agOfiTipo} onChange={e=>setAgOfiTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:700}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <select value={agOfiStatus} onChange={e=>setAgOfiStatus(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
+                </div>
+              </div>
+              <div style={{overflowX:"auto"}}>
+                <table style={{borderCollapse:"collapse",minWidth:"100%",fontSize:11}}>
+                  <thead>
+                    <tr style={{background:"#1A1A1A"}}>
+                      <th style={{padding:"8px 12px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:130,whiteSpace:"nowrap"}}>Técnico</th>
+                      {dias.map(d=>{
+                        const dt=`${ym}-${d}`;
+                        const dow=new Date(dt).getDay();
+                        const isWkd=dow===0||dow===6;
+                        const isToday=dt===TODAY_STR;
+                        return(
+                          <th key={d} style={{padding:"6px 4px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:90,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333"}}>
+                            <div>{d}</div>
+                            <div style={{fontSize:9,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {techsList.map((tech,ti)=>{
+                      return(
+                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
+                          <td style={{padding:"8px 12px",fontWeight:700,fontSize:12,color:"#1A1A1A",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",whiteSpace:"nowrap"}}>{tech}</td>
+                          {dias.map(d=>{
+                            const dt=`${ym}-${d}`;
+                            const key=`${tech}__${dt}`;
+                            const slots=(agendaOfi[key]||[]);
+                            const dow=new Date(dt).getDay();
+                            const isWkd=dow===0||dow===6;
+                            const isToday=dt===TODAY_STR;
+                            return(
+                              <td key={d} style={{padding:4,verticalAlign:"top",minWidth:90,borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F9F9F9":"transparent"}}>
+                                {slots.map((s,si)=>{
+                                  const tipoC=(s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0";
+                                  const st=escSt(s.status);
+                                  return(
+                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:4,padding:"3px 5px",marginBottom:3,fontSize:10}}>
+                                      <div style={{fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:82}} title={s.client}>{s.client}</div>
+                                      {s.patrimonio&&<div style={{color:"#888",fontSize:9}}>🏷️ {s.patrimonio}</div>}
+                                      <span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:st.bg,color:st.color,fontWeight:600}}>{st.l}</span>
+                                      {(s.horaEntrada||s.horaSaida)&&<div style={{fontSize:9,color:"#C47D00",marginTop:1}}>{s.horaEntrada||"--:--"}→{s.horaSaida||"--:--"}</div>}
+                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi(key,arr);}}}} style={{marginTop:2,fontSize:9,padding:"1px 4px",background:"#FFF0F0",border:"none",borderRadius:3,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                    </div>
+                                  );
+                                })}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
+          const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
+          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Hebert Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
+                </div>
+              </div>
+              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
+                  <tbody>{list.map(r=>{
+                    const p=PRIO[r.prioridade||"medio"];
+                    const res=r.status==="resolvido";
+                    return(
+                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
+                      <td><input type="date" value={r.data||""} onChange={e=>hebCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                      <td><input type="text" value={r.descricao||""} onChange={e=>hebCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva a pendência..."/></td>
+                      <td><select value={r.prioridade||"medio"} onChange={e=>hebCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
+                      <td><select value={r.status||"pendente"} onChange={e=>hebCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
+                      <td><input type="text" value={r.obs||""} onChange={e=>hebCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
+                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>hebCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))hebCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                    </tr>);})}</tbody>
+                </table></div></div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── PENDÊNCIAS MANUELA ── */}
+        {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
+          const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
+          const PRI_PM={Urgente:{c:"#C62828",bg:"#FFF0F0"},Normal:{c:"#555",bg:"#F5F5F5"},"Médio Prazo":{c:"#1565C0",bg:"#F0F4FF"}};
+          const list=pendManuela.filter(r=>showArqPendMan||!r.arquivado);
+          const emptyForm={tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""};
+          const [form,setForm]=useState(editPendMan||emptyForm);
+          const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+          const salvar=()=>{
+            if(editPendMan){
+              pendManCrud.update(editPendMan.id,{...form});
+              setEditPendMan(null);
+            } else {
+              pendManCrud.add(form);
+            }
+            setForm(emptyForm);
+          };
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📋 Pendências Manuela</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
+                <button onClick={()=>setShowArqPendMan(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPendMan?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPendMan?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+              </div>
+
+              {/* Formulário */}
+              <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #F5C800"}}>
+                <div style={{fontWeight:700,fontSize:13,marginBottom:14,color:"#555"}}>{editPendMan?"✏️ Editar Pendência":"➕ Nova Pendência"}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Tarefa</label>
+                    <select value={form.tarefa} onChange={e=>upd("tarefa",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}>
+                      {PEND_ACOES.map(a=><option key={a}>{a}</option>)}
+                    </select>
+                  </div>
+                  {form.tarefa==="Outros"&&(
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Descrição (Outros)</label>
+                      <input type="text" value={form.tarefaOutros} onChange={e=>upd("tarefaOutros",e.target.value)} placeholder="Descreva a tarefa..." style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/>
+                    </div>
+                  )}
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Data</label>
+                    <input type="date" value={form.data} onChange={e=>upd("data",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Prioridade</label>
+                    <select value={form.prioridade} onChange={e=>upd("prioridade",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700,color:PRI_PM[form.prioridade]?.c||"#555"}}>
+                      <option>Urgente</option><option>Normal</option><option>Médio Prazo</option>
+                    </select>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,gridColumn:"1/-1"}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Solução</label>
+                    <input type="text" value={form.solucao} onChange={e=>upd("solucao",e.target.value)} placeholder="Descreva a solução ou encaminhamento..." style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Status</label>
+                    <select value={form.status} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700,color:STS_PM[form.status]?.c||"#555"}}>
+                      <option>Finalizado</option><option>Pendente</option><option>Em Andamento</option>
+                    </select>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Data Conclusão</label>
+                    <input type="date" value={form.dataConclusao} onChange={e=>upd("dataConclusao",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+                  {editPendMan&&<button onClick={()=>{setEditPendMan(null);setForm(emptyForm);}} style={{padding:"8px 16px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>}
+                  <BtnY onClick={salvar}>{editPendMan?"Salvar Alterações":"Adicionar"}</BtnY>
+                </div>
+              </div>
+
+              {/* Tabela */}
+              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência registrada.</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+                  <thead><tr><th>Tarefa</th><th>Data</th><th>Prioridade</th><th>Solução</th><th>Status</th><th>Data Conclusão</th><th>Reg. em</th><th>Ações</th></tr></thead>
+                  <tbody>{list.map(r=>{
+                    const sts=STS_PM[r.status]||{c:"#555",bg:"#F5F5F5"};
+                    const pri=PRI_PM[r.prioridade]||{c:"#555",bg:"#F5F5F5"};
+                    const tarefaLabel=r.tarefa==="Outros"&&r.tarefaOutros?`Outros: ${r.tarefaOutros}`:r.tarefa;
+                    return(
+                      <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
+                        <td style={{fontWeight:700}}>{tarefaLabel}</td>
+                        <td style={{whiteSpace:"nowrap"}}>{r.data||"—"}</td>
+                        <td><span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:pri.bg,color:pri.c,fontWeight:700}}>{r.prioridade}</span></td>
+                        <td style={{maxWidth:220,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={r.solucao}>{r.solucao||"—"}</td>
+                        <td><span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:sts.bg,color:sts.c,fontWeight:700}}>{r.status}</span></td>
+                        <td style={{whiteSpace:"nowrap"}}>{r.dataConclusao||"—"}</td>
+                        <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{fmtDateTime(r.registradoEm)}</td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                          <button onClick={()=>{setEditPendMan(r);setForm({tarefa:r.tarefa,tarefaOutros:r.tarefaOutros||"",data:r.data||"",prioridade:r.prioridade||"Normal",solucao:r.solucao||"",status:r.status||"Pendente",dataConclusao:r.dataConclusao||""});}} style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700,marginRight:3}}>✏</button>
+                          <button onClick={()=>pendManCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))pendManCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                        </td>
+                      </tr>
+                    );
+                  })}</tbody>
+                </table></div></div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* ── OFICINA (clone de Relatórios, técnicos próprios) ── */}
         {tab==="oficina"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-              {TIPOS.slice(0,4).map(t=>{
-                const total=oficina.filter(r=>r.type===t.v).length;
-                return(
-                  <div key={t.v} className="card" style={{padding:"14px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
-                    <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{t.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{ofiTipo===t.v?filteredOficina.filter(r=>r.type===t.v).length:total}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:18}}>
-              {TIPOS.slice(4).map(t=>(
-                <div key={t.v} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${t.color}`,cursor:"pointer"}} onClick={()=>setOfiTipo(ofiTipo===t.v?"todos":t.v)}>
-                  <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>{t.l}</div>
-                  <div style={{fontSize:24,fontWeight:700,color:ofiTipo===t.v?t.color:"#1A1A1A",lineHeight:1}}>{oficina.filter(r=>r.type===t.v).length}</div>
-                </div>
-              ))}
-            </div>
             {/* Filtros */}
             <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
               <input type="text" value={ofiSearch} onChange={e=>setOfiSearch(e.target.value)} placeholder="🔍 Buscar empresa, ação, patrimônio..." style={{minWidth:220,fontSize:12}}/>
@@ -1215,7 +1493,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
                   <tbody>
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").map(d=>{
@@ -1242,7 +1520,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateOfi(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateOfi(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>{const ps=d.processoStatus==="arquivado"?"em_andamento":"arquivado";updateOfi(d.id,{processoStatus:ps});}} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
                         </tr>
                         {pend&&(
                           <tr>
@@ -1381,7 +1659,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Ruptura</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA</th><th>Nº Relatório</th><th>Obs</th><th>Ret.Almox</th><th>Ret.Sistema</th><th>Processo</th><th>Ação</th><th>Ações</th></tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Ruptura</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1394,32 +1672,17 @@ export default function App(){
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.requerente}</td>
                           <td style={{fontSize:11,color:"#888"}}>{e.item}</td>
                           <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.descricao}</td>
-                          <td>
-                            <select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:110}}>
-                              <option value="Aprovado">Aprovado</option>
-                              <option value="Atendido">Atendido</option>
-                              <option value="Pendente">Pendente</option>
-                              <option value="Parcialmente Atendido">Parc. Atendido</option>
-                              <option value="Retorno Concluído">Retorno Concluído</option>
-                            </select>
-                          </td>
-                          <td>
-                            <select value={e.statusRuptura||"normal"} onChange={ev=>updateEmp(e.id,{statusRuptura:ev.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:e.statusRuptura==="ruptura"?"#C62828":"#1A7A3C",background:e.statusRuptura==="ruptura"?"#FFF0F0":"#F0FFF5",border:"none",borderRadius:5}}>
-                              <option value="normal">Normal</option>
-                              <option value="ruptura">⚠️ Ruptura</option>
-                            </select>
-                          </td>
+                          <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:110}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option></select></td>
+                          <td><select value={e.statusRuptura||"normal"} onChange={ev=>updateEmp(e.id,{statusRuptura:ev.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:e.statusRuptura==="ruptura"?"#C62828":"#1A7A3C",background:e.statusRuptura==="ruptura"?"#FFF0F0":"#F0FFF5",border:"none",borderRadius:5}}><option value="normal">Normal</option><option value="ruptura">⚠️ Ruptura</option></select></td>
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11}}>{e.centroResultado}</td>
                           <td style={{textAlign:"center"}}>{e.quant}</td>
                           <td style={{fontSize:11}}>{e.retorno}</td>
                           <td style={{whiteSpace:"nowrap",color:atrasado?"#C62828":"#888",fontWeight:atrasado?700:400,fontSize:11}}>{e.dataRetorno}</td>
                           <td><SlaBadge days={sla}/></td>
-                          <td><input type="text" value={e.numRelatorio||""} onChange={ev=>updateEmp(e.id,{numRelatorio:ev.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.retornoAlmox||""} onChange={ev=>updateEmp(e.id,{retornoAlmox:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={e.retornoSistema||""} onChange={ev=>updateEmp(e.id,{retornoSistema:ev.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><PSSelect value={e.processoStatus} onChange={v=>updateEmp(e.id,{processoStatus:v})}/></td>
-                          <td><BtnG onClick={()=>{setEditEmp(e);setModalEmp(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
+                          <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={e.dataAplicacao||""} onChange={ev=>updateEmp(e.id,{dataAplicacao:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><select value={e.statusEmp||"pendente"} onChange={ev=>updateEmp(e.id,{statusEmp:ev.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:e.statusEmp==="concluido"?"#1A7A3C":"#C62828",background:e.statusEmp==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
+                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1436,34 +1699,48 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Saída/Entrada</div>
+                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Entrada/Saída</div>
                 <div style={{fontSize:13,color:"#888"}}>{saidaEntrada.length} registros</div>
               </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{setEditSaida(null);setModalSaida(true);}}>+ Nova Saída/Entrada</BtnY></div>
+              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{const row={id:`SAI${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Nova Entrada/Saída</BtnY></div>
             </div>
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Empresa</th><th>Requerente</th><th>Código</th><th>Descrição</th><th>Data Saída</th><th>Data Entrega</th><th>Mês</th><th>REQ Retorno</th><th>Devolução</th><th>Status</th><th>Processo</th><th>Obs</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado").map(s=>{
-                      const devolvido=s.status==="devolvido";
+                      const isRuptura=s.statusReq==="ruptura";
+                      const isAtendido=s.statusReq==="atendido";
+                      const slaRuptura=s.data?diffDays(s.data):null;
                       return(
                         <tr key={s.id}>
-                          <td style={{fontWeight:700}}>{s.req}</td>
-                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.empresa}</td>
-                          <td style={{maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.requerente}</td>
-                          <td style={{fontSize:11,color:"#888"}}>{s.codigo}</td>
-                          <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.descricao}</td>
-                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataSaida}</td>
-                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{s.dataEntrega}</td>
-                          <td style={{fontSize:11,color:"#888"}}>{s.mes}</td>
-                          <td style={{fontSize:11}}>{s.reqRetorno}</td>
-                          <td style={{whiteSpace:"nowrap",color:devolvido?"#1A7A3C":"#888",fontSize:11}}>{s.devolucao||"—"}</td>
-                          <td><select value={s.status} onChange={e=>updateSaida(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:devolvido?"#1A7A3C":s.status==="em_uso"?"#E67E00":"#C62828",fontWeight:700,background:devolvido?"#F0FFF5":s.status==="em_uso"?"#FFF8F0":"#FFF0F0",border:"none",borderRadius:5}}><option value="pendente">Pendente</option><option value="em_uso">Em Uso</option><option value="devolvido">Devolvido</option></select></td>
-                          <td><input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="date" value={s.data||""} onChange={e=>updateSaida(s.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.empresa||""} onChange={e=>updateSaida(s.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.peca||""} onChange={e=>updateSaida(s.id,{peca:e.target.value})} placeholder="Nome da peça" style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.codigo||""} onChange={e=>updateSaida(s.id,{codigo:e.target.value})} placeholder="Cód" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.quantidade||""} onChange={e=>updateSaida(s.id,{quantidade:e.target.value})} placeholder="1" style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
+                          <td><input type="text" value={s.req||""} onChange={e=>updateSaida(s.id,{req:e.target.value})} placeholder="REQ" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td>
+                            <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})}
+                              style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",
+                                color:s.statusReq==="atendido"?"#1A7A3C":s.statusReq==="ruptura"?"#C62828":"#888",
+                                background:s.statusReq==="atendido"?"#F0FFF5":s.statusReq==="ruptura"?"#FFF0F0":"#F8F8F8"}}>
+                              <option value="">Selecione...</option>
+                              <option value="atendido">✅ Atendido</option>
+                              <option value="ruptura">🔴 Ruptura</option>
+                            </select>
+                          </td>
+                          <td>{isRuptura?<SlaBadge days={slaRuptura}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="date" value={s.dataAtendimento||""} onChange={e=>updateSaida(s.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<select value={s.localPeca||""} onChange={e=>updateSaida(s.id,{localPeca:e.target.value})} style={{fontSize:11,padding:"3px 5px",borderRadius:5}}><option value="">Selecione...</option><option value="suporte">📦 Suporte</option><option value="entregue_tecnico">🧑‍🔧 Entregue ao Técnico</option></select>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="date" value={s.dataEntregaTecnico||""} onChange={e=>updateSaida(s.id,{dataEntregaTecnico:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{isAtendido?<input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td>{(isAtendido||isRuptura)?<input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:110,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                          <td><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:s.statusFinal==="concluido"?"#1A7A3C":"#C62828",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td><PSSelect value={s.processoStatus} onChange={v=>updateSaida(s.id,{processoStatus:v})}/></td>
-                          <td><BtnG onClick={()=>{setEditSaida(s);setModalSaida(true);}} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG></td>
                           {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
                         </tr>
                       );
@@ -1480,10 +1757,12 @@ export default function App(){
         {tab==="agenda_prev"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
+          const diasNoMes=new Date(agpYear,agpMonth+1,0).getDate();
+          const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
           const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
           const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
-          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:[k.slice(0,i),k.slice(i+2)];}).filter(x=>x&&x[1].startsWith(ym)).map(x=>x[0])));
+          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i);}).filter(Boolean)));
           const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
@@ -1491,14 +1770,15 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade,horimetro:agHorimetro,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
-            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
+            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
             notify("✅ Atendimento salvo!");
           };
+          const getTipoCor=tipo=>(tipo||"preventivo")==="corretivo"?"#C62828":"#1565C0";
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda</div><div style={{fontSize:13,color:"#888"}}>Agenda mensal de todos os técnicos — {MESES[agpMonth]} {agpYear}</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda</div><div style={{fontSize:13,color:"#888"}}>{techsList.length} técnico(s)</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                   <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12}}>
                     <option value="todas">🌐 Todas regiões</option>
@@ -1506,11 +1786,11 @@ export default function App(){
                     <option value="roca">Roca</option>
                     <option value="centroOeste">Centro-Oeste</option>
                   </select>
-                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
-                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todas as situações</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
 
@@ -1518,66 +1798,80 @@ export default function App(){
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
-                  <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
-                  <input type="text" placeholder="Cidade" value={agCidade} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <input type="text" placeholder="Horímetro" value={agHorimetro} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
-                  <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
+                  <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:110}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
                   <select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <BtnY onClick={addAtend}>Adicionar</BtnY>
                 </div>
               </div>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {techsList.map(tech=>{
-                  const color=techColor(tech);
-                  const entries=[];
-                  Object.keys(schedule).forEach(k=>{
-                    const i=k.indexOf("__"); if(i<0) return;
-                    const kt=k.slice(0,i), kd=k.slice(i+2);
-                    if(kt!==tech||!kd.startsWith(ym)) return;
-                    (schedule[k]||[]).forEach((s,si)=>{ if(matchSt(s)&&matchTipo(s)) entries.push({s,date:kd,key:k,si}); });
-                  });
-                  entries.sort((a,b)=>a.date.localeCompare(b.date));
-                  const done=entries.filter(e=>isDone(e.s)).length;
-                  return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
-                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {done} concl. · {MESES[agpMonth]}</div>
-                      </div>
-                      <div style={{padding:"8px 14px"}}>
-                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
-                        {entries.map((e,ix)=>{const st=escSt(e.s.status);const dia=e.date.slice(8,10);const tipoLbl=(e.s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo";return(
-                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia||"?"}</span>
-                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
-                            </div>
-                            {e.s.cidade&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>📍 {e.s.cidade}</div>}
-                            {e.s.horimetro&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>⏱ Horímetro: {e.s.horimetro}</div>}
-                            <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
-                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
-                              <input type="time" value={e.s.horaEntrada||""} title="Entrada" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <input type="time" value={e.s.horaSaida||""} title="Saída" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
-                            </div>
-                            <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                              <input type="date" value={e.date} onChange={ev=>{const nd=ev.target.value;if(!nd||nd===e.date)return;const oldArr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);const nk=`${tech}__${nd}`;const nArr=[...(schedule[nk]||[]),{...e.s}];saveSched(e.key,oldArr);saveSched(nk,nArr);}} style={{fontSize:10,padding:"2px 5px"}}/>
-                              <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
-                                {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
-                              </select>
-                            </div>
-                          </div>
-                        );})}
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Calendário horizontal */}
+              <div style={{overflowX:"auto"}}>
+                <table style={{borderCollapse:"collapse",minWidth:"100%",fontSize:11}}>
+                  <thead>
+                    <tr style={{background:"#1A1A1A"}}>
+                      <th style={{padding:"8px 12px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:140,whiteSpace:"nowrap"}}>Técnico</th>
+                      {dias.map(d=>{
+                        const dt=`${ym}-${d}`;
+                        const dow=new Date(dt).getDay();
+                        const isWkd=dow===0||dow===6;
+                        const isToday=dt===TODAY_STR;
+                        return(
+                          <th key={d} style={{padding:"6px 4px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:90,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333"}}>
+                            <div>{d}</div>
+                            <div style={{fontSize:9,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {techsList.map((tech,ti)=>{
+                      const color=techColor(tech);
+                      return(
+                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
+                          <td style={{padding:"8px 12px",fontWeight:700,fontSize:12,color:"#1A1A1A",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",whiteSpace:"nowrap"}}>
+                            <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>
+                            {tech}
+                          </td>
+                          {dias.map(d=>{
+                            const dt=`${ym}-${d}`;
+                            const key=`${tech}__${dt}`;
+                            const slots=(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s));
+                            const dow=new Date(dt).getDay();
+                            const isWkd=dow===0||dow===6;
+                            const isToday=dt===TODAY_STR;
+                            return(
+                              <td key={d} style={{padding:4,verticalAlign:"top",minWidth:90,borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F9F9F9":"transparent"}}>
+                                {slots.map((s,si)=>{
+                                  const st=escSt(s.status);
+                                  const tipoC=getTipoCor(s.type);
+                                  return(
+                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:4,padding:"3px 5px",marginBottom:3,fontSize:10}}>
+                                      <div style={{fontWeight:700,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:82}} title={s.client}>{s.client}</div>
+                                      {s.patrimonio&&<div style={{color:"#888",fontSize:9}}>🏷️ {s.patrimonio}</div>}
+                                      <div style={{display:"flex",gap:3,alignItems:"center",marginTop:2,flexWrap:"wrap"}}>
+                                        <span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:st.bg,color:st.color,fontWeight:600}}>{st.l}</span>
+                                        <span style={{fontSize:9,color:tipoC,fontWeight:600}}>{(s.type||"prev").slice(0,4)}</span>
+                                      </div>
+                                      {(s.horaEntrada||s.horaSaida)&&<div style={{fontSize:9,color:"#C47D00",marginTop:1}}>{s.horaEntrada||"--:--"}→{s.horaSaida||"--:--"}</div>}
+                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(schedule[key]||[]).filter((_,i)=>i!==si);saveSched(key,arr);}}}} style={{marginTop:2,fontSize:9,padding:"1px 4px",background:"#FFF0F0",border:"none",borderRadius:3,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                    </div>
+                                  );
+                                })}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           );
@@ -1597,7 +1891,7 @@ export default function App(){
               const corr=dashReports.filter(r=>r.type==="corretivo").length;
               const totalPC=prev+corr;
               const pct=n=>totalPC?Math.round(n/totalPC*100):0;
-              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
               const regPrev=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="preventivo").length);
               const regCorr=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="corretivo").length);
@@ -1667,7 +1961,7 @@ export default function App(){
 
             {/* Horas totais do mês */}
             {(()=>{
-              const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
               const mesReps=agendaAtendimentos.filter(r=>r.date&&r.date.startsWith(mesAtual));
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
@@ -1698,7 +1992,7 @@ export default function App(){
             {/* Cards por técnico */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
               {ALL_TECHS.map(tech=>{
-                const parseMin=h=>{if(!h)return 0;const m=h.match(/(\d+)[hH:](\d+)?/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+                const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
                 const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"—";
                 const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
                 const techReps=agendaAtendimentos.filter(r=>r.tecnico===tech&&r.date&&r.date.startsWith(mesAtual));
@@ -1746,80 +2040,6 @@ export default function App(){
         )}
 
       </div>
-
-
-        {/* ── CARROS ── */}
-        {tab==="carros"&&(()=>{
-          const filtrados=carros.filter(c=>{
-            if(!showArqCarros&&c.arquivado)return false;
-            if(carroFiltroPlaca!=="todas"&&c.placa!==carroFiltroPlaca)return false;
-            if(carroFiltroStatus!=="todos"&&c.status!==carroFiltroStatus)return false;
-            if(carroFiltroData&&(!c.data||c.data<carroFiltroData))return false;
-            return true;
-          });
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Controle de Carros</div><div style={{fontSize:13,color:"#888"}}>{filtrados.length} registro(s)</div></div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <select value={carroFiltroPlaca} onChange={e=>setCarroFiltroPlaca(e.target.value)} style={{fontSize:12}}><option value="todas">Todas as placas</option>{PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}</select>
-                  <select value={carroFiltroStatus} onChange={e=>setCarroFiltroStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os status</option>{Object.entries(CARRO_STATUS).map(([v,o])=><option key={v} value={v}>{o.l}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888"}}>A partir de</span><input type="date" value={carroFiltroData} onChange={e=>setCarroFiltroData(e.target.value)} style={{fontSize:12}}/></div>
-                  <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>setModalCarroRevisao({})}>+ Nova Revisão</BtnY>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-                {PLACAS_CARROS.map(placa=>{
-                  const registros=carros.filter(c=>c.placa===placa&&!c.arquivado);
-                  const ultimo=registros.sort((a,b)=>(b.data||"").localeCompare(a.data||""))[0];
-                  const stCfg=ultimo?CARRO_STATUS[ultimo.status]||CARRO_STATUS.liberado:null;
-                  return(
-                    <div key={placa} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${stCfg?.c||"#E0E0E0"}`,cursor:"pointer"}} onClick={()=>setCarroFiltroPlaca(carroFiltroPlaca===placa?"todas":placa)}>
-                      <div style={{fontWeight:800,fontSize:15,marginBottom:4,color:carroFiltroPlaca===placa?"#C47D00":"#1A1A1A"}}>{placa}</div>
-                      {ultimo?(<><div style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:stCfg?.bg,color:stCfg?.c,fontWeight:700,display:"inline-block",marginBottom:4}}>{stCfg?.l}</div><div style={{fontSize:11,color:"#888"}}>Último: {ultimo.data}</div>{ultimo.proximaRevisaoData&&<div style={{fontSize:11,color:"#1565C0",fontWeight:600}}>Próx: {ultimo.proximaRevisaoData}</div>}</>):(<div style={{fontSize:11,color:"#CCC"}}>Sem registros</div>)}
-                    </div>
-                  );
-                })}
-              </div>
-              {filtrados.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum registro. Clique em "+ Nova Revisão".</div>):(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14}}>
-                  {filtrados.map(c=>{
-                    const stCfg=CARRO_STATUS[c.status]||CARRO_STATUS.liberado;
-                    const itensSubst=Array.isArray(c.itensSubstituidos)?c.itensSubstituidos.map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v):[];
-                    const itensProx=Array.isArray(c.itensProximaRevisao)?c.itensProximaRevisao.map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v):[];
-                    return(
-                      <div key={c.id} className="card" style={{borderLeft:`4px solid ${stCfg.c}`,opacity:c.arquivado?.5:1}}>
-                        <div style={{padding:"12px 16px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <div><span style={{fontWeight:800,fontSize:16,marginRight:10}}>{c.placa}</span><span style={{fontSize:11,padding:"3px 8px",borderRadius:5,background:stCfg.bg,color:stCfg.c,fontWeight:700}}>{stCfg.l}</span></div>
-                          <div style={{display:"flex",gap:6}}>
-                            <BtnG onClick={()=>setModalCarroRevisao(c)} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG>
-                            <button onClick={()=>updateCarro(c.id,{arquivado:!c.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"4px 8px",fontSize:11}}>🗄️</button>
-                            <button onClick={()=>{if(window.confirm("Excluir?")){setCarros(p=>p.filter(x=>x.id!==c.id));db.delete("carros",c.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:11,fontWeight:700}}>✕</button>
-                          </div>
-                        </div>
-                        <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,fontSize:12}}>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Data</span><br/>{c.data||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Responsável</span><br/>{c.responsavel||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Última Revisão</span><br/>{c.ultimaRevisaoData||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>KM Última Rev.</span><br/>{c.kmUltimaRevisao||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>KM Atual</span><br/>{c.kmAtual||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Valor Última Rev.</span><br/>{c.valorUltimaRevisao||"—"}</div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Próxima Revisão</span><br/><span style={{color:"#1565C0",fontWeight:600}}>{c.proximaRevisaoData||"—"}</span></div>
-                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Oficina</span><br/>{c.oficina||"—"}</div>
-                          {itensSubst.length>0&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#1565C0",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>✅ Itens Substituídos</span><br/><div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{itensSubst.map((it,i)=><span key={i} style={{fontSize:10,background:"#E8F0FF",color:"#1565C0",padding:"2px 6px",borderRadius:4}}>{it}</span>)}</div></div>}
-                          {itensProx.length>0&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#1A7A3C",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>🔜 Próxima Revisão — Itens</span><br/><div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{itensProx.map((it,i)=><span key={i} style={{fontSize:10,background:"#E0F7E8",color:"#1A7A3C",padding:"2px 6px",borderRadius:4}}>{it}</span>)}</div></div>}
-                          {c.obs&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Obs</span><br/>{c.obs}</div>}
-                        </div>
-                        <div style={{padding:"8px 16px",borderTop:"1px solid #F4F4F4",fontSize:10,color:"#AAA"}}>Reg. por {c.registradoPor||"—"} · {fmtDateTime(c.registradoEm)}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })()}
 
         {/* ── UBER ── */}
         {tab==="uber"&&(
@@ -2070,21 +2290,23 @@ export default function App(){
           const list=pendGustavo.filter(r=>showArqGus||!r.arquivado);
           const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
           const STS={resolvido:"Resolvido",diretoria:"Diretoria",em_andamento:"Em Andamento",pendente:"Pendente"};
+          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📌 Pendências Gustavo</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqGus(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqGus?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqGus?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>gusCrud.add({data:TODAY_STR,solicitacao:"cliente",empresa:"",demanda:"email",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
+                  <BtnY onClick={()=>gusCrud.add({data:TODAY_STR,solicitacao:"cliente",empresa:"",demanda:"email",status:"pendente",prioridade:"medio",obs:""})}>+ Nova Pendência</BtnY>
                 </div>
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
-                  <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";return(
+                  <thead><tr><th>Data</th><th>Prioridade</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";const p=PRIO[r.prioridade||"medio"];return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.data||""} onChange={e=>gusCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                      <td><select value={r.prioridade||"medio"} onChange={e=>gusCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
                       <td><select value={r.solicitacao||"cliente"} onChange={e=>gusCrud.update(r.id,{solicitacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}>{Object.entries(SOL).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
                       <td><input type="text" value={r.empresa||""} onChange={e=>gusCrud.update(r.id,{empresa:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><select value={r.demanda||"email"} onChange={e=>gusCrud.update(r.id,{demanda:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="email">📧 Email</option><option value="whatsapp">💬 WhatsApp</option></select></td>
@@ -2092,6 +2314,437 @@ export default function App(){
                       <td><input type="text" value={r.obs||""} onChange={e=>gusCrud.update(r.id,{obs:e.target.value})} style={{width:240,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
                       {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>gusCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))gusCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                    </tr>);})}</tbody>
+                </table></div></div>
+              )}
+            </div>
+          );
+        })()}
+
+      {/* ── DASHBOARD REQUISIÇÕES ── */}
+        {tab==="dashboard_req"&&(()=>{
+          const allReqs=[...emprestimos,...saidaEntrada];
+          const totalEmp=emprestimos.length;
+          const totalSai=saidaEntrada.length;
+          const total=allReqs.length;
+          // Rupturas (saída/entrada)
+          const rupturas=saidaEntrada.filter(s=>s.statusReq==="ruptura");
+          const rupturasInfo=rupturas.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
+          // Atendidos
+          const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
+          // Pendentes
+          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length + saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
+          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length + saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
+          // Por técnico (requerente)
+          const byTech={};
+          emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          // Peças aplicadas por relatório
+          const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
+          const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
+          const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
+          // Gráfico: status empréstimos
+          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5"],borderColor:["#C62828","#1A7A3C"],borderWidth:2}]};
+          // Gráfico: status saída/entrada
+          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5","#FFF8F0","#F0F4FF"],borderColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:2}]};
+          // Gráfico: por técnico
+          const techLabels=Object.keys(byTech);
+          const techValues=techLabels.map(t=>byTech[t]);
+          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C800",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
+
+          const KPI=({label,value,color="#1A1A1A",bg="#FFF",icon})=>(
+            <div className="card" style={{padding:"16px 20px",background:bg,display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
+              <div style={{fontSize:32,fontWeight:800,color,lineHeight:1}}>{value}</div>
+            </div>
+          );
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Requisições</div>
+
+              {/* KPIs */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
+                <KPI icon="📦" label="Total Requisições" value={total}/>
+                <KPI icon="🔄" label="Empréstimo e Retorno" value={totalEmp}/>
+                <KPI icon="📤" label="Entrada/Saída" value={totalSai}/>
+                <KPI icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF0F0"/>
+                <KPI icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+                <KPI icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
+                <KPI icon="✅" label="Atendidos (S/E)" value={atendidos} color="#1A7A3C" bg="#F0FFF5"/>
+                <KPI icon="🔧" label="Peças Aplicadas c/ Relatório" value={todasPecasAplicadas.length}/>
+              </div>
+
+              {/* Gráficos */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:20}}>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Empréstimo e Retorno</div>
+                  <ChartCanvas type="doughnut" data={chartStatusEmpData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Entrada/Saída</div>
+                  <ChartCanvas type="doughnut" data={chartStatusSaiData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Requisições por Técnico/Requerente</div>
+                  <ChartCanvas type="bar" data={chartTechData} options={{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},indexAxis:"y"}} height={200}/>
+                </div>
+              </div>
+
+              {/* Rupturas detalhadas */}
+              {rupturas.length>0&&(
+                <div className="card" style={{padding:16,marginBottom:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas — Detalhamento ({rupturas.length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias em ruptura)</th></tr></thead>
+                    <tbody>{rupturasInfo.map((r,i)=>(
+                      <tr key={i}>
+                        <td style={{fontWeight:700}}>{r.peca}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{r.codigo}</td>
+                        <td>{r.empresa}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{rupturas[i]?.data||"—"}</td>
+                        <td><SlaBadge days={r.dias}/></td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+
+              {/* Peças aplicadas por relatório */}
+              {todasPecasAplicadas.length>0&&(
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Peças Aplicadas por Relatório ({todasPecasAplicadas.length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Relatório</th><th>Peça</th><th>Empresa/Requerente</th></tr></thead>
+                    <tbody>{todasPecasAplicadas.map((p,i)=>(
+                      <tr key={i}>
+                        <td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td>
+                        <td>{p.peca}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{p.empresa}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+              {todasPecasAplicadas.length===0&&rupturas.length===0&&total===0&&(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                  Nenhuma requisição cadastrada ainda.
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── SAS ── */}
+        {tab==="sas"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📄 SAS</div><div style={{fontSize:13,color:"#888"}}>{sas.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(sas,"sas_grupomov",[{key:"dataSolicitacao",label:"Data Solicitação"},{key:"email",label:"E-mail"},{key:"nfNum",label:"Nº NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"tel",label:"Tel"},{key:"emailContato",label:"Email Contato"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Data Realização"},{key:"relatorioMov",label:"Relatório MOV"},{key:"envioFaturamento",label:"Envio Faturamento"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"dataEnvioSas",label:"Data Envio SAS"}])}/>
+                <BtnY onClick={addSas}>+ Novo SAS</BtnY>
+              </div>
+            </div>
+            <div className="card" style={{overflow:"hidden"}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>
+                    {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
+                    {sas.map(s=>{
+                      const isPend=s.status==="pendente";
+                      const slaVal=isPend&&s.dataSolicitacao?diffDays(s.dataSolicitacao):null;
+                      return(
+                        <tr key={s.id}>
+                          <td><input type="date" value={s.dataSolicitacao||""} onChange={e=>updateSas(s.id,{dataSolicitacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.email||""} onChange={e=>updateSas(s.id,{email:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.nfNum||""} onChange={e=>updateSas(s.id,{nfNum:e.target.value})} placeholder="NF-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equipamento" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.cliente||""} onChange={e=>updateSas(s.id,{cliente:e.target.value})} placeholder="Cliente" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.nome||""} onChange={e=>updateSas(s.id,{nome:e.target.value})} placeholder="Nome" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.tel||""} onChange={e=>updateSas(s.id,{tel:e.target.value})} placeholder="Tel" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.emailContato||""} onChange={e=>updateSas(s.id,{emailContato:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><select value={s.servico||"entrega_tecnica"} onChange={e=>updateSas(s.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}><option value="entrega_tecnica">📦 Entrega Técnica</option><option value="manutencao_externa">🔧 Manutenção Externa</option></select></td>
+                          <td><input type="date" value={s.dataRealizacao||""} onChange={e=>updateSas(s.id,{dataRealizacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.envioFaturamento||""} onChange={e=>updateSas(s.id,{envioFaturamento:e.target.value})} placeholder="Info..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                          <td><input type="text" value={s.valor||""} onChange={e=>updateSas(s.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
+                          <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
+                          <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
+                          <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
+                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── CARROS ── */}
+        {tab==="carros"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{carros.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(carros,"carros_grupomov",[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"tecnico",label:"Técnico"},{key:"manutencao",label:"Manutenção"},{key:"valor",label:"Valor"},{key:"aprovadoGustavo",label:"Aprovado Gustavo"},{key:"dataExecucao",label:"Data Execução"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={addCarro}>+ Novo Registro</BtnY>
+              </div>
+            </div>
+            <div className="card" style={{overflow:"hidden"}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr><th>Data</th><th>Placa</th><th>Técnico</th><th>Manutenção</th><th>Valor</th><th>Aprov. Gustavo</th><th>Data Execução</th><th>Oficina</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <tbody>
+                    {carros.length===0&&<tr><td colSpan={11} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Registro".</td></tr>}
+                    {carros.map(c=>(
+                      <tr key={c.id}>
+                        <td><input type="date" value={c.data||""} onChange={e=>updateCarro(c.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.placa||""} onChange={e=>updateCarro(c.id,{placa:e.target.value})} placeholder="ABC-1234" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><select value={c.tecnico||ALL_TECHS[0]} onChange={e=>updateCarro(c.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{[...ALL_TECHS,...OFICINA_TECHS].map(t=><option key={t}>{t}</option>)}</select></td>
+                        <td><input type="text" value={c.manutencao||""} onChange={e=>updateCarro(c.id,{manutencao:e.target.value})} placeholder="Descreva a manutenção..." style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.valor||""} onChange={e=>updateCarro(c.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
+                        <td><select value={c.aprovadoGustavo||"nao"} onChange={e=>updateCarro(c.id,{aprovadoGustavo:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:c.aprovadoGustavo==="sim"?"#1A7A3C":"#C62828",background:c.aprovadoGustavo==="sim"?"#F0FFF5":"#FFF0F0"}}><option value="nao">❌ Não</option><option value="sim">✅ Sim</option></select></td>
+                        <td>{c.aprovadoGustavo==="sim"?<input type="date" value={c.dataExecucao||""} onChange={e=>updateCarro(c.id,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                        <td>{c.aprovadoGustavo==="sim"?<input type="text" value={c.oficina||""} onChange={e=>updateCarro(c.id,{oficina:e.target.value})} placeholder="Oficina..." style={{width:120,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
+                        <td><input type="text" value={c.obs||""} onChange={e=>updateCarro(c.id,{obs:e.target.value})} placeholder="Obs..." style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
+                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delCarro(c.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── APONTAMENTOS OFICINA 150 ── */}
+        {tab==="apontamentos_150"&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{apontamentos150.length} registro(s) · Matheus, Pedro Souza, Pedro Pimentel</div></div>
+              <div style={{display:"flex",gap:8}}>
+                <BtnExcel onClick={()=>exportCSV(apontamentos150,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={addApon150}>+ Novo Apontamento</BtnY>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
+              <input type="date" value={ofi150Data} onChange={e=>setOfi150Data(e.target.value)} style={{fontSize:12}}/>
+              <input type="text" value={ofi150OS} onChange={e=>setOfi150OS(e.target.value)} placeholder="🔍 OS" style={{width:100,fontSize:12}}/>
+              <input type="text" value={ofi150Pat} onChange={e=>setOfi150Pat(e.target.value)} placeholder="🔍 Patrimônio" style={{width:130,fontSize:12}}/>
+              <select value={ofi150Tech} onChange={e=>setOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={ofi150Serv} onChange={e=>setOfi150Serv(e.target.value)} style={{fontSize:12}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+            </div>
+            <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+              <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Relatório</th><th>Obs</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+              <tbody>
+                {apontamentos150.filter(a=>{
+                  if(ofi150Data&&a.data!==ofi150Data)return false;
+                  if(ofi150OS&&!(a.os||"").toLowerCase().includes(ofi150OS.toLowerCase()))return false;
+                  if(ofi150Pat&&!(a.patrimonio||"").toLowerCase().includes(ofi150Pat.toLowerCase()))return false;
+                  if(ofi150Tech!=="todos"&&a.tecnico!==ofi150Tech)return false;
+                  if(ofi150Serv!=="todos"&&a.servico!==ofi150Serv)return false;
+                  return true;
+                }).map(a=>(
+                  <tr key={a.id}>
+                    <td><input type="date" value={a.data||""} onChange={e=>updateApon150(a.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><input type="text" value={a.os||""} onChange={e=>updateApon150(a.id,{os:e.target.value})} placeholder="OS-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><input type="text" value={a.patrimonio||""} onChange={e=>updateApon150(a.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><select value={a.tecnico||"Matheus"} onChange={e=>updateApon150(a.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
+                    <td><select value={a.servico||SERVICOS_OFICINA[0]} onChange={e=>updateApon150(a.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></td>
+                    <td><input type="time" value={a.inicio||""} onChange={e=>{const v=e.target.value;updateApon150(a.id,{inicio:v,total:calcHoras(v,a.termino)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><input type="time" value={a.termino||""} onChange={e=>{const v=e.target.value;updateApon150(a.id,{termino:v,total:calcHoras(a.inicio,v)});}} style={{width:95,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><span style={{display:"inline-block",minWidth:54,fontSize:12,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:6,padding:"4px 8px"}}>{a.total||calcHoras(a.inicio,a.termino)||"—"}</span></td>
+                    <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon150(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td><input type="text" value={a.obs||""} onChange={e=>updateApon150(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                    <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
+                    {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                  </tr>
+                ))}
+                {apontamentos150.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
+              </tbody>
+            </table></div></div>
+          </div>
+        )}
+
+        {/* ── AGENDA OFICINA 150 ── */}
+        {tab==="agenda_ofi_150"&&(()=>{
+          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
+          const diasNoMes=new Date(agOfi150Year,agOfi150Month+1,0).getDate();
+          const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
+          const techsList=OFI150_TECHS?OFI150_TECHS:(OFICINA_TECHS||[]);
+          const addAtend150=()=>{
+            const dataFinal=agOfi150Date||`${ym}-01`;
+            if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
+            const key=`${agOfi150TechSel}__${dataFinal}`;
+            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,patrimonio:agOfi150Pat||"",type:agOfi150Tipo,status:agOfi150Status,horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida)}]);
+            setAgOfi150Empresa("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");
+            notify("✅ Atendimento salvo!");
+          };
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{techsList.length} técnico(s)</div></div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                </div>
+              </div>
+              <div className="card" style={{padding:14,marginBottom:18}}>
+                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{(OFI150_TECHS||OFICINA_TECHS).map(t=><option key={t}>{t}</option>)}</select>
+                  <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
+                  <input type="text" placeholder="Empresa" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio(s)" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfi150Entrada} onChange={e=>setAgOfi150Entrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfi150Saida} onChange={e=>setAgOfi150Saida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
+                  <select value={agOfi150Tipo} onChange={e=>setAgOfi150Tipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:700}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <select value={agOfi150Status} onChange={e=>setAgOfi150Status(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <BtnY onClick={addAtend150}>Adicionar</BtnY>
+                </div>
+              </div>
+              <div style={{overflowX:"auto"}}>
+                <table style={{borderCollapse:"collapse",minWidth:"100%",fontSize:11}}>
+                  <thead>
+                    <tr style={{background:"#1A1A1A"}}>
+                      <th style={{padding:"8px 12px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:130,whiteSpace:"nowrap"}}>Técnico</th>
+                      {dias.map(d=>{
+                        const dt=`${ym}-${d}`;
+                        const dow=new Date(dt).getDay();
+                        const isWkd=dow===0||dow===6;
+                        const isToday=dt===TODAY_STR;
+                        return(
+                          <th key={d} style={{padding:"6px 4px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:90,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333"}}>
+                            <div>{d}</div>
+                            <div style={{fontSize:9,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {techsList.map((tech,ti)=>{
+                      return(
+                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
+                          <td style={{padding:"8px 12px",fontWeight:700,fontSize:12,color:"#1A1A1A",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",whiteSpace:"nowrap"}}>{tech}</td>
+                          {dias.map(d=>{
+                            const dt=`${ym}-${d}`;
+                            const key=`${tech}__${dt}`;
+                            const slots=(agendaOfi150[key]||[]);
+                            const dow=new Date(dt).getDay();
+                            const isWkd=dow===0||dow===6;
+                            const isToday=dt===TODAY_STR;
+                            return(
+                              <td key={d} style={{padding:4,verticalAlign:"top",minWidth:90,borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F9F9F9":"transparent"}}>
+                                {slots.map((s,si)=>{
+                                  const tipoC=(s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0";
+                                  const st=escSt(s.status);
+                                  return(
+                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:4,padding:"3px 5px",marginBottom:3,fontSize:10}}>
+                                      <div style={{fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:82}} title={s.client}>{s.client}</div>
+                                      {s.patrimonio&&<div style={{color:"#888",fontSize:9}}>🏷️ {s.patrimonio}</div>}
+                                      <span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:st.bg,color:st.color,fontWeight:600}}>{st.l}</span>
+                                      {(s.horaEntrada||s.horaSaida)&&<div style={{fontSize:9,color:"#C47D00",marginTop:1}}>{s.horaEntrada||"--:--"}→{s.horaSaida||"--:--"}</div>}
+                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi150[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi150(key,arr);}}}} style={{marginTop:2,fontSize:9,padding:"1px 4px",background:"#FFF0F0",border:"none",borderRadius:3,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                    </div>
+                                  );
+                                })}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab==="dashboard_ofi_150"&&(()=>{
+          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
+          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+          const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
+          const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+          const apMes=apontamentos150.filter(a=>a.data&&a.data.startsWith(mesAtual));
+          const totalMin=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          const agAtend=[];
+          Object.keys(agendaOfi150).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi150[k]||[]).forEach(s=>agAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida)}));});
+          const concluidos=agAtend.filter(a=>a.status==="concluida").length;
+          const techHorasData={labels:OFICINA_150_TECHS,datasets:[{label:"Horas",data:OFICINA_150_TECHS.map(t=>+(apMes.filter(a=>a.tecnico===t).reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
+          const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
+          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina 150 — {MESES[agOfi150Month]} {agOfi150Year}</div>
+              <div style={{display:"flex",gap:8,marginBottom:16}}>
+                <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+                {[{l:"Apontamentos (mês)",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais (mês)",v:fmtMin(totalMin),c:"#C47D00"},{l:"Agendados",v:agAtend.length,c:"#1565C0"},{l:"Concluídos",v:concluidos,c:"#1A7A3C"}].map((s,i)=>(
+                  <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
+                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>⏱ Horas por Técnico</div><ChartCanvas type="bar" data={techHorasData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},maintainAspectRatio:false}} height={160}/></div>
+                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Serviços Realizados</div><ChartCanvas type="bar" data={servData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}} height={240}/></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {OFICINA_150_TECHS.map(tech=>{
+                  const color=techColor(tech);
+                  const techAp=apMes.filter(a=>a.tecnico===tech);
+                  const totalM=techAp.reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0);
+                  return(<div key={tech} className="card" style={{borderTop:`3px solid ${color}`,padding:"14px 16px"}}>
+                    <div style={{fontWeight:700,fontSize:14,marginBottom:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                    <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Horas: <b style={{color:"#C47D00"}}>{fmtMin(totalM)}</b></div>
+                    <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Apontamentos: <b>{techAp.length}</b></div>
+                    <div style={{fontSize:11,color:"#AAA"}}>Serviços: {[...new Set(techAp.map(a=>a.servico))].join(", ")||"—"}</div>
+                  </div>);
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── PENDÊNCIAS MATHEUS ── */}
+        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
+          const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
+          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Matheus</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
+                </div>
+              </div>
+              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
+                  <tbody>{list.map(r=>{const p=PRIO[r.prioridade||"medio"];const res=r.status==="resolvido";return(
+                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
+                      <td><input type="date" value={r.data||""} onChange={e=>mathCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                      <td><input type="text" value={r.descricao||""} onChange={e=>mathCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva..."/></td>
+                      <td><select value={r.prioridade||"medio"} onChange={e=>mathCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
+                      <td><select value={r.status||"pendente"} onChange={e=>mathCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
+                      <td><input type="text" value={r.obs||""} onChange={e=>mathCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
+                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>mathCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))mathCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
@@ -2108,9 +2761,10 @@ export default function App(){
       {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
       {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
       {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
-      {modalCarroRevisao!==null&&<CarroRevisaoModal placa={PLACAS_CARROS[0]} onClose={()=>setModalCarroRevisao(null)} initial={modalCarroRevisao?.id?modalCarroRevisao:null} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false};if(d.id&&carros.find(c=>c.id===d.id)){updateCarro(d.id,dd);}else{setCarros(p=>[dd,...p]);db.save("carros",dd.id,dd);}notify("✅ Revisão salva!");}}/>}
     </div>
   );
 }
+
+    
 
     
