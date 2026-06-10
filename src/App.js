@@ -790,6 +790,8 @@ export default function App(){
   const [agOfi150Saida,setAgOfi150Saida]=useState("");
   const [agOfi150Obs,setAgOfi150Obs]=useState("");
   const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
+  const [agOfi150Cidade,setAgOfi150Cidade]=useState("");
+  const [agOfi150Horimetro,setAgOfi150Horimetro]=useState("");
   const [agOfi150Tipo,setAgOfi150Tipo]=useState("preventivo");
   const [agOfi150Status,setAgOfi150Status]=useState("agendada");
   const [pendMatheus,setPendMatheus]=useState([]);
@@ -836,6 +838,8 @@ export default function App(){
   const [agDate,setAgDate]=useState("");
   const [agEmpresa,setAgEmpresa]=useState("");
   const [agCidade,setAgCidade]=useState("");
+  const [editSlot,setEditSlot]=useState(null); // {key, si, slot, tipo} para edição de card
+  const [editSlotForm,setEditSlotForm]=useState({});
   const [agHorimetro,setAgHorimetro]=useState("");
   const [agPat,setAgPat]=useState("");
   const [agStatus,setAgStatus]=useState("agendada");
@@ -1044,7 +1048,7 @@ export default function App(){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <span style={{fontSize:12,color:"#888"}}>{user.name} — {user.role}</span>
-            {user.canDelete&&<button onClick={()=>setModalUsers(true)} style={{background:"#F5C800",border:"none",color:"#1A1A1A",borderRadius:6,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
+            <button onClick={()=>setModalUsers(true)} style={{background:"#F5C800",border:"none",color:"#1A1A1A",borderRadius:6,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
             <button onClick={()=>setUser(null)} style={{background:"#333",border:"none",color:"#AAA",borderRadius:6,padding:"5px 10px",fontSize:11,cursor:"pointer"}}>Sair</button>
           </div>
         </div>
@@ -1121,7 +1125,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?15:14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
@@ -1129,7 +1133,7 @@ export default function App(){
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
                       const pend=isPendentePecas(d.status);
-                      const nCols=user.canDelete?15:14;
+                      const nCols=15;
                       return(
                         <Fragment key={d.id}>
                         <tr style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
@@ -1147,7 +1151,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                         </tr>
                         {pend&&(
                           <tr>
@@ -1202,7 +1206,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {apontamentos.filter(a=>{
                       if(ofiNovaData&&a.data!==ofiNovaData)return false;
@@ -1225,7 +1229,7 @@ export default function App(){
                         <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                         <td><input type="text" value={a.obs||""} onChange={e=>updateApon(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                         <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                        {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                        <td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                       </tr>
                     ))}
                     {apontamentos.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
@@ -1322,7 +1326,10 @@ export default function App(){
                                       {s.servico&&<div style={{color:"#1565C0",fontSize:11,fontWeight:700,marginBottom:2}}>🔧 {s.servico}</div>}
                                       {(s.horaEntrada||s.horaSaida)&&<div style={{color:"#C47D00",fontSize:11,fontWeight:700,marginBottom:3}}>🕐 {s.horaEntrada||"--:--"} → {s.horaSaida||"--:--"}{horas?<span style={{color:"#1A7A3C",marginLeft:4}}>({horas})</span>:""}</div>}
                                       <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:st.bg,color:st.color,fontWeight:700,display:"inline-block",marginTop:3}}>{st.l}</span>
-                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi(key,arr);}}}} style={{marginTop:5,fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                      <div style={{display:"flex",gap:3,marginTop:5}}>
+                                        <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"ofi"});setEditSlotForm({...s});}} style={{fontSize:10,padding:"3px 6px",background:"#F0F4FF",border:"1px solid #C5D8FF",borderRadius:4,color:"#1565C0",cursor:"pointer",flex:1}}>✏️</button>
+                                        <button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi(key,arr);}}}} style={{fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",flex:1}}>✕</button>
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -1455,12 +1462,17 @@ export default function App(){
                     const tarefaLabel=r.tarefa==="Outros"&&r.tarefaOutros?`Outros: ${r.tarefaOutros}`:r.tarefa;
                     return(
                       <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                        <td style={{fontWeight:700}}>{tarefaLabel}</td>
-                        <td style={{whiteSpace:"nowrap"}}>{r.data||"—"}</td>
-                        <td><span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:pri.bg,color:pri.c,fontWeight:700}}>{r.prioridade}</span></td>
-                        <td style={{maxWidth:220,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={r.solucao}>{r.solucao||"—"}</td>
-                        <td><span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:sts.bg,color:sts.c,fontWeight:700}}>{r.status}</span></td>
-                        <td style={{whiteSpace:"nowrap"}}>{r.dataConclusao||"—"}</td>
+                         <td>
+                           <select value={r.tarefa||"Reunião"} onChange={e=>pendManCrud.update(r.id,{tarefa:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>
+                             {PEND_ACOES.map(a=><option key={a}>{a}</option>)}
+                           </select>
+                           {r.tarefa==="Outros"&&<input type="text" value={r.tarefaOutros||""} onChange={e=>pendManCrud.update(r.id,{tarefaOutros:e.target.value})} placeholder="Descreva..." style={{width:120,fontSize:10,padding:"2px 4px",marginTop:2,display:"block"}}/>}
+                         </td>
+                         <td><input type="date" value={r.data||""} onChange={e=>pendManCrud.update(r.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                         <td><select value={r.prioridade||"Normal"} onChange={e=>pendManCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:pri.c,background:pri.bg,border:"none",borderRadius:5}}><option>Urgente</option><option>Normal</option><option>Médio Prazo</option></select></td>
+                         <td><input type="text" value={r.solucao||""} onChange={e=>pendManCrud.update(r.id,{solucao:e.target.value})} placeholder="Solução..." style={{width:200,fontSize:11,padding:"3px 6px"}}/></td>
+                         <td><select value={r.status||"Pendente"} onChange={e=>pendManCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:sts.c,background:sts.bg,border:"none",borderRadius:5}}><option>Finalizado</option><option>Pendente</option><option>Em Andamento</option></select></td>
+                         <td><input type="date" value={r.dataConclusao||""} onChange={e=>pendManCrud.update(r.id,{dataConclusao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
                         <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{fmtDateTime(r.registradoEm)}</td>
                         <td style={{whiteSpace:"nowrap"}}>
                           <button onClick={()=>{setEditPendMan(r);setForm({tarefa:r.tarefa,tarefaOutros:r.tarefaOutros||"",data:r.data||"",prioridade:r.prioridade||"Normal",solucao:r.solucao||"",status:r.status||"Pendente",dataConclusao:r.dataConclusao||""});}} style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700,marginRight:3}}>✏</button>
@@ -1501,7 +1513,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").map(d=>{
@@ -1509,7 +1521,7 @@ export default function App(){
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
                       const pend=isPendentePecas(d.status);
-                      const nCols=user.canDelete?16:15;
+                      const nCols=16;
                       return(
                         <Fragment key={d.id}>
                         <tr style={{opacity:isArq?.5:1,background:isArq?"#F8F8F8":""}}>
@@ -1528,7 +1540,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateOfi(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateOfi(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                         </tr>
                         {pend&&(
                           <tr>
@@ -1574,16 +1586,16 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap">
                   <table>
-                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>Nº Mau Uso</th><th>OV</th><th>Valor</th><th>Aprovado por</th><th>Processo</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>Nº Mau Uso</th><th>OV</th><th>Valor</th><th>Aprovado por</th><th>Processo</th><th>Obs</th><th>Ações</th></tr></thead>
                     <tbody>
                       {processosMU.map(p=>{
                         const sla=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):null;
                         const pendSLA=p.enviadoAprovacao==="nao"?diffDays(p.date):null;
                         return(
                           <tr key={p.id}>
-                            <td style={{whiteSpace:"nowrap"}}>{p.date}</td>
-                            <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.empresa}</td>
-                            <td style={{fontSize:11}}>{p.patrimonio}</td>
+                             <td><input type="date" value={p.date||""} onChange={e=>updateMU(p.id,{date:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                             <td><input type="text" value={p.empresa||""} onChange={e=>updateMU(p.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                             <td><input type="text" value={p.patrimonio||""} onChange={e=>updateMU(p.id,{patrimonio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><select value={p.enviadoAprovacao} onChange={e=>updateMU(p.id,{enviadoAprovacao:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
@@ -1595,7 +1607,7 @@ export default function App(){
                             <td><input type="text" value={p.aprovadoPor||""} onChange={e=>updateMU(p.id,{aprovadoPor:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.obs||""} onChange={e=>updateMU(p.id,{obs:e.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
                             <td><PSSelect value={p.processoStatus} onChange={v=>updateMU(p.id,{processoStatus:v})}/></td>
-                            {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_mu',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                            <td><button onClick={()=>{if(window.confirm('Excluir?')){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_mu',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                           </tr>
                         );
                       })}
@@ -1620,16 +1632,16 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap">
                   <table>
-                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>OV</th><th>Aprovado por</th><th>Serviço Exec.</th><th>Nº Chamado</th><th>Nº Relatório</th><th>Processo</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>OV</th><th>Aprovado por</th><th>Serviço Exec.</th><th>Nº Chamado</th><th>Nº Relatório</th><th>Processo</th><th>Obs</th><th>Ações</th></tr></thead>
                     <tbody>
                       {processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado").map(p=>{
                         const sla=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):null;
                         const pendSLA=p.enviadoAprovacao==="nao"?diffDays(p.date):null;
                         return(
                           <tr key={p.id}>
-                            <td style={{whiteSpace:"nowrap"}}>{p.date}</td>
-                            <td style={{maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.empresa}</td>
-                            <td style={{fontSize:11}}>{p.patrimonio}</td>
+                             <td><input type="date" value={p.date||""} onChange={e=>updateAF(p.id,{date:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                             <td><input type="text" value={p.empresa||""} onChange={e=>updateAF(p.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                             <td><input type="text" value={p.patrimonio||""} onChange={e=>updateAF(p.id,{patrimonio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.chamado||""} onChange={e=>updateAF(p.id,{chamado:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><select value={p.enviadoAprovacao} onChange={e=>updateAF(p.id,{enviadoAprovacao:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
@@ -1642,7 +1654,7 @@ export default function App(){
                             <td><input type="text" value={p.relatorio2||""} onChange={e=>updateAF(p.id,{relatorio2:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                             <td><input type="text" value={p.obs||""} onChange={e=>updateAF(p.id,{obs:e.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
                             <td><PSSelect value={p.processoStatus} onChange={v=>updateAF(p.id,{processoStatus:v})}/></td>
-                            {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_af',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                            <td><button onClick={()=>{if(window.confirm('Excluir?')){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_af',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                           </tr>
                         );
                       })}
@@ -1667,7 +1679,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th><th>Ações</th></tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1675,22 +1687,22 @@ export default function App(){
                       const atrasado=sla!==null&&sla<0;
                       return(
                         <tr key={e.id} style={{background:atrasado?"#FFF8F8":""}}>
-                          <td style={{fontWeight:700,whiteSpace:"nowrap"}}>{e.req}{atrasado&&<span style={{marginLeft:4,color:"#C62828",fontSize:10}}>⚠</span>}</td>
-                          <td style={{whiteSpace:"nowrap",color:"#888",fontSize:11}}>{e.data}</td>
-                          <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.requerente}</td>
-                          <td style={{fontSize:11,color:"#888"}}>{e.item}</td>
-                          <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.descricao}</td>
+                           <td><input type="text" value={e.req||""} onChange={ev=>updateEmp(e.id,{req:ev.target.value})} style={{width:70,fontSize:11,padding:"3px 6px",fontWeight:700}}/>{atrasado&&<span style={{marginLeft:4,color:"#C62828",fontSize:10}}>⚠️</span>}</td>
+                           <td><input type="date" value={e.data||""} onChange={ev=>updateEmp(e.id,{data:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                           <td><input type="text" value={e.requerente||""} onChange={ev=>updateEmp(e.id,{requerente:ev.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                           <td><input type="text" value={e.item||""} onChange={ev=>updateEmp(e.id,{item:ev.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                           <td><input type="text" value={e.descricao||""} onChange={ev=>updateEmp(e.id,{descricao:ev.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:130}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option><option value="Ruptura">⚠️ Ruptura</option></select></td>
-                          <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11}}>{e.centroResultado}</td>
-                          <td style={{textAlign:"center"}}>{e.quant}</td>
-                          <td style={{fontSize:11}}>{e.retorno}</td>
-                          <td style={{whiteSpace:"nowrap",color:atrasado?"#C62828":"#888",fontWeight:atrasado?700:400,fontSize:11}}>{e.dataRetorno}</td>
+                           <td><input type="text" value={e.centroResultado||""} onChange={ev=>updateEmp(e.id,{centroResultado:ev.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                           <td><input type="text" value={e.quant||""} onChange={ev=>updateEmp(e.id,{quant:ev.target.value})} style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
+                           <td><select value={e.retorno||"nao"} onChange={ev=>updateEmp(e.id,{retorno:ev.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
+                           <td><input type="date" value={e.dataRetorno||""} onChange={ev=>updateEmp(e.id,{dataRetorno:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px",color:atrasado?"#C62828":"inherit"}}/></td>
                           <td><SlaBadge days={sla}/></td>
                           <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="date" value={e.dataAplicacao||""} onChange={ev=>updateEmp(e.id,{dataAplicacao:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><select value={e.statusEmp||"pendente"} onChange={ev=>updateEmp(e.id,{statusEmp:ev.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:e.statusEmp==="concluido"?"#1A7A3C":"#C62828",background:e.statusEmp==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm('Excluir?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                         </tr>
                       );
                     })}
@@ -1714,7 +1726,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th><th>Ações</th></tr></thead>
                   <tbody>
                     {saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado").map(s=>{
                       const isRuptura=s.statusReq==="ruptura";
@@ -1748,7 +1760,7 @@ export default function App(){
                           <td>{(isAtendido||isRuptura)?<input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:110,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
                           <td><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:s.statusFinal==="concluido"?"#1A7A3C":"#C62828",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td><PSSelect value={s.processoStatus} onChange={v=>updateSaida(s.id,{processoStatus:v})}/></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm('Excluir?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                         </tr>
                       );
                     })}
@@ -1870,7 +1882,7 @@ export default function App(){
                                         <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:st.bg,color:st.color,fontWeight:700}}>{st.l}</span>
                                         <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:`${tipoC}15`,color:tipoC,fontWeight:700}}>{(s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo"}</span>
                                       </div>
-                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(schedule[key]||[]).filter((_,i)=>i!==si);saveSched(key,arr);}}}} style={{marginTop:5,fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                      <button onClick={()=>{if(window.confirm("Remover?")){{const arr=(schedule[key]||[]).filter((_,i)=>i!==si);saveSched(key,arr);}}}} style={{marginTop:5,fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>
                                     </div>
                                   );
                                 })}
@@ -2082,7 +2094,7 @@ export default function App(){
                       <tr>
                         <th>Data</th><th>Solicitante</th><th>Departamento</th><th>Motivo</th>
                         <th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Endereço</th><th>Valor (R$)</th>
-                        <th>Status</th><th>Obs</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}
+                        <th>Status</th><th>Obs</th><th>Registrado por</th><th>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2120,7 +2132,7 @@ export default function App(){
                           </td>
                           <td><input type="text" value={p.obs||""} onChange={e=>updateUber(p.id,{obs:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{p.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(p.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir pedido?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm("Excluir pedido?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -2155,7 +2167,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap">
                   <table>
-                    <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Patrimônio</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                    <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Patrimônio</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th><th>Ações</th></tr></thead>
                     <tbody>
                       {financeiro.map(f=>{
                         const pend=f.situacao==="pendente";
@@ -2176,7 +2188,7 @@ export default function App(){
                             <td><input type="text" value={f.valorReembolso||""} onChange={e=>updateFin(f.id,{valorReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="R$ 0,00"/></td>
                             <td><input type="text" value={f.ticketReembolso||""} onChange={e=>updateFin(f.id,{ticketReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="Ticket"/></td>
                             <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{f.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(f.registradoEm)}</span></td>
-                            {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este lançamento?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                            <td><button onClick={()=>{if(window.confirm("Excluir este lançamento?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                           </tr>
                         );
                       })}
@@ -2202,7 +2214,7 @@ export default function App(){
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data Envio</th><th>Rel</th><th>Empresa</th><th>Técnico</th><th>PAT</th><th>Tipo</th><th>Resolvido</th><th>Novo PAT</th><th>Data</th><th>NF</th><th>Rel Entrega</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data Envio</th><th>Rel</th><th>Empresa</th><th>Técnico</th><th>PAT</th><th>Tipo</th><th>Resolvido</th><th>Novo PAT</th><th>Data</th><th>NF</th><th>Rel Entrega</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>{list.map(r=>{const ok=r.resolvido==="sim";return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.dataEnvio||""} onChange={e=>froCrud.update(r.id,{dataEnvio:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
@@ -2217,7 +2229,7 @@ export default function App(){
                       <td><input type="text" value={r.nf||""} onChange={e=>froCrud.update(r.id,{nf:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}} placeholder="NF"/></td>
                       <td><input type="text" value={r.relEntrega||""} onChange={e=>froCrud.update(r.id,{relEntrega:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="—"/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>froCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>froCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
@@ -2240,7 +2252,7 @@ export default function App(){
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum item.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Empresa</th><th>PAT</th><th>Motivo da Contestação</th><th>Email/WhatsApp</th><th>Responsável</th><th>Status</th><th>Data Resolução</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Empresa</th><th>PAT</th><th>Motivo da Contestação</th><th>Email/WhatsApp</th><th>Responsável</th><th>Status</th><th>Data Resolução</th><th>Observação</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>{list.map(r=>{const conc=r.status==="concluido";const pend=r.status==="pendente";return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.data||""} onChange={e=>priCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
@@ -2253,7 +2265,7 @@ export default function App(){
                       <td><input type="date" value={r.dataResolucao||""} onChange={e=>priCrud.update(r.id,{dataResolucao:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                       <td><input type="text" value={r.obs||""} onChange={e=>priCrud.update(r.id,{obs:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>priCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))priCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>priCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))priCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
@@ -2277,7 +2289,7 @@ export default function App(){
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum item.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data de Envio</th><th>Responsável</th><th>Motivo</th><th>Funcionário</th><th>Status</th><th>Observação</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data de Envio</th><th>Responsável</th><th>Motivo</th><th>Funcionário</th><th>Status</th><th>Observação</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>{list.map(r=>{const conc=r.status==="concluido";return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.dataEnvio||""} onChange={e=>rhCrud.update(r.id,{dataEnvio:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
@@ -2287,7 +2299,7 @@ export default function App(){
                       <td><select value={r.status||"pendente_luana"} onChange={e=>rhCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:conc?"#1A7A3C":"#C47D00",background:conc?"#F0FFF5":"#FFFBF0",minWidth:140}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
                       <td><input type="text" value={r.obs||""} onChange={e=>rhCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
@@ -2312,7 +2324,7 @@ export default function App(){
               </div>
               {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
                 <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Prioridade</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Prioridade</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";const p=PRIO[r.prioridade||"medio"];return(
                     <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
                       <td><input type="date" value={r.data||""} onChange={e=>gusCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
@@ -2323,7 +2335,7 @@ export default function App(){
                       <td><select value={r.status||"pendente"} onChange={e=>gusCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":pend?"#C62828":"#1565C0",background:res?"#F0FFF5":pend?"#FFF0F0":"#F0F4FF",minWidth:130}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
                       <td><input type="text" value={r.obs||""} onChange={e=>gusCrud.update(r.id,{obs:e.target.value})} style={{width:240,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                       <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      {user.canDelete&&<td style={{whiteSpace:"nowrap"}}><button onClick={()=>gusCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))gusCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>gusCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))gusCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                     </tr>);})}</tbody>
                 </table></div></div>
               )}
@@ -2460,7 +2472,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
                     {sas.map(s=>{
@@ -2484,7 +2496,7 @@ export default function App(){
                           <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
                           <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                          <td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                         </tr>
                       );
                     })}
@@ -2496,34 +2508,39 @@ export default function App(){
         )}
 
         {/* ── CARROS ── */}
-        {tab==="carros"&&(
+        {tab==="carros"&&(()=>{
+          const listaCarros=carros.filter(c=>!c.arquivado||(typeof c.arquivado==="undefined"));
+          return(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{carros.length} registro(s)</div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{listaCarros.length} registro(s)</div></div>
               <div style={{display:"flex",gap:8}}>
-                <BtnExcel onClick={()=>exportCSV(carros,"carros_grupomov",[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"tecnico",label:"Técnico"},{key:"manutencao",label:"Manutenção"},{key:"valor",label:"Valor"},{key:"aprovadoGustavo",label:"Aprovado Gustavo"},{key:"dataExecucao",label:"Data Execução"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(carros,"carros_grupomov",[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"tecnico",label:"Técnico"},{key:"manutencao",label:"Manutenção"},{key:"valor",label:"Valor"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={addCarro}>+ Novo Registro</BtnY>
               </div>
             </div>
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Placa</th><th>Técnico</th><th>Manutenção</th><th>Valor</th><th>Aprov. Gustavo</th><th>Data Execução</th><th>Oficina</th><th>Observações</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Placa</th><th>Técnico</th><th>Manutenção</th><th>Valor</th><th>Aprov. Gustavo</th><th>Data Execução</th><th>Oficina</th><th>Obs</th><th>Reg. por</th><th>Ações</th></tr></thead>
                   <tbody>
-                    {carros.length===0&&<tr><td colSpan={11} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Registro".</td></tr>}
-                    {carros.map(c=>(
+                    {listaCarros.length===0&&<tr><td colSpan={11} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Registro".</td></tr>}
+                    {listaCarros.map(c=>(
                       <tr key={c.id}>
                         <td><input type="date" value={c.data||""} onChange={e=>updateCarro(c.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
                         <td><select value={c.placa||PLACAS_CARROS[0]} onChange={e=>updateCarro(c.id,{placa:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}</select></td>
-                        <td><select value={c.tecnico||ALL_TECHS[0]} onChange={e=>updateCarro(c.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>{[...ALL_TECHS,...OFICINA_TECHS].map(t=><option key={t}>{t}</option>)}</select></td>
-                        <td><input type="text" value={c.manutencao||""} onChange={e=>updateCarro(c.id,{manutencao:e.target.value})} placeholder="Descreva a manutenção..." style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
-                        <td><input type="text" value={c.valor||""} onChange={e=>updateCarro(c.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
-                        <td><select value={c.aprovadoGustavo||"nao"} onChange={e=>updateCarro(c.id,{aprovadoGustavo:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:c.aprovadoGustavo==="sim"?"#1A7A3C":"#C62828",background:c.aprovadoGustavo==="sim"?"#F0FFF5":"#FFF0F0"}}><option value="nao">❌ Não</option><option value="sim">✅ Sim</option></select></td>
-                        <td>{c.aprovadoGustavo==="sim"?<input type="date" value={c.dataExecucao||""} onChange={e=>updateCarro(c.id,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                        <td>{c.aprovadoGustavo==="sim"?<input type="text" value={c.oficina||""} onChange={e=>updateCarro(c.id,{oficina:e.target.value})} placeholder="Oficina..." style={{width:120,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                        <td><input type="text" value={c.obs||""} onChange={e=>updateCarro(c.id,{obs:e.target.value})} placeholder="Obs..." style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><select value={c.tecnico||ALL_TECHS[0]} onChange={e=>updateCarro(c.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
+                        <td><input type="text" value={c.manutencao||""} onChange={e=>updateCarro(c.id,{manutencao:e.target.value})} placeholder="Tipo de manutenção..." style={{width:160,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.valor||""} onChange={e=>updateCarro(c.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><select value={c.aprovadoGustavo||"nao"} onChange={e=>updateCarro(c.id,{aprovadoGustavo:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:c.aprovadoGustavo==="sim"?"#1A7A3C":"#C62828",background:c.aprovadoGustavo==="sim"?"#F0FFF5":"#FFF0F0",border:"none",borderRadius:5}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
+                        <td><input type="date" value={c.dataExecucao||""} onChange={e=>updateCarro(c.id,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.oficina||""} onChange={e=>updateCarro(c.id,{oficina:e.target.value})} placeholder="Oficina..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
+                        <td><input type="text" value={c.obs||""} onChange={e=>updateCarro(c.id,{obs:e.target.value})} placeholder="Obs..." style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
                         <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
-                                            <td><button onClick={()=>{if(window.confirm("Excluir?"))delCarro(c.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                        <td style={{whiteSpace:"nowrap"}}>
+                          <button onClick={()=>updateCarro(c.id,{arquivado:!c.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))delCarro(c.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -2531,7 +2548,8 @@ export default function App(){
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* ── APONTAMENTOS OFICINA 150 ── */}
         {tab==="apontamentos_150"&&(
@@ -2551,7 +2569,7 @@ export default function App(){
               <select value={ofi150Serv} onChange={e=>setOfi150Serv(e.target.value)} style={{fontSize:12}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
             </div>
             <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-              <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Relatório</th><th>Obs</th><th>Registrado por</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+              <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Relatório</th><th>Obs</th><th>Registrado por</th><th>Ações</th></tr></thead>
               <tbody>
                 {apontamentos150.filter(a=>{
                   if(ofi150Data&&a.data!==ofi150Data)return false;
@@ -2573,7 +2591,7 @@ export default function App(){
                     <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon150(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                     <td><input type="text" value={a.obs||""} onChange={e=>updateApon150(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
                     <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                    {user.canDelete&&<td><button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>}
+                    <td><button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
                   </tr>
                 ))}
                 {apontamentos150.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
@@ -2594,7 +2612,7 @@ export default function App(){
             if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfi150TechSel}__${dataFinal}`;
             saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,cidade:agOfi150Cidade||"",horimetro:agOfi150Horimetro||"",patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:(agOfi150Status==="todos"?"agendada":agOfi150Status),horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida)}]);
-            setAgOfi150Empresa("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");
+            setAgOfi150Empresa("");setAgOfi150Cidade("");setAgOfi150Horimetro("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -2667,7 +2685,10 @@ export default function App(){
                                       {s.servico&&<div style={{color:"#1565C0",fontSize:11,fontWeight:700,marginBottom:2}}>🔧 {s.servico}</div>}
                                       {(s.horaEntrada||s.horaSaida)&&<div style={{color:"#C47D00",fontSize:11,fontWeight:700,marginBottom:3}}>🕐 {s.horaEntrada||"--:--"} → {s.horaSaida||"--:--"}{horas?<span style={{color:"#1A7A3C",marginLeft:4}}>({horas})</span>:""}</div>}
                                       <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:st.bg,color:st.color,fontWeight:700,display:"inline-block",marginTop:3}}>{st.l}</span>
-                                      {user.canDelete&&<button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi150[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi150(key,arr);}}}} style={{marginTop:5,fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",width:"100%"}}>✕ remover</button>}
+                                      <div style={{display:"flex",gap:3,marginTop:5}}>
+                                        <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"ofi150"});setEditSlotForm({...s});}} style={{fontSize:10,padding:"3px 6px",background:"#F0F4FF",border:"1px solid #C5D8FF",borderRadius:4,color:"#1565C0",cursor:"pointer",flex:1}}>✏️</button>
+                                        <button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi150[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi150(key,arr);}}}} style={{fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",flex:1}}>✕</button>
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -2832,6 +2853,18 @@ export default function App(){
           );
         })()}
 
+      {editSlot&&<EditSlotModal
+        slot={editSlotForm}
+        tipo={editSlot.tipo}
+        onClose={()=>setEditSlot(null)}
+        onSave={novo=>{
+          if(editSlot.tipo==="tecnico"){const arr=[...(schedule[editSlot.key]||[])];arr[editSlot.si]=novo;saveSched(editSlot.key,arr);}
+          else if(editSlot.tipo==="ofi"){const arr=[...(agendaOfi[editSlot.key]||[])];arr[editSlot.si]=novo;saveAgendaOfi(editSlot.key,arr);}
+          else if(editSlot.tipo==="ofi150"){const arr=[...(agendaOfi150[editSlot.key]||[])];arr[editSlot.si]=novo;saveAgendaOfi150(editSlot.key,arr);}
+          notify("✅ Atendimento atualizado!");
+          setEditSlot(null);
+        }}
+      />}
       {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
       {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
       {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
