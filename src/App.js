@@ -104,6 +104,7 @@ const empSitCfg = {
   "Parcialmente Atendido":{color:"#E67E00",bg:"#FFF8F0"},
   "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
   "Retorno Concluído":{color:"#00838F",bg:"#E0F7FA"},
+  "Ruptura":{color:"#C62828",bg:"#FFF0F0"},
 };
 const PROCESS_STATUS = {
   "em_andamento": {color:"#E67E00", bg:"#FFF8F0", label:"Em Andamento"},
@@ -493,12 +494,9 @@ function EmpModal({onClose,onSave,initial}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Inp label="Nº REQ" value={form.req} onChange={v=>upd("req",v)} placeholder="8821"/>
             <Inp type="date" label="Data" value={form.data} onChange={v=>upd("data",v)}/>
-            <Sel label="Situação" value={form.situacao} onChange={v=>upd("situacao",v)} options={["Aprovado","Atendido","Pendente","Parcialmente Atendido","Retorno Concluído"]}/>
+            <Sel label="Situação" value={form.situacao} onChange={v=>upd("situacao",v)} options={["Aprovado","Atendido","Pendente","Parcialmente Atendido","Retorno Concluído","Ruptura"]}/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-            <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
-            <Sel label="Status Ruptura" value={form.statusRuptura||"normal"} onChange={v=>upd("statusRuptura",v)} options={[{v:"normal",l:"Normal"},{v:"ruptura",l:"⚠️ Ruptura"}]}/>
-          </div>
+          <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
           <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
             <Inp label="Ítem (Código)" value={form.item} onChange={v=>upd("item",v)} placeholder="2316816"/>
             <Inp label="Descrição" value={form.descricao} onChange={v=>upd("descricao",v)} placeholder="Descrição da peça"/>
@@ -546,10 +544,7 @@ function SaidaModal({onClose,onSave,initial}){
             <Inp label="Empresa" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="MOV LOC"/>
             <Inp label="Mês" value={form.mes} onChange={v=>upd("mes",v)} placeholder="2026/06"/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-            <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
-            <Sel label="Status Ruptura" value={form.statusRuptura||"normal"} onChange={v=>upd("statusRuptura",v)} options={[{v:"normal",l:"Normal"},{v:"ruptura",l:"⚠️ Ruptura"}]}/>
-          </div>
+          <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
           <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
             <Inp label="Código" value={form.codigo} onChange={v=>upd("codigo",v)} placeholder="2322471"/>
             <Inp label="Descrição" value={form.descricao} onChange={v=>upd("descricao",v)} placeholder="Descrição da peça"/>
@@ -768,6 +763,8 @@ export default function App(){
   const [agOfiSaida,setAgOfiSaida]=useState("");
   const [agOfiObs,setAgOfiObs]=useState("");
   const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
+  const [agOfiCidade,setAgOfiCidade]=useState("");
+  const [agOfiHorimetro,setAgOfiHorimetro]=useState("");
   const [agOfiTipo,setAgOfiTipo]=useState("preventivo");
   const [pendHebert,setPendHebert]=useState([]);
   const [showArqHeb,setShowArqHeb]=useState(false);
@@ -838,6 +835,8 @@ export default function App(){
   const [agTech,setAgTech]=useState(ALL_TECHS[0]);
   const [agDate,setAgDate]=useState("");
   const [agEmpresa,setAgEmpresa]=useState("");
+  const [agCidade,setAgCidade]=useState("");
+  const [agHorimetro,setAgHorimetro]=useState("");
   const [agPat,setAgPat]=useState("");
   const [agStatus,setAgStatus]=useState("agendada");
   const [agTipo,setAgTipo]=useState("preventivo");
@@ -1245,8 +1244,8 @@ export default function App(){
             const dataFinal=agOfiDate||`${ym}-01`;
             if(!agOfiEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfiTechSel}__${dataFinal}`;
-            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,patrimonio:agOfiPat||"",type:agOfiTipo,status:(agOfiStatus==="todos"?"agendada":agOfiStatus),horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida)}]);
-            setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");
+            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,cidade:agOfiCidade||"",horimetro:agOfiHorimetro||"",patrimonio:agOfiPat||"",type:agOfiTipo,status:(agOfiStatus==="todos"?"agendada":agOfiStatus),horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida)}]);
+            setAgOfiEmpresa("");setAgOfiCidade("");setAgOfiHorimetro("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -1265,6 +1264,8 @@ export default function App(){
                   <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
+                  <input type="text" placeholder="Cidade" value={agOfiCidade||""} onChange={e=>setAgOfiCidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:90}}/>
+                  <input type="text" placeholder="Horímetro" value={agOfiHorimetro||""} onChange={e=>setAgOfiHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfiEntrada} onChange={e=>setAgOfiEntrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfiSaida} onChange={e=>setAgOfiSaida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
@@ -1312,6 +1313,8 @@ export default function App(){
                                   return(
                                     <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:4,padding:"3px 5px",marginBottom:3,fontSize:10}}>
                                       <div style={{fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:82}} title={s.client}>{s.client}</div>
+                                      {s.cidade&&<div style={{color:"#555",fontSize:9}}>📍 {s.cidade}</div>}
+                                      {s.horimetro&&<div style={{color:"#555",fontSize:9}}>⏱ {s.horimetro}</div>}
                                       {s.patrimonio&&<div style={{color:"#888",fontSize:9}}>🏷️ {s.patrimonio}</div>}
                                       <span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:st.bg,color:st.color,fontWeight:600}}>{st.l}</span>
                                       {(s.horaEntrada||s.horaSaida)&&<div style={{fontSize:9,color:"#C47D00",marginTop:1}}>{s.horaEntrada||"--:--"}→{s.horaSaida||"--:--"}</div>}
@@ -1332,6 +1335,70 @@ export default function App(){
           );
         })()}
 
+        {tab==="dashboard_ofi"&&(()=>{
+          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
+          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+          const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
+          // Apontamentos do mês
+          const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+          const apMes=apontamentos.filter(a=>a.data&&a.data.startsWith(mesAtual));
+          const totalMinMes=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          // Por técnico
+          const byTech={}; OFICINA_TECHS.forEach(t=>{byTech[t]=apMes.filter(a=>a.tecnico===t);});
+          const techHorasData={labels:OFICINA_TECHS,datasets:[{label:"Horas",data:OFICINA_TECHS.map(t=>+(byTech[t].reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
+          // Por serviço
+          const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
+          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
+          // Agenda oficina do mês
+          const agOfiAtend=[];
+          Object.keys(agendaOfi).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi[k]||[]).forEach(s=>agOfiAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas}));});
+          const concluidos=agOfiAtend.filter(a=>a.status==="concluida").length;
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina — {MESES[agOfiMonth]} {agOfiYear}</div>
+              <div style={{display:"flex",gap:8,marginBottom:16,alignItems:"center"}}>
+                <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+                {[{l:"Apontamentos (mês)",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais (mês)",v:fmtMin(totalMinMes),c:"#C47D00"},{l:"Agendados",v:agOfiAtend.length,c:"#1565C0"},{l:"Concluídos",v:concluidos,c:"#1A7A3C"}].map((s,i)=>(
+                  <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
+                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>⏱ Horas por Técnico (mês)</div>
+                  <ChartCanvas type="bar" data={techHorasData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},maintainAspectRatio:false}} height={Math.max(160,OFICINA_TECHS.length*34)}/>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Serviços Realizados (mês)</div>
+                  <ChartCanvas type="bar" data={servData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}} height={Math.max(160,SERVICOS_OFICINA.length*34)}/>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {OFICINA_TECHS.map(tech=>{
+                  const color=techColor(tech);
+                  const techAp=apMes.filter(a=>a.tecnico===tech);
+                  const totalMin=techAp.reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0);
+                  return(
+                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,padding:"14px 16px"}}>
+                      <div style={{fontWeight:700,fontSize:14,marginBottom:8}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Horas: <b style={{color:"#C47D00"}}>{fmtMin(totalMin)}</b></div>
+                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Apontamentos: <b style={{color:"#1A1A1A"}}>{techAp.length}</b></div>
+                      <div style={{fontSize:11,color:"#AAA"}}>Serviços: {[...new Set(techAp.map(a=>a.servico))].join(", ")||"—"}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
         {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
           const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
@@ -1373,8 +1440,8 @@ export default function App(){
           const PRI_PM={Urgente:{c:"#C62828",bg:"#FFF0F0"},Normal:{c:"#555",bg:"#F5F5F5"},"Médio Prazo":{c:"#1565C0",bg:"#F0F4FF"}};
           const list=pendManuela.filter(r=>showArqPendMan||!r.arquivado);
           const emptyForm={tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""};
-          const [form,setForm]=useState(editPendMan||emptyForm);
-          const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+          const form=pendManForm;
+          const upd=(k,v)=>setPendManForm(p=>({...p,[k]:v}));
           const salvar=()=>{
             if(editPendMan){
               pendManCrud.update(editPendMan.id,{...form});
@@ -1382,7 +1449,7 @@ export default function App(){
             } else {
               pendManCrud.add(form);
             }
-            setForm(emptyForm);
+            setPendManForm(emptyForm);
           };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -1660,7 +1727,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Ruptura</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th>{user.canDelete&&<th>✕</th>}</tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1673,8 +1740,7 @@ export default function App(){
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.requerente}</td>
                           <td style={{fontSize:11,color:"#888"}}>{e.item}</td>
                           <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.descricao}</td>
-                          <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:110}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option></select></td>
-                          <td><select value={e.statusRuptura||"normal"} onChange={ev=>updateEmp(e.id,{statusRuptura:ev.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:e.statusRuptura==="ruptura"?"#C62828":"#1A7A3C",background:e.statusRuptura==="ruptura"?"#FFF0F0":"#F0FFF5",border:"none",borderRadius:5}}><option value="normal">Normal</option><option value="ruptura">⚠️ Ruptura</option></select></td>
+                          <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:130}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option><option value="Ruptura">⚠️ Ruptura</option></select></td>
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11}}>{e.centroResultado}</td>
                           <td style={{textAlign:"center"}}>{e.quant}</td>
                           <td style={{fontSize:11}}>{e.retorno}</td>
@@ -1771,8 +1837,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
-            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",horimetro:agHorimetro||"",patrimonio:agPat||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
+            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
             notify("✅ Atendimento salvo!");
           };
           const getTipoCor=tipo=>(tipo||"preventivo")==="corretivo"?"#C62828":"#1565C0";
@@ -1801,6 +1867,8 @@ export default function App(){
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
+                  <input type="text" placeholder="Cidade" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <input type="text" placeholder="Horímetro" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:110}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
@@ -1855,6 +1923,8 @@ export default function App(){
                                   return(
                                     <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:4,padding:"3px 5px",marginBottom:3,fontSize:10}}>
                                       <div style={{fontWeight:700,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:82}} title={s.client}>{s.client}</div>
+                                      {s.cidade&&<div style={{color:"#555",fontSize:9}}>📍 {s.cidade}</div>}
+                                      {s.horimetro&&<div style={{color:"#555",fontSize:9}}>⏱ {s.horimetro}</div>}
                                       {s.patrimonio&&<div style={{color:"#888",fontSize:9}}>🏷️ {s.patrimonio}</div>}
                                       <div style={{display:"flex",gap:3,alignItems:"center",marginTop:2,flexWrap:"wrap"}}>
                                         <span style={{fontSize:9,padding:"1px 4px",borderRadius:3,background:st.bg,color:st.color,fontWeight:600}}>{st.l}</span>
@@ -2579,7 +2649,7 @@ export default function App(){
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
           const diasNoMes=new Date(agOfi150Year,agOfi150Month+1,0).getDate();
           const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
-          const techsList=OFI150_TECHS?OFI150_TECHS:(OFICINA_TECHS||[]);
+          const techsList=OFICINA_TECHS.filter(t=>agOfi150Tech==="todos"||t===t);
           const addAtend150=()=>{
             const dataFinal=agOfi150Date||`${ym}-01`;
             if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
@@ -2600,7 +2670,7 @@ export default function App(){
               <div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{(OFI150_TECHS||OFICINA_TECHS).map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:140}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
