@@ -52,6 +52,33 @@ const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
 const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel"];
+
+// ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
+const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
+
+// ── ITENS DE REVISÃO ──────────────────────────────────────────────────────────
+const ITENS_REVISAO = [
+  {v:"oleo_motor",l:"Óleo Motor"},
+  {v:"oleo_cambio",l:"Óleo do Câmbio"},
+  {v:"oleo_freio",l:"Óleo de Freio"},
+  {v:"oleo_embreagem",l:"Óleo Embreagem"},
+  {v:"filtro_oleo_motor",l:"Filtro de Óleo Motor"},
+  {v:"filtro_ar_cond",l:"Filtro Ar Condicionado"},
+  {v:"filtro_ar_motor",l:"Filtro Ar do Motor"},
+  {v:"higienizador",l:"Higienizador"},
+  {v:"cabo_velas",l:"Cabo e Velas"},
+  {v:"correia_dentada",l:"Correia Dentada"},
+  {v:"correia_alternador",l:"Correia do Alternador"},
+  {v:"correia_dh",l:"Correia DH"},
+  {v:"correia_servico",l:"Correia de Serviço"},
+  {v:"tensor_correias",l:"Tensor de Correias"},
+  {v:"outros",l:"Outros"},
+];
+const CARRO_STATUS = {
+  orcamento_pendente: {l:"Orçamento Pendente",c:"#C62828",bg:"#FFF0F0"},
+  oficina:            {l:"Oficina",            c:"#E67E00",bg:"#FFF8F0"},
+  liberado:           {l:"Liberado",           c:"#1A7A3C",bg:"#F0FFF5"},
+};
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODAY      = new Date();
 const LOGO_MOV = "data:image/jpeg;base64,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";
@@ -78,11 +105,11 @@ const statusCfg = {
   "concluído":{color:"#1A7A3C",bg:"#F0FFF5",label:"Concluído"},
 };
 const empSitCfg = {
+  "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
   "Atendido":{color:"#1A7A3C",bg:"#F0FFF5"},
   "Pendente":{color:"#C62828",bg:"#FFF0F0"},
   "Parcialmente Atendido":{color:"#E67E00",bg:"#FFF8F0"},
-  "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
-  "Aberto":{color:"#888",bg:"#F8F8F8"},
+  "Retorno Concluído":{color:"#00838F",bg:"#E0F7FA"},
 };
 const PROCESS_STATUS = {
   "em_andamento": {color:"#E67E00", bg:"#FFF8F0", label:"Em Andamento"},
@@ -219,7 +246,7 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS}){
   const [analyzing,setAnalyzing]=useState(false);
   const [err,setErr]=useState("");
   const fileRef=useRef();
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",tecnico:techs[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
+  const [form,setForm]=useState({date:TODAY_STR,empresa:"",cidade:"",horimetro:"",patrimonio:"",tecnico:techs[0],region:"metropolitana",type:"corretivo",reportNum:"",execRelatorio:"",acao:"",status:"",urgent:false,sla:8,horaEntrada:"",horaSaida:"",horasTrabalhadas:"",horasDeslocamento:"",requisicaoPeca:"",numChamado:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const analyzeAI=async(content)=>{
     setAnalyzing(true);setErr("");
@@ -252,6 +279,10 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS}){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
               <Inp label="Nº Relatório" value={form.reportNum} onChange={v=>upd("reportNum",v)} placeholder="REL-2026-001"/>
               <Inp label="Empresa/Cliente" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="Nome da empresa"/>
+              <Inp label="Cidade" value={form.cidade} onChange={v=>upd("cidade",v)} placeholder="Cidade"/>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+              <Inp label="Horímetro" value={form.horimetro} onChange={v=>upd("horimetro",v)} placeholder="Ex: 12350"/>
               <Inp label="Patrimônio" value={form.patrimonio} onChange={v=>upd("patrimonio",v)} placeholder="PAT-000"/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
@@ -401,7 +432,7 @@ function ImportExcelModal({onClose,onImport}){
 // ── MODAL PROCESSO (Mau Uso / A Faturar) ─────────────────────────────────────
 function ProcessoModal({onClose,onSave,tipo}){
   const isMU=tipo==="mau_uso";
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
+  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",horimetro:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const sla=form.enviadoAprovacao==="sim"&&form.dataEnvio?diffDays(form.dataEnvio):null;
   return(
@@ -417,7 +448,8 @@ function ProcessoModal({onClose,onSave,tipo}){
             <Inp label="Empresa" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="Nome da empresa"/>
             <Inp label="Patrimônio" value={form.patrimonio} onChange={v=>upd("patrimonio",v)} placeholder="PAT-000"/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+            <Inp label="Horímetro" value={form.horimetro} onChange={v=>upd("horimetro",v)} placeholder="Ex: 12350"/>
             <Inp label="Nº Relatório" value={form.relatorio} onChange={v=>upd("relatorio",v)} placeholder="REL-2026-001"/>
             <Inp label="Chamado" value={form.chamado} onChange={v=>upd("chamado",v)} placeholder="CHM-001"/>
           </div>
@@ -458,7 +490,7 @@ function ProcessoModal({onClose,onSave,tipo}){
 
 // ── MODAL EMPRÉSTIMO ──────────────────────────────────────────────────────────
 function EmpModal({onClose,onSave,initial}){
-  const [form,setForm]=useState(initial||{req:"",data:TODAY_STR,natureza:"Empréstimo/Obriga Retorno",requerente:"",item:"",descricao:"",situacao:"Aberto",centroResultado:"",quant:"1",retorno:"",dataRetorno:"",observacao:"",retornoAlmox:"",retornoSistema:"",numRelatorio:"",slaAlert:""});
+  const [form,setForm]=useState(initial||{req:"",data:TODAY_STR,natureza:"Empréstimo/Obriga Retorno",requerente:"",item:"",descricao:"",situacao:"Aprovado",statusRuptura:"normal",centroResultado:"",quant:"1",retorno:"",dataRetorno:"",observacao:"",retornoAlmox:"",retornoSistema:"",numRelatorio:"",slaAlert:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const sla=form.dataRetorno?diffDays(form.dataRetorno):null;
   return(
@@ -472,9 +504,12 @@ function EmpModal({onClose,onSave,initial}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Inp label="Nº REQ" value={form.req} onChange={v=>upd("req",v)} placeholder="8821"/>
             <Inp type="date" label="Data" value={form.data} onChange={v=>upd("data",v)}/>
-            <Sel label="Situação" value={form.situacao} onChange={v=>upd("situacao",v)} options={["Aberto","Aprovado","Atendido","Pendente","Parcialmente Atendido"]}/>
+            <Sel label="Situação" value={form.situacao} onChange={v=>upd("situacao",v)} options={["Aprovado","Atendido","Pendente","Parcialmente Atendido","Retorno Concluído"]}/>
           </div>
-          <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
+            <Sel label="Status Ruptura" value={form.statusRuptura||"normal"} onChange={v=>upd("statusRuptura",v)} options={[{v:"normal",l:"Normal"},{v:"ruptura",l:"⚠️ Ruptura"}]}/>
+          </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
             <Inp label="Ítem (Código)" value={form.item} onChange={v=>upd("item",v)} placeholder="2316816"/>
             <Inp label="Descrição" value={form.descricao} onChange={v=>upd("descricao",v)} placeholder="Descrição da peça"/>
@@ -522,7 +557,10 @@ function SaidaModal({onClose,onSave,initial}){
             <Inp label="Empresa" value={form.empresa} onChange={v=>upd("empresa",v)} placeholder="MOV LOC"/>
             <Inp label="Mês" value={form.mes} onChange={v=>upd("mes",v)} placeholder="2026/06"/>
           </div>
-          <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Inp label="Requerente" value={form.requerente} onChange={v=>upd("requerente",v)} placeholder="Nome do requerente"/>
+            <Sel label="Status Ruptura" value={form.statusRuptura||"normal"} onChange={v=>upd("statusRuptura",v)} options={[{v:"normal",l:"Normal"},{v:"ruptura",l:"⚠️ Ruptura"}]}/>
+          </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
             <Inp label="Código" value={form.codigo} onChange={v=>upd("codigo",v)} placeholder="2322471"/>
             <Inp label="Descrição" value={form.descricao} onChange={v=>upd("descricao",v)} placeholder="Descrição da peça"/>
@@ -548,6 +586,70 @@ function SaidaModal({onClose,onSave,initial}){
 }
 
 
+
+
+// ── MODAL REVISÃO CARRO ───────────────────────────────────────────────────────
+function CarroRevisaoModal({onClose, onSave, placa, initial}){
+  const emptyForm = {placa:placa||PLACAS_CARROS[0],status:"liberado",data:TODAY_STR,responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],proximaRevisaoData:"",oficina:"",obs:"",obsOutros:"",obsOutrosProx:""};
+  const [form,setForm]=useState(initial&&initial.id?initial:emptyForm);
+  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const toggleItem=(list,v)=>list.includes(v)?list.filter(x=>x!==v):[...list,v];
+  const stCfg=CARRO_STATUS[form.status]||CARRO_STATUS.liberado;
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#FFF",borderRadius:16,width:720,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>🚗 Revisão — {form.placa}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+            <Sel label="Placa" value={form.placa} onChange={v=>upd("placa",v)} options={PLACAS_CARROS.map(p=>({v:p,l:p}))}/>
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1}}>Status</div>
+              <select value={form.status} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"7px 10px",color:stCfg.c,background:stCfg.bg,border:"none",borderRadius:8,fontWeight:700,cursor:"pointer"}}>
+                <option value="orcamento_pendente">Orçamento Pendente</option>
+                <option value="oficina">Oficina</option>
+                <option value="liberado">Liberado</option>
+              </select>
+            </div>
+            <Inp type="date" label="Data" value={form.data} onChange={v=>upd("data",v)}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Inp label="Responsável" value={form.responsavel} onChange={v=>upd("responsavel",v)} placeholder="Nome"/>
+            <Inp label="Oficina" value={form.oficina} onChange={v=>upd("oficina",v)} placeholder="Nome da oficina"/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+            <Inp type="date" label="Última Revisão" value={form.ultimaRevisaoData} onChange={v=>upd("ultimaRevisaoData",v)}/>
+            <Inp label="KM Última Revisão" value={form.kmUltimaRevisao} onChange={v=>upd("kmUltimaRevisao",v)} placeholder="Ex: 45000"/>
+            <Inp label="Valor Última Revisão" value={form.valorUltimaRevisao} onChange={v=>upd("valorUltimaRevisao",v)} placeholder="R$ 0,00"/>
+          </div>
+          <Inp label="KM Atual" value={form.kmAtual} onChange={v=>upd("kmAtual",v)} placeholder="Ex: 52000"/>
+          <div style={{background:"#F0F4FF",borderRadius:10,padding:14,border:"1px solid #C5D8FF"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#1565C0",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>✅ Itens Substituídos</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+              {ITENS_REVISAO.map(it=>(<label key={it.v} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",padding:"4px 6px",borderRadius:6,background:form.itensSubstituidos.includes(it.v)?"#D6E4FF":"transparent"}}><input type="checkbox" checked={form.itensSubstituidos.includes(it.v)} onChange={()=>upd("itensSubstituidos",toggleItem(form.itensSubstituidos,it.v))} style={{width:14,height:14}}/>{it.l}</label>))}
+            </div>
+            {form.itensSubstituidos.includes("outros")&&<div style={{marginTop:8}}><Inp label="Outros (descrição)" value={form.obsOutros} onChange={v=>upd("obsOutros",v)} placeholder="Descreva..."/></div>}
+          </div>
+          <div style={{background:"#F0FFF5",borderRadius:10,padding:14,border:"1px solid #A0DDBB"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>🔜 Itens Próxima Revisão</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+              {ITENS_REVISAO.map(it=>(<label key={it.v} style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",padding:"4px 6px",borderRadius:6,background:form.itensProximaRevisao.includes(it.v)?"#C8F0D8":"transparent"}}><input type="checkbox" checked={form.itensProximaRevisao.includes(it.v)} onChange={()=>upd("itensProximaRevisao",toggleItem(form.itensProximaRevisao,it.v))} style={{width:14,height:14}}/>{it.l}</label>))}
+            </div>
+            {form.itensProximaRevisao.includes("outros")&&<div style={{marginTop:8}}><Inp label="Outros próxima (descrição)" value={form.obsOutrosProx} onChange={v=>upd("obsOutrosProx",v)} placeholder="Descreva..."/></div>}
+          </div>
+          <Inp type="date" label="Próxima Revisão (Data Prevista)" value={form.proximaRevisaoData} onChange={v=>upd("proximaRevisaoData",v)}/>
+          <Inp label="Observações" value={form.obs} onChange={v=>upd("obs",v)} placeholder="Observações gerais..."/>
+          <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:8}}>
+            <BtnG onClick={onClose}>Cancelar</BtnG>
+            <BtnY onClick={()=>{onSave({...form,id:form.id||`CAR${Date.now()}`});onClose();}}>Salvar</BtnY>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── EXPORTAR EXCEL (CSV) ──────────────────────────────────────────────────────
 const exportCSV = (data, filename, cols) => {
@@ -698,6 +800,12 @@ export default function App(){
   const [rhFiscal,setRhFiscal]=useState([]);
   const [pendGustavo,setPendGustavo]=useState([]);
   const [oficina,setOficina]=useState([]);
+  const [carros,setCarros]=useState([]);
+  const [modalCarroRevisao,setModalCarroRevisao]=useState(null);
+  const [carroFiltroPlaca,setCarroFiltroPlaca]=useState("todas");
+  const [carroFiltroData,setCarroFiltroData]=useState("");
+  const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
+  const [showArqCarros,setShowArqCarros]=useState(false);
   const [modalOfi,setModalOfi]=useState(false);
   const [modalImportOfi,setModalImportOfi]=useState(false);
   const [showArqOfi,setShowArqOfi]=useState(false);
@@ -750,6 +858,8 @@ export default function App(){
   const [agPat,setAgPat]=useState("");
   const [agStatus,setAgStatus]=useState("agendada");
   const [agTipo,setAgTipo]=useState("preventivo");
+  const [agCidade,setAgCidade]=useState("");
+  const [agHorimetro,setAgHorimetro]=useState("");
   const [agEntrada,setAgEntrada]=useState("");
   const [agSaida,setAgSaida]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
@@ -769,11 +879,12 @@ export default function App(){
   // ── CARREGAR DADOS DO SUPABASE ──
   useEffect(()=>{
     const load = async () => {
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, carrosRows] = await Promise.all([
         db.get("relatorios"), db.get("processos_mu"), db.get("processos_af"),
         db.get("emprestimos"), db.get("saida_entrada"), db.get("requisicoes"),
         db.get("uber_pedidos"), db.get("escala"), db.get("usuarios"), db.get("financeiro"),
-        db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina")
+        db.get("pendencias_frota"), db.get("prioridades_clientes"), db.get("rh_fiscal"), db.get("pendencias_gustavo"), db.get("oficina"),
+        db.get("carros")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -788,6 +899,7 @@ export default function App(){
       if(rhs.length>0) setRhFiscal(rhs);
       if(guss.length>0) setPendGustavo(guss);
       if(ofis.length>0) setOficina(ofis);
+      if(carrosRows.length>0) setCarros(carrosRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ if(r&&r.key){ if(r.key.startsWith("PREV__")) prev[r.key.slice(6)]=r.slots||[]; else sched[r.key]=r.slots||[]; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
       notify("✅ Dados carregados!");
@@ -834,6 +946,7 @@ export default function App(){
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
   const updateOfi=(id,changes)=>{ setOficina(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("oficina",id,row); return np; }); };
+  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); notify("✅ Salvo!"); };
   // Usuários (gerenciados pela gestora)
   const saveUser=(u)=>{ setUsers(prev=>{ const ex=prev.find(x=>x.id===u.id); return ex?prev.map(x=>x.id===u.id?u:x):[...prev,u]; }); db.save("usuarios",u.id,u); notify("✅ Usuário salvo!"); };
   const deleteUser=(id)=>{ if(id==="manuela"){alert("Não é possível excluir a gestora principal.");return;} setUsers(prev=>prev.filter(x=>x.id!==id)); db.delete("usuarios",id); notify("Usuário removido."); };
@@ -936,6 +1049,7 @@ export default function App(){
             ["emprestimos","🔄 Req. Empréstimo"],
             ["saida_entrada","📦 Saída/Entrada"],
             ["uber","🚗 Uber"],
+            ["carros","🚙 Carros"],
             ["financeiro","💰 Financeiro"],
             ["pendencias_frota","🚜 Pendências Frota"],
             ["prioridades_clientes","⭐ Prioridades Clientes",true],
@@ -997,7 +1111,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?15:14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredReports.filter(d=>showArqRel||d.processoStatus!=="arquivado").map(d=>{
@@ -1023,7 +1137,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateReport(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateReport(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>{const ps=d.processoStatus==="arquivado"?"em_andamento":"arquivado";updateReport(d.id,{processoStatus:ps});}} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setReports(p=>p.filter(r=>r.id!==d.id));db.delete("relatorios",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                         </tr>
                         {pend&&(
                           <tr>
@@ -1101,7 +1215,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th>{user.canDelete&&<th>Excluir</th>}</tr></thead>
+                  <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
                     {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").map(d=>{
@@ -1128,7 +1242,7 @@ export default function App(){
                           <td><select value={d.status||""} onChange={e=>updateOfi(d.id,{status:e.target.value})} style={{fontSize:11,padding:"4px 7px",color:sc.color,background:sc.bg,border:`1px solid ${sc.color}33`,borderRadius:6,fontWeight:700,minWidth:150}}>{!REL_STATUS[d.status]&&<option value={d.status||""}>{d.status||"— selecionar —"}</option>}{REL_STATUS_KEYS.map(v=><option key={v} value={v}>{v}</option>)}</select></td>
                           <td><PSSelect value={d.processoStatus} onChange={v=>updateOfi(d.id,{processoStatus:v})}/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{d.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(d.registradoEm)}</span></td>
-                          {user.canDelete&&<td><button onClick={()=>{if(window.confirm("Excluir este relatório?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>}
+                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>{const ps=d.processoStatus==="arquivado"?"em_andamento":"arquivado";updateOfi(d.id,{processoStatus:ps});}} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?")){setOficina(p=>p.filter(r=>r.id!==d.id));db.delete("oficina",d.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
                         </tr>
                         {pend&&(
                           <tr>
@@ -1267,7 +1381,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA</th><th>Nº Relatório</th><th>Obs</th><th>Ret.Almox</th><th>Ret.Sistema</th><th>Processo</th><th>Ação</th>{user.canDelete&&<th>✕</th>}</tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Ruptura</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA</th><th>Nº Relatório</th><th>Obs</th><th>Ret.Almox</th><th>Ret.Sistema</th><th>Processo</th><th>Ação</th><th>Ações</th></tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1280,7 +1394,21 @@ export default function App(){
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.requerente}</td>
                           <td style={{fontSize:11,color:"#888"}}>{e.item}</td>
                           <td style={{maxWidth:150,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.descricao}</td>
-                          <td><Tag color={sc.color} bg={sc.bg}>{e.situacao}</Tag></td>
+                          <td>
+                            <select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:110}}>
+                              <option value="Aprovado">Aprovado</option>
+                              <option value="Atendido">Atendido</option>
+                              <option value="Pendente">Pendente</option>
+                              <option value="Parcialmente Atendido">Parc. Atendido</option>
+                              <option value="Retorno Concluído">Retorno Concluído</option>
+                            </select>
+                          </td>
+                          <td>
+                            <select value={e.statusRuptura||"normal"} onChange={ev=>updateEmp(e.id,{statusRuptura:ev.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,color:e.statusRuptura==="ruptura"?"#C62828":"#1A7A3C",background:e.statusRuptura==="ruptura"?"#FFF0F0":"#F0FFF5",border:"none",borderRadius:5}}>
+                              <option value="normal">Normal</option>
+                              <option value="ruptura">⚠️ Ruptura</option>
+                            </select>
+                          </td>
                           <td style={{maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:11}}>{e.centroResultado}</td>
                           <td style={{textAlign:"center"}}>{e.quant}</td>
                           <td style={{fontSize:11}}>{e.retorno}</td>
@@ -1363,8 +1491,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
-            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade,horimetro:agHorimetro,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
+            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -1392,6 +1520,8 @@ export default function App(){
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                   <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
                   <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Cidade" value={agCidade} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <input type="text" placeholder="Horímetro" value={agHorimetro} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
                   <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
                   <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
@@ -1428,6 +1558,8 @@ export default function App(){
                               <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
                               <button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
                             </div>
+                            {e.s.cidade&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>📍 {e.s.cidade}</div>}
+                            {e.s.horimetro&&<div style={{fontSize:11,color:"#888",marginBottom:2}}>⏱ Horímetro: {e.s.horimetro}</div>}
                             <div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
                             <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
                               <input type="time" value={e.s.horaEntrada||""} title="Entrada" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
@@ -1614,6 +1746,80 @@ export default function App(){
         )}
 
       </div>
+
+
+        {/* ── CARROS ── */}
+        {tab==="carros"&&(()=>{
+          const filtrados=carros.filter(c=>{
+            if(!showArqCarros&&c.arquivado)return false;
+            if(carroFiltroPlaca!=="todas"&&c.placa!==carroFiltroPlaca)return false;
+            if(carroFiltroStatus!=="todos"&&c.status!==carroFiltroStatus)return false;
+            if(carroFiltroData&&(!c.data||c.data<carroFiltroData))return false;
+            return true;
+          });
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Controle de Carros</div><div style={{fontSize:13,color:"#888"}}>{filtrados.length} registro(s)</div></div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <select value={carroFiltroPlaca} onChange={e=>setCarroFiltroPlaca(e.target.value)} style={{fontSize:12}}><option value="todas">Todas as placas</option>{PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}</select>
+                  <select value={carroFiltroStatus} onChange={e=>setCarroFiltroStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os status</option>{Object.entries(CARRO_STATUS).map(([v,o])=><option key={v} value={v}>{o.l}</option>)}</select>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888"}}>A partir de</span><input type="date" value={carroFiltroData} onChange={e=>setCarroFiltroData(e.target.value)} style={{fontSize:12}}/></div>
+                  <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <BtnY onClick={()=>setModalCarroRevisao({})}>+ Nova Revisão</BtnY>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+                {PLACAS_CARROS.map(placa=>{
+                  const registros=carros.filter(c=>c.placa===placa&&!c.arquivado);
+                  const ultimo=registros.sort((a,b)=>(b.data||"").localeCompare(a.data||""))[0];
+                  const stCfg=ultimo?CARRO_STATUS[ultimo.status]||CARRO_STATUS.liberado:null;
+                  return(
+                    <div key={placa} className="card" style={{padding:"12px 16px",borderTop:`3px solid ${stCfg?.c||"#E0E0E0"}`,cursor:"pointer"}} onClick={()=>setCarroFiltroPlaca(carroFiltroPlaca===placa?"todas":placa)}>
+                      <div style={{fontWeight:800,fontSize:15,marginBottom:4,color:carroFiltroPlaca===placa?"#C47D00":"#1A1A1A"}}>{placa}</div>
+                      {ultimo?(<><div style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:stCfg?.bg,color:stCfg?.c,fontWeight:700,display:"inline-block",marginBottom:4}}>{stCfg?.l}</div><div style={{fontSize:11,color:"#888"}}>Último: {ultimo.data}</div>{ultimo.proximaRevisaoData&&<div style={{fontSize:11,color:"#1565C0",fontWeight:600}}>Próx: {ultimo.proximaRevisaoData}</div>}</>):(<div style={{fontSize:11,color:"#CCC"}}>Sem registros</div>)}
+                    </div>
+                  );
+                })}
+              </div>
+              {filtrados.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum registro. Clique em "+ Nova Revisão".</div>):(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14}}>
+                  {filtrados.map(c=>{
+                    const stCfg=CARRO_STATUS[c.status]||CARRO_STATUS.liberado;
+                    const itensSubst=Array.isArray(c.itensSubstituidos)?c.itensSubstituidos.map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v):[];
+                    const itensProx=Array.isArray(c.itensProximaRevisao)?c.itensProximaRevisao.map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v):[];
+                    return(
+                      <div key={c.id} className="card" style={{borderLeft:`4px solid ${stCfg.c}`,opacity:c.arquivado?.5:1}}>
+                        <div style={{padding:"12px 16px",borderBottom:"1px solid #F4F4F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div><span style={{fontWeight:800,fontSize:16,marginRight:10}}>{c.placa}</span><span style={{fontSize:11,padding:"3px 8px",borderRadius:5,background:stCfg.bg,color:stCfg.c,fontWeight:700}}>{stCfg.l}</span></div>
+                          <div style={{display:"flex",gap:6}}>
+                            <BtnG onClick={()=>setModalCarroRevisao(c)} style={{fontSize:11,padding:"4px 10px"}}>✏ Editar</BtnG>
+                            <button onClick={()=>updateCarro(c.id,{arquivado:!c.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"4px 8px",fontSize:11}}>🗄️</button>
+                            <button onClick={()=>{if(window.confirm("Excluir?")){setCarros(p=>p.filter(x=>x.id!==c.id));db.delete("carros",c.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </div>
+                        </div>
+                        <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,fontSize:12}}>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Data</span><br/>{c.data||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Responsável</span><br/>{c.responsavel||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Última Revisão</span><br/>{c.ultimaRevisaoData||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>KM Última Rev.</span><br/>{c.kmUltimaRevisao||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>KM Atual</span><br/>{c.kmAtual||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Valor Última Rev.</span><br/>{c.valorUltimaRevisao||"—"}</div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Próxima Revisão</span><br/><span style={{color:"#1565C0",fontWeight:600}}>{c.proximaRevisaoData||"—"}</span></div>
+                          <div><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Oficina</span><br/>{c.oficina||"—"}</div>
+                          {itensSubst.length>0&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#1565C0",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>✅ Itens Substituídos</span><br/><div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{itensSubst.map((it,i)=><span key={i} style={{fontSize:10,background:"#E8F0FF",color:"#1565C0",padding:"2px 6px",borderRadius:4}}>{it}</span>)}</div></div>}
+                          {itensProx.length>0&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#1A7A3C",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>🔜 Próxima Revisão — Itens</span><br/><div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{itensProx.map((it,i)=><span key={i} style={{fontSize:10,background:"#E0F7E8",color:"#1A7A3C",padding:"2px 6px",borderRadius:4}}>{it}</span>)}</div></div>}
+                          {c.obs&&<div style={{gridColumn:"1/-1"}}><span style={{color:"#999",fontSize:10,fontWeight:700,textTransform:"uppercase"}}>Obs</span><br/>{c.obs}</div>}
+                        </div>
+                        <div style={{padding:"8px 16px",borderTop:"1px solid #F4F4F4",fontSize:10,color:"#AAA"}}>Reg. por {c.registradoPor||"—"} · {fmtDateTime(c.registradoEm)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── UBER ── */}
         {tab==="uber"&&(
@@ -1902,6 +2108,7 @@ export default function App(){
       {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
       {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
       {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
+      {modalCarroRevisao!==null&&<CarroRevisaoModal placa={PLACAS_CARROS[0]} onClose={()=>setModalCarroRevisao(null)} initial={modalCarroRevisao?.id?modalCarroRevisao:null} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false};if(d.id&&carros.find(c=>c.id===d.id)){updateCarro(d.id,dd);}else{setCarros(p=>[dd,...p]);db.save("carros",dd.id,dd);}notify("✅ Revisão salva!");}}/>}
     </div>
   );
 }
