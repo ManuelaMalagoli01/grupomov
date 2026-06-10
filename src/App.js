@@ -1819,28 +1819,25 @@ export default function App(){
         {tab==="agenda_prev"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
-          const diasNoMes=new Date(agpYear,agpMonth+1,0).getDate();
-          const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
           const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
           const isDone=s=>s.status==="preventiva_concluida"||s.status==="corretiva_concluida";
-          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i);}).filter(Boolean)));
+          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:[k.slice(0,i),k.slice(i+2)];}).filter(x=>x&&x[1].startsWith(ym)).map(x=>x[0])));
           const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
-          const getTipoCor=tipo=>(tipo||"preventivo")==="corretivo"?"#C62828":"#1565C0";
           const addAtend=()=>{
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida)}]);
-            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,patrimonio:agPat||"",type:agTipo,status:agStatus,horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:calcHoras(agEntrada,agSaida),relatorio:agRelatorio||""}]);
+            setAgEmpresa("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
             notify("✅ Atendimento salvo!");
           };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda</div><div style={{fontSize:13,color:"#888"}}>{techsList.length} técnico(s)</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda</div><div style={{fontSize:13,color:"#888"}}>Agenda mensal de todos os técnicos — {MESES[agpMonth]} {agpYear}</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                   <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12}}>
                     <option value="todas">🌐 Todas regiões</option>
@@ -1848,98 +1845,78 @@ export default function App(){
                     <option value="roca">Roca</option>
                     <option value="centroOeste">Centro-Oeste</option>
                   </select>
-                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
-                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todas as situações</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
+
               <div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
-                  <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:130}}/>
-                  <input type="text" placeholder="Cidade" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:90}}/>
-                  <input type="text" placeholder="Horímetro" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
-                  <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:110}}/>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
-                  <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                  <input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
+                  <input type="text" placeholder="Empresa" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio(s)" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
+                  <input type="text" placeholder="Nº Relatório" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
                   <select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                   <BtnY onClick={addAtend}>Adicionar</BtnY>
                 </div>
               </div>
-              <div style={{overflowX:"auto"}}>
-                <table style={{borderCollapse:"collapse",minWidth:"100%",fontSize:11}}>
-                  <thead>
-                    <tr style={{background:"#1A1A1A"}}>
-                      <th style={{padding:"8px 12px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:150,whiteSpace:"nowrap"}}>Técnico</th>
-                      {dias.map(d=>{
-                        const dt=`${ym}-${d}`;
-                        const dow=new Date(dt).getDay();
-                        const isWkd=dow===0||dow===6;
-                        const isToday=dt===TODAY_STR;
-                        return(
-                          <th key={d} style={{padding:"6px 4px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:180,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333"}}>
-                            <div>{d}</div>
-                            <div style={{fontSize:9,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {techsList.map((tech,ti)=>{
-                      const color=techColor(tech);
-                      return(
-                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"8px 12px",fontWeight:700,fontSize:12,color:"#1A1A1A",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",whiteSpace:"nowrap"}}>
-                            <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>
-                            {tech}
-                          </td>
-                          {dias.map(d=>{
-                            const dt=`${ym}-${d}`;
-                            const key=`${tech}__${dt}`;
-                            const slots=(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s));
-                            const dow=new Date(dt).getDay();
-                            const isWkd=dow===0||dow===6;
-                            const isToday=dt===TODAY_STR;
-                            return(
-                              <td key={d} style={{padding:4,verticalAlign:"top",minWidth:160,borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F9F9F9":"transparent"}}>
-                                {slots.map((s,si)=>{
-                                  const st=escSt(s.status);
-                                  const tipoC=getTipoCor(s.type);
-                                  const horas=s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida);
-                                  return(
-                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}44`,borderLeft:`4px solid ${tipoC}`,borderRadius:6,padding:"8px 10px",marginBottom:5,fontSize:11,boxShadow:"0 2px 6px rgba(0,0,0,.07)",minWidth:155}}>
-                                      <div style={{fontWeight:800,color:"#1A1A1A",marginBottom:4,fontSize:12,wordBreak:"break-word"}}>{s.client}</div>
-                                      {s.cidade&&<div style={{color:"#444",fontSize:11,marginBottom:2}}>📍 {s.cidade}</div>}
-                                      {s.patrimonio&&<div style={{color:"#555",fontSize:11,marginBottom:2}}>🏷️ {s.patrimonio}</div>}
-                                      {s.relatorio&&<div style={{color:"#1565C0",fontSize:11,marginBottom:2}}>📄 {s.relatorio}</div>}
-                                      {s.horimetro&&<div style={{color:"#555",fontSize:11,marginBottom:2}}>⏱ {s.horimetro}</div>}
-                                      {(s.horaEntrada||s.horaSaida)&&<div style={{color:"#C47D00",fontSize:11,fontWeight:700,marginBottom:3}}>🕐 {s.horaEntrada||"--:--"} → {s.horaSaida||"--:--"}{horas?<span style={{color:"#1A7A3C",marginLeft:4}}>({horas})</span>:""}</div>}
-                                      <div style={{display:"flex",gap:4,marginTop:4,flexWrap:"wrap",alignItems:"center"}}>
-                                        <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:st.bg,color:st.color,fontWeight:700}}>{st.l}</span>
-                                        <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:`${tipoC}15`,color:tipoC,fontWeight:700}}>{(s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo"}</span>
-                                      </div>
-                                      <div style={{display:"flex",gap:3,marginTop:5}}>
-                                        <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} style={{fontSize:10,padding:"3px 6px",background:"#F0F4FF",border:"1px solid #C5D8FF",borderRadius:4,color:"#1565C0",cursor:"pointer",flex:1}}>✏️</button>
-                                        <button onClick={()=>{if(window.confirm("Remover?")){{const arr=(schedule[key]||[]).filter((_,i)=>i!==si);saveSched(key,arr);}}}} style={{fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",flex:1}}>✕</button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {techsList.map(tech=>{
+                  const color=techColor(tech);
+                  const entries=[];
+                  Object.keys(schedule).forEach(k=>{
+                    const i=k.indexOf("__"); if(i<0) return;
+                    const kt=k.slice(0,i), kd=k.slice(i+2);
+                    if(kt!==tech||!kd.startsWith(ym)) return;
+                    (schedule[k]||[]).forEach((s,si)=>{ if(matchSt(s)&&matchTipo(s)) entries.push({s,date:kd,key:k,si}); });
+                  });
+                  entries.sort((a,b)=>a.date.localeCompare(b.date));
+                  const done=entries.filter(e=>isDone(e.s)).length;
+                  return(
+                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {done} concl. · {MESES[agpMonth]}</div>
+                      </div>
+                      <div style={{padding:"8px 14px"}}>
+                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
+                        {entries.map((e,ix)=>{const st=escSt(e.s.status);const dia=e.date.slice(8,10);const tipoLbl=(e.s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo";return(
+                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia||"?"}</span>
+                              <span style={{fontSize:13,fontWeight:700,color:"#222",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
+                              <button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"tecnico"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover este atendimento?")){const arr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);saveSched(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                            </div>
+                            {e.s.cidade&&<div style={{fontSize:11,color:"#555",marginBottom:2}}>📍 {e.s.cidade}</div>}{e.s.horimetro&&<div style={{fontSize:11,color:"#555",marginBottom:2}}>⏱ {e.s.horimetro}</div>}{e.s.relatorio&&<div style={{fontSize:11,color:"#1565C0",marginBottom:2}}>📄 {e.s.relatorio}</div>}<div style={{fontSize:11,color:"#888",marginBottom:5}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:(e.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{tipoLbl}</b></div>
+                            <div style={{marginBottom:5}}>
+                              <input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveSched(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
+                            </div>
+                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
+                              <input type="time" value={e.s.horaEntrada||""} title="Entrada" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <input type="time" value={e.s.horaSaida||""} title="Saída" onChange={ev=>{const v=ev.target.value;const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
+                            </div>
+                            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                              <input type="date" value={e.date} onChange={ev=>{const nd=ev.target.value;if(!nd||nd===e.date)return;const oldArr=(schedule[e.key]||[]).filter((_,j)=>j!==e.si);const nk=`${tech}__${nd}`;const nArr=[...(schedule[nk]||[]),{...e.s}];saveSched(e.key,oldArr);saveSched(nk,nArr);}} style={{fontSize:10,padding:"2px 5px"}}/>
+                              <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(schedule[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveSched(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",color:st.c,background:st.bg,fontWeight:700,borderRadius:6,border:`1px solid ${st.c}33`,flex:1}}>
+                                {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                        );})}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -2650,107 +2627,91 @@ export default function App(){
         {tab==="agenda_ofi_150"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const diasNoMes=new Date(agOfi150Year,agOfi150Month+1,0).getDate();
-          const dias=Array.from({length:diasNoMes},(_,i)=>String(i+1).padStart(2,"0"));
-          const techsList=OFICINA_150_TECHS;
           const addAtend150=()=>{
             const dataFinal=agOfi150Date||`${ym}-01`;
             if(!agOfi150Empresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfi150TechSel}__${dataFinal}`;
-            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,cidade:agOfi150Cidade||"",horimetro:agOfi150Horimetro||"",patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:(agOfi150Status==="todos"?"agendada":agOfi150Status),horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida)}]);
-            setAgOfi150Empresa("");setAgOfi150Cidade("");setAgOfi150Horimetro("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");
-            notify("✅ Atendimento salvo!");
+            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),{client:agOfi150Empresa,patrimonio:agOfi150Pat||"",servico:agOfi150ServSel,status:"agendada",horaEntrada:agOfi150Entrada,horaSaida:agOfi150Saida,horasTrabalhadas:calcHoras(agOfi150Entrada,agOfi150Saida),obs:agOfi150Obs,relatorio:agOfi150Relatorio||""}]);
+            setAgOfi150Empresa("");setAgOfi150Pat("");setAgOfi150Entrada("");setAgOfi150Saida("");setAgOfi150Obs("");setAgOfi150Relatorio("");
+            notify("✅ Atendimento Oficina 150 salvo!");
           };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{techsList.length} técnico(s)</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina 150</div><div style={{fontSize:13,color:"#888"}}>Matheus · Pedro Souza · Pedro Pimentel — {MESES[agOfi150Month]} {agOfi150Year}</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={agOfi150Tech} onChange={e=>setAgOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agOfi150Servico} onChange={e=>setAgOfi150Servico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
               <div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}/>
-                  <input type="text" placeholder="Empresa" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:130}}/>
-                  <input type="text" placeholder="Cidade" value={agOfi150Cidade||""} onChange={e=>setAgOfi150Cidade(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:90}}/>
-                  <input type="text" placeholder="Horímetro" value={agOfi150Horimetro||""} onChange={e=>setAgOfi150Horimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:90}}/>
-                  <input type="text" placeholder="Patrimônio(s)" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <select value={agOfi150ServSel} onChange={e=>setAgOfi150ServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfi150Entrada} onChange={e=>setAgOfi150Entrada(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfi150Saida} onChange={e=>setAgOfi150Saida(e.target.value)} style={{fontSize:12,padding:"6px"}}/></div>
-                  <select value={agOfi150Status} onChange={e=>setAgOfi150Status(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                  <input type="date" value={agOfi150Date||`${ym}-01`} onChange={e=>setAgOfi150Date(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
+                  <input type="text" placeholder="Empresa/Serviço" value={agOfi150Empresa} onChange={e=>setAgOfi150Empresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
+                  <input type="text" placeholder="Patrimônio" value={agOfi150Pat} onChange={e=>setAgOfi150Pat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <select value={agOfi150ServSel} onChange={e=>setAgOfi150ServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfi150Entrada} onChange={e=>setAgOfi150Entrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfi150Saida} onChange={e=>setAgOfi150Saida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <input type="text" placeholder="Obs..." value={agOfi150Obs} onChange={e=>setAgOfi150Obs(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+                  <input type="text" placeholder="Nº Relatório" value={agOfi150Relatorio||""} onChange={e=>setAgOfi150Relatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <BtnY onClick={addAtend150}>Adicionar</BtnY>
                 </div>
               </div>
-              <div style={{overflowX:"auto"}}>
-                <table style={{borderCollapse:"collapse",minWidth:"100%",fontSize:11}}>
-                  <thead>
-                    <tr style={{background:"#1A1A1A"}}>
-                      <th style={{padding:"8px 12px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:2,minWidth:140,whiteSpace:"nowrap"}}>Técnico</th>
-                      {dias.map(d=>{
-                        const dt=`${ym}-${d}`;
-                        const dow=new Date(dt).getDay();
-                        const isWkd=dow===0||dow===6;
-                        const isToday=dt===TODAY_STR;
-                        return(
-                          <th key={d} style={{padding:"6px 4px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:180,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333"}}>
-                            <div>{d}</div>
-                            <div style={{fontSize:9,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {techsList.map((tech,ti)=>{
-                      return(
-                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"8px 12px",fontWeight:700,fontSize:12,color:"#1A1A1A",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",whiteSpace:"nowrap"}}>{tech}</td>
-                          {dias.map(d=>{
-                            const dt=`${ym}-${d}`;
-                            const key=`${tech}__${dt}`;
-                            const slots=(agendaOfi150[key]||[]);
-                            const dow=new Date(dt).getDay();
-                            const isWkd=dow===0||dow===6;
-                            const isToday=dt===TODAY_STR;
-                            return(
-                              <td key={d} style={{padding:4,verticalAlign:"top",minWidth:160,borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F9F9F9":"transparent"}}>
-                                {slots.map((s,si)=>{
-                                  const st=escSt(s.status);
-                                  const horas=s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida);
-                                  return(
-                                    <div key={si} style={{background:"#FFF",border:"1px solid #1565C044",borderLeft:"4px solid #1565C0",borderRadius:6,padding:"8px 10px",marginBottom:5,fontSize:11,boxShadow:"0 2px 6px rgba(0,0,0,.07)",minWidth:155}}>
-                                      <div style={{fontWeight:800,color:"#1A1A1A",marginBottom:4,fontSize:12,wordBreak:"break-word"}}>{s.client}</div>
-                                      {s.cidade&&<div style={{color:"#444",fontSize:11,marginBottom:2}}>📍 {s.cidade}</div>}
-                                      {s.patrimonio&&<div style={{color:"#555",fontSize:11,marginBottom:2}}>🏷️ {s.patrimonio}</div>}
-                                      {s.horimetro&&<div style={{color:"#555",fontSize:11,marginBottom:2}}>⏱ {s.horimetro}</div>}
-                                      {s.servico&&<div style={{color:"#1565C0",fontSize:11,fontWeight:700,marginBottom:2}}>🔧 {s.servico}</div>}
-                                      {(s.horaEntrada||s.horaSaida)&&<div style={{color:"#C47D00",fontSize:11,fontWeight:700,marginBottom:3}}>🕐 {s.horaEntrada||"--:--"} → {s.horaSaida||"--:--"}{horas?<span style={{color:"#1A7A3C",marginLeft:4}}>({horas})</span>:""}</div>}
-                                      <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:st.bg,color:st.color,fontWeight:700,display:"inline-block",marginTop:3}}>{st.l}</span>
-                                      <div style={{display:"flex",gap:3,marginTop:5}}>
-                                        <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"ofi150"});setEditSlotForm({...s});}} style={{fontSize:10,padding:"3px 6px",background:"#F0F4FF",border:"1px solid #C5D8FF",borderRadius:4,color:"#1565C0",cursor:"pointer",flex:1}}>✏️</button>
-                                        <button onClick={()=>{if(window.confirm("Remover?")){{const arr=(agendaOfi150[key]||[]).filter((_,i)=>i!==si);saveAgendaOfi150(key,arr);}}}} style={{fontSize:10,padding:"3px 6px",background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:4,color:"#C62828",cursor:"pointer",flex:1}}>✕</button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {OFICINA_150_TECHS.filter(t=>agOfi150Tech==="todos"||t===agOfi150Tech).map(tech=>{
+                  const color=techColor(tech);
+                  const entries=[];
+                  Object.keys(agendaOfi150).forEach(k=>{
+                    const i=k.indexOf("__"); if(i<0) return;
+                    const kt=k.slice(0,i), kd=k.slice(i+2);
+                    if(kt!==tech||!kd.startsWith(ym)) return;
+                    (agendaOfi150[k]||[]).forEach((s,si)=>{
+                      if(agOfi150Servico==="todos"||s.servico===agOfi150Servico) entries.push({s,date:kd,key:k,si});
+                    });
+                  });
+                  entries.sort((a,b)=>a.date.localeCompare(b.date));
+                  return(
+                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
+                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfi150Month]}</div>
+                      </div>
+                      <div style={{padding:"8px 14px"}}>
+                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
+                        {entries.map((e,ix)=>{const dia=e.date.slice(8,10);return(
+                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
+                              <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
+                              <button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi150"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi150[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi150(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                            </div>
+                            <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
+                            <div style={{marginBottom:4}}><input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/></div>
+                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:4}}>
+                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
+                            </div>
+                            {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>{e.s.obs}</div>}
+                            <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
+                              <option value="agendada">Agendada</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option><option value="remarcada">Remarcada</option>
+                            </select>
+                          </div>
+                        );})}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
         })()}
 
+        {/* ── DASHBOARD OFICINA 150 ── */}
         {tab==="dashboard_ofi_150"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
