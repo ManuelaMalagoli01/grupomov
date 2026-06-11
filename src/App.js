@@ -1217,6 +1217,18 @@ export default function App(){
                           <input type="text" value={r.relatorio||""} onChange={e=>updateR(r.id,{relatorio:e.target.value})} placeholder="Nº do relatório" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
                         </div>
 
+                        {/* Patrimônio */}
+                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Patrimônio</label>
+                          <input type="text" value={r.patrimonio||""} onChange={e=>updateR(r.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+
+                        {/* Horímetro */}
+                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Horímetro</label>
+                          <input type="text" value={r.horimetro||""} onChange={e=>updateR(r.id,{horimetro:e.target.value})} placeholder="Ex: 12350" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+
                         {/* Solicitou Peças */}
                         <div style={{display:"flex",flexDirection:"column",gap:4}}>
                           <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Solicitou Peças?</label>
