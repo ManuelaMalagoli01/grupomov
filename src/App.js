@@ -1,4 +1,4 @@
-    /* eslint-disable */
+        /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
@@ -736,6 +736,7 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 }
 
 export default function App(){
+  const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
   const [user,setUser]=useState(()=>{
     try{
       const saved=localStorage.getItem("grupomov_user");
@@ -1396,7 +1397,8 @@ export default function App(){
                   <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
+              {!isReadOnlyAgenda(user)&&(
+<div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
@@ -1412,6 +1414,7 @@ export default function App(){
                   <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
                 </div>
               </div>
+              )}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
@@ -1438,7 +1441,7 @@ export default function App(){
                             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                               <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
                               <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              <button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                              {!isReadOnlyAgenda(user)&&(<><button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button></>)}
                             </div>
                             <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
                             <div style={{marginBottom:4}}>
@@ -2002,7 +2005,8 @@ export default function App(){
               </div>
 
               {/* Formulário novo atendimento */}
-              <div className="card" style={{padding:14,marginBottom:18}}>
+              {!isReadOnlyAgenda(user)&&(
+<div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
@@ -2019,6 +2023,7 @@ export default function App(){
                   <BtnY onClick={addAtend}>Adicionar</BtnY>
                 </div>
               </div>
+              )}
 
               {/* Calendário horizontal */}
               <div style={{overflowX:"auto"}}>
@@ -2077,10 +2082,10 @@ export default function App(){
                                       {/* Header: Empresa + botões */}
                                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                                         <div style={{fontWeight:800,fontSize:13,color:"#1A1A1A",flex:1,marginRight:4,wordBreak:"break-word"}}>{s.client}</div>
-                                        <div style={{display:"flex",gap:3,flexShrink:0}}>
+                                        {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:3,flexShrink:0}}>
                                           <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:14,padding:"0 2px"}}>✏️</button>
                                           <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:14,padding:"0 2px"}}>✕</button>
-                                        </div>
+                                        </div>)}
                                       </div>
                                       {/* Patrimônio · Tipo */}
                                       <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {s.patrimonio||"—"} · <b style={{color:tipoC}}>{(s.type||"preventivo")==="corretivo"?"Corretivo":"Preventivo"}</b></div>
@@ -2094,26 +2099,28 @@ export default function App(){
                                         defaultValue={s.relatorio||""}
                                         onBlur={e=>updateSlot({relatorio:e.target.value})}
                                         placeholder="Nº Relatório"
-                                        style={{width:"100%",fontSize:11,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:5,marginBottom:4,boxSizing:"border-box"}}
+                                        disabled={isReadOnlyAgenda(user)}
+                                        style={{width:"100%",fontSize:11,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:5,marginBottom:4,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}
                                       />
                                       {/* Entrada / Saída / Soma */}
                                       <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:4}}>
-                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1}}/>
+                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/>
                                         <span style={{fontSize:10,color:"#888"}}>→</span>
-                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1}}/>
+                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/>
                                         {horas&&<span style={{fontSize:11,fontWeight:800,color:"#1A7A3C",background:"#F0FFF5",padding:"2px 5px",borderRadius:4,whiteSpace:"nowrap"}}>{horas}</span>}
                                       </div>
                                       {/* Data */}
                                       <input type="date" defaultValue={dt} onBlur={e=>{
+                                        if(isReadOnlyAgenda(user))return;
                                         if(e.target.value&&e.target.value!==dt){
                                           const newKey=`${tech}__${e.target.value}`;
                                           const oldArr=(schedule[key]||[]).filter((_,j)=>j!==si);
                                           saveSched(key,oldArr);
                                           saveSched(newKey,[...(schedule[newKey]||[]),s]);
                                         }
-                                      }} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,width:"100%",marginBottom:4,boxSizing:"border-box"}}/>
+                                      }} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"3px 4px",border:"1px solid #E0E0E0",borderRadius:5,width:"100%",marginBottom:4,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/>
                                       {/* Status */}
-                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} style={{fontSize:11,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:5,width:"100%",fontWeight:700,color:st.color,background:st.bg}}>
+                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:5,width:"100%",fontWeight:700,color:st.color,background:st.bg}}>
                                         {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                                       </select>
                                     </div>
@@ -3064,7 +3071,8 @@ export default function App(){
                   <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
-              <div className="card" style={{padding:14,marginBottom:18}}>
+              {!isReadOnlyAgenda(user)&&(
+<div className="card" style={{padding:14,marginBottom:18}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   <select value={agOfi150TechSel} onChange={e=>setAgOfi150TechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
@@ -3080,6 +3088,7 @@ export default function App(){
                   <BtnY onClick={addAtend150}>Adicionar</BtnY>
                 </div>
               </div>
+              )}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {OFICINA_150_TECHS.filter(t=>agOfi150Tech==="todos"||t===agOfi150Tech).map(tech=>{
                   const color=techColor(tech);
@@ -3106,17 +3115,17 @@ export default function App(){
                             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                               <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
                               <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              <button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi150"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi150[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi150(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                              {!isReadOnlyAgenda(user)&&(<><button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi150"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi150[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi150(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button></>)}
                             </div>
                             <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
-                            <div style={{marginBottom:4}}><input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/></div>
+                            <div style={{marginBottom:4}}><input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi150(e.key,arr);}} disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/></div>
                             <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:4}}>
-                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
+                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi150(e.key,arr);}} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"2px 4px",width:78,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/>
+                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi150(e.key,arr);}} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"2px 4px",width:78,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}/>
                               <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||calcHoras(e.s.horaEntrada,e.s.horaSaida)||"—"}</span>
                             </div>
                             {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>{e.s.obs}</div>}
-                            <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi150(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
+                            <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi150[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi150(e.key,arr);}} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
                               <option value="agendada">Agendada</option><option value="concluida">Concluída</option><option value="cancelada">Cancelada</option><option value="remarcada">Remarcada</option>
                             </select>
                           </div>
@@ -3303,3 +3312,5 @@ export default function App(){
     </div>
   );
 }
+
+    
