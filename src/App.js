@@ -1,4 +1,4 @@
-        /* eslint-disable */
+    /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
@@ -44,6 +44,13 @@ const USERS = [
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:true  },
   { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:true,  apenasOficina:true },
   { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:true,  apenasOfi150:true },
+  { id:"rafael", name:"Rafael", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"helbert", name:"Helbert", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"dilson", name:"Dilson", role:"Líder Metropolitana BH", password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"anderson", name:"Anderson", role:"Líder Metropolitana BH", password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"bruno", name:"Bruno", role:"Líder Centro Oeste", password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"pedro_pimentel", name:"Pedro Pimentel", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda150:true },
+  { id:"pedro_souza_v", name:"Pedro Souza", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda150:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
@@ -740,6 +747,8 @@ export default function App(){
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
@@ -1139,6 +1148,8 @@ export default function App(){
             ["pendencias_manuela_tab","📋 Pendências Manuela","somanuela"],
             ["pendencias_matheus","🔧 Pendências Matheus","matheus"],
           ].filter(([k,l,tipo])=>{
+            if(user.apenasAgenda) return ["agenda_prev"].includes(k);
+            if(user.apenasAgenda150) return ["agenda_ofi_150"].includes(k);
             if(user.apenasOficina) return ["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k);
             if(user.apenasOfi150) return ["apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_matheus"].includes(k);
             if(tipo==="somanuela") return user.id==="manuela";
@@ -3292,5 +3303,3 @@ export default function App(){
     </div>
   );
 }
-
-    
