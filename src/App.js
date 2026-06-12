@@ -152,6 +152,12 @@ const REL_STATUS_KEYS = Object.keys(REL_STATUS);
 const isPendentePecas = s => s==="Preventiva pendente peças" || s==="Corretiva pendente peças";
 const EXECUTADO_OPTS = ["", "Sim", "Não", "Devolvido"];
 // Calcula Horas Trabalhadas = Saída − Entrada (formato HH:MM)
+
+const getDOW = (dateStr) => {
+  const [y,m,d] = dateStr.split("-").map(Number);
+  return new Date(y, m-1, d).getDay();
+};
+
 const calcHoras = (entrada, saida) => {
   if(!entrada || !saida) return "";
   const [h1,m1]=String(entrada).split(":").map(Number);
@@ -723,7 +729,13 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 }
 
 export default function App(){
-  const [user,setUser]=useState(null);
+  const [user,setUser]=useState(()=>{
+    try{
+      const saved=localStorage.getItem("grupomov_user");
+      if(saved){ const parsed=JSON.parse(saved); return USERS.find(u=>u.id===parsed.id)||null; }
+    }catch(e){}
+    return null;
+  });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
@@ -1041,7 +1053,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -1092,7 +1104,7 @@ export default function App(){
           <div style={{display:"flex",alignItems:"center",gap:12}}>
             <span style={{fontSize:12,color:"#888"}}>{user.name} — {user.role}</span>
             <button onClick={()=>setModalUsers(true)} style={{background:"#F5C800",border:"none",color:"#1A1A1A",borderRadius:6,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
-            <button onClick={()=>setUser(null)} style={{background:"#333",border:"none",color:"#AAA",borderRadius:6,padding:"5px 10px",fontSize:11,cursor:"pointer"}}>Sair</button>
+            <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"#333",border:"none",color:"#AAA",borderRadius:6,padding:"5px 10px",fontSize:11,cursor:"pointer"}}>Sair</button>
           </div>
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
@@ -2001,7 +2013,7 @@ export default function App(){
                       <th style={{padding:"10px 14px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:160,whiteSpace:"nowrap",fontSize:13}}>Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
-                        const dow=new Date(dt).getDay();
+                        const dow=getDOW(dt);
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
@@ -2031,7 +2043,7 @@ export default function App(){
                             const dt=`${ym}-${String(d).padStart(2,"0")}`;
                             const key=`${tech}__${dt}`;
                             const slots=(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s));
-                            const dow=new Date(dt).getDay();
+                            const dow=getDOW(dt);
                             const isWkd=dow===0||dow===6;
                             const isToday=dt===TODAY_STR;
                             return(
