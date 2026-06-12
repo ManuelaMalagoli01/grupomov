@@ -1856,7 +1856,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}>
               <div className="tbl-wrap">
                 <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th><th>Ações</th></tr></thead>
+                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Requisição de Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th><th>Ações</th></tr></thead>
                   <tbody>
                     {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
                       const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
@@ -1872,7 +1872,7 @@ export default function App(){
                           <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:130}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option><option value="Ruptura">⚠️ Ruptura</option></select></td>
                            <td><input type="text" value={e.centroResultado||""} onChange={ev=>updateEmp(e.id,{centroResultado:ev.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
                            <td><input type="text" value={e.quant||""} onChange={ev=>updateEmp(e.id,{quant:ev.target.value})} style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                           <td><select value={e.retorno||"nao"} onChange={ev=>updateEmp(e.id,{retorno:ev.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
+                           <td><select value={e.retorno||"nao"} onChange={ev=>updateEmp(e.id,{retorno:ev.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td><td><input type="text" value={e.reqRetorno||""} onChange={ev=>updateEmp(e.id,{reqRetorno:ev.target.value})} placeholder="REQ-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                            <td><input type="date" value={e.dataRetorno||""} onChange={ev=>updateEmp(e.id,{dataRetorno:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px",color:atrasado?"#C62828":"inherit"}}/></td>
                           <td><SlaBadge days={sla}/></td>
                           <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
