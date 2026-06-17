@@ -1175,17 +1175,45 @@ export default function App(){
 
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const STS_PECAS={
-            "Atendido e Separado":{c:"#1A7A3C",bg:"#F0FFF5"},
-            "Ruptura":{c:"#C62828",bg:"#FFF0F0"},
-            "Parcialmente Atendido":{c:"#E67E00",bg:"#FFF8F0"},
+          const STS_PECA = ["Peça Separada","Ruptura","Atendido","Ag. Diretoria","Ag. Compras"];
+          const STS_PECA_COR = {"Peça Separada":{c:"#1A7A3C",bg:"#F0FFF5"},"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Atendido":{c:"#1565C0",bg:"#F0F4FF"},"Ag. Diretoria":{c:"#6A1B9A",bg:"#F8F0FF"},"Ag. Compras":{c:"#E67E00",bg:"#FFF8F0"}};
+          const STS_FINAL_COR = {"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},"Pendente":{c:"#C62828",bg:"#FFF0F0"}};
+          const TIPOS_SERV = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador"];
+          const list = reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
+
+          const calcSLA=(dataConc,dataAtend)=>{
+            if(!dataConc||!dataAtend) return null;
+            const [yc,mc,dc]=dataConc.split("-").map(Number);
+            const [ya,ma,da]=dataAtend.split("-").map(Number);
+            const diff=Math.round((new Date(yc,mc-1,dc)-new Date(ya,ma-1,da))/(1000*60*60*24));
+            return diff>=0?diff:null;
           };
-          const STS_FINAL={
-            "Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},
-            "Pendente":{c:"#C62828",bg:"#FFF0F0"},
+
+          const addPeca=(id)=>{
+            const r=reports.find(x=>x.id===id);
+            const pecas=[...(r.pecas||[]),{tipoServico:"Mecânica",peca:"",cod:"",quantidade:"",requisicao:"",statusPeca:"Peça Separada",ticketCompras:"",dataConc:"",statusFinal:"Pendente",obs:""}];
+            updateReport(id,{pecas});
           };
-          const list=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
-          const updateR=(id,ch)=>updateReport(id,ch);
+          const updatePeca=(id,pi,changes)=>{
+            const r=reports.find(x=>x.id===id);
+            const pecas=[...(r.pecas||[])];
+            pecas[pi]={...pecas[pi],...changes};
+            updateReport(id,{pecas});
+          };
+          const delPeca=(id,pi)=>{
+            const r=reports.find(x=>x.id===id);
+            const pecas=(r.pecas||[]).filter((_,i)=>i!==pi);
+            updateReport(id,{pecas});
+          };
+          const novoRegistro=()=>{
+            const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
+              dataAtendimento:TODAY_STR,tipoAtendimento:"preventivo",relatorio:"",tecnico:ALL_TECHS[0],
+              empresa:"",cidade:"",patrimonio:"",horimetro:"",chamado:"",
+              horaEntrada:"",horaSaida:"",horasTrabalhadas:"",
+              pecas:[],statusFinal:"Pendente",obs:"",processoStatus:"em_andamento"};
+            setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
+          };
+
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
@@ -1193,189 +1221,212 @@ export default function App(){
                   <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📋 Conferência de Relatórios</div>
                   <div style={{fontSize:13,color:"#888"}}>{list.length} registro(s)</div>
                 </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                  <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit",color:"#888"}}>{showArqRel?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <label style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:"#F0F4FF",color:"#1565C0",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit",color:"#888"}}>{showArqRel?"✓ Arquivados":"📁 Arquivados"}</button>
+                  <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"none",background:pdfLoading?"#E0E0E0":"#1565C0",color:"#FFF",fontSize:12,fontWeight:700,fontFamily:"inherit",opacity:pdfLoading?.7:1}}>
                     {pdfLoading?"⏳ Lendo PDF...":"📄 Ler PDF"}
                     <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
                       const file=e.target.files?.[0]; if(!file)return;
                       setPdfLoading(true);
                       try{
                         const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                        const resp=await fetch("https://api.anthropic.com/v1/messages",{
-                          method:"POST",
-                          headers:{"Content-Type":"application/json"},
-                          body:JSON.stringify({
-                            model:"claude-sonnet-4-6",
-                            max_tokens:1000,
-                            messages:[{role:"user",content:[
-                              {type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},
-                              {type:"text",text:`Leia este relatório de manutenção e extraia SOMENTE em JSON puro (sem markdown, sem backticks):
-{
-  "relatorio": "número do relatório",
-  "dataAtendimento": "data no formato YYYY-MM-DD ou vazia",
-  "tipoAtendimento": "preventivo ou corretivo",
-  "tecnico": "nome do técnico",
-  "patrimonio": "número do patrimônio/PAT",
-  "chamado": "número do chamado se existir",
-  "solicitouPecas": "sim ou nao",
-  "peca": "nome da peça se houver",
-  "quantidade": "quantidade da peça se houver",
-  "statusFinal": "Concluído ou Pendente"
-}`}
-            ]}]})
-                        });
-                        const data=await resp.json();
-                        const txt=data.content?.[0]?.text||"{}";
-                        const clean=txt.replace(/```json|```/g,"").trim();
-                        const parsed=JSON.parse(clean);
+                        const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                        if(!resp.ok) throw new Error(await resp.text());
+                        const parsed=await resp.json();
+                        if(parsed.error) throw new Error(parsed.error);
                         const row={
-                          id:`REL${Date.now()}`,
-                          registradoPor:user.name,
-                          registradoEm:new Date().toISOString(),
+                          id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
                           dataAtendimento:parsed.dataAtendimento||TODAY_STR,
                           tipoAtendimento:parsed.tipoAtendimento||"preventivo",
-                          chamado:parsed.chamado||"",
                           relatorio:parsed.relatorio||"",
                           tecnico:parsed.tecnico||ALL_TECHS[0],
+                          empresa:parsed.empresa||"",
+                          cidade:parsed.cidade||"",
                           patrimonio:parsed.patrimonio||"",
-                          solicitouPecas:parsed.solicitouPecas||"nao",
-                          peca:parsed.peca||"",
-                          quantidade:parsed.quantidade||"",
-                          statusPecas:"Atendido e Separado",
-                          dataFinalizacao:"",
-                          statusFinal:parsed.statusFinal||"Pendente",
-                          processoStatus:"em_andamento"
+                          horimetro:parsed.horimetro||"",
+                          chamado:parsed.chamado||"",
+                          horaEntrada:parsed.horaEntrada||"",
+                          horaSaida:parsed.horaSaida||"",
+                          horasTrabalhadas:parsed.horasTrabalhadas||"",
+                          pecas:[],statusFinal:parsed.statusFinal||"Pendente",
+                          obs:parsed.observacoes||"",processoStatus:"em_andamento"
                         };
-                        setReports(p=>[row,...p]);
-                        db.save("relatorios",row.id,row);
-                        notify("✅ PDF lido e registro criado!");
-                      }catch(err){
-                        console.error(err);
-                        notify("❌ Erro ao ler PDF. Tente novamente.");
-                      }finally{
-                        setPdfLoading(false);
-                        e.target.value="";
-                      }
+                        setReports(p=>[row,...p]);db.save("relatorios",row.id,row);
+                        notify("✅ PDF lido! Verifique os dados e adicione peças se necessário.");
+                      }catch(err){notify("❌ Erro: "+err.message);}
+                      finally{setPdfLoading(false);e.target.value="";}
                     }}/>
                   </label>
-                  <BtnY onClick={()=>{
-                    const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
-                      dataAtendimento:TODAY_STR,tipoAtendimento:"preventivo",chamado:"",relatorio:"",tecnico:ALL_TECHS[0],
-                      solicitouPecas:"nao",reqCod:"",peca:"",quantidade:"",statusPecas:"Atendido e Separado",
-                      dataFinalizacao:"",statusFinal:"Pendente",processoStatus:"em_andamento"};
-                    setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
-                  }}>+ Novo Registro</BtnY>
+                  <BtnY onClick={novoRegistro}>+ Novo Registro</BtnY>
                 </div>
               </div>
 
-              {list.length===0&&<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum registro.</div>}
+              {list.length===0&&<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum registro. Clique em "+ Novo Registro" ou "📄 Ler PDF".</div>}
 
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {list.map(r=>{
                   const isCorr=r.tipoAtendimento==="corretivo";
-                  const stFinal=STS_FINAL[r.statusFinal]||STS_FINAL["Pendente"];
-                  const stPecas=STS_PECAS[r.statusPecas]||STS_PECAS["Atendido e Separado"];
+                  const stFinal=STS_FINAL_COR[r.statusFinal]||STS_FINAL_COR["Pendente"];
+                  const pecas=r.pecas||[];
                   return(
                     <div key={r.id} className="card" style={{padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?.5:1,borderLeft:`4px solid ${stFinal.c}`}}>
-                      {/* Header */}
-                      <div style={{background:"#F8F8F8",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #EEE"}}>
-                        <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                          <input type="date" value={r.dataAtendimento||""} onChange={e=>updateR(r.id,{dataAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:700}}/>
-                          <select value={r.tipoAtendimento||"preventivo"} onChange={e=>updateR(r.id,{tipoAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF"}}>
+
+                      {/* ── HEADER ── */}
+                      <div style={{background:"#F8F8F8",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #EEE",flexWrap:"wrap",gap:8}}>
+                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                          <input type="text" value={r.relatorio||""} onChange={e=>updateReport(r.id,{relatorio:e.target.value})} placeholder="Nº Relatório" style={{fontSize:13,fontWeight:800,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6,width:110}}/>
+                          <input type="date" value={r.dataAtendimento||""} onChange={e=>updateReport(r.id,{dataAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                          <select value={r.tipoAtendimento||"preventivo"} onChange={e=>updateReport(r.id,{tipoAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"none",borderRadius:6,fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF"}}>
                             <option value="preventivo">✅ Preventivo</option>
                             <option value="corretivo">🔧 Corretivo</option>
                           </select>
-                          <select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateR(r.id,{tecnico:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6}}>
+                          <select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6}}>
                             {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
                           </select>
                           <span style={{fontSize:11,padding:"3px 10px",borderRadius:12,background:stFinal.bg,color:stFinal.c,fontWeight:700}}>{r.statusFinal||"Pendente"}</span>
                         </div>
                         <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>updateR(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12}}>🗄️</button>
-                          <button onClick={()=>{if(window.confirm("Excluir?")){{setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,color:"#C62828",fontWeight:700}}>✕</button>
+                          <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12}}>🗄️</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,color:"#C62828",fontWeight:700}}>✕</button>
                         </div>
                       </div>
 
-                      {/* Corpo */}
-                      <div style={{padding:"14px 16px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-                        {/* Chamado - só se corretivo */}
-                        {isCorr&&<div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Chamado</label>
-                          <input type="text" value={r.chamado||""} onChange={e=>updateR(r.id,{chamado:e.target.value})} placeholder="Nº do chamado" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                      {/* ── DADOS BASE ── */}
+                      <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,borderBottom:"1px solid #EEE"}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label>
+                          <input type="text" value={r.empresa||""} onChange={e=>updateReport(r.id,{empresa:e.target.value})} placeholder="Empresa" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cidade</label>
+                          <input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="Cidade" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>PAT</label>
+                          <input type="text" value={r.patrimonio||""} onChange={e=>updateReport(r.id,{patrimonio:e.target.value})} placeholder="PAT" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horímetro</label>
+                          <input type="text" value={r.horimetro||""} onChange={e=>updateReport(r.id,{horimetro:e.target.value})} placeholder="Ex: 17852" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        </div>
+                        {isCorr&&<div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Nº Chamado</label>
+                          <input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="Chamado" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
                         </div>}
-
-                        {/* Relatório */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Relatório</label>
-                          <input type="text" value={r.relatorio||""} onChange={e=>updateR(r.id,{relatorio:e.target.value})} placeholder="Nº do relatório" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Entrada</label>
+                          <input type="time" value={r.horaEntrada||""} onChange={e=>updateReport(r.id,{horaEntrada:e.target.value})} style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
                         </div>
-
-                        {/* Patrimônio */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Patrimônio</label>
-                          <input type="text" value={r.patrimonio||""} onChange={e=>updateR(r.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Saída</label>
+                          <input type="time" value={r.horaSaida||""} onChange={e=>updateReport(r.id,{horaSaida:e.target.value})} style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
                         </div>
-
-                        {/* Horímetro */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Horímetro</label>
-                          <input type="text" value={r.horimetro||""} onChange={e=>updateR(r.id,{horimetro:e.target.value})} placeholder="Ex: 12350" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horas Trab.</label>
+                          <input type="text" value={r.horasTrabalhadas||calcHoras(r.horaEntrada,r.horaSaida)||""} onChange={e=>updateReport(r.id,{horasTrabalhadas:e.target.value})} placeholder="00:00" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:700,color:"#1A7A3C"}}/>
                         </div>
-
-                        {/* Solicitou Peças */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Solicitou Peças?</label>
-                          <select value={r.solicitouPecas||"nao"} onChange={e=>updateR(r.id,{solicitouPecas:e.target.value})} style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:700,color:r.solicitouPecas==="sim"?"#E67E00":"#1A7A3C",background:r.solicitouPecas==="sim"?"#FFF8F0":"#F0FFF5"}}>
-                            <option value="nao">Não</option>
-                            <option value="sim">Sim</option>
-                          </select>
-                        </div>
-
-                        {/* Data Finalização */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Data Finalização</label>
-                          <input type="date" value={r.dataFinalizacao||""} onChange={e=>updateR(r.id,{dataFinalizacao:e.target.value})} style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-
-                        {/* Status Final */}
-                        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.5}}>Status Final</label>
-                          <select value={r.statusFinal||"Pendente"} onChange={e=>updateR(r.id,{statusFinal:e.target.value})} style={{fontSize:12,padding:"6px 10px",border:"none",borderRadius:6,fontWeight:700,color:stFinal.c,background:stFinal.bg}}>
-                            <option>Concluído</option>
-                            <option>Pendente</option>
-                          </select>
+                        <div style={{display:"flex",flexDirection:"column",gap:3,gridColumn:"1/-1"}}>
+                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observação</label>
+                          <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observações..." style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
                         </div>
                       </div>
 
-                      {/* Seção de Peças - só se solicitou */}
-                      {r.solicitouPecas==="sim"&&(
-                        <div style={{padding:"12px 16px",borderTop:"1px solid #EEE",background:"#FFFBF5"}}>
-                          <div style={{fontSize:11,fontWeight:700,color:"#E67E00",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📦 Requisição de Peças</div>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 2fr 80px 1fr",gap:10,alignItems:"end"}}>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cód. Req.</label>
-                              <input type="text" value={r.reqCod||""} onChange={e=>updateR(r.id,{reqCod:e.target.value})} placeholder="REQ-001" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                            </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label>
-                              <input type="text" value={r.peca||""} onChange={e=>updateR(r.id,{peca:e.target.value})} placeholder="Descrição da peça" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                            </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd</label>
-                              <input type="text" value={r.quantidade||""} onChange={e=>updateR(r.id,{quantidade:e.target.value})} placeholder="0" style={{fontSize:12,padding:"6px 10px",border:"1px solid #E0E0E0",borderRadius:6,textAlign:"center"}}/>
-                            </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Peças</label>
-                              <select value={r.statusPecas||"Atendido e Separado"} onChange={e=>updateR(r.id,{statusPecas:e.target.value})} style={{fontSize:12,padding:"6px 10px",border:"none",borderRadius:6,fontWeight:700,color:stPecas.c,background:stPecas.bg}}>
-                                <option>Atendido e Separado</option>
-                                <option>Ruptura</option>
-                                <option>Parcialmente Atendido</option>
-                              </select>
-                            </div>
-                          </div>
+                      {/* ── SEÇÃO PEÇAS ── */}
+                      <div style={{padding:"12px 16px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                          <div style={{fontSize:11,fontWeight:800,color:"#E67E00",textTransform:"uppercase",letterSpacing:.5}}>📦 Peças / Serviços</div>
+                          <button onClick={()=>addPeca(r.id)} style={{fontSize:11,padding:"4px 12px",borderRadius:6,border:"none",background:"#FFF8F0",color:"#E67E00",cursor:"pointer",fontWeight:700}}>+ Adicionar Peça</button>
                         </div>
-                      )}
+
+                        {pecas.length===0&&<div style={{fontSize:11,color:"#CCC",textAlign:"center",padding:"12px 0"}}>Nenhuma peça adicionada.</div>}
+
+                        {pecas.map((p,pi)=>{
+                          const stP=STS_PECA_COR[p.statusPeca]||STS_PECA_COR["Peça Separada"];
+                          const stF=STS_FINAL_COR[p.statusFinal]||STS_FINAL_COR["Pendente"];
+                          const sla=calcSLA(p.dataConc,r.dataAtendimento);
+                          return(
+                            <div key={pi} style={{background:"#FAFAFA",borderRadius:8,padding:"10px 12px",marginBottom:8,border:"1px solid #EEE",borderLeft:`3px solid ${stP.c}`}}>
+                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 80px 1fr 1fr",gap:8,marginBottom:8}}>
+                                {/* Tipo Serviço */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Tipo Serviço</label>
+                                  <select value={p.tipoServico||"Mecânica"} onChange={e=>updatePeca(r.id,pi,{tipoServico:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:600,color:"#1565C0",background:"#F0F4FF"}}>
+                                    {TIPOS_SERV.map(t=><option key={t}>{t}</option>)}
+                                  </select>
+                                </div>
+                                {/* Peça */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label>
+                                  <input type="text" value={p.peca||""} onChange={e=>updatePeca(r.id,pi,{peca:e.target.value})} placeholder="Nome da peça" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                                </div>
+                                {/* Qtd */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd</label>
+                                  <input type="text" value={p.quantidade||""} onChange={e=>updatePeca(r.id,pi,{quantidade:e.target.value})} placeholder="0" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6,textAlign:"center"}}/>
+                                </div>
+                                {/* COD */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>COD</label>
+                                  <input type="text" value={p.cod||""} onChange={e=>updatePeca(r.id,pi,{cod:e.target.value})} placeholder="Código" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                                </div>
+                                {/* Requisição */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Requisição</label>
+                                  <input type="text" value={p.requisicao||""} onChange={e=>updatePeca(r.id,pi,{requisicao:e.target.value})} placeholder="REQ-001" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                                </div>
+                              </div>
+
+                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr auto",gap:8,alignItems:"end"}}>
+                                {/* Status Peça */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Peça</label>
+                                  <select value={p.statusPeca||"Peça Separada"} onChange={e=>updatePeca(r.id,pi,{statusPeca:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"none",borderRadius:6,fontWeight:700,color:stP.c,background:stP.bg}}>
+                                    {STS_PECA.map(s=><option key={s}>{s}</option>)}
+                                  </select>
+                                </div>
+                                {/* Ticket se Ag. Compras */}
+                                {p.statusPeca==="Ag. Compras"&&<div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#E67E00",textTransform:"uppercase"}}>Nº Ticket</label>
+                                  <input type="text" value={p.ticketCompras||""} onChange={e=>updatePeca(r.id,pi,{ticketCompras:e.target.value})} placeholder="Ticket" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E67E00",borderRadius:6}}/>
+                                </div>}
+                                {/* Data Conclusão */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Conclusão</label>
+                                  <input type="date" value={p.dataConc||""} onChange={e=>updatePeca(r.id,pi,{dataConc:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                                </div>
+                                {/* SLA */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>SLA (dias)</label>
+                                  <div style={{fontSize:12,fontWeight:800,padding:"5px 8px",borderRadius:6,background:sla===null?"#F5F5F5":sla>3?"#FFF0F0":"#F0FFF5",color:sla===null?"#CCC":sla>3?"#C62828":"#1A7A3C",textAlign:"center"}}>{sla!==null?sla+"d":"—"}</div>
+                                </div>
+                                {/* Status Final */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Final</label>
+                                  <select value={p.statusFinal||"Pendente"} onChange={e=>updatePeca(r.id,pi,{statusFinal:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"none",borderRadius:6,fontWeight:700,color:stF.c,background:stF.bg}}>
+                                    <option>Concluído</option><option>Pendente</option>
+                                  </select>
+                                </div>
+                                {/* Obs */}
+                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Obs</label>
+                                  <input type="text" value={p.obs||""} onChange={e=>updatePeca(r.id,pi,{obs:e.target.value})} placeholder="Obs..." style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
+                                </div>
+                                {/* Excluir peça */}
+                                <button onClick={()=>delPeca(r.id,pi)} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:12,fontWeight:700,alignSelf:"flex-end"}}>✕</button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Status final do registro */}
+                        <div style={{display:"flex",gap:10,alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid #EEE"}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Geral:</label>
+                          <select value={r.statusFinal||"Pendente"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:12,padding:"5px 10px",border:"none",borderRadius:6,fontWeight:700,color:stFinal.c,background:stFinal.bg}}>
+                            <option>Concluído</option><option>Pendente</option>
+                          </select>
+                          <span style={{fontSize:10,color:"#AAA",marginLeft:"auto"}}>Reg. por {r.registradoPor||"—"} · {fmtDateTime(r.registradoEm)}</span>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
