@@ -775,6 +775,7 @@ export default function App(){
   const [dashTo,setDashTo]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
+  const [pdfLoading,setPdfLoading]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
@@ -1018,6 +1019,7 @@ export default function App(){
   const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
   const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
+  const froCrud=mkCrud("pendencias_frota",setFrota);
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
   const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
@@ -1193,6 +1195,70 @@ export default function App(){
                 </div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit",color:"#888"}}>{showArqRel?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <label style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:"#F0F4FF",color:"#1565C0",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
+                    {pdfLoading?"⏳ Lendo PDF...":"📄 Ler PDF"}
+                    <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
+                      const file=e.target.files?.[0]; if(!file)return;
+                      setPdfLoading(true);
+                      try{
+                        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                        const resp=await fetch("https://api.anthropic.com/v1/messages",{
+                          method:"POST",
+                          headers:{"Content-Type":"application/json"},
+                          body:JSON.stringify({
+                            model:"claude-sonnet-4-6",
+                            max_tokens:1000,
+                            messages:[{role:"user",content:[
+                              {type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},
+                              {type:"text",text:`Leia este relatório de manutenção e extraia SOMENTE em JSON puro (sem markdown, sem backticks):
+{
+  "relatorio": "número do relatório",
+  "dataAtendimento": "data no formato YYYY-MM-DD ou vazia",
+  "tipoAtendimento": "preventivo ou corretivo",
+  "tecnico": "nome do técnico",
+  "patrimonio": "número do patrimônio/PAT",
+  "chamado": "número do chamado se existir",
+  "solicitouPecas": "sim ou nao",
+  "peca": "nome da peça se houver",
+  "quantidade": "quantidade da peça se houver",
+  "statusFinal": "Concluído ou Pendente"
+}`}
+            ]}]})
+                        });
+                        const data=await resp.json();
+                        const txt=data.content?.[0]?.text||"{}";
+                        const clean=txt.replace(/```json|```/g,"").trim();
+                        const parsed=JSON.parse(clean);
+                        const row={
+                          id:`REL${Date.now()}`,
+                          registradoPor:user.name,
+                          registradoEm:new Date().toISOString(),
+                          dataAtendimento:parsed.dataAtendimento||TODAY_STR,
+                          tipoAtendimento:parsed.tipoAtendimento||"preventivo",
+                          chamado:parsed.chamado||"",
+                          relatorio:parsed.relatorio||"",
+                          tecnico:parsed.tecnico||ALL_TECHS[0],
+                          patrimonio:parsed.patrimonio||"",
+                          solicitouPecas:parsed.solicitouPecas||"nao",
+                          peca:parsed.peca||"",
+                          quantidade:parsed.quantidade||"",
+                          statusPecas:"Atendido e Separado",
+                          dataFinalizacao:"",
+                          statusFinal:parsed.statusFinal||"Pendente",
+                          processoStatus:"em_andamento"
+                        };
+                        setReports(p=>[row,...p]);
+                        db.save("relatorios",row.id,row);
+                        notify("✅ PDF lido e registro criado!");
+                      }catch(err){
+                        console.error(err);
+                        notify("❌ Erro ao ler PDF. Tente novamente.");
+                      }finally{
+                        setPdfLoading(false);
+                        e.target.value="";
+                      }
+                    }}/>
+                  </label>
                   <BtnY onClick={()=>{
                     const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
                       dataAtendimento:TODAY_STR,tipoAtendimento:"preventivo",chamado:"",relatorio:"",tecnico:ALL_TECHS[0],
