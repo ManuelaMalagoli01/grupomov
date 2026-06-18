@@ -39,7 +39,7 @@ const db = {
 
 
 const USERS = [
-  { id:"manuela", name:"Manuela", role:"ADM", password:"mov2026", canDelete:true  },
+  { id:"manuela", name:"Manuela Malagoli", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"gustavo", name:"Gustavo Coelho", role:"ADM", password:"mov2026", canDelete:true  },
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:true  },
   { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:true,  apenasOficina:true },
@@ -779,10 +779,7 @@ function AppTopBar({user, setUser, setModalUsers}){
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",borderRadius:8,padding:"5px 10px"}}>
           <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
-          <div>
-            <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
-            <div style={{fontSize:10,color:"#666"}}>{user.role}</div>
-          </div>
+          <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
         </div>
         {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
         <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer"}}>Sair</button>
