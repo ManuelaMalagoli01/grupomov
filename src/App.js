@@ -1088,7 +1088,15 @@ export default function App(){
       if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
       if(matRows.length>0) setPendMatheus(matRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ const rk=r.key||(r.data&&r.data.key); const rs=r.slots||(r.data&&r.data.slots)||[]; if(rk){ if(rk.startsWith("PREV__")) prev[rk.slice(6)]=rs; else sched[rk]=rs; } }); setSchedule(sched); setAgendaPrev(prev); }
-      if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
+      if(usrs.length>0){
+        const merged=[...USERS];
+        usrs.forEach(u=>{
+          const idx=merged.findIndex(m=>m.id===u.id);
+          if(idx>=0) merged[idx]={...merged[idx],...u};
+          else merged.push(u);
+        });
+        setUsers(merged);
+      }
       notify("✅ Dados carregados!");
     };
     load();
