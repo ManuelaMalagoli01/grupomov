@@ -1188,7 +1188,7 @@ export default function App(){
 
           const addPecaRel=(id)=>{
             const r=reports.find(x=>x.id===id);
-            const pecas=[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",relatorio:"",dataExecucao:"",obs:""}];
+            const pecas=[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",relatorioPendencia:"",relatorioExecucao:"",dataExecucao:"",obs:""}];
             updateReport(id,{pecas});
           };
           const updatePecaRel=(id,pi,changes)=>{
@@ -1346,7 +1346,8 @@ export default function App(){
                                   <td><input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Peça" style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                                   <td><input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="COD" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                                   <td><input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{width:60,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                                  <td colSpan={2}><input type="text" value={p.relatorio||""} onChange={e=>updatePecaRel(r.id,pi,{relatorio:e.target.value})} placeholder="Nº Relatório" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td><input type="text" value={p.relatorioPendencia||""} onChange={e=>updatePecaRel(r.id,pi,{relatorioPendencia:e.target.value})} placeholder="Rel. Pendência" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td><input type="text" value={p.relatorioExecucao||""} onChange={e=>updatePecaRel(r.id,pi,{relatorioExecucao:e.target.value})} placeholder="Rel. Execução" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
                                   <td><input type="date" value={p.dataExecucao||""} onChange={e=>updatePecaRel(r.id,pi,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
                                   <td colSpan={3}><input type="text" value={p.obs||""} onChange={e=>updatePecaRel(r.id,pi,{obs:e.target.value})} placeholder="Observação" style={{width:"100%",fontSize:11,padding:"3px 6px"}}/></td>
                                   <td></td>
