@@ -1211,45 +1211,48 @@ export default function App(){
       {notification&&<div className="notif">{notification}</div>}
 
       {/* HEADER */}
-      <div style={{background:"#111827",boxShadow:"0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.2)",position:"sticky",top:0,zIndex:100}}>
-        <div style={{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:14,padding:"10px 0"}}>
-            <div style={{background:"#FFF",borderRadius:10,padding:"5px 9px",display:"flex",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,.2)"}}>
-              <img src={LOGO_MOV} alt="Grupo MOV" style={{height:28,width:"auto",display:"block"}}/>
-            </div>
-            <div>
-              <div style={{fontSize:13,fontWeight:800,color:"#FFF",letterSpacing:-.2}}>Grupo MOV</div>
-              <div style={{fontSize:9,color:"#666",letterSpacing:1.2,textTransform:"uppercase",marginTop:1}}>Gestão de Manutenção</div>
-            </div>
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.05)",borderRadius:8,padding:"6px 12px"}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
-              <div>
-                <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
-                <div style={{fontSize:10,color:"#666"}}>{user.role}</div>
-              </div>
-            </div>
-            {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .18s"}}>👤 Usuários</button>}
-            <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer",transition:"all .18s"}}>Sair</button>
+      {/* ── TOPBAR ── */}
+      <div style={{background:"#111827",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}> 
+          <div style={{background:"#FFF",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center"}}><img src={LOGO_MOV} alt="Grupo MOV" style={{height:26,width:"auto",display:"block"}}/></div>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:"#FFF"}}>Grupo MOV</div>
+            <div style={{fontSize:9,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>Gestão de Manutenção</div>
           </div>
         </div>
-        <div style={{padding:"6px 28px 0",display:"flex",gap:2,overflowX:"auto",borderTop:"1px solid rgba(255,255,255,.06)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",borderRadius:8,padding:"5px 10px"}}>
+            <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
+              <div style={{fontSize:10,color:"#666"}}>{user.role}</div>
+            </div>
+          </div>
+          {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
+          <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer"}}>Sair</button>
+        </div>
+      </div>
+
+      {/* ── LAYOUT: SIDEBAR + CONTEÚDO ── */}
+      <div style={{display:"flex",minHeight:"calc(100vh - 56px)"}}>
+
+        {/* SIDEBAR */}
+        <div style={{width:220,background:"#1E293B",flexShrink:0,overflowY:"auto",padding:"12px 0"}}>
           {[
             ["relatorios","📋 Conf. Relatórios","normal"],
             ["agenda_prev","🗓 Agenda","normal"],
             ["dashboard","📊 Dashboard","normal"],
-            ["apontamentos_oficina","📝 Apontamentos Oficina","oficina"],
+            ["apontamentos_oficina","📝 Apont. Oficina","oficina"],
             ["agenda_ofi","🗓 Agenda Oficina","oficina"],
-            ["dashboard_ofi","📊 Dashboard Oficina","oficina"],
-            ["apontamentos_150","📝 Apontamentos Oficina 150","ofi150"],
-            ["agenda_ofi_150","🗓 Agenda Oficina 150","ofi150"],
-            ["dashboard_ofi_150","📊 Dashboard Oficina 150","ofi150"],
+            ["dashboard_ofi","📊 Dash Oficina","oficina"],
+            ["apontamentos_150","📝 Apont. 150","ofi150"],
+            ["agenda_ofi_150","🗓 Agenda 150","ofi150"],
+            ["dashboard_ofi_150","📊 Dash 150","ofi150"],
             ["mau_uso","⚠️ Mau Uso","normal"],
             ["a_faturar","💰 A Faturar","normal"],
-            ["emprestimos","🔄 Req. Empréstimo e Retorno","normal"],
+            ["emprestimos","🔄 Req. Empréstimo","normal"],
             ["saida_entrada","📦 Req. Entrada/Saída","normal"],
-            ["dashboard_req","📊 Dashboard Requisições","normal"],
+            ["dashboard_req","📊 Dash Requisições","normal"],
             ["sas","📄 SAS","normal"],
             ["carros","🚙 Carros","normal"],
             ["uber","🚗 Uber","normal"],
@@ -1273,16 +1276,27 @@ export default function App(){
             if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
             if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
             return true;
-          }).map(([k,l])=>(
-            <button key={k} className={`nav-tab ${tab===k?"active":""}`} onClick={()=>setTab(k)}>
-              {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:5,background:"#C62828",color:"#FFF",borderRadius:8,fontSize:9,padding:"1px 5px"}}>{empAlerta}</span>}
-            </button>
-          ))}
+          }).map(([k,l])=>{
+            const isActive=tab===k;
+            return(
+              <button key={k} onClick={()=>setTab(k)} style={{
+                display:"flex",alignItems:"center",gap:8,width:"100%",
+                padding:"9px 16px",border:"none",
+                background:isActive?"rgba(245,194,0,.12)":"transparent",
+                color:isActive?"#F5C200":"#94A3B8",
+                fontSize:12,fontWeight:isActive?700:500,
+                cursor:"pointer",textAlign:"left",
+                borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",
+                transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap",
+              }}>
+                {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{empAlerta}</span>}
+              </button>
+            );
+          })}
         </div>
-        <div style={{height:3,background:"linear-gradient(90deg,#F5C200,#FFE566,#F5C200)",marginTop:8}}/>
-      </div>
 
-      <div style={{maxWidth:1300,margin:"0 auto",padding:"24px 20px"}}>
+        {/* CONTEÚDO */}
+        <div style={{flex:1,padding:"24px",overflowX:"auto",minWidth:0,background:"#F0F2F5"}}>
 
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
@@ -3442,7 +3456,8 @@ export default function App(){
           );
         })()}
 
-      {editSlot&&<EditSlotModal
+
+        {editSlot&&<EditSlotModal
         slot={editSlotForm}
         tipo={editSlot.tipo}
         onClose={()=>setEditSlot(null)}
@@ -3453,16 +3468,18 @@ export default function App(){
           notify("✅ Atendimento atualizado!");
           setEditSlot(null);
         }}
-      />}
-      {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
-      {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
-      {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
-      {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
-      {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
-      {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
-      {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
-      {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
-      {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
+        />}
+        {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
+        {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
+        {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
+        {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
+        {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
+        {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
+        {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
+        {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
+        {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
+        </div>
+      </div>
     </div>
   );
 }
