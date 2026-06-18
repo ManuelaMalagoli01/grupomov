@@ -88,11 +88,11 @@ const fmtDate    = d=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate
 const TODAY_STR  = fmtDate(TODAY);
 const diffDays   = s=>{ if(!s) return null; const d=Math.floor((TODAY-new Date(s))/86400000); return d>=0?d:null; };
 const TIPOS = [
-  {v:"preventivo",l:"📋 Preventivo",color:"#1565C0",bg:"#F0F4FF"},
-  {v:"corretivo",l:"🔧 Corretivo",color:"#C62828",bg:"#FFF0F0"},
-  {v:"a_faturar",l:"💰 A Faturar",color:"#1A7A3C",bg:"#F0FFF5"},
-  {v:"mau_uso",l:"⚠️ Mau Uso",color:"#E67E00",bg:"#FFF8F0"},
-  {v:"entrega_tecnica",l:"📦 Entrega Técnica",color:"#6A1B9A",bg:"#F8F0FF"},
+  {v:"preventivo",l:"📋 Preventivo",color:"#2563EB",bg:"#EFF6FF"},
+  {v:"corretivo",l:"🔧 Corretivo",color:"#EF4444",bg:"#FEF2F2"},
+  {v:"a_faturar",l:"💰 A Faturar",color:"#16A34A",bg:"#F0FDF4"},
+  {v:"mau_uso",l:"⚠️ Mau Uso",color:"#EA580C",bg:"#FFEDD5"},
+  {v:"entrega_tecnica",l:"📦 Entrega Técnica",color:"#7C3AED",bg:"#EDE9FE"},
   {v:"bateria",l:"🔋 Bateria",color:"#00838F",bg:"#F0FAFA"},
   {v:"carregador",l:"🔌 Carregador",color:"#AD1457",bg:"#FFF0F5"},
 ];
@@ -100,18 +100,18 @@ const tipoCfg = v=>TIPOS.find(t=>t.v===v)||TIPOS[0];
 const TC = {"Anderson":"#E67E00","Dilson":"#1A7A3C","Rafael":"#1565C0","Helbert":"#6A1B9A","Luiz Guilherme":"#C62828","Denison":"#00838F","Arthur":"#4E342E","Eduardo":"#37474F","Luiz Ribeiro":"#558B2F","Bruno":"#AD1457","Marcus":"#283593"};
 const techColor = t=>TC[t]||"#555";
 const statusCfg = {
-  "aberto":{color:"#C62828",bg:"#FFF0F0",label:"Aberto"},
-  "em andamento":{color:"#E67E00",bg:"#FFF8F0",label:"Em Andamento"},
-  "acompanhar":{color:"#1565C0",bg:"#F0F4FF",label:"Acompanhar"},
-  "concluído":{color:"#1A7A3C",bg:"#F0FFF5",label:"Concluído"},
+  "aberto":{color:"#EF4444",bg:"#FEF2F2",label:"Aberto"},
+  "em andamento":{color:"#EA580C",bg:"#FFEDD5",label:"Em Andamento"},
+  "acompanhar":{color:"#2563EB",bg:"#EFF6FF",label:"Acompanhar"},
+  "concluído":{color:"#16A34A",bg:"#F0FDF4",label:"Concluído"},
 };
 const empSitCfg = {
-  "Atendido":{color:"#1A7A3C",bg:"#F0FFF5"},
-  "Pendente":{color:"#C62828",bg:"#FFF0F0"},
-  "Parcialmente Atendido":{color:"#E67E00",bg:"#FFF8F0"},
-  "Aprovado":{color:"#1565C0",bg:"#F0F4FF"},
-  "Retorno Concluído":{color:"#00838F",bg:"#E0F7FA"},
-  "Ruptura":{color:"#C62828",bg:"#FFF0F0"},
+  "Atendido":{color:"#16A34A",bg:"#F0FDF4"},
+  "Pendente":{color:"#EF4444",bg:"#FEF2F2"},
+  "Parcialmente Atendido":{color:"#EA580C",bg:"#FFEDD5"},
+  "Aprovado":{color:"#2563EB",bg:"#EFF6FF"},
+  "Retorno Concluído":{color:"#0D9488",bg:"#CCFBF1"},
+  "Ruptura":{color:"#EF4444",bg:"#FEF2F2"},
 };
 const PROCESS_STATUS = {
   "em_andamento": {color:"#E67E00", bg:"#FFF8F0", label:"Em Andamento"},
@@ -191,12 +191,12 @@ const mapTipo = label => {
 };
 
 const AGENDA_STATUS = {
-  "agendada":{color:"#1565C0",bg:"#F0F4FF",dot:"#1565C0",label:"Agendada"},
-  "confirmada":{color:"#1A7A3C",bg:"#F0FFF5",dot:"#1A7A3C",label:"Confirmada"},
+  "agendada":{color:"#2563EB",bg:"#EFF6FF",dot:"#1565C0",label:"Agendada"},
+  "confirmada":{color:"#16A34A",bg:"#F0FDF4",dot:"#1A7A3C",label:"Confirmada"},
   "concluida":{color:"#00838F",bg:"#F0FAFA",dot:"#00838F",label:"Concluída"},
-  "cancelada":{color:"#C62828",bg:"#FFF0F0",dot:"#C62828",label:"Cancelada"},
-  "remarcada":{color:"#E67E00",bg:"#FFF8F0",dot:"#E67E00",label:"Remarcada"},
-  "nao_atende":{color:"#6A1B9A",bg:"#F8F0FF",dot:"#6A1B9A",label:"Cliente não atende"},
+  "cancelada":{color:"#EF4444",bg:"#FEF2F2",dot:"#C62828",label:"Cancelada"},
+  "remarcada":{color:"#EA580C",bg:"#FFEDD5",dot:"#E67E00",label:"Remarcada"},
+  "nao_atende":{color:"#7C3AED",bg:"#EDE9FE",dot:"#6A1B9A",label:"Cliente não atende"},
 };
 const getDaysInMonth=(y,m)=>new Date(y,m+1,0).getDate();
 const getDayOfWeek=(y,m,d)=>new Date(y,m,d).getDay();
@@ -1107,34 +1107,101 @@ export default function App(){
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#F0F2F5;font-family:'Inter',sans-serif;}
   textarea{resize:none;}
-  body{background:#F4F4F4;}
-  ::-webkit-scrollbar{width:5px;height:5px;}
-  ::-webkit-scrollbar-thumb{background:#F5C200;border-radius:3px;}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  @keyframes slideDown{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
-  .card{background:#FFF;border:1px solid #E8E8E8;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-  .btn{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;transition:all .15s;}
-  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 20px;border:2px solid #F5C200;}
-  .btn-primary:hover{background:#E6B500;border-color:#E6B500;}
-  .btn-ghost{background:#FFF;color:#1A1A1A;padding:8px 16px;border:2px solid #1A1A1A;font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;}
-  .btn-ghost:hover{background:#1A1A1A;color:#F5C200;}
-  .nav-tab{cursor:pointer;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;border:none;background:transparent;color:#AAA;font-family:inherit;white-space:nowrap;transition:all .15s;}
-  .nav-tab.active{background:#F5C200;color:#1A1A1A;}
-  .nav-tab:hover:not(.active){color:#F5C200;}
-  select{background:#FFF;color:#1A1A1A;border:1.5px solid #D0D0D0;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:12px;cursor:pointer;outline:none;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:#F0F0F0;border-radius:3px;}
+  ::-webkit-scrollbar-thumb{background:#D0D0D0;border-radius:3px;}
+  ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+  .card{
+    background:#FFFFFF;border-radius:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
+    border:1px solid rgba(0,0,0,.06);
+    transition:box-shadow .2s ease;
+  }
+  .card:hover{box-shadow:0 2px 6px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.07);}
+
+  .btn{cursor:pointer;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .18s ease;letter-spacing:0;}
+  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 18px;box-shadow:0 2px 6px rgba(245,194,0,.3);}
+  .btn-primary:hover{background:#FFCF00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,194,0,.4);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-ghost{background:transparent;color:#555;padding:8px 14px;border:1.5px solid #E0E0E0;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
+  .btn-ghost:hover{background:#F5F5F5;border-color:#BDBDBD;color:#222;}
+
+  .nav-tab{
+    cursor:pointer;padding:9px 15px;border-radius:0;
+    font-size:11.5px;font-weight:600;border:none;
+    background:transparent;color:#777;
+    font-family:'Inter',sans-serif;
+    white-space:nowrap;transition:all .15s;
+    border-bottom:2.5px solid transparent;
+    margin-bottom:-1px;
+  }
+  .nav-tab.active{color:#F5C200;border-bottom-color:#F5C200;background:rgba(245,194,0,.07);}
+  .nav-tab:hover:not(.active){color:#EEE;background:rgba(255,255,255,.06);}
+
+  select{
+    background:#FFFFFF;color:#1A1A1A;
+    border:1.5px solid #E5E7EB;border-radius:8px;
+    padding:7px 10px;font-family:'Inter',sans-serif;font-size:12px;
+    cursor:pointer;outline:none;transition:border-color .15s;
+  }
   select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
-  input[type=text],input[type=password],input[type=date],input[type=time],textarea{background:#FFF;color:#1A1A1A;border:1.5px solid #D0D0D0;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:12px;outline:none;}
-  input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,input[type=time]:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
-  input:disabled,select:disabled{background:#F5F5F5;color:#AAA;}
-  .notif{position:fixed;top:16px;right:16px;background:#1A1A1A;color:#F5C200;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;animation:slideDown .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.25);border-left:4px solid #F5C200;}
+
+  input[type=text],input[type=password],input[type=date],input[type=time],textarea{
+    background:#FFFFFF;color:#1A1A1A;
+    border:1.5px solid #E5E7EB;border-radius:8px;
+    padding:8px 11px;font-family:'Inter',sans-serif;font-size:12px;
+    outline:none;transition:all .15s;
+  }
+  input:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.12);}
+  input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;}
+
+  .notif{
+    position:fixed;top:18px;right:18px;z-index:9999;
+    background:#111827;color:#F9FAFB;
+    padding:12px 20px;border-radius:10px;
+    font-size:13px;font-weight:600;
+    animation:slideDown .22s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    border-left:4px solid #F5C200;
+    display:flex;align-items:center;gap:8px;
+  }
+
   .tbl-wrap{overflow-x:auto;width:100%;}
-  table{width:100%;border-collapse:collapse;min-width:700px;}
-  th{background:#1A1A1A;color:#F5C200;padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;}
-  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #F0F0F0;vertical-align:middle;color:#333;}
-  tr:hover td{background:#FFFDF0;}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
+  th{
+    background:#F8F9FA;padding:10px 14px;
+    text-align:left;font-size:10.5px;font-weight:700;
+    color:#6B7280;text-transform:uppercase;letter-spacing:.7px;
+    border-bottom:2px solid #E5E7EB;white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+  td{
+    padding:10px 14px;font-size:12.5px;
+    border-bottom:1px solid #F3F4F6;
+    vertical-align:middle;color:#374151;
+    font-family:'Inter',sans-serif;
+  }
+  tr:hover td{background:#FEFCE8;}
   tr:last-child td{border-bottom:none;}
+
+  /* STATUS BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;font-family:'Inter',sans-serif;}
+  .badge-green{background:#F0FDF4;color:#16A34A;}
+  .badge-red{background:#FEF2F2;color:#EF4444;}
+  .badge-yellow{background:#FEF9C3;color:#A16207;}
+  .badge-blue{background:#EFF6FF;color:#2563EB;}
+  .badge-orange{background:#FFEDD5;color:#EA580C;}
+  .badge-gray{background:#F3F4F6;color:#6B7280;}
+  .badge-purple{background:#EDE9FE;color:#7C3AED;}
 `;
 
 
@@ -1144,7 +1211,7 @@ export default function App(){
       {notification&&<div className="notif">{notification}</div>}
 
       {/* HEADER */}
-      <div style={{background:"#1A1A1A",boxShadow:"0 2px 8px rgba(0,0,0,.3)",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:"#111827",boxShadow:"0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.2)",position:"sticky",top:0,zIndex:100}}>
         <div style={{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
           <div style={{display:"flex",alignItems:"center",gap:14,padding:"10px 0"}}>
             <div style={{background:"#FFF",borderRadius:10,padding:"5px 9px",display:"flex",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,.2)"}}>
@@ -1516,7 +1583,7 @@ export default function App(){
                   });
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                    <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
                       <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfiMonth]}</div>
@@ -2247,7 +2314,7 @@ export default function App(){
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0)/60).toFixed(1));
-              const BLU="#1565C0",RED="#C62828",YEL="#F5C200",ORG="#C47D00";
+              const BLU="#2563EB",RED="#EF4444",YEL="#F5C200",ORG="#EA580C",GRN="#16A34A",PUR="#7C3AED",TEA="#0D9488";
               return(
                 <>
                   <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
@@ -2262,7 +2329,7 @@ export default function App(){
                     <div className="card" style={{padding:"16px 20px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
                       <ChartCanvas type="doughnut" height={230}
-                        data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:0}]}}
+                        data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:2,borderColor:"#FFF",hoverOffset:6}]}}
                         options={{cutout:"60%",maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
                       <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:10,fontSize:13}}>
                         <span style={{color:BLU,fontWeight:700}}>{prev} prev · {pct(prev)}%</span>
@@ -2319,15 +2386,15 @@ export default function App(){
                 <div className="card" style={{padding:"16px 20px",marginBottom:20,display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
                   <div style={{fontSize:11,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>⏱ Resumo do mês atual</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                    <div style={{fontSize:32,fontWeight:700,color:"#C47D00",lineHeight:1}}>{fmtMin(totalMin)}</div>
+                    <div style={{fontSize:38,fontWeight:900,color:"#1A1A1A",lineHeight:1}}>{fmtMin(totalMin)}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>horas trabalhadas</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                    <div style={{fontSize:32,fontWeight:700,color:"#1565C0",lineHeight:1}}>{mesReps.filter(r=>r.type==="preventivo").length}</div>
+                    <div style={{fontSize:38,fontWeight:900,color:"#2563EB",lineHeight:1}}>{mesReps.filter(r=>r.type==="preventivo").length}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>preventivos</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                    <div style={{fontSize:32,fontWeight:700,color:"#C62828",lineHeight:1}}>{mesReps.filter(r=>r.type==="corretivo").length}</div>
+                    <div style={{fontSize:38,fontWeight:900,color:"#EF4444",lineHeight:1}}>{mesReps.filter(r=>r.type==="corretivo").length}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>corretivos</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
@@ -2350,7 +2417,7 @@ export default function App(){
                 const corrs=techReps.filter(r=>r.type==="corretivo").length;
                 const color=techColor(tech);
                 return(
-                  <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                  <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
                     <div style={{padding:"12px 16px",borderBottom:"1px solid #F4F4F4",display:"flex",alignItems:"center",gap:10}}>
                       <div style={{width:32,height:32,borderRadius:"50%",background:color+"18",border:`2px solid ${color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color,flexShrink:0}}>{tech.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
                       <div style={{flex:1}}>
@@ -3190,7 +3257,7 @@ export default function App(){
                   });
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
-                    <div key={tech} className="card" style={{borderTop:`3px solid ${color}`,overflow:"hidden"}}>
+                    <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
                       <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfi150Month]}</div>
