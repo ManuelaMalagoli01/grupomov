@@ -832,6 +832,471 @@ function AppSidebar({tab, setTab, user, empAlerta}){
     if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
     return true;
   });
+  return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {visible.map(([k,l])=>{
+        const isActive=tab===k;
+        return(
+          <button key={k} onClick={()=>setTab(k)} style={{
+            display:"flex",alignItems:"center",gap:8,width:"100%",
+            padding:"9px 16px",border:"none",
+            background:isActive?"rgba(245,194,0,.12)":"transparent",
+            color:isActive?"#F5C200":"#94A3B8",
+            fontSize:12,fontWeight:isActive?700:500,
+            cursor:"pointer",textAlign:"left",
+            borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",
+            transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap",
+          }}>
+            {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{empAlerta}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function App(){
+  const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
+  const [user,setUser]=useState(()=>{
+    try{
+      const saved=localStorage.getItem("grupomov_user");
+      if(saved){ const parsed=JSON.parse(saved); return USERS.find(u=>u.id===parsed.id)||null; }
+    }catch(e){}
+    return null;
+  });
+  const [users,setUsers]=useState(USERS);
+  const [modalUsers,setModalUsers]=useState(false);
+  const [tab,setTab]=useState("relatorios");
+  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
+  const [reports,setReports]=useState(REAL_REPORTS);
+  const [processosMU,setProcessosMU]=useState([]);
+  const [processosAF,setProcessosAF]=useState([]);
+  const [emprestimos,setEmprestimos]=useState(EMP_DATA);
+  const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
+  const [requisicoes,setRequisicoes]=useState([]);
+  const [agendaItems,setAgendaItems]=useState({});
+  const [schedule,setSchedule]=useState({});
+  const [escalaStatusFilter,setEscalaStatusFilter]=useState("todos");
+  const [notification,setNotification]=useState("");
+
+  // Filtros relatórios
+  const [filterTipo,setFilterTipo]=useState("todos");
+  const [filterTech,setFilterTech]=useState("todos");
+  const [filterStatus,setFilterStatus]=useState("todos");
+  const [filterRegion,setFilterRegion]=useState("todas");
+  const [filterDateFrom,setFilterDateFrom]=useState("");
+  const [filterDateTo,setFilterDateTo]=useState("");
+  const [searchText,setSearchText]=useState("");
+  const [dashRegion,setDashRegion]=useState("todas");
+  const [dashFrom,setDashFrom]=useState("");
+  const [dashTo,setDashTo]=useState("");
+  const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
+  const [showArqRel,setShowArqRel]=useState(false);
+  const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
+  const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
+  const [relFiltroTech,setRelFiltroTech]=useState("todos");
+  const [relFiltroPat,setRelFiltroPat]=useState("");
+  const [relFiltroEmp,setRelFiltroEmp]=useState("");
+  const [relFiltroData,setRelFiltroData]=useState("");
+  const [pdfLoading,setPdfLoading]=useState(false);
+  const [showArqMU,setShowArqMU]=useState(false);
+  const [showArqAF,setShowArqAF]=useState(false);
+  const [showArqEmp,setShowArqEmp]=useState(false);
+  const [showArqSaida,setShowArqSaida]=useState(false);
+  const [showArqReq,setShowArqReq]=useState(false);
+  const [uberPedidos,setUberPedidos]=useState([]);
+  const [financeiro,setFinanceiro]=useState([]);
+  const [frota,setFrota]=useState([]);
+  const [prioridades,setPrioridades]=useState([]);
+  const [rhFiscal,setRhFiscal]=useState([]);
+  const [pendGustavo,setPendGustavo]=useState([]);
+  const [oficina,setOficina]=useState([]);
+  const [carros,setCarros]=useState([]);
+  const [carForm,setCarForm]=useState({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});
+  const [carFiltroPlaca,setCarFiltroPlaca]=useState("todas");
+  const [carMonth,setCarMonth]=useState(TODAY.getMonth());
+  const [carYear,setCarYear]=useState(TODAY.getFullYear());
+  const [pendManuela,setPendManuela]=useState([]);
+  const [modalCarroRevisao,setModalCarroRevisao]=useState(null);
+  const [carroFiltroPlaca,setCarroFiltroPlaca]=useState("todas");
+  const [carroFiltroData,setCarroFiltroData]=useState("");
+  const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
+  const [showArqCarros,setShowArqCarros]=useState(false);
+  const [showArqPendMan,setShowArqPendMan]=useState(false);
+  const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
+  const [editPendMan,setEditPendMan]=useState(null);
+  const [modalOfi,setModalOfi]=useState(false);
+  const [modalImportOfi,setModalImportOfi]=useState(false);
+  const [showArqOfi,setShowArqOfi]=useState(false);
+  const [ofiSearch,setOfiSearch]=useState("");
+  const [ofiTipo,setOfiTipo]=useState("todos");
+  const [ofiRegion,setOfiRegion]=useState("todas");
+  const [ofiTech,setOfiTech]=useState("todos");
+  const [ofiStatus,setOfiStatus]=useState("todos");
+  const [ofiFrom,setOfiFrom]=useState("");
+  const [ofiTo,setOfiTo]=useState("");
+  const [showArqFro,setShowArqFro]=useState(false);
+  const [showArqPri,setShowArqPri]=useState(false);
+  const [showArqRh,setShowArqRh]=useState(false);
+  const [showArqGus,setShowArqGus]=useState(false);
+  const [dashReqTab,setDashReqTab]=useState("visao_geral");
+  const [schedOfiDate,setSchedOfiDate]=useState(TODAY_STR);
+  const [agendaOfi,setAgendaOfi]=useState({});
+  const [agOfiMonth,setAgOfiMonth]=useState(TODAY.getMonth());
+  const [agOfiYear,setAgOfiYear]=useState(TODAY.getFullYear());
+  const [agOfiTech,setAgOfiTech]=useState("todos");
+  const [agOfiServico,setAgOfiServico]=useState("todos");
+  const [agOfiStatus,setAgOfiStatus]=useState("todos");
+  const [agOfiEmpresa,setAgOfiEmpresa]=useState("");
+  const [agOfiPat,setAgOfiPat]=useState("");
+  const [agOfiTechSel,setAgOfiTechSel]=useState(OFICINA_TECHS[0]);
+  const [agOfiDate,setAgOfiDate]=useState("");
+  const [agOfiServSel,setAgOfiServSel]=useState(SERVICOS_OFICINA[0]);
+  const [agOfiEntrada,setAgOfiEntrada]=useState("");
+  const [agOfiSaida,setAgOfiSaida]=useState("");
+  const [agOfiObs,setAgOfiObs]=useState("");
+  const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
+  const [agOfiCidade,setAgOfiCidade]=useState("");
+  const [agOfiHorimetro,setAgOfiHorimetro]=useState("");
+  const [agOfiTipo,setAgOfiTipo]=useState("preventivo");
+  const [pendHebert,setPendHebert]=useState([]);
+  const [showArqHeb,setShowArqHeb]=useState(false);
+  // Filtros nova aba oficina
+  const [ofiNovaData,setOfiNovaData]=useState("");
+  const [ofiNovaOS,setOfiNovaOS]=useState("");
+  const [ofiNovaPat,setOfiNovaPat]=useState("");
+  const [ofiNovaTech,setOfiNovaTech]=useState("todos");
+  const [ofiNovaServ,setOfiNovaServ]=useState("todos");
+  const [apontamentos,setApontamentos]=useState([]);
+  const [apontamentos150,setApontamentos150]=useState([]);
+  const [agendaOfi150,setAgendaOfi150]=useState({});
+  const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
+  const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
+  const [agOfi150Tech,setAgOfi150Tech]=useState("todos");
+  const [agOfi150Servico,setAgOfi150Servico]=useState("todos");
+  const [agOfi150TechSel,setAgOfi150TechSel]=useState(OFICINA_150_TECHS[0]);
+  const [agOfi150Date,setAgOfi150Date]=useState("");
+  const [agOfi150Empresa,setAgOfi150Empresa]=useState("");
+  const [agOfi150Pat,setAgOfi150Pat]=useState("");
+  const [agOfi150ServSel,setAgOfi150ServSel]=useState(SERVICOS_OFICINA[0]);
+  const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
+  const [agOfi150Saida,setAgOfi150Saida]=useState("");
+  const [agOfi150Obs,setAgOfi150Obs]=useState("");
+  const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
+  const [agOfi150Cidade,setAgOfi150Cidade]=useState("");
+  const [agOfi150Horimetro,setAgOfi150Horimetro]=useState("");
+  const [agOfi150Tipo,setAgOfi150Tipo]=useState("preventivo");
+  const [agOfi150Status,setAgOfi150Status]=useState("agendada");
+  const [pendMatheus,setPendMatheus]=useState([]);
+  const [showArqMat,setShowArqMat]=useState(false);
+  const [ofi150Data,setOfi150Data]=useState("");
+  const [ofi150OS,setOfi150OS]=useState("");
+  const [ofi150Pat,setOfi150Pat]=useState("");
+  const [ofi150Tech,setOfi150Tech]=useState("todos");
+  const [ofi150Serv,setOfi150Serv]=useState("todos");
+  const [sas,setSas]=useState([]);
+
+  // Modais
+  const [modalReport,setModalReport]=useState(false);
+  const [modalImport,setModalImport]=useState(false);
+  const [modalMU,setModalMU]=useState(false);
+  const [modalAF,setModalAF]=useState(false);
+  const [modalEmp,setModalEmp]=useState(null);
+  const [modalSaida,setModalSaida]=useState(null);
+  const [editEmp,setEditEmp]=useState(null);
+  const [editSaida,setEditSaida]=useState(null);
+
+  // Agenda
+  const [agendaRegion,setAgendaRegion]=useState("metropolitana");
+  const [agendaTech,setAgendaTech]=useState("Rafael");
+  const [agendaMonth,setAgendaMonth]=useState(TODAY.getMonth());
+  const [agendaYear,setAgendaYear]=useState(TODAY.getFullYear());
+  const [agendaModal,setAgendaModal]=useState(null);
+  const [agendaForm,setAgendaForm]=useState({empresa:"",patrimonio:"",patrimonio2:"",patrimonio3:"",status:"agendada",contato:"",obs:""});
+
+  // Escala
+  const [schedDate,setSchedDate]=useState(TODAY_STR);
+  const [schedRegion,setSchedRegion]=useState("metropolitana");
+  const [schedType,setSchedType]=useState("preventivo");
+  const [schedFilterTech,setSchedFilterTech]=useState("todos");
+
+  // Agenda Preventiva (mensal)
+  const [agendaPrev,setAgendaPrev]=useState({});
+  const [agpRegion,setAgpRegion]=useState("todas");
+  const [agpTech,setAgpTech]=useState("todos");
+  const [agpStatus,setAgpStatus]=useState("todos");
+  const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
+  const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
+  const [agTech,setAgTech]=useState(ALL_TECHS[0]);
+  const [agDate,setAgDate]=useState("");
+  const [agEmpresa,setAgEmpresa]=useState("");
+  const [agCidade,setAgCidade]=useState("");
+  const [editSlot,setEditSlot]=useState(null); // {key, si, slot, tipo} para edição de card
+  const [editSlotForm,setEditSlotForm]=useState({});
+  const [agHorimetro,setAgHorimetro]=useState("");
+  const [agPat,setAgPat]=useState("");
+  const [agStatus,setAgStatus]=useState("agendada");
+  const [agTipo,setAgTipo]=useState("preventivo");
+  const [agEntrada,setAgEntrada]=useState("");
+  const [agSaida,setAgSaida]=useState("");
+  const [agRelatorio,setAgRelatorio]=useState("");
+  const [agpTipo,setAgpTipo]=useState("todos");
+
+  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
+
+  // ── TÍTULO DO APP ──
+  useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
+  // Desliga e limpa o cache offline (Service Worker) que prendia versões antigas
+  useEffect(()=>{
+    try{
+      if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
+      if(window.caches&&caches.keys){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
+    }catch(e){}
+  },[]);
+
+  // ── CARREGAR DADOS DO SUPABASE ──
+  useEffect(()=>{
+    const load = async () => {
+      const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
+        safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
+        safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
+        safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
+        safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("pendencias_gustavo"), safeGet("oficina"),
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus")
+      ]);
+      if(rels.length>0) setReports(rels);
+      if(mus.length>0) setProcessosMU(mus);
+      if(afs.length>0) setProcessosAF(afs);
+      if(emps.length>0) setEmprestimos(emps);
+      if(saidas.length>0) setSaidaEntrada(saidas);
+      if(reqs.length>0) setRequisicoes(reqs);
+      if(ubers.length>0) setUberPedidos(ubers);
+      if(fins.length>0) setFinanceiro(fins);
+      if(fros.length>0) setFrota(fros);
+      if(pris.length>0) setPrioridades(pris);
+      if(rhs.length>0) setRhFiscal(rhs);
+      if(guss.length>0) setPendGustavo(guss);
+      if(ofis.length>0) setOficina(ofis);
+      if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi(ao); }
+      if(hebRows.length>0) setPendHebert(hebRows);
+      if(apRows.length>0) setApontamentos(apRows);
+      if(sasRows.length>0) setSas(sasRows);
+      if(carrosRows.length>0) setCarros(carrosRows);
+      if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
+      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
+      if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
+      if(matRows.length>0) setPendMatheus(matRows);
+      if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ const rk=r.key||(r.data&&r.data.key); const rs=r.slots||(r.data&&r.data.slots)||[]; if(rk){ if(rk.startsWith("PREV__")) prev[rk.slice(6)]=rs; else sched[rk]=rs; } }); setSchedule(sched); setAgendaPrev(prev); }
+      if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
+      notify("✅ Dados carregados!");
+    };
+    load();
+  },[]);
+
+  // ── SALVAR AUTOMATICAMENTE ──
+  const saveDB = async (table, items) => {
+    for(const item of items) {
+      await db.save(table, item.id, item);
+    }
+  };
+  // Salva a escala de um técnico/dia no banco (visível para todos)
+  const saveSched=(key,slots)=>{ setSchedule(p=>({...p,[key]:slots})); db.save("escala", key, {key, slots}); };
+  // Agenda Preventiva (mensal) — salva no banco (prefixo PREV__ na mesma tabela)
+  const saveAgendaPrev=(key,slots)=>{ setAgendaPrev(p=>({...p,[key]:slots})); db.save("escala", "PREV__"+key, {key:"PREV__"+key, slots}); };
+
+  const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateMU=(id,changes)=>{const updated=processosMU.map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  // Requisições — salvar no banco (visível para todos)
+  const updateReq=(id,changes)=>{ setRequisicoes(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("requisicoes",id,row); return np; }); };
+  const addReq=()=>{ const row={id:`REQ${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataRequisicao:TODAY_STR,numRequisicao:"",nomePeca:"",codigoPeca:"",quantidade:"",atendimento:"corretivo",numRelatorio:"",patrimonio:"",tecnico:ALL_TECHS[0],situacao:"reservada",status:"reservada",dataExecucao:"",tecnicoExecucao:"",relatorioExecucao:"",concluido:"pendente",processoStatus:"em_andamento",tecnicoEntrega:"",dataEntrega:"",dataEntregaParcial:"",previsaoChegada:""}; setRequisicoes(p=>[row,...p]); db.save("requisicoes",row.id,row); notify("✅ Requisição criada e salva!"); };
+  const delReq=(id)=>{ setRequisicoes(p=>p.filter(x=>x.id!==id)); db.delete("requisicoes",id); };
+  // Uber — salvar no banco
+  const updateUber=(id,changes)=>{ setUberPedidos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("uber_pedidos",id,row); return np; }); };
+  const addUber=()=>{ const row={id:`UBR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,solicitante:"",departamento:"MANUTENÇÃO",motivo:"",empresa:"",patrimonio:"",relatorio:"",endereco:"",valor:"",status:"pendente",obs:""}; setUberPedidos(p=>[row,...p]); db.save("uber_pedidos",row.id,row); notify("✅ Pedido criado e salvo!"); };
+  const delUber=(id)=>{ setUberPedidos(p=>p.filter(x=>x.id!==id)); db.delete("uber_pedidos",id); };
+  // Financeiro — salvar no banco
+  const updateFin=(id,changes)=>{ setFinanceiro(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("financeiro",id,row); return np; }); };
+  const addFin=()=>{ const row={id:`FIN${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",tecnico:ALL_TECHS[0],solicitacao:"combustivel",atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",dataAcerto:"",reembolso:"nao",valorReembolso:"",ticketReembolso:""}; setFinanceiro(p=>[row,...p]); db.save("financeiro",row.id,row); notify("✅ Lançamento criado e salvo!"); };
+  const delFin=(id)=>{ setFinanceiro(p=>p.filter(x=>x.id!==id)); db.delete("financeiro",id); };
+  // CRUD genérico (salva no banco) para abas novas
+  const mkCrud=(table,setFn)=>({
+    update:(id,changes)=>{ setFn(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save(table,id,row); return np; }); },
+    add:(base)=>{ const r={id:`${table.slice(0,3).toUpperCase()}${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...base}; setFn(p=>[r,...p]); db.save(table,r.id,r); notify("✅ Criado e salvo!"); },
+    del:(id)=>{ setFn(p=>p.filter(x=>x.id!==id)); db.delete(table,id); },
+  });
+  const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
+  const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
+  const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
+  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
+  const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
+  const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
+  const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
+  const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
+
+  const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
+  const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
+  const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
+  const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
+  const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
+  const froCrud=mkCrud("pendencias_frota",setFrota);
+  const priCrud=mkCrud("prioridades_clientes",setPrioridades);
+  const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
+  const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
+  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
+  const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:PLACAS_CARROS[0],tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:"",arquivado:false}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); };
+  const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
+  const pendManCrud={
+    add:(d)=>{ const row={...d,id:`PM${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}; setPendManuela(p=>[row,...p]); db.save("pendencias_manuela",row.id,row); notify("✅ Salvo!"); },
+    update:(id,ch)=>{ setPendManuela(prev=>{ const np=prev.map(x=>x.id===id?{...x,...ch}:x); const row=np.find(x=>x.id===id); db.save("pendencias_manuela",id,row); return np; }); },
+    del:(id)=>{ setPendManuela(p=>p.filter(x=>x.id!==id)); db.delete("pendencias_manuela",id); notify("🗑 Excluído!"); },
+  };
+  const updateOfi=(id,changes)=>{ setOficina(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("oficina",id,row); return np; }); };
+  // Usuários (gerenciados pela gestora)
+  const saveUser=(u)=>{ setUsers(prev=>{ const ex=prev.find(x=>x.id===u.id); return ex?prev.map(x=>x.id===u.id?u:x):[...prev,u]; }); db.save("usuarios",u.id,u); notify("✅ Usuário salvo!"); };
+  const deleteUser=(id)=>{ if(id==="manuela"){alert("Não é possível excluir a gestora principal.");return;} setUsers(prev=>prev.filter(x=>x.id!==id)); db.delete("usuarios",id); notify("Usuário removido."); };
+
+  const filteredReports=reports.filter(d=>{
+    if(filterTipo!=="todos"&&d.type!==filterTipo)return false;
+    if(filterTech!=="todos"&&d.tecnico!==filterTech)return false;
+    if(filterStatus!=="todos"&&d.status!==filterStatus)return false;
+    if(filterRegion!=="todas"&&d.region!==filterRegion)return false;
+    if(filterDateFrom&&d.date<filterDateFrom)return false;
+    if(filterDateTo&&d.date>filterDateTo)return false;
+    if(searchText){const s=searchText.toLowerCase();if(!d.empresa?.toLowerCase().includes(s)&&!d.acao?.toLowerCase().includes(s)&&!d.reportNum?.toLowerCase().includes(s)&&!d.patrimonio?.toLowerCase().includes(s))return false;}
+    return true;
+  });
+
+  const filteredOficina=oficina.filter(d=>{
+    if(ofiTipo!=="todos"&&d.type!==ofiTipo)return false;
+    if(ofiTech!=="todos"&&d.tecnico!==ofiTech)return false;
+    if(ofiStatus!=="todos"&&d.status!==ofiStatus)return false;
+    if(ofiRegion!=="todas"&&d.region!==ofiRegion)return false;
+    if(ofiFrom&&d.date<ofiFrom)return false;
+    if(ofiTo&&d.date>ofiTo)return false;
+    if(ofiSearch){const s=ofiSearch.toLowerCase();if(!d.empresa?.toLowerCase().includes(s)&&!d.acao?.toLowerCase().includes(s)&&!d.reportNum?.toLowerCase().includes(s)&&!d.patrimonio?.toLowerCase().includes(s))return false;}
+    return true;
+  });
+
+  const empAlerta=emprestimos.filter(e=>{
+    if(!e.dataRetorno||e.situacao==="Atendido")return false;
+    const d=diffDays(e.dataRetorno);
+    return d!==null&&d<0;
+  }).length;
+
+  // Lista achatada dos atendimentos da Agenda (para o Dashboard)
+  const techRegionMap={}; Object.entries(REGIONS).forEach(([rk,rv])=>rv.techs.forEach(t=>{techRegionMap[t]=rk;}));
+  const agendaAtendimentos=[];
+  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
+
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+
+  const CSS=`
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#F0F2F5;font-family:'Inter',sans-serif;}
+  textarea{resize:none;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:#F0F0F0;border-radius:3px;}
+  ::-webkit-scrollbar-thumb{background:#D0D0D0;border-radius:3px;}
+  ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+  .card{
+    background:#FFFFFF;border-radius:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
+    border:1px solid rgba(0,0,0,.06);
+    transition:box-shadow .2s ease;
+  }
+  .card:hover{box-shadow:0 2px 6px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.07);}
+
+  .btn{cursor:pointer;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .18s ease;letter-spacing:0;}
+  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 18px;box-shadow:0 2px 6px rgba(245,194,0,.3);}
+  .btn-primary:hover{background:#FFCF00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,194,0,.4);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-ghost{background:transparent;color:#555;padding:8px 14px;border:1.5px solid #E0E0E0;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
+  .btn-ghost:hover{background:#F5F5F5;border-color:#BDBDBD;color:#222;}
+
+  .nav-tab{
+    cursor:pointer;padding:9px 15px;border-radius:0;
+    font-size:11.5px;font-weight:600;border:none;
+    background:transparent;color:#777;
+    font-family:'Inter',sans-serif;
+    white-space:nowrap;transition:all .15s;
+    border-bottom:2.5px solid transparent;
+    margin-bottom:-1px;
+  }
+  .nav-tab.active{color:#F5C200;border-bottom-color:#F5C200;background:rgba(245,194,0,.07);}
+  .nav-tab:hover:not(.active){color:#EEE;background:rgba(255,255,255,.06);}
+
+  select{
+    background:#FFFFFF;color:#1A1A1A;
+    border:1.5px solid #E5E7EB;border-radius:8px;
+    padding:7px 10px;font-family:'Inter',sans-serif;font-size:12px;
+    cursor:pointer;outline:none;transition:border-color .15s;
+  }
+  select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
+
+  input[type=text],input[type=password],input[type=date],input[type=time],textarea{
+    background:#FFFFFF;color:#1A1A1A;
+    border:1.5px solid #E5E7EB;border-radius:8px;
+    padding:8px 11px;font-family:'Inter',sans-serif;font-size:12px;
+    outline:none;transition:all .15s;
+  }
+  input:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.12);}
+  input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;}
+
+  .notif{
+    position:fixed;top:18px;right:18px;z-index:9999;
+    background:#111827;color:#F9FAFB;
+    padding:12px 20px;border-radius:10px;
+    font-size:13px;font-weight:600;
+    animation:slideDown .22s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    border-left:4px solid #F5C200;
+    display:flex;align-items:center;gap:8px;
+  }
+
+  .tbl-wrap{overflow-x:auto;width:100%;}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
+  th{
+    background:#F8F9FA;padding:10px 14px;
+    text-align:left;font-size:10.5px;font-weight:700;
+    color:#6B7280;text-transform:uppercase;letter-spacing:.7px;
+    border-bottom:2px solid #E5E7EB;white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+  td{
+    padding:10px 14px;font-size:12.5px;
+    border-bottom:1px solid #F3F4F6;
+    vertical-align:middle;color:#374151;
+    font-family:'Inter',sans-serif;
+  }
+  tr:hover td{background:#FEFCE8;}
+  tr:last-child td{border-bottom:none;}
+
+  /* STATUS BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;font-family:'Inter',sans-serif;}
+  .badge-green{background:#F0FDF4;color:#16A34A;}
+  .badge-red{background:#FEF2F2;color:#EF4444;}
+  .badge-yellow{background:#FEF9C3;color:#A16207;}
+  .badge-blue{background:#EFF6FF;color:#2563EB;}
+  .badge-orange{background:#FFEDD5;color:#EA580C;}
+  .badge-gray{background:#F3F4F6;color:#6B7280;}
+  .badge-purple{background:#EDE9FE;color:#7C3AED;}
+`;
+
+
+
   const modals = (<>
         {editSlot&&<EditSlotModal
         slot={editSlotForm}
@@ -855,6 +1320,7 @@ function AppSidebar({tab, setTab, user, empAlerta}){
         {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
         {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
   </>);
+
 
   const renderTab = () => {
     return (
@@ -3019,469 +3485,6 @@ function AppSidebar({tab, setTab, user, empAlerta}){
       </>
     );
   };
-
-  return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {visible.map(([k,l])=>{
-        const isActive=tab===k;
-        return(
-          <button key={k} onClick={()=>setTab(k)} style={{
-            display:"flex",alignItems:"center",gap:8,width:"100%",
-            padding:"9px 16px",border:"none",
-            background:isActive?"rgba(245,194,0,.12)":"transparent",
-            color:isActive?"#F5C200":"#94A3B8",
-            fontSize:12,fontWeight:isActive?700:500,
-            cursor:"pointer",textAlign:"left",
-            borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",
-            transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap",
-          }}>
-            {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{empAlerta}</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-export default function App(){
-  const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
-  const [user,setUser]=useState(()=>{
-    try{
-      const saved=localStorage.getItem("grupomov_user");
-      if(saved){ const parsed=JSON.parse(saved); return USERS.find(u=>u.id===parsed.id)||null; }
-    }catch(e){}
-    return null;
-  });
-  const [users,setUsers]=useState(USERS);
-  const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState("relatorios");
-  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
-  const [reports,setReports]=useState(REAL_REPORTS);
-  const [processosMU,setProcessosMU]=useState([]);
-  const [processosAF,setProcessosAF]=useState([]);
-  const [emprestimos,setEmprestimos]=useState(EMP_DATA);
-  const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
-  const [requisicoes,setRequisicoes]=useState([]);
-  const [agendaItems,setAgendaItems]=useState({});
-  const [schedule,setSchedule]=useState({});
-  const [escalaStatusFilter,setEscalaStatusFilter]=useState("todos");
-  const [notification,setNotification]=useState("");
-
-  // Filtros relatórios
-  const [filterTipo,setFilterTipo]=useState("todos");
-  const [filterTech,setFilterTech]=useState("todos");
-  const [filterStatus,setFilterStatus]=useState("todos");
-  const [filterRegion,setFilterRegion]=useState("todas");
-  const [filterDateFrom,setFilterDateFrom]=useState("");
-  const [filterDateTo,setFilterDateTo]=useState("");
-  const [searchText,setSearchText]=useState("");
-  const [dashRegion,setDashRegion]=useState("todas");
-  const [dashFrom,setDashFrom]=useState("");
-  const [dashTo,setDashTo]=useState("");
-  const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
-  const [showArqRel,setShowArqRel]=useState(false);
-  const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
-  const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
-  const [relFiltroTech,setRelFiltroTech]=useState("todos");
-  const [relFiltroPat,setRelFiltroPat]=useState("");
-  const [relFiltroEmp,setRelFiltroEmp]=useState("");
-  const [relFiltroData,setRelFiltroData]=useState("");
-  const [pdfLoading,setPdfLoading]=useState(false);
-  const [showArqMU,setShowArqMU]=useState(false);
-  const [showArqAF,setShowArqAF]=useState(false);
-  const [showArqEmp,setShowArqEmp]=useState(false);
-  const [showArqSaida,setShowArqSaida]=useState(false);
-  const [showArqReq,setShowArqReq]=useState(false);
-  const [uberPedidos,setUberPedidos]=useState([]);
-  const [financeiro,setFinanceiro]=useState([]);
-  const [frota,setFrota]=useState([]);
-  const [prioridades,setPrioridades]=useState([]);
-  const [rhFiscal,setRhFiscal]=useState([]);
-  const [pendGustavo,setPendGustavo]=useState([]);
-  const [oficina,setOficina]=useState([]);
-  const [carros,setCarros]=useState([]);
-  const [carForm,setCarForm]=useState({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});
-  const [carFiltroPlaca,setCarFiltroPlaca]=useState("todas");
-  const [carMonth,setCarMonth]=useState(TODAY.getMonth());
-  const [carYear,setCarYear]=useState(TODAY.getFullYear());
-  const [pendManuela,setPendManuela]=useState([]);
-  const [modalCarroRevisao,setModalCarroRevisao]=useState(null);
-  const [carroFiltroPlaca,setCarroFiltroPlaca]=useState("todas");
-  const [carroFiltroData,setCarroFiltroData]=useState("");
-  const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
-  const [showArqCarros,setShowArqCarros]=useState(false);
-  const [showArqPendMan,setShowArqPendMan]=useState(false);
-  const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
-  const [editPendMan,setEditPendMan]=useState(null);
-  const [modalOfi,setModalOfi]=useState(false);
-  const [modalImportOfi,setModalImportOfi]=useState(false);
-  const [showArqOfi,setShowArqOfi]=useState(false);
-  const [ofiSearch,setOfiSearch]=useState("");
-  const [ofiTipo,setOfiTipo]=useState("todos");
-  const [ofiRegion,setOfiRegion]=useState("todas");
-  const [ofiTech,setOfiTech]=useState("todos");
-  const [ofiStatus,setOfiStatus]=useState("todos");
-  const [ofiFrom,setOfiFrom]=useState("");
-  const [ofiTo,setOfiTo]=useState("");
-  const [showArqFro,setShowArqFro]=useState(false);
-  const [showArqPri,setShowArqPri]=useState(false);
-  const [showArqRh,setShowArqRh]=useState(false);
-  const [showArqGus,setShowArqGus]=useState(false);
-  const [dashReqTab,setDashReqTab]=useState("visao_geral");
-  const [schedOfiDate,setSchedOfiDate]=useState(TODAY_STR);
-  const [agendaOfi,setAgendaOfi]=useState({});
-  const [agOfiMonth,setAgOfiMonth]=useState(TODAY.getMonth());
-  const [agOfiYear,setAgOfiYear]=useState(TODAY.getFullYear());
-  const [agOfiTech,setAgOfiTech]=useState("todos");
-  const [agOfiServico,setAgOfiServico]=useState("todos");
-  const [agOfiStatus,setAgOfiStatus]=useState("todos");
-  const [agOfiEmpresa,setAgOfiEmpresa]=useState("");
-  const [agOfiPat,setAgOfiPat]=useState("");
-  const [agOfiTechSel,setAgOfiTechSel]=useState(OFICINA_TECHS[0]);
-  const [agOfiDate,setAgOfiDate]=useState("");
-  const [agOfiServSel,setAgOfiServSel]=useState(SERVICOS_OFICINA[0]);
-  const [agOfiEntrada,setAgOfiEntrada]=useState("");
-  const [agOfiSaida,setAgOfiSaida]=useState("");
-  const [agOfiObs,setAgOfiObs]=useState("");
-  const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
-  const [agOfiCidade,setAgOfiCidade]=useState("");
-  const [agOfiHorimetro,setAgOfiHorimetro]=useState("");
-  const [agOfiTipo,setAgOfiTipo]=useState("preventivo");
-  const [pendHebert,setPendHebert]=useState([]);
-  const [showArqHeb,setShowArqHeb]=useState(false);
-  // Filtros nova aba oficina
-  const [ofiNovaData,setOfiNovaData]=useState("");
-  const [ofiNovaOS,setOfiNovaOS]=useState("");
-  const [ofiNovaPat,setOfiNovaPat]=useState("");
-  const [ofiNovaTech,setOfiNovaTech]=useState("todos");
-  const [ofiNovaServ,setOfiNovaServ]=useState("todos");
-  const [apontamentos,setApontamentos]=useState([]);
-  const [apontamentos150,setApontamentos150]=useState([]);
-  const [agendaOfi150,setAgendaOfi150]=useState({});
-  const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
-  const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
-  const [agOfi150Tech,setAgOfi150Tech]=useState("todos");
-  const [agOfi150Servico,setAgOfi150Servico]=useState("todos");
-  const [agOfi150TechSel,setAgOfi150TechSel]=useState(OFICINA_150_TECHS[0]);
-  const [agOfi150Date,setAgOfi150Date]=useState("");
-  const [agOfi150Empresa,setAgOfi150Empresa]=useState("");
-  const [agOfi150Pat,setAgOfi150Pat]=useState("");
-  const [agOfi150ServSel,setAgOfi150ServSel]=useState(SERVICOS_OFICINA[0]);
-  const [agOfi150Entrada,setAgOfi150Entrada]=useState("");
-  const [agOfi150Saida,setAgOfi150Saida]=useState("");
-  const [agOfi150Obs,setAgOfi150Obs]=useState("");
-  const [agOfi150Relatorio,setAgOfi150Relatorio]=useState("");
-  const [agOfi150Cidade,setAgOfi150Cidade]=useState("");
-  const [agOfi150Horimetro,setAgOfi150Horimetro]=useState("");
-  const [agOfi150Tipo,setAgOfi150Tipo]=useState("preventivo");
-  const [agOfi150Status,setAgOfi150Status]=useState("agendada");
-  const [pendMatheus,setPendMatheus]=useState([]);
-  const [showArqMat,setShowArqMat]=useState(false);
-  const [ofi150Data,setOfi150Data]=useState("");
-  const [ofi150OS,setOfi150OS]=useState("");
-  const [ofi150Pat,setOfi150Pat]=useState("");
-  const [ofi150Tech,setOfi150Tech]=useState("todos");
-  const [ofi150Serv,setOfi150Serv]=useState("todos");
-  const [sas,setSas]=useState([]);
-
-  // Modais
-  const [modalReport,setModalReport]=useState(false);
-  const [modalImport,setModalImport]=useState(false);
-  const [modalMU,setModalMU]=useState(false);
-  const [modalAF,setModalAF]=useState(false);
-  const [modalEmp,setModalEmp]=useState(null);
-  const [modalSaida,setModalSaida]=useState(null);
-  const [editEmp,setEditEmp]=useState(null);
-  const [editSaida,setEditSaida]=useState(null);
-
-  // Agenda
-  const [agendaRegion,setAgendaRegion]=useState("metropolitana");
-  const [agendaTech,setAgendaTech]=useState("Rafael");
-  const [agendaMonth,setAgendaMonth]=useState(TODAY.getMonth());
-  const [agendaYear,setAgendaYear]=useState(TODAY.getFullYear());
-  const [agendaModal,setAgendaModal]=useState(null);
-  const [agendaForm,setAgendaForm]=useState({empresa:"",patrimonio:"",patrimonio2:"",patrimonio3:"",status:"agendada",contato:"",obs:""});
-
-  // Escala
-  const [schedDate,setSchedDate]=useState(TODAY_STR);
-  const [schedRegion,setSchedRegion]=useState("metropolitana");
-  const [schedType,setSchedType]=useState("preventivo");
-  const [schedFilterTech,setSchedFilterTech]=useState("todos");
-
-  // Agenda Preventiva (mensal)
-  const [agendaPrev,setAgendaPrev]=useState({});
-  const [agpRegion,setAgpRegion]=useState("todas");
-  const [agpTech,setAgpTech]=useState("todos");
-  const [agpStatus,setAgpStatus]=useState("todos");
-  const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
-  const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
-  const [agTech,setAgTech]=useState(ALL_TECHS[0]);
-  const [agDate,setAgDate]=useState("");
-  const [agEmpresa,setAgEmpresa]=useState("");
-  const [agCidade,setAgCidade]=useState("");
-  const [editSlot,setEditSlot]=useState(null); // {key, si, slot, tipo} para edição de card
-  const [editSlotForm,setEditSlotForm]=useState({});
-  const [agHorimetro,setAgHorimetro]=useState("");
-  const [agPat,setAgPat]=useState("");
-  const [agStatus,setAgStatus]=useState("agendada");
-  const [agTipo,setAgTipo]=useState("preventivo");
-  const [agEntrada,setAgEntrada]=useState("");
-  const [agSaida,setAgSaida]=useState("");
-  const [agRelatorio,setAgRelatorio]=useState("");
-  const [agpTipo,setAgpTipo]=useState("todos");
-
-  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
-
-  // ── TÍTULO DO APP ──
-  useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
-  // Desliga e limpa o cache offline (Service Worker) que prendia versões antigas
-  useEffect(()=>{
-    try{
-      if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
-      if(window.caches&&caches.keys){ caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{}); }
-    }catch(e){}
-  },[]);
-
-  // ── CARREGAR DADOS DO SUPABASE ──
-  useEffect(()=>{
-    const load = async () => {
-      const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
-        safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
-        safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
-        safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
-        safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("pendencias_gustavo"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus")
-      ]);
-      if(rels.length>0) setReports(rels);
-      if(mus.length>0) setProcessosMU(mus);
-      if(afs.length>0) setProcessosAF(afs);
-      if(emps.length>0) setEmprestimos(emps);
-      if(saidas.length>0) setSaidaEntrada(saidas);
-      if(reqs.length>0) setRequisicoes(reqs);
-      if(ubers.length>0) setUberPedidos(ubers);
-      if(fins.length>0) setFinanceiro(fins);
-      if(fros.length>0) setFrota(fros);
-      if(pris.length>0) setPrioridades(pris);
-      if(rhs.length>0) setRhFiscal(rhs);
-      if(guss.length>0) setPendGustavo(guss);
-      if(ofis.length>0) setOficina(ofis);
-      if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi(ao); }
-      if(hebRows.length>0) setPendHebert(hebRows);
-      if(apRows.length>0) setApontamentos(apRows);
-      if(sasRows.length>0) setSas(sasRows);
-      if(carrosRows.length>0) setCarros(carrosRows);
-      if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
-      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
-      if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
-      if(matRows.length>0) setPendMatheus(matRows);
-      if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ const rk=r.key||(r.data&&r.data.key); const rs=r.slots||(r.data&&r.data.slots)||[]; if(rk){ if(rk.startsWith("PREV__")) prev[rk.slice(6)]=rs; else sched[rk]=rs; } }); setSchedule(sched); setAgendaPrev(prev); }
-      if(usrs.length>0){ const merged=[...usrs]; if(!merged.find(u=>u.id==="manuela")) merged.unshift(USERS[0]); setUsers(merged); }
-      notify("✅ Dados carregados!");
-    };
-    load();
-  },[]);
-
-  // ── SALVAR AUTOMATICAMENTE ──
-  const saveDB = async (table, items) => {
-    for(const item of items) {
-      await db.save(table, item.id, item);
-    }
-  };
-  // Salva a escala de um técnico/dia no banco (visível para todos)
-  const saveSched=(key,slots)=>{ setSchedule(p=>({...p,[key]:slots})); db.save("escala", key, {key, slots}); };
-  // Agenda Preventiva (mensal) — salva no banco (prefixo PREV__ na mesma tabela)
-  const saveAgendaPrev=(key,slots)=>{ setAgendaPrev(p=>({...p,[key]:slots})); db.save("escala", "PREV__"+key, {key:"PREV__"+key, slots}); };
-
-  const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateMU=(id,changes)=>{const updated=processosMU.map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  // Requisições — salvar no banco (visível para todos)
-  const updateReq=(id,changes)=>{ setRequisicoes(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("requisicoes",id,row); return np; }); };
-  const addReq=()=>{ const row={id:`REQ${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataRequisicao:TODAY_STR,numRequisicao:"",nomePeca:"",codigoPeca:"",quantidade:"",atendimento:"corretivo",numRelatorio:"",patrimonio:"",tecnico:ALL_TECHS[0],situacao:"reservada",status:"reservada",dataExecucao:"",tecnicoExecucao:"",relatorioExecucao:"",concluido:"pendente",processoStatus:"em_andamento",tecnicoEntrega:"",dataEntrega:"",dataEntregaParcial:"",previsaoChegada:""}; setRequisicoes(p=>[row,...p]); db.save("requisicoes",row.id,row); notify("✅ Requisição criada e salva!"); };
-  const delReq=(id)=>{ setRequisicoes(p=>p.filter(x=>x.id!==id)); db.delete("requisicoes",id); };
-  // Uber — salvar no banco
-  const updateUber=(id,changes)=>{ setUberPedidos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("uber_pedidos",id,row); return np; }); };
-  const addUber=()=>{ const row={id:`UBR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,solicitante:"",departamento:"MANUTENÇÃO",motivo:"",empresa:"",patrimonio:"",relatorio:"",endereco:"",valor:"",status:"pendente",obs:""}; setUberPedidos(p=>[row,...p]); db.save("uber_pedidos",row.id,row); notify("✅ Pedido criado e salvo!"); };
-  const delUber=(id)=>{ setUberPedidos(p=>p.filter(x=>x.id!==id)); db.delete("uber_pedidos",id); };
-  // Financeiro — salvar no banco
-  const updateFin=(id,changes)=>{ setFinanceiro(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("financeiro",id,row); return np; }); };
-  const addFin=()=>{ const row={id:`FIN${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",tecnico:ALL_TECHS[0],solicitacao:"combustivel",atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",dataAcerto:"",reembolso:"nao",valorReembolso:"",ticketReembolso:""}; setFinanceiro(p=>[row,...p]); db.save("financeiro",row.id,row); notify("✅ Lançamento criado e salvo!"); };
-  const delFin=(id)=>{ setFinanceiro(p=>p.filter(x=>x.id!==id)); db.delete("financeiro",id); };
-  // CRUD genérico (salva no banco) para abas novas
-  const mkCrud=(table,setFn)=>({
-    update:(id,changes)=>{ setFn(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save(table,id,row); return np; }); },
-    add:(base)=>{ const r={id:`${table.slice(0,3).toUpperCase()}${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...base}; setFn(p=>[r,...p]); db.save(table,r.id,r); notify("✅ Criado e salvo!"); },
-    del:(id)=>{ setFn(p=>p.filter(x=>x.id!==id)); db.delete(table,id); },
-  });
-  const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
-  const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
-  const updateApon=(id,changes)=>{ setApontamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_oficina",id,row); return np; }); };
-  const addApon=()=>{ const row={id:`APO${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:""}; setApontamentos(p=>[row,...p]); db.save("apontamentos_oficina",row.id,row); notify("✅ Apontamento criado!"); };
-  const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
-  const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
-  const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
-  const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
-
-  const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
-  const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
-  const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
-  const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
-  const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
-  const froCrud=mkCrud("pendencias_frota",setFrota);
-  const priCrud=mkCrud("prioridades_clientes",setPrioridades);
-  const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
-  const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
-  const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
-  const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:PLACAS_CARROS[0],tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:"",arquivado:false}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); };
-  const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
-  const pendManCrud={
-    add:(d)=>{ const row={...d,id:`PM${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}; setPendManuela(p=>[row,...p]); db.save("pendencias_manuela",row.id,row); notify("✅ Salvo!"); },
-    update:(id,ch)=>{ setPendManuela(prev=>{ const np=prev.map(x=>x.id===id?{...x,...ch}:x); const row=np.find(x=>x.id===id); db.save("pendencias_manuela",id,row); return np; }); },
-    del:(id)=>{ setPendManuela(p=>p.filter(x=>x.id!==id)); db.delete("pendencias_manuela",id); notify("🗑 Excluído!"); },
-  };
-  const updateOfi=(id,changes)=>{ setOficina(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("oficina",id,row); return np; }); };
-  // Usuários (gerenciados pela gestora)
-  const saveUser=(u)=>{ setUsers(prev=>{ const ex=prev.find(x=>x.id===u.id); return ex?prev.map(x=>x.id===u.id?u:x):[...prev,u]; }); db.save("usuarios",u.id,u); notify("✅ Usuário salvo!"); };
-  const deleteUser=(id)=>{ if(id==="manuela"){alert("Não é possível excluir a gestora principal.");return;} setUsers(prev=>prev.filter(x=>x.id!==id)); db.delete("usuarios",id); notify("Usuário removido."); };
-
-  const filteredReports=reports.filter(d=>{
-    if(filterTipo!=="todos"&&d.type!==filterTipo)return false;
-    if(filterTech!=="todos"&&d.tecnico!==filterTech)return false;
-    if(filterStatus!=="todos"&&d.status!==filterStatus)return false;
-    if(filterRegion!=="todas"&&d.region!==filterRegion)return false;
-    if(filterDateFrom&&d.date<filterDateFrom)return false;
-    if(filterDateTo&&d.date>filterDateTo)return false;
-    if(searchText){const s=searchText.toLowerCase();if(!d.empresa?.toLowerCase().includes(s)&&!d.acao?.toLowerCase().includes(s)&&!d.reportNum?.toLowerCase().includes(s)&&!d.patrimonio?.toLowerCase().includes(s))return false;}
-    return true;
-  });
-
-  const filteredOficina=oficina.filter(d=>{
-    if(ofiTipo!=="todos"&&d.type!==ofiTipo)return false;
-    if(ofiTech!=="todos"&&d.tecnico!==ofiTech)return false;
-    if(ofiStatus!=="todos"&&d.status!==ofiStatus)return false;
-    if(ofiRegion!=="todas"&&d.region!==ofiRegion)return false;
-    if(ofiFrom&&d.date<ofiFrom)return false;
-    if(ofiTo&&d.date>ofiTo)return false;
-    if(ofiSearch){const s=ofiSearch.toLowerCase();if(!d.empresa?.toLowerCase().includes(s)&&!d.acao?.toLowerCase().includes(s)&&!d.reportNum?.toLowerCase().includes(s)&&!d.patrimonio?.toLowerCase().includes(s))return false;}
-    return true;
-  });
-
-  const empAlerta=emprestimos.filter(e=>{
-    if(!e.dataRetorno||e.situacao==="Atendido")return false;
-    const d=diffDays(e.dataRetorno);
-    return d!==null&&d<0;
-  }).length;
-
-  // Lista achatada dos atendimentos da Agenda (para o Dashboard)
-  const techRegionMap={}; Object.entries(REGIONS).forEach(([rk,rv])=>rv.techs.forEach(t=>{techRegionMap[t]=rk;}));
-  const agendaAtendimentos=[];
-  Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
-
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
-
-  const CSS=`
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#F0F2F5;font-family:'Inter',sans-serif;}
-  textarea{resize:none;}
-  ::-webkit-scrollbar{width:6px;height:6px;}
-  ::-webkit-scrollbar-track{background:#F0F0F0;border-radius:3px;}
-  ::-webkit-scrollbar-thumb{background:#D0D0D0;border-radius:3px;}
-  ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
-
-  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
-  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-
-  .card{
-    background:#FFFFFF;border-radius:14px;
-    box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
-    border:1px solid rgba(0,0,0,.06);
-    transition:box-shadow .2s ease;
-  }
-  .card:hover{box-shadow:0 2px 6px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.07);}
-
-  .btn{cursor:pointer;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .18s ease;letter-spacing:0;}
-  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 18px;box-shadow:0 2px 6px rgba(245,194,0,.3);}
-  .btn-primary:hover{background:#FFCF00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,194,0,.4);}
-  .btn-primary:active{transform:translateY(0);}
-  .btn-ghost{background:transparent;color:#555;padding:8px 14px;border:1.5px solid #E0E0E0;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
-  .btn-ghost:hover{background:#F5F5F5;border-color:#BDBDBD;color:#222;}
-
-  .nav-tab{
-    cursor:pointer;padding:9px 15px;border-radius:0;
-    font-size:11.5px;font-weight:600;border:none;
-    background:transparent;color:#777;
-    font-family:'Inter',sans-serif;
-    white-space:nowrap;transition:all .15s;
-    border-bottom:2.5px solid transparent;
-    margin-bottom:-1px;
-  }
-  .nav-tab.active{color:#F5C200;border-bottom-color:#F5C200;background:rgba(245,194,0,.07);}
-  .nav-tab:hover:not(.active){color:#EEE;background:rgba(255,255,255,.06);}
-
-  select{
-    background:#FFFFFF;color:#1A1A1A;
-    border:1.5px solid #E5E7EB;border-radius:8px;
-    padding:7px 10px;font-family:'Inter',sans-serif;font-size:12px;
-    cursor:pointer;outline:none;transition:border-color .15s;
-  }
-  select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
-
-  input[type=text],input[type=password],input[type=date],input[type=time],textarea{
-    background:#FFFFFF;color:#1A1A1A;
-    border:1.5px solid #E5E7EB;border-radius:8px;
-    padding:8px 11px;font-family:'Inter',sans-serif;font-size:12px;
-    outline:none;transition:all .15s;
-  }
-  input:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.12);}
-  input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;}
-
-  .notif{
-    position:fixed;top:18px;right:18px;z-index:9999;
-    background:#111827;color:#F9FAFB;
-    padding:12px 20px;border-radius:10px;
-    font-size:13px;font-weight:600;
-    animation:slideDown .22s ease;
-    box-shadow:0 10px 30px rgba(0,0,0,.25);
-    border-left:4px solid #F5C200;
-    display:flex;align-items:center;gap:8px;
-  }
-
-  .tbl-wrap{overflow-x:auto;width:100%;}
-  table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
-  th{
-    background:#F8F9FA;padding:10px 14px;
-    text-align:left;font-size:10.5px;font-weight:700;
-    color:#6B7280;text-transform:uppercase;letter-spacing:.7px;
-    border-bottom:2px solid #E5E7EB;white-space:nowrap;
-    font-family:'Inter',sans-serif;
-  }
-  td{
-    padding:10px 14px;font-size:12.5px;
-    border-bottom:1px solid #F3F4F6;
-    vertical-align:middle;color:#374151;
-    font-family:'Inter',sans-serif;
-  }
-  tr:hover td{background:#FEFCE8;}
-  tr:last-child td{border-bottom:none;}
-
-  /* STATUS BADGES */
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;font-family:'Inter',sans-serif;}
-  .badge-green{background:#F0FDF4;color:#16A34A;}
-  .badge-red{background:#FEF2F2;color:#EF4444;}
-  .badge-yellow{background:#FEF9C3;color:#A16207;}
-  .badge-blue{background:#EFF6FF;color:#2563EB;}
-  .badge-orange{background:#FFEDD5;color:#EA580C;}
-  .badge-gray{background:#F3F4F6;color:#6B7280;}
-  .badge-purple{background:#EDE9FE;color:#7C3AED;}
-`;
 
 
   return(
