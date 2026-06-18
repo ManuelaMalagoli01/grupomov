@@ -224,30 +224,59 @@ function LoginScreen({onLogin, users=USERS}){
   const [user,setUser]=useState(list[0]?.id||"manuela");
   const [pass,setPass]=useState("");
   const [err,setErr]=useState("");
-  const handle=()=>{const u=list.find(x=>x.id===user&&x.password===pass)||USERS.find(x=>x.id===user&&x.password===pass);if(u)onLogin(u);else setErr("Senha incorreta.");};
+  const [loading,setLoading]=useState(false);
+  const handle=()=>{
+    setLoading(true);
+    setTimeout(()=>{
+      const u=list.find(x=>x.id===user&&x.password===pass)||USERS.find(x=>x.id===user&&x.password===pass);
+      if(u)onLogin(u);
+      else{setErr("Senha incorreta. Tente novamente.");setLoading(false);}
+    },400);
+  };
   return(
-    <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{background:"#FFF",borderRadius:16,padding:40,width:380,boxShadow:"0 20px 60px rgba(0,0,0,.4)"}}>
-        <div style={{textAlign:"center",marginBottom:32}}>
-          <img src={LOGO_MOV} alt="Grupo MOV 35 anos" style={{height:64,width:"auto",margin:"0 auto 14px",display:"block"}}/>
-          <div style={{fontSize:12,color:"#AAA",marginTop:4}}>Gestão Manutenção Grupo MOV</div>
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1A1A1A 0%,#2A2A2A 50%,#1A1A1A 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      {/* Elementos decorativos */}
+      <div style={{position:"fixed",top:-100,right:-100,width:400,height:400,background:"radial-gradient(circle,rgba(245,200,0,.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"fixed",bottom:-100,left:-100,width:300,height:300,background:"radial-gradient(circle,rgba(245,200,0,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+
+      <div style={{background:"#FFF",borderRadius:20,padding:48,width:"100%",maxWidth:420,boxShadow:"0 32px 80px rgba(0,0,0,.5)",position:"relative",overflow:"hidden"}}>
+        {/* Faixa amarela topo */}
+        <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#F5C800,#FFD700,#F5C800)"}}/>
+
+        {/* Logo e título */}
+        <div style={{textAlign:"center",marginBottom:36}}>
+          <div style={{width:80,height:80,borderRadius:16,background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",boxShadow:"0 8px 24px rgba(0,0,0,.2)"}}>
+            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:52,width:"auto"}}/>
+          </div>
+          <div style={{fontSize:22,fontWeight:900,color:"#1A1A1A",letterSpacing:-.5}}>Grupo MOV</div>
+          <div style={{fontSize:12,color:"#AAA",marginTop:4,letterSpacing:.5}}>Sistema de Gestão de Manutenção</div>
         </div>
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Usuário</div>
-          <select value={user} onChange={e=>setUser(e.target.value)} style={{width:"100%",padding:"10px 12px",fontSize:14}}>{list.map(u=><option key={u.id} value={u.id}>{u.name} — {u.role}</option>)}</select>
+
+        {/* Campos */}
+        <div style={{marginBottom:16}}>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Usuário</label>
+          <select value={user} onChange={e=>{setUser(e.target.value);setErr("");}} style={{width:"100%",padding:"12px 14px",fontSize:13,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA"}}>
+            {list.map(u=><option key={u.id} value={u.id}>{u.name} — {u.role}</option>)}
+          </select>
         </div>
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Senha</div>
-          <input type="password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="Digite sua senha" style={{width:"100%",padding:"10px 12px",fontSize:14}}/>
+        <div style={{marginBottom:24}}>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Senha</label>
+          <input type="password" value={pass} onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA"}}/>
         </div>
-        {err&&<div style={{fontSize:12,color:"#C62828",marginBottom:12,textAlign:"center"}}>{err}</div>}
-        <button onClick={handle} style={{width:"100%",padding:12,background:"#F5C800",border:"none",borderRadius:10,fontWeight:700,fontSize:15,cursor:"pointer"}}>Entrar</button>
+
+        {err&&<div style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#C62828",marginBottom:16,fontWeight:600}}>⚠️ {err}</div>}
+
+        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:10,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C800,#E6B000)",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .2s",boxShadow:loading?"none":"0 4px 16px rgba(245,200,0,.4)",letterSpacing:.3}}>
+          {loading?"Entrando...":"Entrar →"}
+        </button>
+
+        <div style={{textAlign:"center",marginTop:24,fontSize:11,color:"#CCC"}}>Grupo MOV © {new Date().getFullYear()}</div>
       </div>
     </div>
   );
 }
 
-// ── MODAL RELATÓRIO (Excel/PDF/Manual + IA) ───────────────────────────────────
+
 function ReportModal({onClose,onSave,techs=ALL_TECHS}){
   const [mode,setMode]=useState("manual");
   const [text,setText]=useState("");
@@ -1078,55 +1107,133 @@ export default function App(){
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
-    *{box-sizing:border-box;margin:0;padding:0;}
-    textarea{resize:none;}
-    ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-thumb{background:#CCC;border-radius:3px;}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes slideDown{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .card{background:#FFF;border:1px solid #E2E2E2;border-radius:12px;}
-    .btn{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;transition:all .15s;}
-    .btn-primary{background:#F5C800;color:#1A1A1A;padding:9px 20px;}
-    .btn-primary:hover{background:#E6B800;}
-    .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
-    .btn-ghost{background:transparent;color:#666;padding:8px 16px;border:1px solid #E0E0E0;font-family:inherit;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .15s;}
-    .btn-ghost:hover{background:#F5F5F5;border-color:#BDBDBD;}
-    .nav-tab{cursor:pointer;padding:7px 13px;border-radius:7px;font-size:12px;font-weight:600;border:none;background:transparent;color:#AAA;font-family:inherit;transition:all .15s;white-space:nowrap;}
-    .nav-tab.active{background:#F5C800;color:#1A1A1A;}
-    .nav-tab:hover:not(.active){color:#FFF;background:#333;}
-    select{background:#FFF;color:#1A1A1A;border:1px solid #E0E0E0;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:12px;cursor:pointer;outline:none;}
-    select:focus{border-color:#F5C800;}
-    input[type=text],input[type=password],input[type=date],input[type=time],textarea{background:#FFF;color:#1A1A1A;border:1px solid #E0E0E0;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;}
-    input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,input[type=time]:focus,textarea:focus{border-color:#F5C800;box-shadow:0 0 0 3px rgba(245,200,0,.15);}
-    input[type=date],input[type=time]{cursor:pointer;}
-    .notif{position:fixed;top:16px;right:16px;background:#1A1A1A;color:#F5C800;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;animation:slideDown .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.2);}
-    .tbl-wrap{overflow-x:auto;width:100%;}
-    table{width:100%;border-collapse:collapse;min-width:700px;}
-    th{background:#F8F8F8;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:#AAA;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #EBEBEB;white-space:nowrap;}
-    td{padding:10px 12px;font-size:12px;border-bottom:1px solid #F4F4F4;vertical-align:middle;}
-    tr:hover td{background:#FAFAFA;}
-    tr:last-child td{border-bottom:none;}
-  `;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  textarea{resize:vertical;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:#F0F0F0;}
+  ::-webkit-scrollbar-thumb{background:#CCC;border-radius:3px;}
+  ::-webkit-scrollbar-thumb:hover{background:#AAA;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+  body{background:#F0F2F5;}
+
+  .card{
+    background:#FFF;
+    border:none;
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+    transition:box-shadow .2s;
+  }
+  .card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+  .card-flat{background:#FFF;border-radius:12px;border:1px solid #EBEBEB;}
+
+  .btn{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;transition:all .18s;letter-spacing:.2px;}
+  .btn-primary{background:linear-gradient(135deg,#F5C800,#E6B000);color:#1A1A1A;padding:9px 20px;box-shadow:0 2px 8px rgba(245,200,0,.35);}
+  .btn-primary:hover{background:linear-gradient(135deg,#FFD700,#F5C800);box-shadow:0 4px 12px rgba(245,200,0,.45);transform:translateY(-1px);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-ghost{background:#FFF;color:#555;padding:8px 16px;border:1.5px solid #E0E0E0;font-family:inherit;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
+  .btn-ghost:hover{background:#F8F8F8;border-color:#BDBDBD;color:#333;}
+
+  .nav-tab{
+    cursor:pointer;padding:8px 14px;border-radius:8px 8px 0 0;
+    font-size:11.5px;font-weight:600;border:none;
+    background:transparent;color:#888;
+    font-family:inherit;transition:all .18s;
+    white-space:nowrap;letter-spacing:.1px;
+    border-bottom:3px solid transparent;
+    margin-bottom:-1px;
+  }
+  .nav-tab.active{background:rgba(245,200,0,.12);color:#F5C800;border-bottom:3px solid #F5C800;}
+  .nav-tab:hover:not(.active){color:#FFF;background:rgba(255,255,255,.08);}
+
+  select{
+    background:#FFF;color:#1A1A1A;
+    border:1.5px solid #E8E8E8;border-radius:8px;
+    padding:7px 10px;font-family:inherit;font-size:12px;
+    cursor:pointer;outline:none;transition:all .18s;
+  }
+  select:focus{border-color:#F5C800;box-shadow:0 0 0 3px rgba(245,200,0,.15);}
+
+  input[type=text],input[type=password],input[type=date],input[type=time],textarea{
+    background:#FFF;color:#1A1A1A;
+    border:1.5px solid #E8E8E8;border-radius:8px;
+    padding:8px 12px;font-family:inherit;font-size:12px;
+    outline:none;transition:all .18s;
+  }
+  input[type=text]:focus,input[type=password]:focus,
+  input[type=date]:focus,input[type=time]:focus,textarea:focus{
+    border-color:#F5C800;
+    box-shadow:0 0 0 3px rgba(245,200,0,.12);
+  }
+  input:disabled,select:disabled{background:#F5F5F5;color:#AAA;cursor:not-allowed;}
+
+  .notif{
+    position:fixed;top:20px;right:20px;
+    background:#1A1A1A;color:#F5C800;
+    padding:12px 20px;border-radius:10px;
+    font-size:13px;font-weight:700;z-index:9999;
+    animation:slideDown .25s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    border-left:4px solid #F5C800;
+  }
+
+  .tbl-wrap{overflow-x:auto;width:100%;}
+  table{width:100%;border-collapse:collapse;min-width:700px;}
+  th{
+    background:#FAFAFA;padding:10px 14px;
+    text-align:left;font-size:10px;font-weight:700;
+    color:#999;text-transform:uppercase;letter-spacing:1px;
+    border-bottom:2px solid #F0F0F0;white-space:nowrap;
+    position:sticky;top:0;z-index:1;
+  }
+  td{padding:11px 14px;font-size:12px;border-bottom:1px solid #F5F5F5;vertical-align:middle;color:#333;}
+  tr:hover td{background:#FAFBFF;}
+  tr:last-child td{border-bottom:none;}
+
+  .stat-card{
+    background:#FFF;border-radius:14px;padding:20px 24px;
+    box-shadow:0 1px 4px rgba(0,0,0,.07);
+    border-left:4px solid #F5C800;
+    transition:transform .2s,box-shadow .2s;
+  }
+  .stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1);}
+
+  .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;}
+
+  input[type=text]::placeholder,textarea::placeholder{color:#BDBDBD;}
+`;
+
 
   return(
-    <div style={{minHeight:"100vh",background:"#F2F2F2",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#F0F2F5",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
 
       {/* HEADER */}
-      <div style={{background:"#1A1A1A"}}>
-        <div style={{padding:"12px 24px 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{background:"#FFF",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center",flexShrink:0}}>
-              <img src={LOGO_MOV} alt="Grupo MOV 35 anos" style={{height:26,width:"auto",display:"block"}}/>
+      <div style={{background:"linear-gradient(180deg,#1C1C1C 0%,#222 100%)",boxShadow:"0 2px 12px rgba(0,0,0,.3)",position:"sticky",top:0,zIndex:100}}>
+        <div style={{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:14,padding:"10px 0"}}>
+            <div style={{background:"#FFF",borderRadius:10,padding:"5px 9px",display:"flex",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,.2)"}}>
+              <img src={LOGO_MOV} alt="Grupo MOV" style={{height:28,width:"auto",display:"block"}}/>
             </div>
             <div>
-              <div style={{fontSize:9,color:"#666",letterSpacing:1.5,textTransform:"uppercase"}}>Gestão Manutenção Grupo MOV</div>
+              <div style={{fontSize:13,fontWeight:800,color:"#FFF",letterSpacing:-.2}}>Grupo MOV</div>
+              <div style={{fontSize:9,color:"#666",letterSpacing:1.2,textTransform:"uppercase",marginTop:1}}>Gestão de Manutenção</div>
             </div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <span style={{fontSize:12,color:"#888"}}>{user.name} — {user.role}</span>
-            <button onClick={()=>setModalUsers(true)} style={{background:"#F5C800",border:"none",color:"#1A1A1A",borderRadius:6,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
-            <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"#333",border:"none",color:"#AAA",borderRadius:6,padding:"5px 10px",fontSize:11,cursor:"pointer"}}>Sair</button>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.05)",borderRadius:8,padding:"6px 12px"}}>
+              <div style={{width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,#F5C800,#E6B000)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
+              <div>
+                <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
+                <div style={{fontSize:10,color:"#666"}}>{user.role}</div>
+              </div>
+            </div>
+            {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,200,0,.15)",border:"1px solid rgba(245,200,0,.3)",color:"#F5C800",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .18s"}}>👤 Usuários</button>}
+            <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer",transition:"all .18s"}}>Sair</button>
           </div>
         </div>
         <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
