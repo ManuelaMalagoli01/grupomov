@@ -1232,7 +1232,7 @@ export default function App(){
                           patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",
                           tecnico:parsed.tecnico||ALL_TECHS[0],
                           chamado:parsed.chamado||"",relatorio:parsed.relatorio||"",
-                          os:"",obs:parsed.observacoes||"",
+                          servico:"Mecânica",obs:parsed.observacoes||"",
                           pecas:[],processoStatus:"em_andamento"
                         };
                         setReports(p=>[row,...p]);db.save("relatorios",row.id,row);
@@ -1245,7 +1245,7 @@ export default function App(){
                     const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
                       atendimento:"preventivo",statusFinal:"Pendente Peças",dataAtendimento:TODAY_STR,
                       empresa:"",cidade:"",patrimonio:"",horimetro:"",tecnico:ALL_TECHS[0],
-                      chamado:"",relatorio:"",os:"",obs:"",pecas:[],processoStatus:"em_andamento"};
+                      chamado:"",relatorio:"",servico:"Mecânica",obs:"",pecas:[],processoStatus:"em_andamento"};
                     setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
                   }}>+ Novo Registro</BtnY>
                 </div>
@@ -1277,7 +1277,7 @@ export default function App(){
                         <th>Horímetro</th>
                         <th>Técnico</th>
                         <th>Chamado</th>
-                        <th>OS</th>
+                        <th>Serviço</th>
                         <th>Obs</th>
                         <th>Reg. por</th>
                         <th>Ações</th>
@@ -1322,7 +1322,9 @@ export default function App(){
                                 </select>
                               </td>
                               <td><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="Chamado" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><input type="text" value={r.os||""} onChange={e=>updateReport(r.id,{os:e.target.value})} placeholder="OS" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><select value={r.servico||"Mecânica"} onChange={e=>updateReport(r.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600,color:"#1565C0",background:"#F0F4FF",border:"none",borderRadius:5}}>
+                                {SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}
+                              </select></td>
                               <td><input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observação" style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
                               <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
                               <td style={{whiteSpace:"nowrap"}}>
