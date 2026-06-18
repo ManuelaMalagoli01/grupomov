@@ -1207,7 +1207,6 @@ export default function App(){
 
   return(
     <div style={{minHeight:"100vh",background:"#ECEEF2",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
-    <div style={{minHeight:"100vh",background:"#ECEEF2",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
 
