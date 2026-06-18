@@ -234,14 +234,14 @@ function LoginScreen({onLogin, users=USERS}){
     },400);
   };
   return(
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1A1A1A 0%,#2A2A2A 50%,#1A1A1A 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+    <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
       {/* Elementos decorativos */}
-      <div style={{position:"fixed",top:-100,right:-100,width:400,height:400,background:"radial-gradient(circle,rgba(245,200,0,.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
-      <div style={{position:"fixed",bottom:-100,left:-100,width:300,height:300,background:"radial-gradient(circle,rgba(245,200,0,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"fixed",top:-100,right:-100,width:400,height:400,background:"radial-gradient(circle,rgba(245,194,0,.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"fixed",bottom:-100,left:-100,width:300,height:300,background:"radial-gradient(circle,rgba(245,194,0,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
 
       <div style={{background:"#FFF",borderRadius:20,padding:48,width:"100%",maxWidth:420,boxShadow:"0 32px 80px rgba(0,0,0,.5)",position:"relative",overflow:"hidden"}}>
         {/* Faixa amarela topo */}
-        <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#F5C800,#FFD700,#F5C800)"}}/>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"#F5C200"}}/>
 
         {/* Logo e título */}
         <div style={{textAlign:"center",marginBottom:36}}>
@@ -266,7 +266,7 @@ function LoginScreen({onLogin, users=USERS}){
 
         {err&&<div style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#C62828",marginBottom:16,fontWeight:600}}>⚠️ {err}</div>}
 
-        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:10,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C800,#E6B000)",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .2s",boxShadow:loading?"none":"0 4px 16px rgba(245,200,0,.4)",letterSpacing:.3}}>
+        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:10,border:"none",background:loading?"#E0E0E0":"#F5C200",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .2s",boxShadow:loading?"none":"0 4px 16px rgba(245,194,0,.4)",letterSpacing:.3}}>
           {loading?"Entrando...":"Entrar →"}
         </button>
 
@@ -300,13 +300,13 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:700,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>➕ Novo Relatório</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>➕ Novo Relatório</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22}}>
           <div style={{display:"flex",gap:8,marginBottom:18}}>
             {[["manual","✏️ Manual"],["texto","🤖 Colar texto (IA)"],["arquivo","📎 Arquivo"]].map(([m,l])=>(
-              <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"9px 0",borderRadius:8,border:`2px solid ${mode===m?"#F5C800":"#E0E0E0"}`,background:mode===m?"#FFFBF0":"#FFF",fontWeight:600,fontSize:12,cursor:"pointer",color:mode===m?"#C47D00":"#888"}}>{l}</button>
+              <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"9px 0",borderRadius:8,border:`2px solid ${mode===m?"#F5C200":"#E0E0E0"}`,background:mode===m?"#FFFBF0":"#FFF",fontWeight:600,fontSize:12,cursor:"pointer",color:mode===m?"#C47D00":"#888"}}>{l}</button>
             ))}
           </div>
           {mode==="texto"&&<div style={{marginBottom:16}}><textarea value={text} onChange={e=>setText(e.target.value)} rows={5} placeholder="Cole o texto do relatório..." style={{width:"100%",resize:"none"}}/><div style={{marginTop:8}}><BtnY onClick={()=>analyzeAI(text)} disabled={analyzing||!text.trim()}>{analyzing?"⏳ Analisando...":"🤖 Analisar com IA"}</BtnY></div></div>}
@@ -429,7 +429,7 @@ function ImportExcelModal({onClose,onImport}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>📥 Importar relatórios via Excel</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>📥 Importar relatórios via Excel</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22}}>
@@ -472,7 +472,7 @@ function ProcessoModal({onClose,onSave,tipo}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>{isMU?"⚠️ Novo Processo Mau Uso":"💰 Novo Processo A Faturar"}</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>{isMU?"⚠️ Novo Processo Mau Uso":"💰 Novo Processo A Faturar"}</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
@@ -529,7 +529,7 @@ function EmpModal({onClose,onSave,initial}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>🔄 Requisição Empréstimo</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>🔄 Requisição Empréstimo</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:12}}>
@@ -577,7 +577,7 @@ function SaidaModal({onClose,onSave,initial}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:620,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>📦 Req. Saída/Entrada</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>📦 Req. Saída/Entrada</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:12}}>
@@ -656,7 +656,7 @@ function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:720,maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C800"}}>👤 Gerenciar Usuários</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>👤 Gerenciar Usuários</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22}}>
@@ -673,7 +673,7 @@ function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
                   <td><input type="text" value={r.password||""} onChange={e=>setRow(r.id,"password",e.target.value)} style={{width:"100%",fontSize:12,padding:"4px 6px"}}/></td>
                   <td style={{textAlign:"center"}}><input type="checkbox" checked={!!r.canDelete} disabled={r.id==="manuela"} onChange={e=>setRow(r.id,"canDelete",e.target.checked)}/></td>
                   <td style={{whiteSpace:"nowrap"}}>
-                    <button onClick={()=>salvar(r)} style={{background:"#F5C800",border:"none",borderRadius:5,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer",marginRight:4}}>Salvar</button>
+                    <button onClick={()=>salvar(r)} style={{background:"#F5C200",border:"none",borderRadius:5,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer",marginRight:4}}>Salvar</button>
                     {r.id!=="manuela"&&<button onClick={()=>excluir(r.id)} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",padding:"4px 8px",fontSize:11,cursor:"pointer"}}>✕</button>}
                   </td>
                 </tr>
@@ -731,7 +731,7 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"14px 20px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:15,color:"#F5C800"}}>✏️ Editar Atendimento</div>
+          <div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>✏️ Editar Atendimento</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:20,display:"flex",flexDirection:"column",gap:12}}>
@@ -756,7 +756,7 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
           <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label><select value={form.status||"agendada"} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:8}}>
             <button onClick={onClose} style={{padding:"8px 18px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
-            <button onClick={()=>{onSave({...form,horasTrabalhadas:calcHoras(form.horaEntrada,form.horaSaida)});onClose();}} style={{padding:"8px 18px",borderRadius:8,border:"none",background:"#F5C800",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Salvar</button>
+            <button onClick={()=>{onSave({...form,horasTrabalhadas:calcHoras(form.horaEntrada,form.horaSaida)});onClose();}} style={{padding:"8px 18px",borderRadius:8,border:"none",background:"#F5C200",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Salvar</button>
           </div>
         </div>
       </div>
@@ -1108,112 +1108,43 @@ export default function App(){
 
   const CSS=`
   *{box-sizing:border-box;margin:0;padding:0;}
-  textarea{resize:vertical;}
-  ::-webkit-scrollbar{width:6px;height:6px;}
-  ::-webkit-scrollbar-track{background:#F0F0F0;}
-  ::-webkit-scrollbar-thumb{background:#CCC;border-radius:3px;}
-  ::-webkit-scrollbar-thumb:hover{background:#AAA;}
-
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-
-  body{background:#F0F2F5;}
-
-  .card{
-    background:#FFF;
-    border:none;
-    border-radius:12px;
-    box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
-    transition:box-shadow .2s;
-  }
-  .card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
-  .card-flat{background:#FFF;border-radius:12px;border:1px solid #EBEBEB;}
-
-  .btn{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;transition:all .18s;letter-spacing:.2px;}
-  .btn-primary{background:linear-gradient(135deg,#F5C800,#E6B000);color:#1A1A1A;padding:9px 20px;box-shadow:0 2px 8px rgba(245,200,0,.35);}
-  .btn-primary:hover{background:linear-gradient(135deg,#FFD700,#F5C800);box-shadow:0 4px 12px rgba(245,200,0,.45);transform:translateY(-1px);}
-  .btn-primary:active{transform:translateY(0);}
-  .btn-ghost{background:#FFF;color:#555;padding:8px 16px;border:1.5px solid #E0E0E0;font-family:inherit;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
-  .btn-ghost:hover{background:#F8F8F8;border-color:#BDBDBD;color:#333;}
-
-  .nav-tab{
-    cursor:pointer;padding:8px 14px;border-radius:8px 8px 0 0;
-    font-size:11.5px;font-weight:600;border:none;
-    background:transparent;color:#888;
-    font-family:inherit;transition:all .18s;
-    white-space:nowrap;letter-spacing:.1px;
-    border-bottom:3px solid transparent;
-    margin-bottom:-1px;
-  }
-  .nav-tab.active{background:rgba(245,200,0,.12);color:#F5C800;border-bottom:3px solid #F5C800;}
-  .nav-tab:hover:not(.active){color:#FFF;background:rgba(255,255,255,.08);}
-
-  select{
-    background:#FFF;color:#1A1A1A;
-    border:1.5px solid #E8E8E8;border-radius:8px;
-    padding:7px 10px;font-family:inherit;font-size:12px;
-    cursor:pointer;outline:none;transition:all .18s;
-  }
-  select:focus{border-color:#F5C800;box-shadow:0 0 0 3px rgba(245,200,0,.15);}
-
-  input[type=text],input[type=password],input[type=date],input[type=time],textarea{
-    background:#FFF;color:#1A1A1A;
-    border:1.5px solid #E8E8E8;border-radius:8px;
-    padding:8px 12px;font-family:inherit;font-size:12px;
-    outline:none;transition:all .18s;
-  }
-  input[type=text]:focus,input[type=password]:focus,
-  input[type=date]:focus,input[type=time]:focus,textarea:focus{
-    border-color:#F5C800;
-    box-shadow:0 0 0 3px rgba(245,200,0,.12);
-  }
-  input:disabled,select:disabled{background:#F5F5F5;color:#AAA;cursor:not-allowed;}
-
-  .notif{
-    position:fixed;top:20px;right:20px;
-    background:#1A1A1A;color:#F5C800;
-    padding:12px 20px;border-radius:10px;
-    font-size:13px;font-weight:700;z-index:9999;
-    animation:slideDown .25s ease;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
-    border-left:4px solid #F5C800;
-  }
-
+  textarea{resize:none;}
+  body{background:#F4F4F4;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-thumb{background:#F5C200;border-radius:3px;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideDown{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .card{background:#FFF;border:1px solid #E8E8E8;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .btn{cursor:pointer;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;transition:all .15s;}
+  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 20px;border:2px solid #F5C200;}
+  .btn-primary:hover{background:#E6B500;border-color:#E6B500;}
+  .btn-ghost{background:#FFF;color:#1A1A1A;padding:8px 16px;border:2px solid #1A1A1A;font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;}
+  .btn-ghost:hover{background:#1A1A1A;color:#F5C200;}
+  .nav-tab{cursor:pointer;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;border:none;background:transparent;color:#AAA;font-family:inherit;white-space:nowrap;transition:all .15s;}
+  .nav-tab.active{background:#F5C200;color:#1A1A1A;}
+  .nav-tab:hover:not(.active){color:#F5C200;}
+  select{background:#FFF;color:#1A1A1A;border:1.5px solid #D0D0D0;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:12px;cursor:pointer;outline:none;}
+  select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
+  input[type=text],input[type=password],input[type=date],input[type=time],textarea{background:#FFF;color:#1A1A1A;border:1.5px solid #D0D0D0;border-radius:8px;padding:8px 12px;font-family:inherit;font-size:12px;outline:none;}
+  input[type=text]:focus,input[type=password]:focus,input[type=date]:focus,input[type=time]:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
+  input:disabled,select:disabled{background:#F5F5F5;color:#AAA;}
+  .notif{position:fixed;top:16px;right:16px;background:#1A1A1A;color:#F5C200;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;animation:slideDown .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.25);border-left:4px solid #F5C200;}
   .tbl-wrap{overflow-x:auto;width:100%;}
   table{width:100%;border-collapse:collapse;min-width:700px;}
-  th{
-    background:#FAFAFA;padding:10px 14px;
-    text-align:left;font-size:10px;font-weight:700;
-    color:#999;text-transform:uppercase;letter-spacing:1px;
-    border-bottom:2px solid #F0F0F0;white-space:nowrap;
-    position:sticky;top:0;z-index:1;
-  }
-  td{padding:11px 14px;font-size:12px;border-bottom:1px solid #F5F5F5;vertical-align:middle;color:#333;}
-  tr:hover td{background:#FAFBFF;}
+  th{background:#1A1A1A;color:#F5C200;padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;}
+  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #F0F0F0;vertical-align:middle;color:#333;}
+  tr:hover td{background:#FFFDF0;}
   tr:last-child td{border-bottom:none;}
-
-  .stat-card{
-    background:#FFF;border-radius:14px;padding:20px 24px;
-    box-shadow:0 1px 4px rgba(0,0,0,.07);
-    border-left:4px solid #F5C800;
-    transition:transform .2s,box-shadow .2s;
-  }
-  .stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1);}
-
-  .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.2px;}
-
-  input[type=text]::placeholder,textarea::placeholder{color:#BDBDBD;}
 `;
 
 
   return(
-    <div style={{minHeight:"100vh",background:"#F0F2F5",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#ECEEF2",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
 
       {/* HEADER */}
-      <div style={{background:"linear-gradient(180deg,#1C1C1C 0%,#222 100%)",boxShadow:"0 2px 12px rgba(0,0,0,.3)",position:"sticky",top:0,zIndex:100}}>
+      <div style={{background:"#1A1A1A",boxShadow:"0 2px 8px rgba(0,0,0,.3)",position:"sticky",top:0,zIndex:100}}>
         <div style={{padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
           <div style={{display:"flex",alignItems:"center",gap:14,padding:"10px 0"}}>
             <div style={{background:"#FFF",borderRadius:10,padding:"5px 9px",display:"flex",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,.2)"}}>
@@ -1226,17 +1157,17 @@ export default function App(){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.05)",borderRadius:8,padding:"6px 12px"}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,#F5C800,#E6B000)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
+              <div style={{width:28,height:28,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
               <div>
                 <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
                 <div style={{fontSize:10,color:"#666"}}>{user.role}</div>
               </div>
             </div>
-            {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,200,0,.15)",border:"1px solid rgba(245,200,0,.3)",color:"#F5C800",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .18s"}}>👤 Usuários</button>}
+            {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all .18s"}}>👤 Usuários</button>}
             <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer",transition:"all .18s"}}>Sair</button>
           </div>
         </div>
-        <div style={{padding:"8px 24px 0",display:"flex",gap:3,overflowX:"auto"}}>
+        <div style={{padding:"6px 28px 0",display:"flex",gap:2,overflowX:"auto",borderTop:"1px solid rgba(255,255,255,.06)"}}>
           {[
             ["relatorios","📋 Conf. Relatórios","normal"],
             ["agenda_prev","🗓 Agenda","normal"],
@@ -1281,7 +1212,7 @@ export default function App(){
             </button>
           ))}
         </div>
-        <div style={{height:3,background:"linear-gradient(90deg,#F5C800,#FFE566,#F5C800)",marginTop:8}}/>
+        <div style={{height:3,background:"linear-gradient(90deg,#F5C200,#FFE566,#F5C200)",marginTop:8}}/>
       </div>
 
       <div style={{maxWidth:1300,margin:"0 auto",padding:"24px 20px"}}>
@@ -1640,10 +1571,10 @@ export default function App(){
           const totalMinMes=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           // Por técnico
           const byTech={}; OFICINA_TECHS.forEach(t=>{byTech[t]=apMes.filter(a=>a.tecnico===t);});
-          const techHorasData={labels:OFICINA_TECHS,datasets:[{label:"Horas",data:OFICINA_TECHS.map(t=>+(byTech[t].reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
+          const techHorasData={labels:OFICINA_TECHS,datasets:[{label:"Horas",data:OFICINA_TECHS.map(t=>+(byTech[t].reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C200",borderRadius:4}]};
           // Por serviço
           const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
-          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
+          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
           // Agenda oficina do mês
           const agOfiAtend=[];
           Object.keys(agendaOfi).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi[k]||[]).forEach(s=>agOfiAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas}));});
@@ -1753,7 +1684,7 @@ export default function App(){
               </div>
 
               {/* Formulário */}
-              <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #F5C800"}}>
+              <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #F5C200"}}>
                 <div style={{fontWeight:700,fontSize:13,marginBottom:14,color:"#555"}}>{editPendMan?"✏️ Editar Pendência":"➕ Nova Pendência"}</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -1892,7 +1823,7 @@ export default function App(){
                         {pend&&(
                           <tr>
                             <td colSpan={nCols} style={{padding:"0 12px 12px"}}>
-                              <div style={{background:"#FFF7E0",borderLeft:"4px solid #F5C800",borderRadius:8,padding:"10px 14px"}}>
+                              <div style={{background:"#FFF7E0",borderLeft:"4px solid #F5C200",borderRadius:8,padding:"10px 14px"}}>
                                 <div style={{fontSize:10,fontWeight:800,color:"#92600A",letterSpacing:.5,marginBottom:8}}>⚠️ PEÇAS PENDENTES — acompanhamento</div>
                                 <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
                                   <div style={{display:"flex",flexDirection:"column",gap:3}}><span style={{fontSize:9,fontWeight:700,color:"#999"}}>REQUISIÇÃO</span><input type="text" value={d.requisicaoPeca||""} onChange={e=>updateOfi(d.id,{requisicaoPeca:e.target.value})} placeholder="REQ-000" style={{fontSize:11,padding:"4px 6px"}}/></div>
@@ -2186,14 +2117,14 @@ export default function App(){
                 <table style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
                     <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
-                      <th style={{padding:"10px 14px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:160,whiteSpace:"nowrap",fontSize:13}}>Técnico</th>
+                      <th style={{padding:"10px 14px",color:"#F5C200",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:160,whiteSpace:"nowrap",fontSize:13}}>Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
-                          <th key={d} style={{padding:"8px 6px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:220,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12}}>
+                          <th key={d} style={{padding:"8px 6px",color:isToday?"#F5C200":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:220,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12}}>
                             <div style={{fontSize:14,fontWeight:800}}>Dia {String(d).padStart(2,"0")}</div>
                             <div style={{fontSize:10,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
                           </th>
@@ -2316,7 +2247,7 @@ export default function App(){
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0)/60).toFixed(1));
-              const BLU="#1565C0",RED="#C62828",YEL="#F5C800",ORG="#C47D00";
+              const BLU="#1565C0",RED="#C62828",YEL="#F5C200",ORG="#C47D00";
               return(
                 <>
                   <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
@@ -2768,7 +2699,7 @@ export default function App(){
           // Gráfico: por técnico
           const techLabels=Object.keys(byTech);
           const techValues=techLabels.map(t=>byTech[t]);
-          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C800",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
+          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C200",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
 
           const KPI=({label,value,color="#1A1A1A",bg="#FFF",icon})=>(
             <div className="card" style={{padding:"16px 20px",background:bg,display:"flex",flexDirection:"column",gap:4}}>
@@ -3056,14 +2987,14 @@ export default function App(){
                 <table style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
                     <tr style={{background:"#1A1A1A"}}>
-                      <th style={{padding:"10px 14px",color:"#F5C800",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:150,whiteSpace:"nowrap",fontSize:13}}>Placa</th>
+                      <th style={{padding:"10px 14px",color:"#F5C200",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:150,whiteSpace:"nowrap",fontSize:13}}>Placa</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
-                          <th key={d} style={{padding:"8px 6px",color:isToday?"#F5C800":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:240,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12}}>
+                          <th key={d} style={{padding:"8px 6px",color:isToday?"#F5C200":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:240,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12}}>
                             <div style={{fontSize:14,fontWeight:800}}>Dia {String(d).padStart(2,"0")}</div>
                             <div style={{fontSize:10,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
                           </th>
@@ -3307,9 +3238,9 @@ export default function App(){
           const agAtend=[];
           Object.keys(agendaOfi150).forEach(k=>{const i=k.indexOf("__");if(i<0)return;const kt=k.slice(0,i),kd=k.slice(i+2);if(!kd.startsWith(ym))return;(agendaOfi150[k]||[]).forEach(s=>agAtend.push({tech:kt,date:kd,servico:s.servico,status:s.status,horas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida)}));});
           const concluidos=agAtend.filter(a=>a.status==="concluida").length;
-          const techHorasData={labels:OFICINA_150_TECHS,datasets:[{label:"Horas",data:OFICINA_150_TECHS.map(t=>+(apMes.filter(a=>a.tecnico===t).reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C800",borderRadius:4}]};
+          const techHorasData={labels:OFICINA_150_TECHS,datasets:[{label:"Horas",data:OFICINA_150_TECHS.map(t=>+(apMes.filter(a=>a.tecnico===t).reduce((a,r)=>a+parseMin(r.total||calcHoras(r.inicio,r.termino)),0)/60).toFixed(1)),backgroundColor:"#F5C200",borderRadius:4}]};
           const byServ={}; SERVICOS_OFICINA.forEach(s=>{byServ[s]=apMes.filter(a=>a.servico===s).length;});
-          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C800","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
+          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ[s]),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina 150 — {MESES[agOfi150Month]} {agOfi150Year}</div>
