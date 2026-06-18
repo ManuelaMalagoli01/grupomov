@@ -775,6 +775,12 @@ export default function App(){
   const [dashTo,setDashTo]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
+  const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
+  const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
+  const [relFiltroTech,setRelFiltroTech]=useState("todos");
+  const [relFiltroPat,setRelFiltroPat]=useState("");
+  const [relFiltroEmp,setRelFiltroEmp]=useState("");
+  const [relFiltroData,setRelFiltroData]=useState("");
   const [pdfLoading,setPdfLoading]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
   const [showArqAF,setShowArqAF]=useState(false);
@@ -1175,43 +1181,26 @@ export default function App(){
 
         {/* ── RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const STS_PECA = ["Peça Separada","Ruptura","Atendido","Ag. Diretoria","Ag. Compras"];
-          const STS_PECA_COR = {"Peça Separada":{c:"#1A7A3C",bg:"#F0FFF5"},"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Atendido":{c:"#1565C0",bg:"#F0F4FF"},"Ag. Diretoria":{c:"#6A1B9A",bg:"#F8F0FF"},"Ag. Compras":{c:"#E67E00",bg:"#FFF8F0"}};
-          const STS_FINAL_COR = {"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},"Pendente":{c:"#C62828",bg:"#FFF0F0"}};
-          const TIPOS_SERV = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador"];
-          const list = reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
+          const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Concluído"];
+          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS_FINAL_COR={"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},"Pendente Peças":{c:"#C62828",bg:"#FFF0F0"}};
+          const list=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
 
-          const calcSLA=(dataConc,dataAtend)=>{
-            if(!dataConc||!dataAtend) return null;
-            const [yc,mc,dc]=dataConc.split("-").map(Number);
-            const [ya,ma,da]=dataAtend.split("-").map(Number);
-            const diff=Math.round((new Date(yc,mc-1,dc)-new Date(ya,ma-1,da))/(1000*60*60*24));
-            return diff>=0?diff:null;
-          };
-
-          const addPeca=(id)=>{
+          const addPecaRel=(id)=>{
             const r=reports.find(x=>x.id===id);
-            const pecas=[...(r.pecas||[]),{tipoServico:"Mecânica",peca:"",cod:"",quantidade:"",requisicao:"",statusPeca:"Peça Separada",ticketCompras:"",dataConc:"",statusFinal:"Pendente",obs:""}];
+            const pecas=[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",relatorio:"",dataExecucao:"",obs:""}];
             updateReport(id,{pecas});
           };
-          const updatePeca=(id,pi,changes)=>{
+          const updatePecaRel=(id,pi,changes)=>{
             const r=reports.find(x=>x.id===id);
             const pecas=[...(r.pecas||[])];
             pecas[pi]={...pecas[pi],...changes};
             updateReport(id,{pecas});
           };
-          const delPeca=(id,pi)=>{
+          const delPecaRel=(id,pi)=>{
             const r=reports.find(x=>x.id===id);
             const pecas=(r.pecas||[]).filter((_,i)=>i!==pi);
             updateReport(id,{pecas});
-          };
-          const novoRegistro=()=>{
-            const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
-              dataAtendimento:TODAY_STR,tipoAtendimento:"preventivo",relatorio:"",tecnico:ALL_TECHS[0],
-              empresa:"",cidade:"",patrimonio:"",horimetro:"",chamado:"",
-              horaEntrada:"",horaSaida:"",horasTrabalhadas:"",
-              pecas:[],statusFinal:"Pendente",obs:"",processoStatus:"em_andamento"};
-            setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
           };
 
           return(
@@ -1236,200 +1225,140 @@ export default function App(){
                         if(parsed.error) throw new Error(parsed.error);
                         const row={
                           id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
+                          atendimento:parsed.tipoAtendimento||"preventivo",
+                          statusFinal:parsed.statusFinal||"Pendente Peças",
                           dataAtendimento:parsed.dataAtendimento||TODAY_STR,
-                          tipoAtendimento:parsed.tipoAtendimento||"preventivo",
-                          relatorio:parsed.relatorio||"",
+                          empresa:parsed.empresa||"",cidade:parsed.cidade||"",
+                          patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",
                           tecnico:parsed.tecnico||ALL_TECHS[0],
-                          empresa:parsed.empresa||"",
-                          cidade:parsed.cidade||"",
-                          patrimonio:parsed.patrimonio||"",
-                          horimetro:parsed.horimetro||"",
-                          chamado:parsed.chamado||"",
-                          horaEntrada:parsed.horaEntrada||"",
-                          horaSaida:parsed.horaSaida||"",
-                          horasTrabalhadas:parsed.horasTrabalhadas||"",
-                          pecas:[],statusFinal:parsed.statusFinal||"Pendente",
-                          obs:parsed.observacoes||"",processoStatus:"em_andamento"
+                          chamado:parsed.chamado||"",relatorio:parsed.relatorio||"",
+                          os:"",obs:parsed.observacoes||"",
+                          pecas:[],processoStatus:"em_andamento"
                         };
                         setReports(p=>[row,...p]);db.save("relatorios",row.id,row);
-                        notify("✅ PDF lido! Verifique os dados e adicione peças se necessário.");
+                        notify("✅ PDF lido! Verifique e complete os dados.");
                       }catch(err){notify("❌ Erro: "+err.message);}
                       finally{setPdfLoading(false);e.target.value="";}
                     }}/>
                   </label>
-                  <BtnY onClick={novoRegistro}>+ Novo Registro</BtnY>
+                  <BtnY onClick={()=>{
+                    const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
+                      atendimento:"preventivo",statusFinal:"Pendente Peças",dataAtendimento:TODAY_STR,
+                      empresa:"",cidade:"",patrimonio:"",horimetro:"",tecnico:ALL_TECHS[0],
+                      chamado:"",relatorio:"",os:"",obs:"",pecas:[],processoStatus:"em_andamento"};
+                    setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
+                  }}>+ Novo Registro</BtnY>
                 </div>
               </div>
 
-              {list.length===0&&<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum registro. Clique em "+ Novo Registro" ou "📄 Ler PDF".</div>}
+              {/* Filtros */}
+              <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
+                <input type="date" value={relFiltroData||""} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12}} title="Filtrar por data"/>
+                <input type="text" value={relFiltroEmp||""} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{width:150,fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                <input type="text" value={relFiltroPat||""} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{width:100,fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                <select value={relFiltroTech||"todos"} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={relFiltroAtend||"todos"} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:12}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+                <select value={relFiltroStatus||"todos"} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option><option value="Pendente Peças">Pendente Peças</option><option value="Concluído">Concluído</option></select>
+                {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&
+                  <BtnG onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}}>✕ Limpar</BtnG>}
+              </div>
 
-              <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                {list.map(r=>{
-                  const isCorr=r.tipoAtendimento==="corretivo";
-                  const stFinal=STS_FINAL_COR[r.statusFinal]||STS_FINAL_COR["Pendente"];
-                  const pecas=r.pecas||[];
-                  return(
-                    <div key={r.id} className="card" style={{padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?.5:1,borderLeft:`4px solid ${stFinal.c}`}}>
-
-                      {/* ── HEADER ── */}
-                      <div style={{background:"#F8F8F8",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #EEE",flexWrap:"wrap",gap:8}}>
-                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                          <input type="text" value={r.relatorio||""} onChange={e=>updateReport(r.id,{relatorio:e.target.value})} placeholder="Nº Relatório" style={{fontSize:13,fontWeight:800,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6,width:110}}/>
-                          <input type="date" value={r.dataAtendimento||""} onChange={e=>updateReport(r.id,{dataAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                          <select value={r.tipoAtendimento||"preventivo"} onChange={e=>updateReport(r.id,{tipoAtendimento:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"none",borderRadius:6,fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF"}}>
-                            <option value="preventivo">✅ Preventivo</option>
-                            <option value="corretivo">🔧 Corretivo</option>
-                          </select>
-                          <select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{fontSize:12,padding:"4px 8px",border:"1px solid #E0E0E0",borderRadius:6}}>
-                            {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
-                          </select>
-                          <span style={{fontSize:11,padding:"3px 10px",borderRadius:12,background:stFinal.bg,color:stFinal.c,fontWeight:700}}>{r.statusFinal||"Pendente"}</span>
-                        </div>
-                        <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12}}>🗄️</button>
-                          <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,color:"#C62828",fontWeight:700}}>✕</button>
-                        </div>
-                      </div>
-
-                      {/* ── DADOS BASE ── */}
-                      <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,borderBottom:"1px solid #EEE"}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label>
-                          <input type="text" value={r.empresa||""} onChange={e=>updateReport(r.id,{empresa:e.target.value})} placeholder="Empresa" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cidade</label>
-                          <input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="Cidade" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>PAT</label>
-                          <input type="text" value={r.patrimonio||""} onChange={e=>updateReport(r.id,{patrimonio:e.target.value})} placeholder="PAT" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horímetro</label>
-                          <input type="text" value={r.horimetro||""} onChange={e=>updateReport(r.id,{horimetro:e.target.value})} placeholder="Ex: 17852" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        {isCorr&&<div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Nº Chamado</label>
-                          <input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="Chamado" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>}
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Entrada</label>
-                          <input type="time" value={r.horaEntrada||""} onChange={e=>updateReport(r.id,{horaEntrada:e.target.value})} style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Saída</label>
-                          <input type="time" value={r.horaSaida||""} onChange={e=>updateReport(r.id,{horaSaida:e.target.value})} style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horas Trab.</label>
-                          <input type="text" value={r.horasTrabalhadas||calcHoras(r.horaEntrada,r.horaSaida)||""} onChange={e=>updateReport(r.id,{horasTrabalhadas:e.target.value})} placeholder="00:00" style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:700,color:"#1A7A3C"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3,gridColumn:"1/-1"}}>
-                          <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observação</label>
-                          <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observações..." style={{fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                        </div>
-                      </div>
-
-                      {/* ── SEÇÃO PEÇAS ── */}
-                      <div style={{padding:"12px 16px"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                          <div style={{fontSize:11,fontWeight:800,color:"#E67E00",textTransform:"uppercase",letterSpacing:.5}}>📦 Peças / Serviços</div>
-                          <button onClick={()=>addPeca(r.id)} style={{fontSize:11,padding:"4px 12px",borderRadius:6,border:"none",background:"#FFF8F0",color:"#E67E00",cursor:"pointer",fontWeight:700}}>+ Adicionar Peça</button>
-                        </div>
-
-                        {pecas.length===0&&<div style={{fontSize:11,color:"#CCC",textAlign:"center",padding:"12px 0"}}>Nenhuma peça adicionada.</div>}
-
-                        {pecas.map((p,pi)=>{
-                          const stP=STS_PECA_COR[p.statusPeca]||STS_PECA_COR["Peça Separada"];
-                          const stF=STS_FINAL_COR[p.statusFinal]||STS_FINAL_COR["Pendente"];
-                          const sla=calcSLA(p.dataConc,r.dataAtendimento);
-                          return(
-                            <div key={pi} style={{background:"#FAFAFA",borderRadius:8,padding:"10px 12px",marginBottom:8,border:"1px solid #EEE",borderLeft:`3px solid ${stP.c}`}}>
-                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 80px 1fr 1fr",gap:8,marginBottom:8}}>
-                                {/* Tipo Serviço */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Tipo Serviço</label>
-                                  <select value={p.tipoServico||"Mecânica"} onChange={e=>updatePeca(r.id,pi,{tipoServico:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6,fontWeight:600,color:"#1565C0",background:"#F0F4FF"}}>
-                                    {TIPOS_SERV.map(t=><option key={t}>{t}</option>)}
-                                  </select>
-                                </div>
-                                {/* Peça */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label>
-                                  <input type="text" value={p.peca||""} onChange={e=>updatePeca(r.id,pi,{peca:e.target.value})} placeholder="Nome da peça" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                                </div>
-                                {/* Qtd */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd</label>
-                                  <input type="text" value={p.quantidade||""} onChange={e=>updatePeca(r.id,pi,{quantidade:e.target.value})} placeholder="0" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6,textAlign:"center"}}/>
-                                </div>
-                                {/* COD */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>COD</label>
-                                  <input type="text" value={p.cod||""} onChange={e=>updatePeca(r.id,pi,{cod:e.target.value})} placeholder="Código" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                                </div>
-                                {/* Requisição */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Requisição</label>
-                                  <input type="text" value={p.requisicao||""} onChange={e=>updatePeca(r.id,pi,{requisicao:e.target.value})} placeholder="REQ-001" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                                </div>
-                              </div>
-
-                              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr auto",gap:8,alignItems:"end"}}>
-                                {/* Status Peça */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Peça</label>
-                                  <select value={p.statusPeca||"Peça Separada"} onChange={e=>updatePeca(r.id,pi,{statusPeca:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"none",borderRadius:6,fontWeight:700,color:stP.c,background:stP.bg}}>
-                                    {STS_PECA.map(s=><option key={s}>{s}</option>)}
-                                  </select>
-                                </div>
-                                {/* Ticket se Ag. Compras */}
-                                {p.statusPeca==="Ag. Compras"&&<div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#E67E00",textTransform:"uppercase"}}>Nº Ticket</label>
-                                  <input type="text" value={p.ticketCompras||""} onChange={e=>updatePeca(r.id,pi,{ticketCompras:e.target.value})} placeholder="Ticket" style={{fontSize:11,padding:"5px 7px",border:"1px solid #E67E00",borderRadius:6}}/>
-                                </div>}
-                                {/* Data Conclusão */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Conclusão</label>
-                                  <input type="date" value={p.dataConc||""} onChange={e=>updatePeca(r.id,pi,{dataConc:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                                </div>
-                                {/* SLA */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>SLA (dias)</label>
-                                  <div style={{fontSize:12,fontWeight:800,padding:"5px 8px",borderRadius:6,background:sla===null?"#F5F5F5":sla>3?"#FFF0F0":"#F0FFF5",color:sla===null?"#CCC":sla>3?"#C62828":"#1A7A3C",textAlign:"center"}}>{sla!==null?sla+"d":"—"}</div>
-                                </div>
-                                {/* Status Final */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Final</label>
-                                  <select value={p.statusFinal||"Pendente"} onChange={e=>updatePeca(r.id,pi,{statusFinal:e.target.value})} style={{fontSize:11,padding:"5px 7px",border:"none",borderRadius:6,fontWeight:700,color:stF.c,background:stF.bg}}>
-                                    <option>Concluído</option><option>Pendente</option>
-                                  </select>
-                                </div>
-                                {/* Obs */}
-                                <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                                  <label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Obs</label>
-                                  <input type="text" value={p.obs||""} onChange={e=>updatePeca(r.id,pi,{obs:e.target.value})} placeholder="Obs..." style={{fontSize:11,padding:"5px 7px",border:"1px solid #E0E0E0",borderRadius:6}}/>
-                                </div>
-                                {/* Excluir peça */}
-                                <button onClick={()=>delPeca(r.id,pi)} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:12,fontWeight:700,alignSelf:"flex-end"}}>✕</button>
-                              </div>
-                            </div>
-                          );
-                        })}
-
-                        {/* Status final do registro */}
-                        <div style={{display:"flex",gap:10,alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid #EEE"}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status Geral:</label>
-                          <select value={r.statusFinal||"Pendente"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:12,padding:"5px 10px",border:"none",borderRadius:6,fontWeight:700,color:stFinal.c,background:stFinal.bg}}>
-                            <option>Concluído</option><option>Pendente</option>
-                          </select>
-                          <span style={{fontSize:10,color:"#AAA",marginLeft:"auto"}}>Reg. por {r.registradoPor||"—"} · {fmtDateTime(r.registradoEm)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Atendimento</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Empresa</th>
+                        <th>Cidade</th>
+                        <th>PAT</th>
+                        <th>Horímetro</th>
+                        <th>Técnico</th>
+                        <th>Chamado</th>
+                        <th>OS</th>
+                        <th>Obs</th>
+                        <th>Reg. por</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {list.filter(r=>{
+                        if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
+                        if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
+                        if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
+                        if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
+                        if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
+                        if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
+                        return true;
+                      }).map(r=>{
+                        const isCorr=r.atendimento==="corretivo";
+                        const stFinal=STS_FINAL_COR[r.statusFinal]||STS_FINAL_COR["Pendente Peças"];
+                        const pecas=r.pecas||[];
+                        return(
+                          <Fragment key={r.id}>
+                            <tr style={{opacity:r.processoStatus==="arquivado"?.5:1,background:pecas.length>0?"#FFFDE7":"#FFF"}}>
+                              <td>
+                                <select value={r.atendimento||"preventivo"} onChange={e=>updateReport(r.id,{atendimento:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF",border:"none",borderRadius:5}}>
+                                  <option value="preventivo">Preventivo</option>
+                                  <option value="corretivo">Corretivo</option>
+                                </select>
+                              </td>
+                              <td>
+                                <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:stFinal.c,background:stFinal.bg,border:"none",borderRadius:5,minWidth:110}}>
+                                  <option>Pendente Peças</option>
+                                  <option>Concluído</option>
+                                </select>
+                              </td>
+                              <td><input type="date" value={r.dataAtendimento||""} onChange={e=>updateReport(r.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.empresa||""} onChange={e=>updateReport(r.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="Cidade" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.patrimonio||""} onChange={e=>updateReport(r.id,{patrimonio:e.target.value})} placeholder="PAT" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.horimetro||""} onChange={e=>updateReport(r.id,{horimetro:e.target.value})} placeholder="Hor." style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td>
+                                <select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>
+                                  {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
+                                </select>
+                              </td>
+                              <td><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="Chamado" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.os||""} onChange={e=>updateReport(r.id,{os:e.target.value})} placeholder="OS" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td><input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observação" style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
+                              <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
+                              <td style={{whiteSpace:"nowrap"}}>
+                                <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:5,color:"#E67E00",cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3,fontWeight:700}}>+📦</button>
+                                <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button>
+                                <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                              </td>
+                            </tr>
+                            {/* Linha de peças expandida */}
+                            {pecas.map((p,pi)=>{
+                              const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
+                              return(
+                                <tr key={`${r.id}-p${pi}`} style={{background:"#FFFBF5",borderLeft:"3px solid #E67E00"}}>
+                                  <td colSpan={2} style={{paddingLeft:24}}>
+                                    <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:stP.c,background:stP.bg,border:"none",borderRadius:5,minWidth:120}}>
+                                      {STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}
+                                    </select>
+                                  </td>
+                                  <td><input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Peça" style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td><input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="COD" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td><input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{width:60,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
+                                  <td colSpan={2}><input type="text" value={p.relatorio||""} onChange={e=>updatePecaRel(r.id,pi,{relatorio:e.target.value})} placeholder="Nº Relatório" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td><input type="date" value={p.dataExecucao||""} onChange={e=>updatePecaRel(r.id,pi,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td colSpan={3}><input type="text" value={p.obs||""} onChange={e=>updatePecaRel(r.id,pi,{obs:e.target.value})} placeholder="Observação" style={{width:"100%",fontSize:11,padding:"3px 6px"}}/></td>
+                                  <td></td>
+                                  <td><button onClick={()=>delPecaRel(r.id,pi)} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 6px",fontSize:11,fontWeight:700}}>✕</button></td>
+                                </tr>
+                              );
+                            })}
+                          </Fragment>
+                        );
+                      })}
+                      {list.length===0&&<tr><td colSpan={13} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           );
