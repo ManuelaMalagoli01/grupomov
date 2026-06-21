@@ -1,4 +1,4 @@
-        /* eslint-disable */
+/* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
 // ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
@@ -1440,7 +1440,7 @@ export default function App(){
                       setPdfLoading(true);
                       try{
                         const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                        const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"ANTHROPIC_KEY_PLACEHOLDER","anthropic-version":"2023-06-01","anthropic-beta":"pdfs-2024-09-25"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:`Leia este relatório MOV e retorne SOMENTE JSON puro sem markdown: {"relatorio":"número","dataAtendimento":"YYYY-MM-DD","tipoAtendimento":"preventivo ou corretivo","tecnico":"nome","empresa":"nome","cidade":"cidade","patrimonio":"PAT","horimetro":"valor","chamado":"número ou vazio","statusFinal":"Concluído ou Pendente","observacoes":"texto"}`}]}]})}); 
+                        const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"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","anthropic-version":"2023-06-01","anthropic-beta":"pdfs-2024-09-25"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:`Leia este relatório MOV e retorne SOMENTE JSON puro sem markdown: {"relatorio":"número","dataAtendimento":"YYYY-MM-DD","tipoAtendimento":"preventivo ou corretivo","tecnico":"nome","empresa":"nome","cidade":"cidade","patrimonio":"PAT","horimetro":"valor","chamado":"número ou vazio","statusFinal":"Concluído ou Pendente","observacoes":"texto"}`}]}]})}); 
                         if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||"Erro API");}
                         const data=await resp.json();
                         const txt=data.content?.[0]?.text||"{}";
@@ -3585,5 +3585,3 @@ export default function App(){
     </div>
   );
 }
-
-    
