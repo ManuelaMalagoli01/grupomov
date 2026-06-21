@@ -639,6 +639,58 @@ const BtnImport = ({onClick}) => (
   </button>
 );
 
+// Barra de exportação reutilizável
+const ExportBar = ({data, filename, cols, onImport}) => {
+  const [loading, setLoading] = useState(false);
+  return(
+    <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+      <button onClick={async()=>{
+        setLoading(true);
+        try{ await exportXLSX(data, filename, cols); }
+        catch(e){ alert("Erro: "+e.message); }
+        finally{ setLoading(false); }
+      }} disabled={loading} style={{padding:"6px 12px",borderRadius:7,border:"1px solid #16A34A",background:"#F0FDF4",fontSize:11,cursor:"pointer",color:"#16A34A",fontWeight:700,fontFamily:"inherit"}}>
+        📊 Excel
+      </button>
+      <button onClick={()=>exportCSV(data, filename, cols)} style={{padding:"6px 12px",borderRadius:7,border:"1px solid #1565C0",background:"#EFF6FF",fontSize:11,cursor:"pointer",color:"#1565C0",fontWeight:700,fontFamily:"inherit"}}>
+        📄 CSV
+      </button>
+      {onImport&&<label style={{padding:"6px 12px",borderRadius:7,border:"1px solid #EA580C",background:"#FFF7ED",fontSize:11,cursor:"pointer",color:"#EA580C",fontWeight:700,fontFamily:"inherit"}}>
+        📥 Importar
+        <input type="file" accept=".xlsx,.csv" style={{display:"none"}} onChange={onImport}/>
+      </label>}
+    </div>
+  );
+};
+
+
+// Exportar Excel global
+const exportXLSX = async (data, filename, cols) => {
+  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
+  try{
+    const XLSX = await loadXLSX();
+    const rows = data.map(row=>Object.fromEntries(cols.map(c=>[c.label, row[c.key]||""])));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0,30));
+    XLSX.writeFile(wb, filename+".xlsx");
+  }catch(e){ alert("Erro ao exportar: "+e.message); }
+};
+
+// Exportar PDF simples (tabela)
+const exportPDFTable = (data, filename, cols, title) => {
+  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
+  const rows = data.map(row=>cols.map(c=>row[c.key]||"").join(" | ")).join("\n");
+  const header = cols.map(c=>c.label).join(" | ");
+  const content = title+"\n\n"+header+"\n"+"-".repeat(80)+"\n"+rows;
+  const blob = new Blob([content],{type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=filename+".txt"; a.click();
+  URL.revokeObjectURL(url);
+};
+
+
 // ── GERENCIAR USUÁRIOS (somente gestora) ──────────────────────────────────────
 function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
   const [rows,setRows]=useState(users.map(u=>({...u})));
@@ -789,65 +841,84 @@ function AppTopBar({user, setUser, setModalUsers}){
 }
 
 function AppSidebar({tab, setTab, user, empAlerta}){
-  const MENU = [
-    ["relatorios","📋 Conf. Relatórios","normal"],
-    ["agenda_prev","🗓 Agenda","normal"],
-    ["dashboard","📊 Dashboard","normal"],
-    ["apontamentos_oficina","📝 Apont. Oficina","oficina"],
-    ["agenda_ofi","🗓 Agenda Oficina","oficina"],
-    ["dashboard_ofi","📊 Dash Oficina","oficina"],
-    ["apontamentos_150","📝 Apont. 150","ofi150"],
-    ["agenda_ofi_150","🗓 Agenda 150","ofi150"],
-    ["dashboard_ofi_150","📊 Dash 150","ofi150"],
-    ["mau_uso","⚠️ Mau Uso","normal"],
-    ["a_faturar","💰 A Faturar","normal"],
-    ["emprestimos","🔄 Req. Empréstimo","normal"],
-    ["saida_entrada","📦 Req. Entrada/Saída","normal"],
-    ["dashboard_req","📊 Dash Requisições","normal"],
-    ["sas","📄 SAS","normal"],
-    ["carros","🚙 Carros","normal"],
-    ["uber","🚗 Uber","normal"],
-    ["financeiro","💰 Financeiro","normal"],
-    ["pendencias_frota","🚜 Pendências Frota","normal"],
-    ["prioridades_clientes","⭐ Prioridades Clientes","somanuela"],
-    ["rh_fiscal","🧾 RH-Fiscal","somanuela"],
-    ["pendencias_gustavo","📌 Pendências Gustavo","sogusnao"],
-    ["pendencias_hebert","🔧 Pendências Hebert","hebert"],
-    ["pendencias_manuela_tab","📋 Pendências Manuela","somanuela"],
-    ["pendencias_matheus","🔧 Pendências Matheus","matheus"],
-  ];
-  const visible = MENU.filter(([k,l,tipo])=>{
-    if(user.apenasAgenda) return ["agenda_prev"].includes(k);
-    if(user.apenasAgenda150) return ["agenda_ofi_150"].includes(k);
-    if(user.apenasOficina) return ["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_hebert"].includes(k);
-    if(user.apenasOfi150) return ["apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_matheus"].includes(k);
+  const [oficinasOpen, setOficinasOpen] = useState(
+    ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab)
+  );
+  const oficinasAtiva = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab);
+
+  const canSee=(tipo)=>{
+    if(user.apenasAgenda) return tipo==="agenda";
+    if(user.apenasAgenda150) return tipo==="agenda150";
+    if(user.apenasOficina) return ["oficina","hebert"].includes(tipo);
+    if(user.apenasOfi150) return ["ofi150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
     if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
     if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
     if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
+    if(tipo==="oficinas") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi"||user.id==="matheus_ofi";
     return true;
-  });
+  };
+
+  if(user.apenasAgenda) return(<div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}><button onClick={()=>setTab("agenda_prev")} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:"rgba(245,194,0,.12)",color:"#F5C200",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",borderLeft:"3px solid #F5C200",fontFamily:"inherit"}}>🗓 Agenda</button></div>);
+  if(user.apenasAgenda150) return(<div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}><button onClick={()=>setTab("agenda_ofi_150")} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:"rgba(245,194,0,.12)",color:"#F5C200",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",borderLeft:"3px solid #F5C200",fontFamily:"inherit"}}>🗓 Agenda 150</button></div>);
+
+  const Btn=({k,l,badge})=>{
+    const isActive=tab===k;
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+      {l}{badge>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{badge}</span>}
+    </button>);
+  };
+  const SubBtn=({k,l})=>{
+    const isActive=tab===k;
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"rgba(245,194,0,.08)":"transparent",color:isActive?"#F5C200":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>{l}</button>);
+  };
+
   return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {visible.map(([k,l])=>{
-        const isActive=tab===k;
-        return(
-          <button key={k} onClick={()=>setTab(k)} style={{
-            display:"flex",alignItems:"center",gap:8,width:"100%",
-            padding:"9px 16px",border:"none",
-            background:isActive?"rgba(245,194,0,.12)":"transparent",
-            color:isActive?"#F5C200":"#94A3B8",
-            fontSize:12,fontWeight:isActive?700:500,
-            cursor:"pointer",textAlign:"left",
-            borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",
-            transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap",
-          }}>
-            {l}{k==="emprestimos"&&empAlerta>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{empAlerta}</span>}
-          </button>
-        );
-      })}
+      <Btn k="relatorios" l="📋 Conf. Relatórios"/>
+      <Btn k="agenda_prev" l="🗓 Agenda"/>
+      <Btn k="dashboard" l="📊 Dashboard"/>
+
+      {/* OFICINAS - ACORDEÃO */}
+      {canSee("oficinas")&&<>
+        <button onClick={()=>setOficinasOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:oficinasAtiva?"rgba(245,194,0,.12)":"transparent",color:oficinasAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:oficinasAtiva?700:500,cursor:"pointer",borderLeft:oficinasAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+          <span>🏭 Oficinas</span>
+          <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+        </button>
+        {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
+          {canSee("oficina")&&<>
+            <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
+            <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
+            <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
+            <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
+            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Pendências Hebert"/>}
+          </>}
+          {canSee("ofi150")&&<>
+            <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
+            <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
+            <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
+            <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Pendências Matheus"/>}
+          </>}
+        </div>}
+      </>}
+
+      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
+      <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
+      <Btn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
+      <Btn k="dashboard_req" l="📊 Dash Requisições"/>
+      <Btn k="sas" l="📄 SAS"/>
+      <Btn k="carros" l="🚙 Carros"/>
+      <Btn k="uber" l="🚗 Uber"/>
+      <Btn k="financeiro" l="💰 Financeiro"/>
+      <Btn k="pendencias_frota" l="🚜 Pendências Frota"/>
+      {canSee("somanuela")&&<Btn k="prioridades_clientes" l="⭐ Prioridades Clientes"/>}
+      {canSee("somanuela")&&<Btn k="rh_fiscal" l="🧾 RH-Fiscal"/>}
+      {canSee("sogusnao")&&<Btn k="pendencias_gustavo" l="📌 Pendências Gustavo"/>}
+      {canSee("somanuela")&&<Btn k="pendencias_manuela_tab" l="📋 Pendências Manuela"/>}
     </div>
   );
 }
@@ -1331,8 +1402,8 @@ export default function App(){
     return (
       <>
         {tab==="relatorios"&&(()=>{
-          const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Concluído"];
-          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
+          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#F0F4FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_FINAL_COR={"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},"Pendente Peças":{c:"#C62828",bg:"#FFF0F0"}};
           const list=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
 
@@ -1369,10 +1440,11 @@ export default function App(){
                       setPdfLoading(true);
                       try{
                         const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                        const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
-                        if(!resp.ok) throw new Error(await resp.text());
-                        const parsed=await resp.json();
-                        if(parsed.error) throw new Error(parsed.error);
+                        const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":"ANTHROPIC_KEY_PLACEHOLDER","anthropic-version":"2023-06-01","anthropic-beta":"pdfs-2024-09-25"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:`Leia este relatório MOV e retorne SOMENTE JSON puro sem markdown: {"relatorio":"número","dataAtendimento":"YYYY-MM-DD","tipoAtendimento":"preventivo ou corretivo","tecnico":"nome","empresa":"nome","cidade":"cidade","patrimonio":"PAT","horimetro":"valor","chamado":"número ou vazio","statusFinal":"Concluído ou Pendente","observacoes":"texto"}`}]}]})}); 
+                        if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||"Erro API");}
+                        const data=await resp.json();
+                        const txt=data.content?.[0]?.text||"{}";
+                        const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
                         const row={
                           id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
                           atendimento:parsed.tipoAtendimento||"preventivo",
@@ -1418,6 +1490,7 @@ export default function App(){
                   <table>
                     <thead>
                       <tr>
+                        <th>Nº</th>
                         <th>Atendimento</th>
                         <th>Status</th>
                         <th>Data</th>
@@ -1442,13 +1515,14 @@ export default function App(){
                         if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
                         if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
                         return true;
-                      }).map(r=>{
+                      }).map((r,ridx)=>{
                         const isCorr=r.atendimento==="corretivo";
                         const stFinal=STS_FINAL_COR[r.statusFinal]||STS_FINAL_COR["Pendente Peças"];
                         const pecas=r.pecas||[];
                         return(
                           <Fragment key={r.id}>
                             <tr style={{opacity:r.processoStatus==="arquivado"?.5:1,background:pecas.length>0?"#FFFDE7":"#FFF"}}>
+                              <td style={{fontWeight:800,color:"#999",textAlign:"center"}}>{String(ridx+1).padStart(2,"0")}</td>
                               <td>
                                 <select value={r.atendimento||"preventivo"} onChange={e=>updateReport(r.id,{atendimento:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF",border:"none",borderRadius:5}}>
                                   <option value="preventivo">Preventivo</option>
@@ -1488,7 +1562,7 @@ export default function App(){
                               const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
                               return(
                                 <tr key={`${r.id}-p${pi}`} style={{background:"#FFFBF5",borderLeft:"3px solid #E67E00"}}>
-                                  <td colSpan={2} style={{paddingLeft:24}}>
+                                  <td colSpan={3} style={{paddingLeft:24}}>
                                     <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:stP.c,background:stP.bg,border:"none",borderRadius:5,minWidth:120}}>
                                       {STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}
                                     </select>
@@ -1508,7 +1582,7 @@ export default function App(){
                           </Fragment>
                         );
                       })}
-                      {list.length===0&&<tr><td colSpan={13} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro.</td></tr>}
+                      {list.length===0&&<tr><td colSpan={14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro.</td></tr>}
                     </tbody>
                   </table>
                 </div>
@@ -1522,6 +1596,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina</div><div style={{fontSize:13,color:"#888"}}>{apontamentos.length} registro(s)</div></div>
               <div style={{display:"flex",gap:8}}>
+              <ExportBar data={apontamentos} filename="apontamentos_oficina" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"os",label:"OS"},{key:"empresa",label:"Empresa"},{key:"horasTrabalhadas",label:"Horas"}]}/>
                 <BtnExcel onClick={()=>exportCSV(apontamentos,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={addApon}>+ Novo Apontamento</BtnY>
               </div>
@@ -1965,6 +2040,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⚠️ Processos Mau Uso</div><div style={{fontSize:13,color:"#888"}}>{processosMU.filter(p=>!showArqMU?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
               <div style={{display:"flex",gap:8}}>
+              <ExportBar data={processosMU.filter(p=>p.processoStatus!=="arquivado")} filename="mau_uso" cols={[{key:"data",label:"Data"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"}]}/>
                 <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMU?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMU?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado"),"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"enviadoAprovacao",label:"Enviado Aprov."},{key:"aprovado",label:"Aprovado"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovadoPor",label:"Aprovado por"},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>setModalMU(true)}>+ Novo Processo</BtnY>
@@ -2015,6 +2091,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Processos A Faturar</div><div style={{fontSize:13,color:"#888"}}>{processosAF.filter(p=>!showArqAF?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
               <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqAF?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqAF?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado"),"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"aprovado",label:"Aprovado"},{key:"ov",label:"OV"},{key:"aprovadoPor",label:"Aprovado por"},{key:"servicoExecutado",label:"Serviço Exec."},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/><BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY></div>
+              <ExportBar data={processosAF.filter(p=>p.processoStatus!=="arquivado")} filename="a_faturar" cols={[{key:"data",label:"Data"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}]}/>
             </div>
             {processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado").length===0?(
               <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum processo cadastrado. Clique em "+ Novo Processo" para começar.</div>
@@ -2062,6 +2139,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div>
                 <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔄 Requisições de Empréstimo</div>
+                  <ExportBar data={emprestimos.filter(e=>!e.arquivado)} filename="emprestimos" cols={[{key:"dataEmp",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Item"},{key:"retorno",label:"Retorno"},{key:"status",label:"Situação"}]}/>
                 <div style={{fontSize:13,color:"#888"}}>{emprestimos.length} registros · {empAlerta>0&&<span style={{color:"#C62828",fontWeight:700}}>{empAlerta} com retorno em atraso!</span>}</div>
               </div>
               <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqEmp?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqEmp?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(emprestimos,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Ítem"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"retorno",label:"Retorno"},{key:"dataRetorno",label:"Data Retorno"},{key:"numRelatorio",label:"Nº Relatório"},{key:"observacao",label:"Obs"},{key:"processoStatus",label:"Processo"}])}/><BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY></div>
@@ -2646,6 +2724,7 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
+                  <ExportBar data={frota.filter(f=>!f.arquivado)} filename="pendencias_frota" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"descricao",label:"Descrição"},{key:"status",label:"Status"}]}/>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqFro?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqFro?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                   <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
@@ -3204,6 +3283,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{apontamentos150.length} registro(s) · Matheus, Pedro Souza, Pedro Pimentel</div></div>
               <div style={{display:"flex",gap:8}}>
+              <ExportBar data={apontamentos150} filename="apontamentos_150" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"os",label:"OS"},{key:"empresa",label:"Empresa"},{key:"horasTrabalhadas",label:"Horas"}]}/>
                 <BtnExcel onClick={()=>exportCSV(apontamentos150,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={addApon150}>+ Novo Apontamento</BtnY>
               </div>
