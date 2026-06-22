@@ -849,8 +849,8 @@ function AppSidebar({tab, setTab, user, empAlerta}){
   const canSee=(tipo)=>{
     if(user.apenasAgenda) return ["agenda","dashboard"].includes(tipo);
     if(user.apenasAgenda150) return ["agenda150","dashboard","dashboard_ofi_150"].includes(tipo);
-    if(user.apenasOficina) return ["oficina","hebert","dashboard_ofi"].includes(tipo);
-    if(user.apenasOfi150) return ["ofi150","matheus","dashboard_ofi_150"].includes(tipo);
+    if(user.apenasOficina) return ["agenda_ofi","dashboard_ofi","hebert"].includes(tipo);
+    if(user.apenasOfi150) return ["agenda_ofi_150","dashboard_ofi_150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
@@ -872,6 +872,22 @@ function AppSidebar({tab, setTab, user, empAlerta}){
   if(user.apenasAgenda150) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"]].map(([k,l])=>{
+        const isActive=tab===k;
+        return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
+      })}
+    </div>
+  );
+  if(user.apenasOficina) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {[["agenda_ofi","🗓 Agenda Oficina"],["dashboard_ofi","📊 Dashboard Oficina"],["pendencias_hebert","🔧 Pendências Hebert"]].map(([k,l])=>{
+        const isActive=tab===k;
+        return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
+      })}
+    </div>
+  );
+  if(user.apenasOfi150) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"],["pendencias_matheus","🔧 Pendências Matheus"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -949,10 +965,10 @@ export default function App(){
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState("relatorios");
-  useEffect(()=>{ if(user&&user.apenasOficina) setTab("apontamentos_oficina"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("apontamentos_150"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
   const [processosAF,setProcessosAF]=useState([]);
@@ -975,6 +991,13 @@ export default function App(){
   const [dashRegion,setDashRegion]=useState("todas");
   const [dashFrom,setDashFrom]=useState("");
   const [dashTo,setDashTo]=useState("");
+  const [dashTech,setDashTech]=useState("todos");
+  const [dashOfiTech,setDashOfiTech]=useState("todos");
+  const [dashOfiFrom,setDashOfiFrom]=useState("");
+  const [dashOfiTo,setDashOfiTo]=useState("");
+  const [dashOfi150Tech,setDashOfi150Tech]=useState("todos");
+  const [dashOfi150From,setDashOfi150From]=useState("");
+  const [dashOfi150To,setDashOfi150To]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
   const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
@@ -2446,7 +2469,7 @@ export default function App(){
             {(()=>{
               const chartTitle={fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.date||d.date<dashFrom))return false; if(dashTo&&(!d.date||d.date>dashTo))return false; return true; };
-              const dashReports=agendaAtendimentos.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&inRange(d));
+              const dashReports=agendaAtendimentos.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d));
               const prev=dashReports.filter(r=>r.type==="preventivo").length;
               const corr=dashReports.filter(r=>r.type==="corretivo").length;
               const totalPC=prev+corr;
@@ -2464,9 +2487,10 @@ export default function App(){
                   <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
                     <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1}}>Filtro</span>
                     <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
+                    <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:12}}/></div>
-                    {(dashRegion!=="todas"||dashFrom||dashTo)&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");}}>✕ Limpar</BtnG>}
+                    {(dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos")&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");}}>✕ Limpar</BtnG>}
                     <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} atendimento(s) no filtro</span>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
@@ -3450,7 +3474,14 @@ export default function App(){
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
           const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const apMes=apontamentos150.filter(a=>a.data&&a.data.startsWith(ym));
+          const apMes=apontamentos150.filter(a=>{
+            if(!a.data) return false;
+            if(dashOfi150From&&a.data<dashOfi150From) return false;
+            if(dashOfi150To&&a.data>dashOfi150To) return false;
+            if(!dashOfi150From&&!dashOfi150To&&!a.data.startsWith(ym)) return false;
+            if(dashOfi150Tech!=="todos"&&a.tecnico!==dashOfi150Tech) return false;
+            return true;
+          });
           const totalMin=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList150=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech150={};
@@ -3477,10 +3508,16 @@ export default function App(){
           const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ150[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Oficina 150 — {MESES[agOfi150Month]} {agOfi150Year}</div>
-              <div style={{display:"flex",gap:8,marginBottom:16}}>
-                <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div style={{fontWeight:800,fontSize:22}}>📊 Dashboard Oficina 150</div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} style={{fontSize:12}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfi150To} onChange={e=>setDashOfi150To(e.target.value)} style={{fontSize:12}}/></div>
+                  {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
+                </div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
                 {[{l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais",v:fmtMin(totalMin),c:"#C47D00"},{l:"Técnicos Ativos",v:OFICINA_150_TECHS.filter(t=>byTech150[t].aps.length>0).length,c:"#1A7A3C"},{l:"OSs Únicas",v:osList150.length,c:"#1565C0"}].map((s,i)=>(
@@ -3581,7 +3618,14 @@ export default function App(){
           const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
           const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const apMes=apontamentos.filter(a=>a.data&&a.data.startsWith(ym));
+          const apMes=apontamentos.filter(a=>{
+            if(!a.data) return false;
+            if(dashOfiFrom&&a.data<dashOfiFrom) return false;
+            if(dashOfiTo&&a.data>dashOfiTo) return false;
+            if(!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym)) return false;
+            if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech) return false;
+            return true;
+          });
           const totalMinMes=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
@@ -3608,10 +3652,14 @@ export default function App(){
         <div style={{animation:"fadeIn .3s ease"}}>
           {/* Cabeçalho */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-            <div style={{fontWeight:800,fontSize:22}}>📊 Dashboard Oficina 1340 — {MESES[agOfiMonth]} {agOfiYear}</div>
-            <div style={{display:"flex",gap:8}}>
+            <div style={{fontWeight:800,fontSize:22}}>📊 Dashboard Oficina 1340</div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
               <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
               <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} style={{fontSize:12}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)} style={{fontSize:12}}/></div>
+              {(dashOfiTech!=="todos"||dashOfiFrom||dashOfiTo)&&<BtnG onClick={()=>{setDashOfiTech("todos");setDashOfiFrom("");setDashOfiTo("");}}>✕ Limpar</BtnG>}
             </div>
           </div>
 
