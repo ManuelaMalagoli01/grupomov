@@ -847,10 +847,10 @@ function AppSidebar({tab, setTab, user, empAlerta}){
   const oficinasAtiva = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab);
 
   const canSee=(tipo)=>{
-    if(user.apenasAgenda) return tipo==="agenda";
-    if(user.apenasAgenda150) return tipo==="agenda150";
-    if(user.apenasOficina) return ["oficina","hebert"].includes(tipo);
-    if(user.apenasOfi150) return ["ofi150","matheus"].includes(tipo);
+    if(user.apenasAgenda) return ["agenda","dashboard"].includes(tipo);
+    if(user.apenasAgenda150) return ["agenda150","dashboard","dashboard_ofi_150"].includes(tipo);
+    if(user.apenasOficina) return ["oficina","hebert","dashboard_ofi"].includes(tipo);
+    if(user.apenasOfi150) return ["ofi150","matheus","dashboard_ofi_150"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
@@ -861,8 +861,22 @@ function AppSidebar({tab, setTab, user, empAlerta}){
     return true;
   };
 
-  if(user.apenasAgenda) return(<div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}><button onClick={()=>setTab("agenda_prev")} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:"rgba(245,194,0,.12)",color:"#F5C200",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",borderLeft:"3px solid #F5C200",fontFamily:"inherit"}}>🗓 Agenda</button></div>);
-  if(user.apenasAgenda150) return(<div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}><button onClick={()=>setTab("agenda_ofi_150")} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:"rgba(245,194,0,.12)",color:"#F5C200",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",borderLeft:"3px solid #F5C200",fontFamily:"inherit"}}>🗓 Agenda 150</button></div>);
+  if(user.apenasAgenda) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {[["agenda_prev","🗓 Agenda"],["dashboard","📊 Dashboard"]].map(([k,l])=>{
+        const isActive=tab===k;
+        return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
+      })}
+    </div>
+  );
+  if(user.apenasAgenda150) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"]].map(([k,l])=>{
+        const isActive=tab===k;
+        return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
+      })}
+    </div>
+  );
 
   const Btn=({k,l,badge})=>{
     const isActive=tab===k;
