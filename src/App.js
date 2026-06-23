@@ -840,7 +840,8 @@ function AppTopBar({user, setUser, setModalUsers}){
   );
 }
 
-function AppSidebar({tab, setTab, user, empAlerta}){
+function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
+  const bdg=(k)=>badges[k]||0;
   const [oficinasOpen, setOficinasOpen] = useState(
     ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab)
   );
@@ -896,13 +897,17 @@ function AppSidebar({tab, setTab, user, empAlerta}){
 
   const Btn=({k,l,badge})=>{
     const isActive=tab===k;
+    const count=badge!==undefined?badge:bdg(k);
     return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-      {l}{badge>0&&<span style={{marginLeft:"auto",background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700}}>{badge}</span>}
+      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700,minWidth:18,textAlign:"center"}}>{count}</span>}
     </button>);
   };
   const SubBtn=({k,l})=>{
     const isActive=tab===k;
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"rgba(245,194,0,.08)":"transparent",color:isActive?"#F5C200":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>{l}</button>);
+    const count=bdg(k);
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"rgba(245,194,0,.08)":"transparent",color:isActive?"#F5C200":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
+    </button>);
   };
 
   return(
@@ -915,7 +920,10 @@ function AppSidebar({tab, setTab, user, empAlerta}){
       {canSee("oficinas")&&<>
         <button onClick={()=>setOficinasOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:oficinasAtiva?"rgba(245,194,0,.12)":"transparent",color:oficinasAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:oficinasAtiva?700:500,cursor:"pointer",borderLeft:oficinasAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
           <span>🏭 Oficinas</span>
-          <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+          <div style={{display:"flex",alignItems:"center",gap:5}}>
+            {(bdg("pendencias_hebert")+bdg("pendencias_matheus"))>0&&!oficinasOpen&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{bdg("pendencias_hebert")+bdg("pendencias_matheus")}</span>}
+            <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+          </div>
         </button>
         {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
           {canSee("oficina")&&<>
@@ -3765,13 +3773,28 @@ export default function App(){
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
       <AppTopBar user={user} setUser={setUser} setModalUsers={setModalUsers}/>
-      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta}/>
+      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta}
+        badges={{
+          relatorios: reports.filter(r=>r.processoStatus!=="arquivado"&&r.statusFinal!=="Concluído").length,
+          mau_uso: processosMU.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
+          a_faturar: processosAF.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
+          emprestimos: emprestimos.filter(e=>e.processoStatus!=="arquivado"&&e.statusEmp!=="concluido").length,
+          saida_entrada: saidaEntrada.filter(s=>s.processoStatus!=="arquivado"&&s.statusFinal!=="concluido").length,
+          dashboard_req: requisicoes.filter(r=>r.processoStatus!=="arquivado"&&r.concluido!=="concluido").length,
+          sas: sas.filter(s=>s.status==="pendente").length,
+          pendencias_frota: frota.filter(f=>!f.arquivado&&f.resolvido!=="sim").length,
+          pendencias_hebert: pendHebert.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+          pendencias_matheus: pendMatheus.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+          pendencias_gustavo: pendGustavo.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+          pendencias_manuela_tab: pendManuela.filter(r=>!r.arquivado&&r.status!=="Finalizado").length,
+          prioridades_clientes: prioridades.filter(r=>!r.arquivado&&r.status!=="concluido").length,
+          rh_fiscal: rhFiscal.filter(r=>!r.arquivado&&r.status!=="concluido").length,
+          carros: carros.filter(c=>!c.arquivado&&c.status!=="liberado").length,
+          uber: uberPedidos.filter(u=>u.status==="pendente"||u.status==="em_andamento").length,
+          financeiro: financeiro.filter(f=>f.situacao==="pendente").length,
+        }}
+      />
       <div style={{marginLeft:220,padding:"24px 24px 60px",minHeight:"calc(100vh - 56px)"}}>
         {renderTab()}
         {modals}
       </div>
-    </div>
-  );
-}
-
-    
