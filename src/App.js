@@ -1473,6 +1473,28 @@ export default function App(){
             updateReport(id,{pecas});
           };
 
+
+  // ── BADGES MENU LATERAL ──
+  const menuBadges = {
+    relatorios: reports.filter(r=>r.processoStatus!=="arquivado"&&r.statusFinal!=="Concluído").length,
+    mau_uso: processosMU.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
+    a_faturar: processosAF.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
+    emprestimos: emprestimos.filter(e=>e.processoStatus!=="arquivado"&&e.statusEmp!=="concluido").length,
+    saida_entrada: saidaEntrada.filter(s=>s.processoStatus!=="arquivado"&&s.statusFinal!=="concluido").length,
+    dashboard_req: requisicoes.filter(r=>r.processoStatus!=="arquivado"&&r.concluido!=="concluido").length,
+    sas: sas.filter(s=>s.status==="pendente").length,
+    pendencias_frota: frota.filter(f=>!f.arquivado&&f.resolvido!=="sim").length,
+    pendencias_hebert: pendHebert.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+    pendencias_matheus: pendMatheus.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+    pendencias_gustavo: pendGustavo.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
+    pendencias_manuela_tab: pendManuela.filter(r=>!r.arquivado&&r.status!=="Finalizado").length,
+    prioridades_clientes: prioridades.filter(r=>!r.arquivado&&r.status!=="concluido").length,
+    rh_fiscal: rhFiscal.filter(r=>!r.arquivado&&r.status!=="concluido").length,
+    carros: carros.filter(c=>!c.arquivado&&c.status!=="liberado").length,
+    uber: uberPedidos.filter(u=>u.status==="pendente"||u.status==="em_andamento").length,
+    financeiro: financeiro.filter(f=>f.situacao==="pendente").length,
+  };
+
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
@@ -3773,28 +3795,11 @@ export default function App(){
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
       <AppTopBar user={user} setUser={setUser} setModalUsers={setModalUsers}/>
-      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta}
-        badges={{
-          relatorios: reports.filter(r=>r.processoStatus!=="arquivado"&&r.statusFinal!=="Concluído").length,
-          mau_uso: processosMU.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
-          a_faturar: processosAF.filter(p=>p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido").length,
-          emprestimos: emprestimos.filter(e=>e.processoStatus!=="arquivado"&&e.statusEmp!=="concluido").length,
-          saida_entrada: saidaEntrada.filter(s=>s.processoStatus!=="arquivado"&&s.statusFinal!=="concluido").length,
-          dashboard_req: requisicoes.filter(r=>r.processoStatus!=="arquivado"&&r.concluido!=="concluido").length,
-          sas: sas.filter(s=>s.status==="pendente").length,
-          pendencias_frota: frota.filter(f=>!f.arquivado&&f.resolvido!=="sim").length,
-          pendencias_hebert: pendHebert.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
-          pendencias_matheus: pendMatheus.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
-          pendencias_gustavo: pendGustavo.filter(r=>!r.arquivado&&r.status!=="resolvido").length,
-          pendencias_manuela_tab: pendManuela.filter(r=>!r.arquivado&&r.status!=="Finalizado").length,
-          prioridades_clientes: prioridades.filter(r=>!r.arquivado&&r.status!=="concluido").length,
-          rh_fiscal: rhFiscal.filter(r=>!r.arquivado&&r.status!=="concluido").length,
-          carros: carros.filter(c=>!c.arquivado&&c.status!=="liberado").length,
-          uber: uberPedidos.filter(u=>u.status==="pendente"||u.status==="em_andamento").length,
-          financeiro: financeiro.filter(f=>f.situacao==="pendente").length,
-        }}
-      />
+      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta} badges={menuBadges}/>
       <div style={{marginLeft:220,padding:"24px 24px 60px",minHeight:"calc(100vh - 56px)"}}>
         {renderTab()}
         {modals}
       </div>
+    </div>
+  );
+}
