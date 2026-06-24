@@ -3798,3 +3798,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       <Btn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
       <Btn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
       <Btn k="dashboard_req" l="📊 Dash Requisições"/>
+                          </div>
+    </div>
+  );
+}
+
