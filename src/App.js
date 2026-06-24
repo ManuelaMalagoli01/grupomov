@@ -854,6 +854,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     if(user.apenasOfi150) return ["agenda_ofi_150","dashboard_ofi_150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="sogusnao") return user.id!=="gustavo";
+    if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_gustavo","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
     if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
     if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
@@ -1813,144 +1814,157 @@ export default function App(){
         {tab==="dashboard_ofi"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]):0;};
+          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
           const apMes=apontamentos.filter(a=>{
-            if(!a.data) return false;
-            if(dashOfiFrom&&a.data<dashOfiFrom) return false;
-            if(dashOfiTo&&a.data>dashOfiTo) return false;
-            if(!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym)) return false;
-            if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech) return false;
+            if(!a.data)return false;
+            if(dashOfiFrom&&a.data<dashOfiFrom)return false;
+            if(dashOfiTo&&a.data>dashOfiTo)return false;
+            if(!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym))return false;
+            if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech)return false;
             return true;
           });
-          const totalMinMes=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
           OFICINA_TECHS.forEach(t=>{
             const aps=apMes.filter(a=>a.tecnico===t);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            const porServico={};
-            SERVICOS_OFICINA.forEach(s=>{porServico[s]=aps.filter(a=>a.servico===s).length;});
-            byTech[t]={aps,mins,porServico};
+            const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+            const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
+            byTech[t]={aps,mins,porServ};
           });
           const byServ={};
           SERVICOS_OFICINA.forEach(s=>{
             const aps=apMes.filter(a=>a.servico===s);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            byServ[s]={qtd:aps.length,mins};
+            byServ[s]={qtd:aps.length,mins:aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)};
           });
           const byOS={};
           osList.forEach(os=>{
             const aps=apMes.filter(a=>a.os===os);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            byOS[os]={aps,mins,tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
+            byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
+          const techAtivos=OFICINA_TECHS.filter(t=>byTech[t].aps.length>0);
+          const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
+          const chartServ={labels:servAtivos,datasets:[{label:"Qtd",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:6,borderSkipped:false},{label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:["#1565C090","#C6282890","#E67E0090","#F5C20090","#1A7A3C90","#00838F90","#AD145790","#6A1B9A90","#4E342E90"],borderRadius:6,borderSkipped:false}]};
+          const chartOpts=(title)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
+          const chartOptsH=(title)=>({responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.x}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
-          {/* Cabeçalho */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-            <div style={{fontWeight:800,fontSize:22}}>📊 Dashboard Oficina 1340</div>
+          {/* Cabeçalho + Filtros */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
+            <div>
+              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 Dashboard Oficina 1340</div>
+              <div style={{fontSize:12,color:"#888"}}>{MESES[agOfiMonth]} {agOfiYear} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
+            </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-              <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} style={{fontSize:12}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)} style={{fontSize:12}}/></div>
+              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+              <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
               {(dashOfiTech!=="todos"||dashOfiFrom||dashOfiTo)&&<BtnG onClick={()=>{setDashOfiTech("todos");setDashOfiFrom("");setDashOfiTo("");}}>✕ Limpar</BtnG>}
             </div>
           </div>
 
           {/* KPIs */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
             {[
-              {l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A",icon:"📋"},
-              {l:"Horas Totais",v:fmtMin(totalMinMes),c:"#1565C0",icon:"⏱"},
-              {l:"Técnicos Ativos",v:OFICINA_TECHS.filter(t=>byTech[t].aps.length>0).length,c:"#1A7A3C",icon:"👷"},
-              {l:"OSs Únicas",v:osList.length,c:"#C47D00",icon:"🔧"},
+              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A",bg:"#FFF"},
+              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1565C0",bg:"#F0F4FF"},
+              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C",bg:"#F0FFF5"},
+              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00",bg:"#FFFBF0"},
             ].map((s,i)=>(
-              <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
-                <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{s.icon} {s.l}</div>
-                <div style={{fontSize:28,fontWeight:900,color:s.c}}>{s.v}</div>
+              <div key={i} className="card" style={{padding:"18px 20px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
+                <div style={{fontSize:11,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:32,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
               </div>
             ))}
           </div>
 
-          {/* Por Técnico */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:10}}>👷 Apontamentos por Técnico</div>
+          {/* Gráficos principais */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>⏱ Horas Trabalhadas por Técnico</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
+              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
+            </div>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>📋 Apontamentos por Técnico</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
+              <ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>
+            </div>
+          </div>
+          <div className="card" style={{padding:20,marginBottom:24}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>🔧 Serviços Realizados — Quantidade e Horas</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras azuis = quantidade · barras coloridas = horas</div>
+            <ChartCanvas type="bar" data={chartServ} options={{...chartOptsH(),plugins:{legend:{display:true,position:"top"},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.x}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0}}}}} height={Math.max(180,servAtivos.length*50)}/>
+          </div>
+
+          {/* Por Técnico detalhado */}
+          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
-            {OFICINA_TECHS.filter(t=>byTech[t].aps.length>0).map(tech=>{
+            {techAtivos.map(tech=>{
               const d=byTech[tech];
               const color=techColor(tech);
+              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
               return(
-                <div key={tech} className="card" style={{padding:14,borderLeft:`4px solid ${color}`}}>
+                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
                     <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
                       <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>
                       {tech}
                     </div>
-                    <div style={{display:"flex",gap:12,fontSize:12}}>
-                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"3px 10px",borderRadius:6}}>📋 {d.aps.length} apontamento(s)</span>
-                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"3px 10px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
+                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
+                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
+                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
+                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
                     </div>
                   </div>
-                  {/* Serviços do técnico */}
+                  {/* Barra de progresso */}
+                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width .5s"}}/>
+                  </div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {SERVICOS_OFICINA.filter(s=>d.porServico[s]>0).map(serv=>(
+                    {SERVICOS_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
                       <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
-                        {serv} <b>({d.porServico[serv]})</b>
+                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
                       </span>
                     ))}
                   </div>
                 </div>
               );
             })}
-            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:24,fontSize:13}}>Sem apontamentos no período.</div>}
-          </div>
-
-          {/* Por Serviço */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Apontamentos por Serviço</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:24}}>
-            {SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0).map(serv=>(
-              <div key={serv} className="card" style={{padding:"12px 16px",borderTop:"2px solid #1565C0"}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#1565C0",marginBottom:6}}>{serv}</div>
-                <div style={{display:"flex",gap:12,fontSize:12}}>
-                  <span style={{color:"#1A1A1A",fontWeight:700}}>📋 {byServ[serv].qtd} apontamentos</span>
-                  <span style={{color:"#C47D00",fontWeight:700}}>⏱ {fmtMin(byServ[serv].mins)}</span>
-                </div>
-              </div>
-            ))}
-            {SERVICOS_OFICINA.every(s=>byServ[s].qtd===0)&&<div style={{gridColumn:"1/-1",color:"#CCC",textAlign:"center",padding:16,fontSize:13}}>Sem serviços no período.</div>}
+            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
           </div>
 
           {/* Por OS */}
           {osList.length>0&&<>
-            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:10}}>🗂 Apontamentos por OS</div>
+            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
             <div className="card" style={{overflow:"hidden",marginBottom:20}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd Apontamentos</th><th>Horas Totais</th><th>Patrimônio</th></tr></thead>
-                  <tbody>
-                    {osList.map(os=>{
-                      const d=byOS[os];
-                      return(
-                        <tr key={os}>
-                          <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
-                          <td>{d.tecnico}</td>
-                          <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
-                          <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
-                          <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
-                          <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <div className="tbl-wrap"><table>
+                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% do Total</th><th>Patrimônio</th></tr></thead>
+                <tbody>{osList.map(os=>{
+                  const d=byOS[os];
+                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+                  return(<tr key={os}>
+                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
+                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
+                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
+                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
+                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
+                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
+                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
+                  </tr>);
+                })}</tbody>
+              </table></div>
             </div>
           </>}
         </div>
           );
         })()}
+
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
         {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
@@ -3586,113 +3600,154 @@ export default function App(){
         {tab==="dashboard_ofi_150"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
+          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
           const apMes=apontamentos150.filter(a=>{
-            if(!a.data) return false;
-            if(dashOfi150From&&a.data<dashOfi150From) return false;
-            if(dashOfi150To&&a.data>dashOfi150To) return false;
-            if(!dashOfi150From&&!dashOfi150To&&!a.data.startsWith(ym)) return false;
-            if(dashOfi150Tech!=="todos"&&a.tecnico!==dashOfi150Tech) return false;
+            if(!a.data)return false;
+            if(dashOfi150From&&a.data<dashOfi150From)return false;
+            if(dashOfi150To&&a.data>dashOfi150To)return false;
+            if(!dashOfi150From&&!dashOfi150To&&!a.data.startsWith(ym))return false;
+            if(dashOfi150Tech!=="todos"&&a.tecnico!==dashOfi150Tech)return false;
             return true;
           });
-          const totalMin=apMes.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-          const osList150=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
-          const byTech150={};
+          const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
+          const byTech={};
           OFICINA_150_TECHS.forEach(t=>{
             const aps=apMes.filter(a=>a.tecnico===t);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            const porServico={};
-            SERVICOS_OFICINA.forEach(s=>{porServico[s]=aps.filter(a=>a.servico===s).length;});
-            byTech150[t]={aps,mins,porServico};
+            const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+            const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
+            byTech[t]={aps,mins,porServ};
           });
-          const byServ150={};
+          const byServ={};
           SERVICOS_OFICINA.forEach(s=>{
             const aps=apMes.filter(a=>a.servico===s);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            byServ150[s]={qtd:aps.length,mins};
+            byServ[s]={qtd:aps.length,mins:aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)};
           });
-          const byOS150={};
-          osList150.forEach(os=>{
+          const byOS={};
+          osList.forEach(os=>{
             const aps=apMes.filter(a=>a.os===os);
-            const mins=aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            byOS150[os]={aps,mins,tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
+            byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
-          const techHorasData={labels:OFICINA_150_TECHS,datasets:[{label:"Horas",data:OFICINA_150_TECHS.map(t=>+(byTech150[t].mins/60).toFixed(1)),backgroundColor:"#F5C200",borderRadius:4}]};
-          const servData={labels:SERVICOS_OFICINA,datasets:[{label:"Qtd",data:SERVICOS_OFICINA.map(s=>byServ150[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:4}]};
+          const techAtivos=OFICINA_150_TECHS.filter(t=>byTech[t].aps.length>0);
+          const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
+          const chartServ={labels:servAtivos,datasets:[{label:"Qtd",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:6},{label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:["#1565C060","#C6282860","#E67E0060","#F5C20060","#1A7A3C60","#00838F60","#AD145760","#6A1B9A60","#4E342E60"],borderRadius:6}]};
+          const chartOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div style={{fontWeight:800,fontSize:22}}>📊 Dashboard Oficina 150</div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} style={{fontSize:12}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfi150To} onChange={e=>setDashOfi150To(e.target.value)} style={{fontSize:12}}/></div>
-                  {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-                {[{l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A"},{l:"Horas Totais",v:fmtMin(totalMin),c:"#C47D00"},{l:"Técnicos Ativos",v:OFICINA_150_TECHS.filter(t=>byTech150[t].aps.length>0).length,c:"#1A7A3C"},{l:"OSs Únicas",v:osList150.length,c:"#1565C0"}].map((s,i)=>(
-                  <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
-                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
-                    <div style={{fontSize:28,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>⏱ Horas por Técnico</div><ChartCanvas type="bar" data={techHorasData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}},maintainAspectRatio:false}} height={160}/></div>
-                <div className="card" style={{padding:16}}><div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Serviços Realizados</div><ChartCanvas type="bar" data={servData} options={{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false}} height={240}/></div>
-              </div>
-              {/* Por Técnico */}
-              <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:8}}>👷 Por Técnico</div>
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
-                {OFICINA_150_TECHS.filter(t=>byTech150[t].aps.length>0).map(tech=>{
-                  const d=byTech150[tech];
-                  const color=techColor(tech);
-                  return(
-                    <div key={tech} className="card" style={{padding:12,borderLeft:`4px solid ${color}`}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexWrap:"wrap",gap:6}}>
-                        <div style={{fontWeight:800,fontSize:13}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{display:"flex",gap:10,fontSize:11}}>
-                          <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"2px 8px",borderRadius:5}}>⏱ {fmtMin(d.mins)}</span>
-                          <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"2px 8px",borderRadius:5}}>📋 {d.aps.length} apontamento(s)</span>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                        {SERVICOS_OFICINA.filter(s=>d.porServico[s]>0).map(serv=>(
-                          <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:5,padding:"2px 8px",fontSize:10,color:"#1565C0",fontWeight:600}}>{serv} ({d.porServico[serv]})</span>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:20,fontSize:13}}>Sem apontamentos no período.</div>}
-              </div>
-              {/* Por OS */}
-              {osList150.length>0&&<>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:8}}>🗂 Por OS</div>
-                <div className="card" style={{overflow:"hidden",marginBottom:16}}>
-                  <div className="tbl-wrap"><table>
-                    <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>Patrimônio</th></tr></thead>
-                    <tbody>{osList150.map(os=>{
-                      const d=byOS150[os];
-                      return(<tr key={os}>
-                        <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
-                        <td>{d.tecnico}</td>
-                        <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 7px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
-                        <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
-                        <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
-                        <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
-                      </tr>);
-                    })}</tbody>
-                  </table></div>
-                </div>
-              </>}
+        <div style={{animation:"fadeIn .3s ease"}}>
+          {/* Cabeçalho + Filtros */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
+            <div>
+              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 Dashboard Oficina 150</div>
+              <div style={{fontSize:12,color:"#888"}}>{MESES[agOfi150Month]} {agOfi150Year} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+              <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028,2029].map(y=><option key={y}>{y}</option>)}</select>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfi150To} onChange={e=>setDashOfi150To(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+              {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
+            </div>
+          </div>
+
+          {/* KPIs */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+            {[
+              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A",bg:"#FFF"},
+              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1565C0",bg:"#F0F4FF"},
+              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C",bg:"#F0FFF5"},
+              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00",bg:"#FFFBF0"},
+            ].map((s,i)=>(
+              <div key={i} className="card" style={{padding:"18px 20px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
+                <div style={{fontSize:11,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:32,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Gráficos */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>⏱ Horas Trabalhadas por Técnico</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
+              <ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>
+            </div>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>📋 Apontamentos por Técnico</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
+              <ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>
+            </div>
+          </div>
+          {servAtivos.length>0&&<div className="card" style={{padding:20,marginBottom:24}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>🔧 Serviços Realizados</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Azul = quantidade · transparente = horas</div>
+            <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top"}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*45)}/>
+          </div>}
+
+          {/* Por Técnico detalhado */}
+          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+            {techAtivos.map(tech=>{
+              const d=byTech[tech];
+              const color=techColor(tech);
+              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+              return(
+                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
+                    <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>{tech}
+                    </div>
+                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
+                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
+                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
+                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
+                    </div>
+                  </div>
+                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3}}/>
+                  </div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {SERVICOS_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
+                      <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
+                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
+          </div>
+
+          {/* Por OS */}
+          {osList.length>0&&<>
+            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
+            <div className="card" style={{overflow:"hidden",marginBottom:20}}>
+              <div className="tbl-wrap"><table>
+                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% Total</th><th>Patrimônio</th></tr></thead>
+                <tbody>{osList.map(os=>{
+                  const d=byOS[os];
+                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+                  return(<tr key={os}>
+                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
+                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
+                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
+                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
+                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
+                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
+                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
+                  </tr>);
+                })}</tbody>
+              </table></div>
+            </div>
+          </>}
+        </div>
           );
         })()}
+
 
         {/* ── PENDÊNCIAS MATHEUS ── */}
         {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
