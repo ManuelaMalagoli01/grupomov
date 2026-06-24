@@ -1021,7 +1021,9 @@ export default function App(){
   const [showArqSaida,setShowArqSaida]=useState(false);
   const [showArqReq,setShowArqReq]=useState(false);
   const [uberPedidos,setUberPedidos]=useState([]);
+  const [showArqUber,setShowArqUber]=useState(false);
   const [financeiro,setFinanceiro]=useState([]);
+  const [showArqFin,setShowArqFin]=useState(false);
   const [frota,setFrota]=useState([]);
   const [prioridades,setPrioridades]=useState([]);
   const [rhFiscal,setRhFiscal]=useState([]);
@@ -1086,7 +1088,9 @@ export default function App(){
   const [ofiNovaFrom,setOfiNovaFrom]=useState("");
   const [ofiNovaTo,setOfiNovaTo]=useState("");
   const [apontamentos,setApontamentos]=useState([]);
+  const [showArqApon,setShowArqApon]=useState(false);
   const [apontamentos150,setApontamentos150]=useState([]);
+  const [showArqApon150,setShowArqApon150]=useState(false);
   const [agendaOfi150,setAgendaOfi150]=useState({});
   const [agOfi150Month,setAgOfi150Month]=useState(TODAY.getMonth());
   const [agOfi150Year,setAgOfi150Year]=useState(TODAY.getFullYear());
@@ -1115,6 +1119,7 @@ export default function App(){
   const [ofi150From,setOfi150From]=useState("");
   const [ofi150To,setOfi150To]=useState("");
   const [sas,setSas]=useState([]);
+  const [showArqSas,setShowArqSas]=useState(false);
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -1647,6 +1652,7 @@ export default function App(){
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina</div><div style={{fontSize:13,color:"#888"}}>{apontamentos.length} registro(s)</div></div>
               <div style={{display:"flex",gap:8}}>
               <ExportBar data={apontamentos} filename="apontamentos_oficina" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"os",label:"OS"},{key:"empresa",label:"Empresa"},{key:"horasTrabalhadas",label:"Horas"}]}/>
+                <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqApon?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqApon?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(apontamentos,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={addApon}>+ Novo Apontamento</BtnY>
               </div>
@@ -1667,7 +1673,7 @@ export default function App(){
                 <table>
                   <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Oficina</th><th>Relatório</th><th>Observação</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
-                    {apontamentos.filter(a=>{
+                    {apontamentos.filter(a=>showArqApon||!a.arquivado).filter(a=>{
                       if(ofiNovaData&&a.data!==ofiNovaData)return false;
                       if(ofiNovaFrom&&(!a.data||a.data<ofiNovaFrom))return false;
                       if(ofiNovaTo&&(!a.data||a.data>ofiNovaTo))return false;
@@ -1690,7 +1696,10 @@ export default function App(){
                         <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                         <td><input type="text" value={a.obs||""} onChange={e=>updateApon(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                         <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                        <td><button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                      <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{a.arquivado?"📤":"🗄️"}</button>
+                      <button onClick={()=>{if(window.confirm('Excluir?'))delApon(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button>
+                    </td>
                       </tr>
                     ))}
                     {apontamentos.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
@@ -2723,6 +2732,7 @@ export default function App(){
                 <div style={{fontSize:13,color:"#888"}}>{uberPedidos.length} pedido(s) registrado(s)</div>
               </div>
               <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqUber?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqUber?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(uberPedidos,"uber_grupomov",[
                   {key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"departamento",label:"Departamento"},
                   {key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"relatorio",label:"Relatório"},
@@ -2749,7 +2759,7 @@ export default function App(){
                       </tr>
                     </thead>
                     <tbody>
-                      {uberPedidos.map(p=>(
+                      {uberPedidos.filter(p=>showArqUber||!p.arquivado).map(p=>(
                         <tr key={p.id}>
                           <td><input type="date" value={p.data||""} onChange={e=>updateUber(p.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
                           <td><input type="text" value={p.solicitante||""} onChange={e=>updateUber(p.id,{solicitante:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px"}} placeholder="Nome"/></td>
@@ -2783,7 +2793,10 @@ export default function App(){
                           </td>
                           <td><input type="text" value={p.obs||""} onChange={e=>updateUber(p.id,{obs:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
                           <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{p.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(p.registradoEm)}</span></td>
-                          <td><button onClick={()=>{if(window.confirm("Excluir pedido?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                          <td style={{whiteSpace:"nowrap"}}>
+                            <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{p.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir pedido?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -2804,6 +2817,7 @@ export default function App(){
                 <div style={{fontSize:13,color:"#888"}}>{financeiro.length} lançamento(s)</div>
               </div>
               <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqFin?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqFin?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(financeiro,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"Patrimônio"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Data Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Valor Reembolso"},{key:"ticketReembolso",label:"Ticket Reembolso"},{key:"registradoPor",label:"Registrado por"}])}/>
                 <BtnY onClick={addFin}>+ Novo Lançamento</BtnY>
               </div>
@@ -2820,7 +2834,7 @@ export default function App(){
                   <table>
                     <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Patrimônio</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th><th>Ações</th></tr></thead>
                     <tbody>
-                      {financeiro.map(f=>{
+                      {financeiro.filter(f=>showArqFin||!f.arquivado).map(f=>{
                         const pend=f.situacao==="pendente";
                         const semAcerto=f.acerto==="nao";
                         return(
@@ -2839,7 +2853,10 @@ export default function App(){
                             <td><input type="text" value={f.valorReembolso||""} onChange={e=>updateFin(f.id,{valorReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="R$ 0,00"/></td>
                             <td><input type="text" value={f.ticketReembolso||""} onChange={e=>updateFin(f.id,{ticketReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="Ticket"/></td>
                             <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{f.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(f.registradoEm)}</span></td>
-                            <td><button onClick={()=>{if(window.confirm("Excluir este lançamento?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                            <td style={{whiteSpace:"nowrap"}}>
+                              <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} title={f.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{f.arquivado?"📤":"🗄️"}</button>
+                              <button onClick={()=>{if(window.confirm("Excluir este lançamento?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                            </td>
                           </tr>
                         );
                       })}
@@ -3117,6 +3134,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📄 SAS</div><div style={{fontSize:13,color:"#888"}}>{sas.length} registro(s)</div></div>
               <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSas?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSas?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(sas,"sas_grupomov",[{key:"dataSolicitacao",label:"Data Solicitação"},{key:"email",label:"E-mail"},{key:"nfNum",label:"Nº NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"tel",label:"Tel"},{key:"emailContato",label:"Email Contato"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Data Realização"},{key:"relatorioMov",label:"Relatório MOV"},{key:"envioFaturamento",label:"Envio Faturamento"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"dataEnvioSas",label:"Data Envio SAS"}])}/>
                 <BtnY onClick={addSas}>+ Novo SAS</BtnY>
               </div>
@@ -3127,7 +3145,7 @@ export default function App(){
                   <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
                     {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
-                    {sas.map(s=>{
+                    {sas.filter(s=>showArqSas||!s.arquivado).map(s=>{
                       const isPend=s.status==="pendente";
                       const slaVal=isPend&&s.dataSolicitacao?diffDays(s.dataSolicitacao):null;
                       return(
@@ -3148,7 +3166,10 @@ export default function App(){
                           <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
                           <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
                           <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
-                          <td><button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
+                          <td style={{whiteSpace:"nowrap"}}>
+                            <button onClick={()=>updateSas(s.id,{arquivado:!s.arquivado})} title={s.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{s.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -3418,6 +3439,7 @@ export default function App(){
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📝 Apontamentos Oficina 150</div><div style={{fontSize:13,color:"#888"}}>{apontamentos150.length} registro(s) · Matheus, Pedro Souza, Pedro Pimentel</div></div>
               <div style={{display:"flex",gap:8}}>
               <ExportBar data={apontamentos150} filename="apontamentos_150" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"os",label:"OS"},{key:"empresa",label:"Empresa"},{key:"horasTrabalhadas",label:"Horas"}]}/>
+                <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqApon150?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqApon150?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(apontamentos150,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={addApon150}>+ Novo Apontamento</BtnY>
               </div>
@@ -3435,7 +3457,7 @@ export default function App(){
             <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
               <thead><tr><th>Data</th><th>OS</th><th>Patrimônio</th><th>Técnico</th><th>Serviço</th><th>Início</th><th>Término</th><th>Total</th><th>Relatório</th><th>Obs</th><th>Registrado por</th><th>Ações</th></tr></thead>
               <tbody>
-                {apontamentos150.filter(a=>{
+                {apontamentos150.filter(a=>showArqApon150||!a.arquivado).filter(a=>{
                   if(ofi150Data&&a.data!==ofi150Data)return false;
                   if(ofi150From&&(!a.data||a.data<ofi150From))return false;
                   if(ofi150To&&(!a.data||a.data>ofi150To))return false;
@@ -3457,7 +3479,10 @@ export default function App(){
                     <td><input type="text" value={a.relatorio||""} onChange={e=>updateApon150(a.id,{relatorio:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
                     <td><input type="text" value={a.obs||""} onChange={e=>updateApon150(a.id,{obs:e.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
                     <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                    <td><button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11}}>✕</button></td>
+                    <td style={{whiteSpace:"nowrap"}}>
+                      <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{a.arquivado?"📤":"🗄️"}</button>
+                      <button onClick={()=>{if(window.confirm('Excluir?'))delApon150(a.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button>
+                    </td>
                   </tr>
                 ))}
                 {apontamentos150.length===0&&<tr><td colSpan={12} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum apontamento. Clique em "+ Novo Apontamento".</td></tr>}
