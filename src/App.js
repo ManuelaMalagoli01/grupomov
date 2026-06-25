@@ -2259,45 +2259,6 @@ export default function App(){
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {(()=>{
-              const mu=processosMU||[];
-              const pendente=mu.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length;
-              const concluido=mu.filter(p=>p.processoStatus==="concluido").length;
-              const emAndamento=mu.filter(p=>p.processoStatus==="em_andamento").length;
-              const tecnicos=[...new Set(mu.map(p=>p.tecnico).filter(Boolean))];
-              const byTech=tecnicos.map(t=>({tech:t,qtd:mu.filter(p=>p.tecnico===t).length})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
-              const empresas=[...new Set(mu.map(p=>p.empresa).filter(Boolean))];
-              const byEmp=empresas.map(e=>({emp:e,qtd:mu.filter(p=>p.empresa===e).length})).sort((a,b)=>b.qtd-a.qtd).slice(0,6);
-              const chartStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[pendente,emAndamento,concluido],backgroundColor:["#C62828","#1565C0","#1A7A3C"],borderRadius:6}]};
-              const chartTech={labels:byTech.map(t=>t.tech),datasets:[{label:"Ocorrências",data:byTech.map(t=>t.qtd),backgroundColor:"#C62828",borderRadius:6,borderSkipped:false}]};
-              const chartEmp={labels:byEmp.map(e=>e.emp),datasets:[{label:"Processos",data:byEmp.map(e=>e.qtd),backgroundColor:"#E67E00",borderRadius:6,borderSkipped:false}]};
-              return(
-                <div style={{marginBottom:20}}>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-                    {[{icon:"⚠️",l:"Total",v:mu.length,c:"#1A1A1A",bg:"#FFF"},{icon:"⏳",l:"Pendentes",v:pendente,c:"#C62828",bg:"#FFF0F0"},{icon:"🔄",l:"Em Andamento",v:emAndamento,c:"#1565C0",bg:"#F0F4FF"},{icon:"✅",l:"Concluídos",v:concluido,c:"#1A7A3C",bg:"#F0FFF5"}].map((s,i)=>(
-                      <div key={i} className="card" style={{padding:"14px 18px",borderTop:`3px solid ${s.c}`,background:s.bg}}>
-                        <div style={{fontSize:10,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{s.icon} {s.l}</div>
-                        <div style={{fontSize:28,fontWeight:900,color:s.c}}>{s.v}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:16}}>
-                    <div className="card" style={{padding:16}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>📊 Status</div>
-                      <ChartCanvas type="doughnut" data={chartStatus} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10}}}}}} height={150}/>
-                    </div>
-                    <div className="card" style={{padding:16}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>👷 Técnicos com Mais Ocorrências</div>
-                      <ChartCanvas type="bar" data={chartTech} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}} height={150}/>
-                    </div>
-                    <div className="card" style={{padding:16}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>🏢 Empresas com Mais Ocorrências</div>
-                      <ChartCanvas type="bar" data={chartEmp} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}} height={150}/>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⚠️ Processos Mau Uso</div><div style={{fontSize:13,color:"#888"}}>{processosMU.filter(p=>!showArqMU?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
               <div style={{display:"flex",gap:8}}>
@@ -2349,38 +2310,6 @@ export default function App(){
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            {(()=>{
-              const af=processosAF||[];
-              const pendente=af.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length;
-              const concluido=af.filter(p=>p.processoStatus==="concluido").length;
-              const emAndamento=af.filter(p=>p.processoStatus==="em_andamento").length;
-              const empresas=[...new Set(af.map(p=>p.empresa).filter(Boolean))];
-              const byEmp=empresas.map(e=>({emp:e,qtd:af.filter(p=>p.empresa===e).length})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
-              const chartStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[pendente,emAndamento,concluido],backgroundColor:["#C62828","#1565C0","#1A7A3C"],borderRadius:6}]};
-              const chartEmp={labels:byEmp.map(e=>e.emp),datasets:[{label:"Processos",data:byEmp.map(e=>e.qtd),backgroundColor:"#F5C200",borderRadius:6,borderSkipped:false}]};
-              return(
-                <div style={{marginBottom:20}}>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-                    {[{icon:"📋",l:"Total",v:af.length,c:"#1A1A1A",bg:"#FFF"},{icon:"⏳",l:"Pendentes",v:pendente,c:"#C62828",bg:"#FFF0F0"},{icon:"🔄",l:"Em Andamento",v:emAndamento,c:"#1565C0",bg:"#F0F4FF"},{icon:"✅",l:"Concluídos",v:concluido,c:"#1A7A3C",bg:"#F0FFF5"}].map((s,i)=>(
-                      <div key={i} className="card" style={{padding:"14px 18px",borderTop:`3px solid ${s.c}`,background:s.bg}}>
-                        <div style={{fontSize:10,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{s.icon} {s.l}</div>
-                        <div style={{fontSize:28,fontWeight:900,color:s.c}}>{s.v}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12,marginBottom:16}}>
-                    <div className="card" style={{padding:16}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>📊 Status dos Processos</div>
-                      <ChartCanvas type="doughnut" data={chartStatus} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10}}}}}} height={160}/>
-                    </div>
-                    <div className="card" style={{padding:16}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>🏢 Top Empresas por Qtd de Processos</div>
-                      <ChartCanvas type="bar" data={chartEmp} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0}}}}} height={160}/>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Processos A Faturar</div><div style={{fontSize:13,color:"#888"}}>{processosAF.filter(p=>!showArqAF?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
               <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqAF?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqAF?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado"),"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"aprovado",label:"Aprovado"},{key:"ov",label:"OV"},{key:"aprovadoPor",label:"Aprovado por"},{key:"servicoExecutado",label:"Serviço Exec."},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/><BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY></div>
