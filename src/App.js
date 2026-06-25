@@ -1844,8 +1844,8 @@ export default function App(){
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
           const techAtivos=OFICINA_TECHS.filter(t=>byTech[t].aps.length>0);
-          const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
-          const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
           const SERV_COLORS=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
           const chartServ={labels:servAtivos,datasets:[
@@ -1917,12 +1917,12 @@ export default function App(){
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período selecionado</div>
-              {techAtivos.length>0?<ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
+              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
             </div>
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              {techAtivos.length>0?<ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
+              <ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>
             </div>
           </div>
           {servAtivos.length>0&&<>
@@ -3673,8 +3673,8 @@ export default function App(){
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
           const techAtivos=OFICINA_150_TECHS.filter(t=>byTech[t].aps.length>0);
-          const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
-          const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
           const SERV_COLORS150=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
           const chartServ={labels:servAtivos,datasets:[
@@ -3742,12 +3742,12 @@ export default function App(){
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
-              {techAtivos.length>0?<ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
+              <ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>
             </div>
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              {techAtivos.length>0?<ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
+              <ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>
             </div>
           </div>
           {servAtivos.length>0&&<>
