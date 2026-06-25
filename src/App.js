@@ -773,16 +773,16 @@ function ChartCanvas({type,data,options,height=240}){
       if(!alive||!ref.current)return;
       if(inst.current){try{inst.current.destroy();}catch(e){}inst.current=null;}
       try{
-        inst.current=new Chart(ref.current.getContext("2d"),{type,data:JSON.parse(JSON.stringify(data)),options:{responsive:true,maintainAspectRatio:false,...options}});
+        inst.current=new Chart(ref.current.getContext("2d"),{type,data:JSON.parse(JSON.stringify(data)),options:{...options,responsive:true,maintainAspectRatio:false}});
         if(alive)setLoading(false);
       }catch(e){if(alive)setErr(e.message);}
     }).catch(e=>{if(alive){setLoading(false);setErr("Erro ao carregar biblioteca de gráficos");}});
     return ()=>{alive=false;if(inst.current){try{inst.current.destroy();}catch(e){}inst.current=null;}};
   },[key]);
   if(err) return <div style={{height,display:"flex",alignItems:"center",justifyContent:"center",color:"#C62828",fontSize:11,background:"#FFF0F0",borderRadius:8}}>⚠️ {err}</div>;
-  return <div style={{position:"relative",height}}>
-    {loading&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#AAA",fontSize:12}}>⏳ Carregando...</div>}
-    <canvas ref={ref}/>
+  return <div style={{position:"relative",width:"100%",height:height+"px",minHeight:height}}>
+    {loading&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#AAA",fontSize:12,zIndex:1}}>⏳ Carregando gráfico...</div>}
+    <canvas ref={ref} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}}/>
   </div>;
 }
 
