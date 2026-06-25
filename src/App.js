@@ -3587,6 +3587,7 @@ export default function App(){
                   </select>
                   <select value={carMonth} onChange={e=>setCarMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={carYear} onChange={e=>setCarYear(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                  <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                 </div>
               </div>
 
@@ -3704,7 +3705,7 @@ export default function App(){
                   </thead>
                   <tbody>
                     {placasList.map((placa,pi)=>{
-                      const registros=carros.filter(c=>c.placa===placa&&!c.arquivado);
+                      const registros=carros.filter(c=>c.placa===placa&&(showArqCarros||!c.arquivado));
                       return(
                         <tr key={placa} style={{background:pi%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
                           <td style={{padding:"10px 14px",position:"sticky",left:0,background:pi%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:"2px solid #E0E0E0"}}>
@@ -3725,14 +3726,14 @@ export default function App(){
                                   const itensProx=(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v);
                                   const updateC=(ch)=>updateCarro(c.id,ch);
                                   return(
-                                    <div key={c.id} style={{background:"#FFF",border:`1px solid ${stCfg.c}33`,borderLeft:`4px solid ${stCfg.c}`,borderRadius:8,padding:"8px 10px",marginBottom:6,boxShadow:"0 2px 6px rgba(0,0,0,.07)"}}>
+                                    <div key={c.id} style={{background:"#FFF",border:`1px solid ${stCfg.c}33`,borderLeft:`4px solid ${c.arquivado?"#CCC":stCfg.c}`,borderRadius:8,padding:"8px 10px",marginBottom:6,boxShadow:"0 2px 6px rgba(0,0,0,.07)",opacity:c.arquivado?0.55:1}}>
                                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                                         <select value={c.status} onChange={e=>updateC({status:e.target.value})} style={{fontSize:11,padding:"3px 6px",border:"none",borderRadius:5,fontWeight:700,color:stCfg.c,background:stCfg.bg}}>
                                           {Object.entries(CARRO_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
                                         </select>
                                         <div style={{display:"flex",gap:3}}>
-                                          <button onClick={()=>updateC({arquivado:!c.arquivado})} title="Arquivar" style={{background:"none",border:"none",cursor:"pointer",fontSize:13}}>🗄️</button>
-                                          <button onClick={()=>{if(window.confirm("Excluir?")){setCarros(p=>p.filter(x=>x.id!==c.id));db.delete("carros",c.id);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button>
+                                          <button onClick={()=>updateC({arquivado:!c.arquivado})} title={c.arquivado?"Desarquivar":"Arquivar"} style={{background:"none",border:"none",cursor:"pointer",fontSize:14}}>{c.arquivado?"📤":"🗄️"}</button>
+                                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setCarros(p=>p.filter(x=>x.id!==c.id));db.delete("carros",c.id);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:14,fontWeight:700}}>✕</button>
                                         </div>
                                       </div>
                                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
