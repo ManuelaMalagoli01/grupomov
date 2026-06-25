@@ -1511,8 +1511,14 @@ export default function App(){
                       try{
                         const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
                         const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
-                        if(!resp.ok){const err=await resp.json();throw new Error(err.error?.message||"Erro API");}
-                        const data=await resp.json();
+                        const respText=await resp.text();
+                        if(!resp.ok){
+                          let errMsg="Erro API ("+resp.status+")";
+                          try{const errJson=JSON.parse(respText);errMsg=errJson.error||errMsg;}catch(e){}
+                          throw new Error(errMsg);
+                        }
+                        let data;
+                        try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
                         const txt=data.content?.[0]?.text||"{}";
                         const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
                         const row={
