@@ -1056,6 +1056,8 @@ export default function App(){
   const [carroFiltroData,setCarroFiltroData]=useState("");
   const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
   const [showArqCarros,setShowArqCarros]=useState(false);
+  const [modalCarros,setModalCarros]=useState(false);
+  const [editCarro,setEditCarro]=useState(null);
   const [showArqPendMan,setShowArqPendMan]=useState(false);
   const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
   const [editPendMan,setEditPendMan]=useState(null);
@@ -3536,253 +3538,164 @@ export default function App(){
 
         {/* ── CARROS ── */}
         {tab==="carros"&&(()=>{
-          const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const ym=`${carYear}-${String(carMonth+1).padStart(2,"0")}`;
-          const diasNoMes=new Date(carYear,carMonth+1,0).getDate();
-          const dias=Array.from({length:diasNoMes},(_,i)=>i+1);
-          const placasList=PLACAS_CARROS.filter(p=>carFiltroPlaca==="todas"||p===carFiltroPlaca);
-          const toggleItem=(field,val)=>{
-            setCarForm(prev=>{
-              const arr=prev[field]||[];
-              return {...prev,[field]:arr.includes(val)?arr.filter(x=>x!==val):[...arr,val]};
-            });
-          };
-          const addRevisao=()=>{
+          const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""};
+          const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
+          const salvarCarro=()=>{
             if(!carForm.placa){alert("Selecione a placa.");return;}
-            const dataFinal=carForm.data||`${ym}-01`;
-            const row={
-              id:`CAR${Date.now()}`,
-              data:dataFinal,
-              placa:carForm.placa,
-              status:carForm.status||"orcamento_pendente",
-              responsavel:carForm.responsavel||"",
-              ultimaRevisaoData:carForm.ultimaRevisaoData||"",
-              itensSubstituidos:carForm.itensSubstituidos||[],
-              itensSubstituidosObs:carForm.itensSubstituidosObs||"",
-              kmUltimaRevisao:carForm.kmUltimaRevisao||"",
-              valorUltimaRevisao:carForm.valorUltimaRevisao||"",
-              kmAtual:carForm.kmAtual||"",
-              itensProximaRevisao:carForm.itensProximaRevisao||[],
-              itensProximaRevisaoObs:carForm.itensProximaRevisaoObs||"",
-              proximaRevisaoData:carForm.proximaRevisaoData||"",
-              oficina:carForm.oficina||"",
-              obs:carForm.obs||"",
-              registradoPor:user.name,
-              registradoEm:new Date().toISOString(),
-              arquivado:false
-            };
-            setCarros(p=>[row,...p]);
-            db.save("carros",row.id,row);
-            setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});
-            notify("✅ Registro salvo!");
+            if(editCarro){
+              updateCarro(editCarro.id,{...carForm});
+              setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);
+              notify("✅ Registro atualizado!");
+            } else {
+              const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...carForm};
+              setCarros(p=>[row,...p]);db.save("carros",row.id,row);
+              setModalCarros(false);setCarForm(CARRO_FORM_EMPTY);
+              notify("✅ Registro salvo!");
+            }
           };
+          const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||""});setModalCarros(true);};
+          const lista=carros.filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
+          const itensSubstLabel=(c)=>(c.itensSubstituidos||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
+          const itensProxLabel=(c)=>(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
+          const Inp2=({label,value,onChange,type="text",placeholder=""})=>(
+            <div style={{display:"flex",flexDirection:"column",gap:3}}>
+              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{label}</label>
+              <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+            </div>
+          );
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚙 Carros</div><div style={{fontSize:13,color:"#888"}}>{placasList.length} placa(s)</div></div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <select value={carFiltroPlaca} onChange={e=>setCarFiltroPlaca(e.target.value)} style={{fontSize:12}}>
+              {/* Modal inserir/editar */}
+              {modalCarros&&(
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}}>
+                  <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+                    <div style={{padding:"16px 20px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
+                      <div style={{fontWeight:800,fontSize:16,color:"#1A1A1A"}}>{editCarro?"✏️ Editar Registro":"➕ Novo Registro — Carros"}</div>
+                      <button onClick={()=>{setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
+                    </div>
+                    <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Placa</label>
+                          <select value={carForm.placa} onChange={e=>setCarForm(p=>({...p,placa:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700}}>
+                            {PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label>
+                          <select value={carForm.status} onChange={e=>setCarForm(p=>({...p,status:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"none",fontWeight:700,color:CARRO_STATUS[carForm.status]?.c||"#555",background:CARRO_STATUS[carForm.status]?.bg||"#F5F5F5"}}>
+                            {Object.entries(CARRO_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <Inp2 label="Data" type="date" value={carForm.data} onChange={v=>setCarForm(p=>({...p,data:v}))}/>
+                        <Inp2 label="Responsável" value={carForm.responsavel} onChange={v=>setCarForm(p=>({...p,responsavel:v}))} placeholder="Nome"/>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                        <Inp2 label="Km Atual" value={carForm.kmAtual} onChange={v=>setCarForm(p=>({...p,kmAtual:v}))} placeholder="Ex: 47500"/>
+                        <Inp2 label="Km Última Revisão" value={carForm.kmUltimaRevisao} onChange={v=>setCarForm(p=>({...p,kmUltimaRevisao:v}))} placeholder="Ex: 45000"/>
+                        <Inp2 label="Valor Última Revisão" value={carForm.valorUltimaRevisao} onChange={v=>setCarForm(p=>({...p,valorUltimaRevisao:v}))} placeholder="R$ 0,00"/>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <Inp2 label="Data Última Revisão" type="date" value={carForm.ultimaRevisaoData} onChange={v=>setCarForm(p=>({...p,ultimaRevisaoData:v}))}/>
+                        <Inp2 label="Data Próxima Revisão" type="date" value={carForm.proximaRevisaoData} onChange={v=>setCarForm(p=>({...p,proximaRevisaoData:v}))}/>
+                      </div>
+                      <div style={{background:"#F8F8F8",borderRadius:8,padding:12}}>
+                        <div style={{fontSize:11,fontWeight:800,color:"#555",marginBottom:8}}>✅ Itens Substituídos</div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                          {ITENS_REVISAO.map(it=>{const sel=(carForm.itensSubstituidos||[]).includes(it.v);return(<button key={it.v} onClick={()=>toggleIt("itensSubstituidos",it.v)} style={{fontSize:11,padding:"4px 9px",borderRadius:12,border:sel?"none":"1px solid #E0E0E0",background:sel?"#1A7A3C":"#FFF",color:sel?"#FFF":"#555",cursor:"pointer",fontWeight:sel?700:400}}>{it.l}</button>);})}
+                        </div>
+                        {(carForm.itensSubstituidos||[]).includes("outros")&&<input type="text" value={carForm.itensSubstituidosObs||""} onChange={e=>setCarForm(p=>({...p,itensSubstituidosObs:e.target.value}))} placeholder="Descrever outros itens substituídos..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%",boxSizing:"border-box"}}/>}
+                      </div>
+                      <div style={{background:"#F0F4FF",borderRadius:8,padding:12}}>
+                        <div style={{fontSize:11,fontWeight:800,color:"#555",marginBottom:8}}>🔜 Itens Próxima Revisão</div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                          {ITENS_REVISAO.map(it=>{const sel=(carForm.itensProximaRevisao||[]).includes(it.v);return(<button key={it.v} onClick={()=>toggleIt("itensProximaRevisao",it.v)} style={{fontSize:11,padding:"4px 9px",borderRadius:12,border:sel?"none":"1px solid #E0E0E0",background:sel?"#1565C0":"#FFF",color:sel?"#FFF":"#555",cursor:"pointer",fontWeight:sel?700:400}}>{it.l}</button>);})}
+                        </div>
+                        {(carForm.itensProximaRevisao||[]).includes("outros")&&<input type="text" value={carForm.itensProximaRevisaoObs||""} onChange={e=>setCarForm(p=>({...p,itensProximaRevisaoObs:e.target.value}))} placeholder="Descrever outros itens próxima revisão..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%",boxSizing:"border-box"}}/>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <Inp2 label="Oficina" value={carForm.oficina} onChange={v=>setCarForm(p=>({...p,oficina:v}))} placeholder="Nome da oficina"/>
+                        <Inp2 label="Observações" value={carForm.obs} onChange={v=>setCarForm(p=>({...p,obs:v}))} placeholder="Obs gerais..."/>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                        <BtnG onClick={()=>{setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}>Cancelar</BtnG>
+                        <BtnY onClick={salvarCarro}>{editCarro?"Salvar Alterações":"Adicionar Registro"}</BtnY>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Header */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontWeight:900,fontSize:22,marginBottom:2}}>🚙 Carros</div>
+                  <div style={{fontSize:13,color:"#888"}}>{lista.length} registro(s)</div>
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  <select value={carFiltroPlaca} onChange={e=>setCarFiltroPlaca(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}>
                     <option value="todas">🌐 Todas as placas</option>
                     {PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}
                   </select>
-                  <select value={carMonth} onChange={e=>setCarMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={carYear} onChange={e=>setCarYear(Number(e.target.value))} style={{fontSize:12}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
                   <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}]}/>
+                  <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
                 </div>
               </div>
 
-              {/* Formulário novo registro */}
-              <div className="card" style={{padding:16,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:12}}>➕ Novo Registro de Revisão</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Placa</label>
-                    <select value={carForm.placa||PLACAS_CARROS[0]} onChange={e=>setCarForm(p=>({...p,placa:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700}}>
-                      {PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}
-                    </select>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label>
-                    <select value={carForm.status||"orcamento_pendente"} onChange={e=>setCarForm(p=>({...p,status:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"none",fontWeight:700,color:CARRO_STATUS[carForm.status||"orcamento_pendente"].c,background:CARRO_STATUS[carForm.status||"orcamento_pendente"].bg}}>
-                      {Object.entries(CARRO_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
-                    </select>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data</label>
-                    <input type="date" value={carForm.data||""} onChange={e=>setCarForm(p=>({...p,data:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Responsável</label>
-                    <input type="text" value={carForm.responsavel||""} onChange={e=>setCarForm(p=>({...p,responsavel:e.target.value}))} placeholder="Nome" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
+              {/* Tabela */}
+              {lista.length===0?(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>🚙</div>
+                  Nenhum registro. Clique em "+ Novo Registro" para começar.
                 </div>
-
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Última Revisão</label>
-                    <input type="date" value={carForm.ultimaRevisaoData||""} onChange={e=>setCarForm(p=>({...p,ultimaRevisaoData:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Km Última Revisão</label>
-                    <input type="text" value={carForm.kmUltimaRevisao||""} onChange={e=>setCarForm(p=>({...p,kmUltimaRevisao:e.target.value}))} placeholder="Ex: 45000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Valor Última Revisão</label>
-                    <input type="text" value={carForm.valorUltimaRevisao||""} onChange={e=>setCarForm(p=>({...p,valorUltimaRevisao:e.target.value}))} placeholder="R$ 0,00" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Km Atual</label>
-                    <input type="text" value={carForm.kmAtual||""} onChange={e=>setCarForm(p=>({...p,kmAtual:e.target.value}))} placeholder="Ex: 47500" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                </div>
-
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-                  <div style={{background:"#F8F8F8",borderRadius:8,padding:10}}>
-                    <div style={{fontSize:11,fontWeight:800,color:"#555",marginBottom:8}}>✅ Itens Substituídos</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                      {ITENS_REVISAO.map(it=>{
-                        const sel=(carForm.itensSubstituidos||[]).includes(it.v);
-                        return(<button key={it.v} onClick={()=>toggleItem("itensSubstituidos",it.v)} style={{fontSize:11,padding:"4px 9px",borderRadius:12,border:sel?"none":"1px solid #E0E0E0",background:sel?"#1A7A3C":"#FFF",color:sel?"#FFF":"#555",cursor:"pointer",fontWeight:sel?700:400}}>{it.l}</button>);
-                      })}
-                    </div>
-                    {(carForm.itensSubstituidos||[]).includes("outros")&&(
-                      <input type="text" value={carForm.itensSubstituidosObs||""} onChange={e=>setCarForm(p=>({...p,itensSubstituidosObs:e.target.value}))} placeholder="Observação sobre 'Outros'..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%"}}/>
-                    )}
-                  </div>
-                  <div style={{background:"#F8F8F8",borderRadius:8,padding:10}}>
-                    <div style={{fontSize:11,fontWeight:800,color:"#555",marginBottom:8}}>🔜 Itens Próxima Revisão</div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                      {ITENS_REVISAO.map(it=>{
-                        const sel=(carForm.itensProximaRevisao||[]).includes(it.v);
-                        return(<button key={it.v} onClick={()=>toggleItem("itensProximaRevisao",it.v)} style={{fontSize:11,padding:"4px 9px",borderRadius:12,border:sel?"none":"1px solid #E0E0E0",background:sel?"#1565C0":"#FFF",color:sel?"#FFF":"#555",cursor:"pointer",fontWeight:sel?700:400}}>{it.l}</button>);
-                      })}
-                    </div>
-                    {(carForm.itensProximaRevisao||[]).includes("outros")&&(
-                      <input type="text" value={carForm.itensProximaRevisaoObs||""} onChange={e=>setCarForm(p=>({...p,itensProximaRevisaoObs:e.target.value}))} placeholder="Observação sobre 'Outros'..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%"}}/>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:10,marginBottom:12}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Próxima Revisão (Data)</label>
-                    <input type="date" value={carForm.proximaRevisaoData||""} onChange={e=>setCarForm(p=>({...p,proximaRevisaoData:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Oficina</label>
-                    <input type="text" value={carForm.oficina||""} onChange={e=>setCarForm(p=>({...p,oficina:e.target.value}))} placeholder="Nome da oficina" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observações</label>
-                    <input type="text" value={carForm.obs||""} onChange={e=>setCarForm(p=>({...p,obs:e.target.value}))} placeholder="Observações gerais..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                  </div>
-                </div>
-
-                <div style={{display:"flex",justifyContent:"flex-end"}}>
-                  <BtnY onClick={addRevisao}>Adicionar Registro</BtnY>
-                </div>
-              </div>
-
-              {/* Calendário horizontal por placa */}
-              <div style={{overflowX:"auto"}}>
-                <table style={{borderCollapse:"collapse",width:"100%"}}>
-                  <thead>
-                    <tr style={{background:"#1A1A1A"}}>
-                      <th style={{padding:"10px 14px",color:"#F5C200",fontWeight:700,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:150,whiteSpace:"nowrap",fontSize:13}}>Placa</th>
-                      {dias.map(d=>{
-                        const dt=`${ym}-${String(d).padStart(2,"0")}`;
-                        const dow=getDOW(dt);
-                        const isWkd=dow===0||dow===6;
-                        const isToday=dt===TODAY_STR;
-                        return(
-                          <th key={d} style={{padding:"8px 6px",color:isToday?"#F5C200":isWkd?"#888":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:240,background:isToday?"#3A3A00":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12}}>
-                            <div style={{fontSize:14,fontWeight:800}}>Dia {String(d).padStart(2,"0")}</div>
-                            <div style={{fontSize:10,color:"#AAA",fontWeight:400}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
-                          </th>
-                        );
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {placasList.map((placa,pi)=>{
-                      const registros=carros.filter(c=>c.placa===placa&&(showArqCarros||!c.arquivado));
-                      return(
-                        <tr key={placa} style={{background:pi%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"10px 14px",position:"sticky",left:0,background:pi%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:"2px solid #E0E0E0"}}>
-                            <div style={{fontWeight:800,fontSize:13}}>{placa}</div>
-                            <div style={{fontSize:11,color:"#888"}}>{registros.length} registro(s) · {MESES[carMonth]}</div>
-                          </td>
-                          {dias.map(d=>{
-                            const dt=`${ym}-${String(d).padStart(2,"0")}`;
-                            const dow=getDOW(dt);
-                            const isWkd=dow===0||dow===6;
-                            const isToday=dt===TODAY_STR;
-                            const dayRegs=registros.filter(c=>c.data===dt);
-                            return(
-                              <td key={d} style={{padding:6,verticalAlign:"top",borderLeft:"1px solid #EEE",borderBottom:"1px solid #EEE",background:isToday?"#FFFDE7":isWkd?"#F5F5F5":"transparent",minWidth:240}}>
-                                {dayRegs.map(c=>{
-                                  const stCfg=CARRO_STATUS[c.status]||CARRO_STATUS.orcamento_pendente;
-                                  const itensSubst=(c.itensSubstituidos||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v);
-                                  const itensProx=(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v);
-                                  const updateC=(ch)=>updateCarro(c.id,ch);
-                                  return(
-                                    <div key={c.id} style={{background:"#FFF",border:`1px solid ${stCfg.c}33`,borderLeft:`4px solid ${c.arquivado?"#CCC":stCfg.c}`,borderRadius:8,padding:"8px 10px",marginBottom:6,boxShadow:"0 2px 6px rgba(0,0,0,.07)",opacity:c.arquivado?0.55:1}}>
-                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-                                        <select value={c.status} onChange={e=>updateC({status:e.target.value})} style={{fontSize:11,padding:"3px 6px",border:"none",borderRadius:5,fontWeight:700,color:stCfg.c,background:stCfg.bg}}>
-                                          {Object.entries(CARRO_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
-                                        </select>
-                                        <div style={{display:"flex",gap:3}}>
-                                          <button onClick={()=>updateC({arquivado:!c.arquivado})} title={c.arquivado?"Desarquivar":"Arquivar"} style={{background:"none",border:"none",cursor:"pointer",fontSize:14}}>{c.arquivado?"📤":"🗄️"}</button>
-                                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setCarros(p=>p.filter(x=>x.id!==c.id));db.delete("carros",c.id);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:14,fontWeight:700}}>✕</button>
-                                        </div>
-                                      </div>
-                                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                                        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                                          <span style={{fontSize:10,color:"#999",width:70}}>Resp.:</span>
-                                          <input type="text" defaultValue={c.responsavel||""} onBlur={e=>updateC({responsavel:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,flex:1}}/>
-                                        </div>
-                                        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                                          <span style={{fontSize:10,color:"#999",width:70}}>Últ.Rev.:</span>
-                                          <input type="date" defaultValue={c.ultimaRevisaoData||""} onBlur={e=>updateC({ultimaRevisaoData:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,flex:1}}/>
-                                        </div>
-                                        <div style={{display:"flex",gap:4}}>
-                                          <div style={{flex:1}}>
-                                            <span style={{fontSize:10,color:"#999"}}>Km Últ.</span>
-                                            <input type="text" defaultValue={c.kmUltimaRevisao||""} onBlur={e=>updateC({kmUltimaRevisao:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,width:"100%",boxSizing:"border-box"}}/>
-                                          </div>
-                                          <div style={{flex:1}}>
-                                            <span style={{fontSize:10,color:"#999"}}>Km Atual</span>
-                                            <input type="text" defaultValue={c.kmAtual||""} onBlur={e=>updateC({kmAtual:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,width:"100%",boxSizing:"border-box"}}/>
-                                          </div>
-                                        </div>
-                                        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                                          <span style={{fontSize:10,color:"#999",width:70}}>Valor:</span>
-                                          <input type="text" defaultValue={c.valorUltimaRevisao||""} onBlur={e=>updateC({valorUltimaRevisao:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,flex:1}}/>
-                                        </div>
-                                        {itensSubst.length>0&&<div style={{fontSize:10,color:"#1A7A3C"}}>✅ {itensSubst.join(", ")}{c.itensSubstituidosObs?` (${c.itensSubstituidosObs})`:""}</div>}
-                                        {itensProx.length>0&&<div style={{fontSize:10,color:"#1565C0"}}>🔜 {itensProx.join(", ")}{c.itensProximaRevisaoObs?` (${c.itensProximaRevisaoObs})`:""}</div>}
-                                        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                                          <span style={{fontSize:10,color:"#999",width:70}}>Próx.Rev.:</span>
-                                          <input type="date" defaultValue={c.proximaRevisaoData||""} onBlur={e=>updateC({proximaRevisaoData:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,flex:1}}/>
-                                        </div>
-                                        <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                                          <span style={{fontSize:10,color:"#999",width:70}}>Oficina:</span>
-                                          <input type="text" defaultValue={c.oficina||""} onBlur={e=>updateC({oficina:e.target.value})} style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,flex:1}}/>
-                                        </div>
-                                        <input type="text" defaultValue={c.obs||""} onBlur={e=>updateC({obs:e.target.value})} placeholder="Observações..." style={{fontSize:11,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:4,width:"100%",boxSizing:"border-box"}}/>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </td>
-                            );
-                          })}
+              ):(
+                <div className="card" style={{overflow:"hidden"}}>
+                  <div className="tbl-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data</th><th>Placa</th><th>Status</th><th>Responsável</th>
+                          <th>Km Atual</th><th>Km Últ. Rev.</th><th>Data Últ. Rev.</th>
+                          <th>Valor Rev.</th><th>Itens Substituídos</th><th>Itens Próx.</th>
+                          <th>Próx. Revisão</th><th>Oficina</th><th>Obs</th>
+                          <th>Reg. por</th><th>Ações</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody>
+                        {lista.map(c=>{
+                          const st=CARRO_STATUS[c.status]||CARRO_STATUS.orcamento_pendente;
+                          return(
+                            <tr key={c.id} style={{opacity:c.arquivado?0.5:1}}>
+                              <td style={{whiteSpace:"nowrap",fontSize:11}}>{c.data||"—"}</td>
+                              <td><span style={{fontWeight:800,fontSize:13,letterSpacing:.5}}>{c.placa||"—"}</span></td>
+                              <td><span style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,color:st.c,background:st.bg,whiteSpace:"nowrap"}}>{st.l}</span></td>
+                              <td style={{fontSize:11}}>{c.responsavel||"—"}</td>
+                              <td style={{fontSize:11,textAlign:"right"}}>{c.kmAtual||"—"}</td>
+                              <td style={{fontSize:11,textAlign:"right"}}>{c.kmUltimaRevisao||"—"}</td>
+                              <td style={{fontSize:11,whiteSpace:"nowrap"}}>{c.ultimaRevisaoData||"—"}</td>
+                              <td style={{fontSize:11,textAlign:"right"}}>{c.valorUltimaRevisao||"—"}</td>
+                              <td style={{fontSize:11,maxWidth:180,color:"#1A7A3C"}}>{itensSubstLabel(c)}</td>
+                              <td style={{fontSize:11,maxWidth:180,color:"#1565C0"}}>{itensProxLabel(c)}</td>
+                              <td style={{fontSize:11,whiteSpace:"nowrap",color:c.proximaRevisaoData&&c.proximaRevisaoData<TODAY_STR?"#C62828":"#333"}}>{c.proximaRevisaoData||"—"}</td>
+                              <td style={{fontSize:11}}>{c.oficina||"—"}</td>
+                              <td style={{fontSize:11,maxWidth:140,color:"#888"}}>{c.obs||"—"}</td>
+                              <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
+                              <td style={{whiteSpace:"nowrap"}}>
+                                <button onClick={()=>abrirEditar(c)} title="Editar" style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 7px",fontSize:13,marginRight:3}}>✏️</button>
+                                <button onClick={()=>updateCarro(c.id,{arquivado:!c.arquivado})} title={c.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:13,marginRight:3}}>{c.arquivado?"📤":"🗄️"}</button>
+                                <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delCarro(c.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
