@@ -1847,9 +1847,38 @@ export default function App(){
           const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
-          const chartServ={labels:servAtivos,datasets:[{label:"Qtd",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:6,borderSkipped:false},{label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:["#1565C090","#C6282890","#E67E0090","#F5C20090","#1A7A3C90","#00838F90","#AD145790","#6A1B9A90","#4E342E90"],borderRadius:6,borderSkipped:false}]};
+          const SERV_COLORS=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
+          const chartServ={labels:servAtivos,datasets:[
+            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS.slice(0,servAtivos.length),borderRadius:6,borderSkipped:false},
+            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:SERV_COLORS.slice(0,servAtivos.length).map(c=>c+"80"),borderRadius:6,borderSkipped:false}
+          ]};
+          // Gráfico Serviço x Técnico (stacked)
+          const chartServTech={
+            labels:techAtivos,
+            datasets:servAtivos.map((serv,si)=>({
+              label:serv,
+              data:techAtivos.map(t=>byTech[t].porServ[serv]||0),
+              backgroundColor:SERV_COLORS[si%SERV_COLORS.length],
+              borderRadius:4,
+              borderSkipped:false,
+            }))
+          };
+          // Horas por serviço por técnico (stacked)
+          const chartHorasServTech={
+            labels:techAtivos,
+            datasets:servAtivos.map((serv,si)=>({
+              label:serv,
+              data:techAtivos.map(t=>{
+                const aps=byTech[t].aps.filter(a=>a.servico===serv);
+                return +(aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)/60).toFixed(1);
+              }),
+              backgroundColor:SERV_COLORS[si%SERV_COLORS.length],
+              borderRadius:4,
+              borderSkipped:false,
+            }))
+          };
           const chartOpts=(title)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
-          const chartOptsH=(title)=>({responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.x}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
+          const chartOptsStacked=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
           {/* Cabeçalho + Filtros */}
@@ -1884,23 +1913,37 @@ export default function App(){
           </div>
 
           {/* Gráficos principais */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
             <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>⏱ Horas Trabalhadas por Técnico</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
-              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período selecionado</div>
+              {techAtivos.length>0?<ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
             </div>
             <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>📋 Apontamentos por Técnico</div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              <ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>
+              {techAtivos.length>0?<ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
             </div>
           </div>
-          <div className="card" style={{padding:20,marginBottom:24}}>
-            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>🔧 Serviços Realizados — Quantidade e Horas</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras azuis = quantidade · barras coloridas = horas</div>
-            <ChartCanvas type="bar" data={chartServ} options={{...chartOptsH(),plugins:{legend:{display:true,position:"top"},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.x}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0}}}}} height={Math.max(180,servAtivos.length*50)}/>
-          </div>
+          {servAtivos.length>0&&<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartServTech} options={chartOptsStacked()} height={220}/>
+              </div>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartHorasServTech} options={chartOptsStacked()} height={220}/>
+              </div>
+            </div>
+            <div className="card" style={{padding:20,marginBottom:16}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
+            </div>
+          </>}
 
           {/* Por Técnico detalhado */}
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
@@ -3633,8 +3676,34 @@ export default function App(){
           const chartHoras={labels:techAtivos,datasets:[{label:"Horas Trabalhadas",data:techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)),backgroundColor:techAtivos.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos,datasets:[{label:"Apontamentos",data:techAtivos.map(t=>byTech[t].aps.length),backgroundColor:techAtivos.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
-          const chartServ={labels:servAtivos,datasets:[{label:"Qtd",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E"],borderRadius:6},{label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:["#1565C060","#C6282860","#E67E0060","#F5C20060","#1A7A3C60","#00838F60","#AD145760","#6A1B9A60","#4E342E60"],borderRadius:6}]};
+          const SERV_COLORS150=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
+          const chartServ={labels:servAtivos,datasets:[
+            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS150.slice(0,servAtivos.length),borderRadius:6,borderSkipped:false},
+            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:SERV_COLORS150.slice(0,servAtivos.length).map(c=>c+"80"),borderRadius:6,borderSkipped:false}
+          ]};
+          const chartServTech150={
+            labels:techAtivos,
+            datasets:servAtivos.map((serv,si)=>({
+              label:serv,
+              data:techAtivos.map(t=>byTech[t].porServ[serv]||0),
+              backgroundColor:SERV_COLORS150[si%SERV_COLORS150.length],
+              borderRadius:4,borderSkipped:false,
+            }))
+          };
+          const chartHorasServTech150={
+            labels:techAtivos,
+            datasets:servAtivos.map((serv,si)=>({
+              label:serv,
+              data:techAtivos.map(t=>{
+                const aps=byTech[t].aps.filter(a=>a.servico===serv);
+                return +(aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)/60).toFixed(1);
+              }),
+              backgroundColor:SERV_COLORS150[si%SERV_COLORS150.length],
+              borderRadius:4,borderSkipped:false,
+            }))
+          };
           const chartOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
+          const chartOptsStacked150=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
           {/* Cabeçalho + Filtros */}
@@ -3669,23 +3738,37 @@ export default function App(){
           </div>
 
           {/* Gráficos */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:24}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
             <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>⏱ Horas Trabalhadas por Técnico</div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
-              <ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>
+              {techAtivos.length>0?<ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
             </div>
             <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>📋 Apontamentos por Técnico</div>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              <ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>
+              {techAtivos.length>0?<ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>}
             </div>
           </div>
-          {servAtivos.length>0&&<div className="card" style={{padding:20,marginBottom:24}}>
-            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>🔧 Serviços Realizados</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Azul = quantidade · transparente = horas</div>
-            <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top"}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*45)}/>
-          </div>}
+          {servAtivos.length>0&&<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartServTech150} options={chartOptsStacked150()} height={220}/>
+              </div>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartHorasServTech150} options={chartOptsStacked150()} height={220}/>
+              </div>
+            </div>
+            <div className="card" style={{padding:20,marginBottom:16}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · translúcidas = horas</div>
+              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
+            </div>
+          </>}
 
           {/* Por Técnico detalhado */}
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
