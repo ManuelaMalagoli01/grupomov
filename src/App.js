@@ -39,8 +39,8 @@ const db = {
 
 
 const USERS = [
-  { id:"manuela", name:"Manuela Malagoli", role:"ADM", password:"mov2026", canDelete:true  },
-  { id:"gustavo", name:"Gustavo Coelho", role:"ADM", password:"mov2026", canDelete:true  },
+  { id:"manuela", name:"Manuela Malagoli", role:"Administradora", password:"mov2026", canDelete:true  },
+  { id:"gustavo", name:"Gustavo Coelho", role:"Administrador", password:"mov2026", canDelete:true  },
   { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:true  },
   { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:true,  apenasOficina:true },
   { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:true,  apenasOfi150:true },
@@ -960,6 +960,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
       <Btn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
       <Btn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
       <Btn k="dashboard_req" l="📊 Dash Requisições"/>
@@ -3188,77 +3189,115 @@ export default function App(){
           const totalEmp=emprestimos.length;
           const totalSai=saidaEntrada.length;
           const total=allReqs.length;
-          // Rupturas (saída/entrada)
+          // Rupturas
           const rupturas=saidaEntrada.filter(s=>s.statusReq==="ruptura");
           const rupturasInfo=rupturas.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
-          // Atendidos
           const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
-          // Pendentes
-          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length + saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
-          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length + saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
-          // Por técnico (requerente)
+          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length+saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
+          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length+saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
+          // Por técnico
           const byTech={};
           emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
           saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
-          // Peças aplicadas por relatório
+          const techSorted=Object.entries(byTech).sort((a,b)=>b[1]-a[1]).slice(0,10);
+          // Peças mais solicitadas (S/E + Empréstimos)
+          const pecaCount={};
+          saidaEntrada.forEach(s=>{const p=s.peca||s.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
+          emprestimos.forEach(e=>{const p=e.item||e.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
+          const topPecas=Object.entries(pecaCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+          // Evolução por mês (últimos 6 meses)
+          const getMes=(dateStr)=>{if(!dateStr)return null;const d=new Date(dateStr);if(isNaN(d))return null;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;};
+          const mesEmp={};emprestimos.forEach(e=>{const m=getMes(e.dataEmp||e.dataSaida||e.registradoEm);if(m)mesEmp[m]=(mesEmp[m]||0)+1;});
+          const mesSai={};saidaEntrada.forEach(s=>{const m=getMes(s.dataSaida||s.data||s.registradoEm);if(m)mesSai[m]=(mesSai[m]||0)+1;});
+          const allMeses=[...new Set([...Object.keys(mesEmp),...Object.keys(mesSai)])].sort().slice(-6);
+          const mesesLabel=allMeses.map(m=>{const[y,mo]=m.split("-");const nomes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];return`${nomes[parseInt(mo)-1]}/${y.slice(2)}`;});
+          const chartEvolucao={labels:mesesLabel,datasets:[{label:"Empréstimo/Retorno",data:allMeses.map(m=>mesEmp[m]||0),backgroundColor:"#F5C200",borderRadius:4},{label:"Entrada/Saída",data:allMeses.map(m=>mesSai[m]||0),backgroundColor:"#1565C0",borderRadius:4}]};
+          // Tipo por técnico empilhado
+          const techsAtivos=techSorted.slice(0,8).map(([t])=>t);
+          const empByTech={};saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";empByTech[t]=(empByTech[t]||0)+1;});
+          const empByTechEmp={};emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";empByTechEmp[t]=(empByTechEmp[t]||0)+1;});
+          const chartTipoTech={labels:techsAtivos,datasets:[{label:"Entrada/Saída",data:techsAtivos.map(t=>empByTech[t]||0),backgroundColor:"#1565C0",borderRadius:4},{label:"Empréstimo/Retorno",data:techsAtivos.map(t=>empByTechEmp[t]||0),backgroundColor:"#F5C200",borderRadius:4}]};
+          // Gráficos status
+          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#C62828","#1A7A3C"],borderWidth:0}]};
+          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
           const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
           const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
           const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
-          // Gráfico: status empréstimos
-          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5"],borderColor:["#C62828","#1A7A3C"],borderWidth:2}]};
-          // Gráfico: status saída/entrada
-          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#FFF0F0","#F0FFF5","#FFF8F0","#F0F4FF"],borderColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:2}]};
-          // Gráfico: por técnico
-          const techLabels=Object.keys(byTech);
-          const techValues=techLabels.map(t=>byTech[t]);
-          const chartTechData={labels:techLabels,datasets:[{label:"Requisições",data:techValues,backgroundColor:"#F5C200",borderColor:"#C47D00",borderWidth:1,borderRadius:4}]};
-
-          const KPI=({label,value,color="#1A1A1A",bg="#FFF",icon})=>(
-            <div className="card" style={{padding:"16px 20px",background:bg,display:"flex",flexDirection:"column",gap:4}}>
+          const KPIR=({label,value,color="#1A1A1A",bg="#FFF",icon,sub})=>(
+            <div className="card" style={{padding:"16px 20px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
               <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
-              <div style={{fontSize:32,fontWeight:800,color,lineHeight:1}}>{value}</div>
+              <div style={{fontSize:30,fontWeight:900,color,lineHeight:1}}>{value}</div>
+              {sub&&<div style={{fontSize:10,color:"#AAA"}}>{sub}</div>}
             </div>
           );
+          const chartOptsBar={plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},maintainAspectRatio:false};
+          const chartOptsBarStacked={plugins:{legend:{position:"bottom",labels:{font:{size:10}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},maintainAspectRatio:false};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{fontWeight:800,fontSize:22,marginBottom:16}}>📊 Dashboard Requisições</div>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+                <div style={{fontWeight:900,fontSize:24}}>📊 Dashboard Requisições</div>
+                <div style={{fontSize:12,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"4px 12px"}}>{total} registros</div>
+              </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
-                <KPI icon="📦" label="Total Requisições" value={total}/>
-                <KPI icon="🔄" label="Empréstimo e Retorno" value={totalEmp}/>
-                <KPI icon="📤" label="Entrada/Saída" value={totalSai}/>
-                <KPI icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF0F0"/>
-                <KPI icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
-                <KPI icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
-                <KPI icon="✅" label="Atendidos (S/E)" value={atendidos} color="#1A7A3C" bg="#F0FFF5"/>
-                <KPI icon="🔧" label="Peças Aplicadas c/ Relatório" value={todasPecasAplicadas.length}/>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:20}}>
+                <KPIR icon="📦" label="Total" value={total} color="#1A1A1A"/>
+                <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
+                <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
+                <KPIR icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF8F8"/>
+                <KPIR icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
+                <KPIR icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
               </div>
 
-              {/* Gráficos */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:20}}>
+              {/* Linha 1: Evolução por mês + Peças mais solicitadas */}
+              <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:16,marginBottom:16}}>
                 <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Empréstimo e Retorno</div>
-                  <ChartCanvas type="doughnut" data={chartStatusEmpData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução por Mês</div>
+                  <div style={{height:200}}><ChartCanvas type="bar" data={chartEvolucao} options={chartOptsBarStacked} height={200}/></div>
                 </div>
                 <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Status — Entrada/Saída</div>
-                  <ChartCanvas type="doughnut" data={chartStatusSaiData} options={{plugins:{legend:{position:"bottom"}},cutout:"65%"}} height={200}/>
+                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🔩 Peças Mais Solicitadas</div>
+                  {topPecas.length===0?<div style={{color:"#CCC",fontSize:12,padding:20,textAlign:"center"}}>Sem dados</div>:(
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {topPecas.map(([peca,qtd],i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{fontSize:10,color:"#AAA",width:16,textAlign:"right"}}>{i+1}</div>
+                          <div style={{flex:1,fontSize:11,fontWeight:600,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{peca}</div>
+                          <div style={{display:"flex",alignItems:"center",gap:4}}>
+                            <div style={{height:6,borderRadius:3,background:"#F5C200",width:Math.max(20,qtd*14)}}/>
+                            <div style={{fontSize:11,fontWeight:800,color:"#C47D00",minWidth:20,textAlign:"right"}}>{qtd}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              {/* Linha 2: Tipo por técnico empilhado + Status donut */}
+              <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:16,marginBottom:16}}>
                 <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>Requisições por Técnico/Requerente</div>
-                  <ChartCanvas type="bar" data={chartTechData} options={{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},indexAxis:"y"}} height={200}/>
+                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>👷 Tipo por Técnico/Requerente</div>
+                  <div style={{height:220}}><ChartCanvas type="bar" data={chartTipoTech} options={chartOptsBarStacked} height={220}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",marginBottom:8}}>Empréstimos</div>
+                    <ChartCanvas type="doughnut" data={chartStatusEmpData} options={{plugins:{legend:{position:"bottom",labels:{font:{size:9}}}},cutout:"60%",maintainAspectRatio:false}} height={160}/>
+                  </div>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",marginBottom:8}}>Entrada/Saída</div>
+                    <ChartCanvas type="doughnut" data={chartStatusSaiData} options={{plugins:{legend:{position:"bottom",labels:{font:{size:9}}}},cutout:"60%",maintainAspectRatio:false}} height={160}/>
+                  </div>
                 </div>
               </div>
 
               {/* Rupturas detalhadas */}
               {rupturas.length>0&&(
-                <div className="card" style={{padding:16,marginBottom:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas — Detalhamento ({rupturas.length})</div>
+                <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #C62828"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas em Aberto ({rupturas.length})</div>
                   <div className="tbl-wrap"><table>
-                    <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias em ruptura)</th></tr></thead>
+                    <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias)</th></tr></thead>
                     <tbody>{rupturasInfo.map((r,i)=>(
                       <tr key={i}>
                         <td style={{fontWeight:700}}>{r.peca}</td>
@@ -3272,26 +3311,171 @@ export default function App(){
                 </div>
               )}
 
-              {/* Peças aplicadas por relatório */}
+              {/* Peças aplicadas */}
               {todasPecasAplicadas.length>0&&(
                 <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Peças Aplicadas por Relatório ({todasPecasAplicadas.length})</div>
+                  <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>🔧 Peças Aplicadas com Relatório ({todasPecasAplicadas.length})</div>
                   <div className="tbl-wrap"><table>
                     <thead><tr><th>Relatório</th><th>Peça</th><th>Empresa/Requerente</th></tr></thead>
                     <tbody>{todasPecasAplicadas.map((p,i)=>(
-                      <tr key={i}>
-                        <td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td>
-                        <td>{p.peca}</td>
-                        <td style={{fontSize:11,color:"#888"}}>{p.empresa}</td>
-                      </tr>
+                      <tr key={i}><td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td><td>{p.peca}</td><td style={{fontSize:11,color:"#888"}}>{p.empresa}</td></tr>
                     ))}</tbody>
                   </table></div>
                 </div>
               )}
-              {todasPecasAplicadas.length===0&&rupturas.length===0&&total===0&&(
+              {total===0&&(
                 <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
                   <div style={{fontSize:32,marginBottom:12}}>📊</div>
                   Nenhuma requisição cadastrada ainda.
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
+        {tab==="dashboard_processos"&&(()=>{
+          const mu=processosMU||[];
+          const af=processosAF||[];
+          const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+          const nomesMes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          // Evolução MU+AF por mês
+          const mesMU={};mu.forEach(p=>{const m=getMes(p.date||p.registradoEm);if(m)mesMU[m]=(mesMU[m]||0)+1;});
+          const mesAF={};af.forEach(p=>{const m=getMes(p.date||p.registradoEm);if(m)mesAF[m]=(mesAF[m]||0)+1;});
+          const allMeses=[...new Set([...Object.keys(mesMU),...Object.keys(mesAF)])].sort().slice(-6);
+          const mesesLabel=allMeses.map(m=>{const[y,mo]=m.split("-");return`${nomesMes[parseInt(mo)-1]}/${y.slice(2)}`;});
+          const chartEvolProc={labels:mesesLabel,datasets:[{label:"⚠️ Mau Uso",data:allMeses.map(m=>mesMU[m]||0),backgroundColor:"#C62828",borderRadius:4},{label:"💰 A Faturar",data:allMeses.map(m=>mesAF[m]||0),backgroundColor:"#F5C200",borderRadius:4}]};
+          // Top empresas combinadas
+          const empCount={};
+          mu.forEach(p=>{const e=p.empresa||"";if(e)empCount[e]=(empCount[e]||0)+1;});
+          af.forEach(p=>{const e=p.empresa||"";if(e)empCount[e]=(empCount[e]||0)+1;});
+          const topEmpresas=Object.entries(empCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+          // Status MU
+          const muPend=mu.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
+          const muAnd=mu.filter(p=>p.processoStatus==="em_andamento").length;
+          const muConc=mu.filter(p=>p.processoStatus==="concluido").length;
+          const muArq=mu.filter(p=>p.processoStatus==="arquivado").length;
+          // Status AF
+          const afPend=af.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
+          const afAnd=af.filter(p=>p.processoStatus==="em_andamento").length;
+          const afConc=af.filter(p=>p.processoStatus==="concluido").length;
+          // Aprovação AF
+          const afAprov=af.filter(p=>p.aprovado==="sim").length;
+          const afServExec=af.filter(p=>p.servicoExecutado==="sim").length;
+          // Valor total AF
+          const valorAF=af.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const chartMuStatus={labels:["Pendente","Em Andamento","Concluído","Arquivado"],datasets:[{data:[muPend,muAnd,muConc,muArq],backgroundColor:["#C62828","#1565C0","#1A7A3C","#888"],borderWidth:0}]};
+          const chartAfStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[afPend,afAnd,afConc],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
+          const chartAfAprov={labels:["Aprovado","Pendente"],datasets:[{data:[afAprov,af.length-afAprov],backgroundColor:["#1A7A3C","#E0E0E0"],borderWidth:0}]};
+          const chartEmpTop={labels:topEmpresas.map(([e])=>e),datasets:[{label:"Processos",data:topEmpresas.map(([,q])=>q),backgroundColor:topEmpresas.map((_,i)=>i%2===0?"#F5C200":"#C62828"),borderRadius:4,borderSkipped:false}]};
+          const donutOpts=(pos="bottom")=>({plugins:{legend:{position:pos,labels:{font:{size:9}}}},cutout:"60%",maintainAspectRatio:false});
+          const barOpts={plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},maintainAspectRatio:false};
+          const barOptsStack={plugins:{legend:{position:"bottom",labels:{font:{size:10}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false};
+          const KPIP=({icon,label,value,color="#1A1A1A",bg="#FFF",sub})=>(
+            <div className="card" style={{padding:"14px 18px",borderTop:`3px solid ${color}`,background:bg}}>
+              <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{icon} {label}</div>
+              <div style={{fontSize:28,fontWeight:900,color,lineHeight:1}}>{value}</div>
+              {sub&&<div style={{fontSize:10,color:"#AAA",marginTop:3}}>{sub}</div>}
+            </div>
+          );
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+                <div style={{fontWeight:900,fontSize:24}}>📊 Dashboard Processos</div>
+                <span style={{fontSize:11,background:"#FFF0E0",color:"#C47D00",borderRadius:20,padding:"3px 12px",fontWeight:700}}>⚠️ Mau Uso + 💰 A Faturar</span>
+              </div>
+
+              {/* KPIs gerais */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
+                <KPIP icon="⚠️" label="Total Mau Uso" value={mu.length} color="#C62828" bg="#FFF8F8"/>
+                <KPIP icon="💰" label="Total A Faturar" value={af.length} color="#F5C200"/>
+                <KPIP icon="✅" label="AF Aprovados" value={afAprov} color="#1A7A3C" bg="#F0FFF5" sub={`de ${af.length} processos`}/>
+                <KPIP icon="🔧" label="Serviço Executado" value={afServExec} color="#1565C0" bg="#F0F4FF" sub={`de ${af.length} A Faturar`}/>
+              </div>
+              {valorAF>0&&(
+                <div className="card" style={{padding:"14px 20px",marginBottom:16,background:"linear-gradient(90deg,#1A7A3C 0%,#2e9e57 100%)",color:"#FFF",display:"flex",alignItems:"center",gap:16}}>
+                  <div style={{fontSize:28}}>💵</div>
+                  <div>
+                    <div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:.8}}>Valor Total A Faturar</div>
+                    <div style={{fontSize:26,fontWeight:900}}>R$ {valorAF.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Linha 1: Evolução + Top Empresas */}
+              <div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr",gap:16,marginBottom:16}}>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Evolução por Mês</div>
+                  <div style={{height:200}}><ChartCanvas type="bar" data={chartEvolProc} options={barOptsStack} height={200}/></div>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🏢 Top Empresas</div>
+                  <div style={{height:200}}><ChartCanvas type="bar" data={chartEmpTop} options={{...barOpts,indexAxis:"y"}} height={200}/></div>
+                </div>
+              </div>
+
+              {/* Linha 2: Status MU, Status AF, Aprovação AF */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:16}}>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#C62828",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>⚠️ Status Mau Uso</div>
+                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartMuStatus} options={donutOpts("bottom")} height={180}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:10}}>
+                    {[{l:"Pendentes",v:muPend,c:"#C62828"},{l:"Em Andamento",v:muAnd,c:"#1565C0"},{l:"Concluídos",v:muConc,c:"#1A7A3C"},{l:"Arquivados",v:muArq,c:"#888"}].map((s,i)=>(
+                      <div key={i} style={{fontSize:10,color:s.c,fontWeight:700,background:"#F8F8F8",borderRadius:6,padding:"4px 8px"}}>{s.v} {s.l}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#C47D00",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>💰 Status A Faturar</div>
+                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartAfStatus} options={donutOpts("bottom")} height={180}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:10}}>
+                    {[{l:"Pendentes",v:afPend,c:"#E67E00"},{l:"Em Andamento",v:afAnd,c:"#1565C0"},{l:"Concluídos",v:afConc,c:"#1A7A3C"}].map((s,i)=>(
+                      <div key={i} style={{fontSize:10,color:s.c,fontWeight:700,background:"#F8F8F8",borderRadius:6,padding:"4px 8px"}}>{s.v} {s.l}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="card" style={{padding:16}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#1A7A3C",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>✅ Aprovação A Faturar</div>
+                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartAfAprov} options={donutOpts("bottom")} height={180}/></div>
+                  <div style={{marginTop:10,textAlign:"center"}}>
+                    <div style={{fontSize:22,fontWeight:900,color:"#1A7A3C"}}>{af.length>0?Math.round(afAprov/af.length*100):0}%</div>
+                    <div style={{fontSize:10,color:"#888"}}>taxa de aprovação</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Processos pendentes rápidos */}
+              {(muPend+afPend)>0&&(
+                <div className="card" style={{padding:16,borderLeft:"4px solid #E67E00"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#E67E00",marginBottom:10}}>⏳ Processos Pendentes ({muPend+afPend})</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                    {muPend>0&&<div>
+                      <div style={{fontSize:10,fontWeight:700,color:"#C62828",marginBottom:6}}>⚠️ Mau Uso Pendentes</div>
+                      {mu.filter(p=>!p.processoStatus||p.processoStatus==="pendente").slice(0,5).map((p,i)=>(
+                        <div key={i} style={{fontSize:11,padding:"4px 0",borderBottom:"1px solid #F5F5F5",display:"flex",gap:8}}>
+                          <span style={{color:"#888"}}>{p.date||"—"}</span>
+                          <span style={{fontWeight:600}}>{p.empresa||"—"}</span>
+                          <span style={{color:"#888"}}>{p.patrimonio||""}</span>
+                        </div>
+                      ))}
+                    </div>}
+                    {afPend>0&&<div>
+                      <div style={{fontSize:10,fontWeight:700,color:"#C47D00",marginBottom:6}}>💰 A Faturar Pendentes</div>
+                      {af.filter(p=>!p.processoStatus||p.processoStatus==="pendente").slice(0,5).map((p,i)=>(
+                        <div key={i} style={{fontSize:11,padding:"4px 0",borderBottom:"1px solid #F5F5F5",display:"flex",gap:8}}>
+                          <span style={{color:"#888"}}>{p.date||"—"}</span>
+                          <span style={{fontWeight:600}}>{p.empresa||"—"}</span>
+                          <span style={{color:"#888"}}>{p.ov?"OV:"+p.ov:""}</span>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                </div>
+              )}
+              {mu.length===0&&af.length===0&&(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                  Nenhum processo cadastrado ainda.
                 </div>
               )}
             </div>
@@ -3988,6 +4172,7 @@ export default function App(){
     relatorios: (reports||[]).filter(r=>!r.arquivado&&r.statusFinal==="Pendente").length,
     mau_uso: (processosMU||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
     a_faturar: (processosAF||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    dashboard_processos: (processosMU||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length+(processosAF||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
     emprestimos: (emprestimos||[]).filter(e=>!e.arquivado&&(e.statusEmp==="pendente"||e.status==="pendente")).length,
     saida_entrada: (saidaEntrada||[]).filter(s=>!s.arquivado&&(s.statusFinal==="pendente"||s.status==="pendente")).length,
     dashboard_req: (requisicoes||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
