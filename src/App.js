@@ -751,25 +751,39 @@ function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
 // ── GRÁFICOS (Chart.js carregado sob demanda) ─────────────────────────────────
 const loadChartLib = () => new Promise((resolve,reject)=>{
   if(window.Chart) return resolve(window.Chart);
-  const sc=document.createElement("script");
-  sc.src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js";
-  sc.onload=()=>resolve(window.Chart);
-  sc.onerror=()=>reject(new Error("Falha ao carregar gráficos"));
-  document.body.appendChild(sc);
+  // Tentar CDN principal
+  const tryLoad=(src)=>new Promise((res,rej)=>{
+    const sc=document.createElement("script");
+    sc.src=src; sc.onload=()=>window.Chart?res(window.Chart):rej(new Error("Chart não carregou")); sc.onerror=()=>rej(new Error("Erro ao carregar"));
+    document.body.appendChild(sc);
+  });
+  tryLoad("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js")
+    .then(resolve)
+    .catch(()=>tryLoad("https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js").then(resolve).catch(reject));
 });
 function ChartCanvas({type,data,options,height=240}){
   const ref=useRef(null); const inst=useRef(null);
+  const [err,setErr]=useState(null);
+  const [loading,setLoading]=useState(true);
   const key=JSON.stringify({type,data,options});
   useEffect(()=>{
     let alive=true;
+    setLoading(true); setErr(null);
     loadChartLib().then(Chart=>{
       if(!alive||!ref.current)return;
-      if(inst.current){inst.current.destroy();inst.current=null;}
-      inst.current=new Chart(ref.current.getContext("2d"),{type,data,options:{...options}});
-    }).catch(()=>{});
-    return ()=>{alive=false;if(inst.current){inst.current.destroy();inst.current=null;}};
+      if(inst.current){try{inst.current.destroy();}catch(e){}inst.current=null;}
+      try{
+        inst.current=new Chart(ref.current.getContext("2d"),{type,data:JSON.parse(JSON.stringify(data)),options:{responsive:true,maintainAspectRatio:false,...options}});
+        if(alive)setLoading(false);
+      }catch(e){if(alive)setErr(e.message);}
+    }).catch(e=>{if(alive){setLoading(false);setErr("Erro ao carregar biblioteca de gráficos");}});
+    return ()=>{alive=false;if(inst.current){try{inst.current.destroy();}catch(e){}inst.current=null;}};
   },[key]);
-  return <div style={{position:"relative",height}}><canvas ref={ref}/></div>;
+  if(err) return <div style={{height,display:"flex",alignItems:"center",justifyContent:"center",color:"#C62828",fontSize:11,background:"#FFF0F0",borderRadius:8}}>⚠️ {err}</div>;
+  return <div style={{position:"relative",height}}>
+    {loading&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#AAA",fontSize:12}}>⏳ Carregando...</div>}
+    <canvas ref={ref}/>
+  </div>;
 }
 
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
