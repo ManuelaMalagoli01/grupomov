@@ -2692,6 +2692,28 @@ export default function App(){
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                   </div>
+                  {/* Gráfico Tipo de Serviço x Técnico */}
+                  {techsWith.length>0&&(()=>{
+                    const tipos=[...new Set(dashReports.map(r=>r.type).filter(Boolean))];
+                    const TIPO_COLORS={"preventivo":"#1A7A3C","corretivo":"#C62828","outros":"#E67E00"};
+                    const chartServTechData={
+                      labels:techsWith,
+                      datasets:tipos.map(tipo=>({
+                        label:tipo==="preventivo"?"Preventiva":tipo==="corretivo"?"Corretiva":"Outro",
+                        data:techsWith.map(t=>dashReports.filter(r=>r.tecnico===t&&r.type===tipo).length),
+                        backgroundColor:TIPO_COLORS[tipo]||"#888",
+                        borderRadius:4,borderSkipped:false,
+                      }))
+                    };
+                    return(
+                      <div className="card" style={{padding:20,marginBottom:16}}>
+                        <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Tipo de Serviço por Técnico</div>
+                        <ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
+                          data={chartServTechData}
+                          options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,beginAtZero:true,ticks:{precision:0}},y:{stacked:true,grid:{display:false}}}}}/>
+                      </div>
+                    );
+                  })()}
                   <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
                 </>
               );
