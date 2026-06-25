@@ -2257,7 +2257,7 @@ export default function App(){
         {tab==="mau_uso"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             {(()=>{
-              const mu=processosMU.filter(p=>p.processoStatus!=="arquivado");
+              const mu=processosMU||[];
               const pendente=mu.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length;
               const concluido=mu.filter(p=>p.processoStatus==="concluido").length;
               const emAndamento=mu.filter(p=>p.processoStatus==="em_andamento").length;
@@ -2268,7 +2268,7 @@ export default function App(){
               const chartStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[pendente,emAndamento,concluido],backgroundColor:["#C62828","#1565C0","#1A7A3C"],borderRadius:6}]};
               const chartTech={labels:byTech.map(t=>t.tech),datasets:[{label:"Ocorrências",data:byTech.map(t=>t.qtd),backgroundColor:"#C62828",borderRadius:6,borderSkipped:false}]};
               const chartEmp={labels:byEmp.map(e=>e.emp),datasets:[{label:"Processos",data:byEmp.map(e=>e.qtd),backgroundColor:"#E67E00",borderRadius:6,borderSkipped:false}]};
-              return mu.length>0?(
+              return(
                 <div style={{marginBottom:20}}>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                     {[{icon:"⚠️",l:"Total",v:mu.length,c:"#1A1A1A",bg:"#FFF"},{icon:"⏳",l:"Pendentes",v:pendente,c:"#C62828",bg:"#FFF0F0"},{icon:"🔄",l:"Em Andamento",v:emAndamento,c:"#1565C0",bg:"#F0F4FF"},{icon:"✅",l:"Concluídos",v:concluido,c:"#1A7A3C",bg:"#F0FFF5"}].map((s,i)=>(
@@ -2293,7 +2293,7 @@ export default function App(){
                     </div>
                   </div>
                 </div>
-              ):null;
+              );
             })()}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⚠️ Processos Mau Uso</div><div style={{fontSize:13,color:"#888"}}>{processosMU.filter(p=>!showArqMU?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
@@ -2347,7 +2347,7 @@ export default function App(){
         {tab==="a_faturar"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             {(()=>{
-              const af=processosAF.filter(p=>p.processoStatus!=="arquivado");
+              const af=processosAF||[];
               const pendente=af.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length;
               const concluido=af.filter(p=>p.processoStatus==="concluido").length;
               const emAndamento=af.filter(p=>p.processoStatus==="em_andamento").length;
@@ -2355,7 +2355,7 @@ export default function App(){
               const byEmp=empresas.map(e=>({emp:e,qtd:af.filter(p=>p.empresa===e).length})).sort((a,b)=>b.qtd-a.qtd).slice(0,8);
               const chartStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[pendente,emAndamento,concluido],backgroundColor:["#C62828","#1565C0","#1A7A3C"],borderRadius:6}]};
               const chartEmp={labels:byEmp.map(e=>e.emp),datasets:[{label:"Processos",data:byEmp.map(e=>e.qtd),backgroundColor:"#F5C200",borderRadius:6,borderSkipped:false}]};
-              return af.length>0?(
+              return(
                 <div style={{marginBottom:20}}>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                     {[{icon:"📋",l:"Total",v:af.length,c:"#1A1A1A",bg:"#FFF"},{icon:"⏳",l:"Pendentes",v:pendente,c:"#C62828",bg:"#FFF0F0"},{icon:"🔄",l:"Em Andamento",v:emAndamento,c:"#1565C0",bg:"#F0F4FF"},{icon:"✅",l:"Concluídos",v:concluido,c:"#1A7A3C",bg:"#F0FFF5"}].map((s,i)=>(
@@ -2376,7 +2376,7 @@ export default function App(){
                     </div>
                   </div>
                 </div>
-              ):null;
+              );
             })()}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Processos A Faturar</div><div style={{fontSize:13,color:"#888"}}>{processosAF.filter(p=>!showArqAF?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
