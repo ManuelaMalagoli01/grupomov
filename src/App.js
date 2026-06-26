@@ -78,7 +78,8 @@ const CARRO_STATUS = {
   corretiva:           {l:"Corretiva",                  c:"#C62828", bg:"#FFF0F0"},
   preventiva:          {l:"Preventiva",                 c:"#1565C0", bg:"#F0F4FF"},
   orcamento:           {l:"Orçamento",                  c:"#E67E00", bg:"#FFF8F0"},
-  corretiva_ruptura_af:{l:"Corretiva · Ruptura · A Faturar", c:"#AD1457", bg:"#FFF0F8"},
+  corretiva_ruptura:   {l:"Corretiva · Ruptura",            c:"#AD1457", bg:"#FFF0F8"},
+  a_faturar:           {l:"A Faturar",                       c:"#6A1B9A", bg:"#F3E5F5"},
   preventiva_ruptura:  {l:"Preventiva · Ruptura",       c:"#8E44AD", bg:"#F6F0FB"},
   concluido:           {l:"Concluído",                  c:"#1A7A3C", bg:"#F0FFF5"},
   agendado:            {l:"Agendado",                   c:"#00838F", bg:"#F0FAFA"},
@@ -1833,7 +1834,8 @@ export default function App(){
                                 <option value="corretiva">Corretiva</option>
                                 <option value="preventiva">Preventiva</option>
                                 <option value="orcamento">Orçamento</option>
-                                <option value="corretiva_ruptura_af">Corretiva · Ruptura · A Faturar</option>
+                                <option value="corretiva_ruptura">Corretiva · Ruptura</option>
+                                <option value="a_faturar">A Faturar</option>
                                 <option value="preventiva_ruptura">Preventiva · Ruptura</option>
                                 <option value="concluido">Concluído</option>
                                 <option value="agendado">Agendado</option>
