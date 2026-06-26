@@ -75,17 +75,9 @@ const ITENS_REVISAO = [
   {v:"correia_servico",l:"Correia Serviço"},{v:"tensor_correias",l:"Tensor Correias"},{v:"outros",l:"Outros"},
 ];
 const CARRO_STATUS = {
-  corretiva:           {l:"Corretiva",                  c:"#C62828", bg:"#FFF0F0"},
-  preventiva:          {l:"Preventiva",                 c:"#1565C0", bg:"#F0F4FF"},
-  orcamento:           {l:"Orçamento",                  c:"#E67E00", bg:"#FFF8F0"},
-  corretiva_ruptura:   {l:"Corretiva · Ruptura",            c:"#AD1457", bg:"#FFF0F8"},
-  a_faturar:           {l:"A Faturar",                       c:"#6A1B9A", bg:"#F3E5F5"},
-  preventiva_ruptura:  {l:"Preventiva · Ruptura",       c:"#8E44AD", bg:"#F6F0FB"},
-  concluido:           {l:"Concluído",                  c:"#1A7A3C", bg:"#F0FFF5"},
-  agendado:            {l:"Agendado",                   c:"#00838F", bg:"#F0FAFA"},
-  urgencia:            {l:"Urgência",                   c:"#B71C1C", bg:"#FFE0E0"},
-  orcamento_pendente:  {l:"Orçamento Pendente",         c:"#E67E00", bg:"#FFF8F0"},
-  liberado:            {l:"Liberado",                   c:"#1A7A3C", bg:"#F0FFF5"},
+  orcamento_pendente:{l:"Orçamento Pendente",c:"#C62828",bg:"#FFF0F0"},
+  oficina:           {l:"Oficina",           c:"#E67E00",bg:"#FFF8F0"},
+  liberado:          {l:"Liberado",          c:"#1A7A3C",bg:"#F0FFF5"},
 };
 const PEND_ACOES = ["Reunião","Envio de Email","Treinamento","Feedback","Retorno para Cliente","Diretoria","Gustavo","Gilberto","Almox","Relatórios","Escala Técnica","Outros"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
@@ -1831,16 +1823,11 @@ export default function App(){
                             {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic"}}>{e.s.obs}</div>}
                             <div style={{marginTop:4}}>
                               <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
-                                <option value="corretiva">Corretiva</option>
-                                <option value="preventiva">Preventiva</option>
-                                <option value="orcamento">Orçamento</option>
-                                <option value="corretiva_ruptura">Corretiva · Ruptura</option>
-                                <option value="a_faturar">A Faturar</option>
-                                <option value="preventiva_ruptura">Preventiva · Ruptura</option>
-                                <option value="concluido">Concluído</option>
-                                <option value="agendado">Agendado</option>
-                                <option value="urgencia">Urgência</option>
                                 <option value="agendada">Agendada</option>
+                                <option value="em_andamento">Em Andamento</option>
+                                <option value="aguardando_aprovacao">Aguardando Aprovação</option>
+                                <option value="aguardando_diretoria">Aguardando Diretoria</option>
+                                <option value="concluida">Concluída</option>
                                 <option value="cancelada">Cancelada</option>
                                 <option value="remarcada">Remarcada</option>
                               </select>
@@ -3509,12 +3496,7 @@ export default function App(){
           const lista=carros.filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
           const itensSubstLabel=(c)=>(c.itensSubstituidos||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
           const itensProxLabel=(c)=>(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
-          const Inp2=({label,value,onChange,type="text",placeholder=""})=>(
-            <div style={{display:"flex",flexDirection:"column",gap:3}}>
-              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{label}</label>
-              <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-            </div>
-          );
+
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               {/* Modal inserir/editar */}
@@ -3541,17 +3523,17 @@ export default function App(){
                         </div>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                        <Inp2 label="Data" type="date" value={carForm.data} onChange={v=>setCarForm(p=>({...p,data:v}))}/>
-                        <Inp2 label="Responsável" value={carForm.responsavel} onChange={v=>setCarForm(p=>({...p,responsavel:v}))} placeholder="Nome"/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data</label><input type="date" value={carForm.data} onChange={e=>setCarForm(p=>({...p,data:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Responsável</label><input type="text" value={carForm.responsavel} onChange={e=>setCarForm(p=>({...p,responsavel:e.target.value}))} placeholder="Nome" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                        <Inp2 label="Km Atual" value={carForm.kmAtual} onChange={v=>setCarForm(p=>({...p,kmAtual:v}))} placeholder="Ex: 47500"/>
-                        <Inp2 label="Km Última Revisão" value={carForm.kmUltimaRevisao} onChange={v=>setCarForm(p=>({...p,kmUltimaRevisao:v}))} placeholder="Ex: 45000"/>
-                        <Inp2 label="Valor Última Revisão" value={carForm.valorUltimaRevisao} onChange={v=>setCarForm(p=>({...p,valorUltimaRevisao:v}))} placeholder="R$ 0,00"/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Km Atual</label><input type="text" value={carForm.kmAtual} onChange={e=>setCarForm(p=>({...p,kmAtual:e.target.value}))} placeholder="Ex: 47500" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Km Última Revisão</label><input type="text" value={carForm.kmUltimaRevisao} onChange={e=>setCarForm(p=>({...p,kmUltimaRevisao:e.target.value}))} placeholder="Ex: 45000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Valor Última Revisão</label><input type="text" value={carForm.valorUltimaRevisao} onChange={e=>setCarForm(p=>({...p,valorUltimaRevisao:e.target.value}))} placeholder="R$ 0,00" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                        <Inp2 label="Data Última Revisão" type="date" value={carForm.ultimaRevisaoData} onChange={v=>setCarForm(p=>({...p,ultimaRevisaoData:v}))}/>
-                        <Inp2 label="Data Próxima Revisão" type="date" value={carForm.proximaRevisaoData} onChange={v=>setCarForm(p=>({...p,proximaRevisaoData:v}))}/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Última Revisão</label><input type="date" value={carForm.ultimaRevisaoData} onChange={e=>setCarForm(p=>({...p,ultimaRevisaoData:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Próxima Revisão</label><input type="date" value={carForm.proximaRevisaoData} onChange={e=>setCarForm(p=>({...p,proximaRevisaoData:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
                       <div style={{background:"#F8F8F8",borderRadius:8,padding:12}}>
                         <div style={{fontSize:11,fontWeight:800,color:"#555",marginBottom:8}}>✅ Itens Substituídos</div>
@@ -3568,9 +3550,9 @@ export default function App(){
                         {(carForm.itensProximaRevisao||[]).includes("outros")&&<input type="text" value={carForm.itensProximaRevisaoObs||""} onChange={e=>setCarForm(p=>({...p,itensProximaRevisaoObs:e.target.value}))} placeholder="Descrever outros itens próxima revisão..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%",boxSizing:"border-box"}}/>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                        <Inp2 label="Oficina" value={carForm.oficina} onChange={v=>setCarForm(p=>({...p,oficina:v}))} placeholder="Nome da oficina"/>
-                        <Inp2 label="Nº Requisição" value={carForm.requisicao||""} onChange={v=>setCarForm(p=>({...p,requisicao:v}))} placeholder="REQ-000"/>
-                        <Inp2 label="Observações" value={carForm.obs} onChange={v=>setCarForm(p=>({...p,obs:v}))} placeholder="Obs gerais..."/>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Oficina</label><input type="text" value={carForm.oficina} onChange={e=>setCarForm(p=>({...p,oficina:e.target.value}))} placeholder="Nome da oficina" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Nº Requisição</label><input type="text" value={carForm.requisicao||""} onChange={e=>setCarForm(p=>({...p,requisicao:e.target.value}))} placeholder="REQ-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observações</label><input type="text" value={carForm.obs} onChange={e=>setCarForm(p=>({...p,obs:e.target.value}))} placeholder="Obs gerais..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
                       <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
                         <BtnG onClick={()=>{setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}>Cancelar</BtnG>
