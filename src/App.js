@@ -75,9 +75,16 @@ const ITENS_REVISAO = [
   {v:"correia_servico",l:"Correia Serviço"},{v:"tensor_correias",l:"Tensor Correias"},{v:"outros",l:"Outros"},
 ];
 const CARRO_STATUS = {
-  orcamento_pendente:{l:"Orçamento Pendente",c:"#C62828",bg:"#FFF0F0"},
-  oficina:{l:"Oficina",c:"#E67E00",bg:"#FFF8F0"},
-  liberado:{l:"Liberado",c:"#1A7A3C",bg:"#F0FFF5"},
+  corretiva:           {l:"Corretiva",                  c:"#C62828", bg:"#FFF0F0"},
+  preventiva:          {l:"Preventiva",                 c:"#1565C0", bg:"#F0F4FF"},
+  orcamento:           {l:"Orçamento",                  c:"#E67E00", bg:"#FFF8F0"},
+  corretiva_ruptura_af:{l:"Corretiva · Ruptura · A Faturar", c:"#AD1457", bg:"#FFF0F8"},
+  preventiva_ruptura:  {l:"Preventiva · Ruptura",       c:"#8E44AD", bg:"#F6F0FB"},
+  concluido:           {l:"Concluído",                  c:"#1A7A3C", bg:"#F0FFF5"},
+  agendado:            {l:"Agendado",                   c:"#00838F", bg:"#F0FAFA"},
+  urgencia:            {l:"Urgência",                   c:"#B71C1C", bg:"#FFE0E0"},
+  orcamento_pendente:  {l:"Orçamento Pendente",         c:"#E67E00", bg:"#FFF8F0"},
+  liberado:            {l:"Liberado",                   c:"#1A7A3C", bg:"#F0FFF5"},
 };
 const PEND_ACOES = ["Reunião","Envio de Email","Treinamento","Feedback","Retorno para Cliente","Diretoria","Gustavo","Gilberto","Almox","Relatórios","Escala Técnica","Outros"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
@@ -1046,7 +1053,7 @@ export default function App(){
   const [pendGustavo,setPendGustavo]=useState([]);
   const [oficina,setOficina]=useState([]);
   const [carros,setCarros]=useState([]);
-  const [carForm,setCarForm]=useState({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});
+  const [carForm,setCarForm]=useState({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});
   const [carFiltroPlaca,setCarFiltroPlaca]=useState("todas");
   const [carMonth,setCarMonth]=useState(TODAY.getMonth());
   const [carYear,setCarYear]=useState(TODAY.getFullYear());
@@ -1090,6 +1097,9 @@ export default function App(){
   const [agOfiServSel,setAgOfiServSel]=useState(SERVICOS_OFICINA[0]);
   const [agOfiEntrada,setAgOfiEntrada]=useState("");
   const [agOfiSaida,setAgOfiSaida]=useState("");
+  const [agOfiDataInicio,setAgOfiDataInicio]=useState("");
+  const [agOfiDataFim,setAgOfiDataFim]=useState("");
+  const [agOfiRequisicao,setAgOfiRequisicao]=useState("");
   const [agOfiObs,setAgOfiObs]=useState("");
   const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
   const [agOfiCidade,setAgOfiCidade]=useState("");
@@ -1743,7 +1753,8 @@ export default function App(){
             const dataFinal=agOfiDate||`${ym}-01`;
             if(!agOfiEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agOfiTechSel}__${dataFinal}`;
-            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,horimetro:agOfiHorimetro||"",patrimonio:agOfiPat||"",servico:agOfiServSel,status:"agendada",horaEntrada:agOfiEntrada,horaSaida:agOfiSaida,horasTrabalhadas:calcHoras(agOfiEntrada,agOfiSaida),obs:agOfiObs,relatorio:agOfiRelatorio||""}]);
+            saveAgendaOfi(key,[...(agendaOfi[key]||[]),{client:agOfiEmpresa,horimetro:agOfiHorimetro||"",patrimonio:agOfiPat||"",servico:agOfiServSel,status:"agendada",dataInicio:agOfiDataInicio,dataFim:agOfiDataFim,requisicao:agOfiRequisicao,obs:agOfiObs,relatorio:agOfiRelatorio||""}]);
+            setAgOfiDataInicio("");setAgOfiDataFim("");setAgOfiRequisicao("");
             setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");setAgOfiObs("");setAgOfiRelatorio("");
             notify("✅ Atendimento Oficina salvo!");
           };
@@ -1768,8 +1779,9 @@ export default function App(){
                   <input type="text" placeholder="Horímetro" value={agOfiHorimetro||""} onChange={e=>setAgOfiHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:100}}/>
                   <input type="text" placeholder="Patrimônio" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <select value={agOfiServSel} onChange={e=>setAgOfiServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Ent.</span><input type="time" value={agOfiEntrada} onChange={e=>setAgOfiEntrada(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888"}}>Saí.</span><input type="time" value={agOfiSaida} onChange={e=>setAgOfiSaida(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>Início</span><input type="date" value={agOfiDataInicio} onChange={e=>setAgOfiDataInicio(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>Fim</span><input type="date" value={agOfiDataFim} onChange={e=>setAgOfiDataFim(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
+                  <input type="text" placeholder="Nº Requisição" value={agOfiRequisicao} onChange={e=>setAgOfiRequisicao(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:110}}/>
                   <input type="text" placeholder="Obs..." value={agOfiObs} onChange={e=>setAgOfiObs(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
                   <input type="text" placeholder="Nº Relatório" value={agOfiRelatorio||""} onChange={e=>setAgOfiRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
                   <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
@@ -1808,16 +1820,25 @@ export default function App(){
                             <div style={{marginBottom:4}}>
                               <input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
                             </div>
-                            <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:4}}>
-                              <input type="time" value={e.s.horaEntrada||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,horaEntrada:v,horasTrabalhadas:calcHoras(v,e.s.horaSaida)};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <input type="time" value={e.s.horaSaida||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,horaSaida:v,horasTrabalhadas:calcHoras(e.s.horaEntrada,v)};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",width:78}}/>
-                              <span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",border:"1px solid #FFE8A0",borderRadius:5,padding:"2px 6px"}}>{e.s.horasTrabalhadas||"—"}</span>
+                            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
+                              <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:9,color:"#888",fontWeight:700}}>INÍCIO</span><input type="date" value={e.s.dataInicio||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataInicio:v};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5}}/></div>
+                              <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:9,color:"#888",fontWeight:700}}>FIM</span><input type="date" value={e.s.dataFim||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataFim:v};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5}}/></div>
+                            </div>
+                            <div style={{marginBottom:4}}>
+                              <input type="text" value={e.s.requisicao||""} placeholder="Nº Requisição" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,requisicao:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
                             </div>
                             {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic"}}>{e.s.obs}</div>}
                             <div style={{marginTop:4}}>
                               <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
+                                <option value="corretiva">Corretiva</option>
+                                <option value="preventiva">Preventiva</option>
+                                <option value="orcamento">Orçamento</option>
+                                <option value="corretiva_ruptura_af">Corretiva · Ruptura · A Faturar</option>
+                                <option value="preventiva_ruptura">Preventiva · Ruptura</option>
+                                <option value="concluido">Concluído</option>
+                                <option value="agendado">Agendado</option>
+                                <option value="urgencia">Urgência</option>
                                 <option value="agendada">Agendada</option>
-                                <option value="concluida">Concluída</option>
                                 <option value="cancelada">Cancelada</option>
                                 <option value="remarcada">Remarcada</option>
                               </select>
@@ -3467,7 +3488,7 @@ export default function App(){
 
         {/* ── CARROS ── */}
         {tab==="carros"&&(()=>{
-          const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""};
+          const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
           const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
           const salvarCarro=()=>{
             if(!carForm.placa){alert("Selecione a placa.");return;}
@@ -3476,13 +3497,13 @@ export default function App(){
               setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);
               notify("✅ Registro atualizado!");
             } else {
-              const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...carForm};
+              const row={id:`CAR${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...carForm};
               setCarros(p=>[row,...p]);db.save("carros",row.id,row);
               setModalCarros(false);setCarForm(CARRO_FORM_EMPTY);
               notify("✅ Registro salvo!");
             }
           };
-          const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||""});setModalCarros(true);};
+          const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||"",requisicao:c.requisicao||""});setModalCarros(true);};
           const lista=carros.filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
           const itensSubstLabel=(c)=>(c.itensSubstituidos||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
           const itensProxLabel=(c)=>(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
@@ -3544,8 +3565,9 @@ export default function App(){
                         </div>
                         {(carForm.itensProximaRevisao||[]).includes("outros")&&<input type="text" value={carForm.itensProximaRevisaoObs||""} onChange={e=>setCarForm(p=>({...p,itensProximaRevisaoObs:e.target.value}))} placeholder="Descrever outros itens próxima revisão..." style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",marginTop:8,width:"100%",boxSizing:"border-box"}}/>}
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                         <Inp2 label="Oficina" value={carForm.oficina} onChange={v=>setCarForm(p=>({...p,oficina:v}))} placeholder="Nome da oficina"/>
+                        <Inp2 label="Nº Requisição" value={carForm.requisicao||""} onChange={v=>setCarForm(p=>({...p,requisicao:v}))} placeholder="REQ-000"/>
                         <Inp2 label="Observações" value={carForm.obs} onChange={v=>setCarForm(p=>({...p,obs:v}))} placeholder="Obs gerais..."/>
                       </div>
                       <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
@@ -3570,7 +3592,7 @@ export default function App(){
                   </select>
                   <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                   <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}]}/>
-                  <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
+                  <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
                 </div>
               </div>
 
@@ -3589,7 +3611,7 @@ export default function App(){
                           <th>Data</th><th>Placa</th><th>Status</th><th>Responsável</th>
                           <th>Km Atual</th><th>Km Últ. Rev.</th><th>Data Últ. Rev.</th>
                           <th>Valor Rev.</th><th>Itens Substituídos</th><th>Itens Próx.</th>
-                          <th>Próx. Revisão</th><th>Oficina</th><th>Obs</th>
+                          <th>Próx. Revisão</th><th>Requisição</th><th>Oficina</th><th>Obs</th>
                           <th>Reg. por</th><th>Ações</th>
                         </tr>
                       </thead>
@@ -3610,6 +3632,7 @@ export default function App(){
                               <td style={{fontSize:11,maxWidth:180,color:"#1565C0"}}>{itensProxLabel(c)}</td>
                               <td style={{fontSize:11,whiteSpace:"nowrap",color:c.proximaRevisaoData&&c.proximaRevisaoData<TODAY_STR?"#C62828":"#333"}}>{c.proximaRevisaoData||"—"}</td>
                               <td style={{fontSize:11}}>{c.oficina||"—"}</td>
+                              <td style={{fontSize:11,color:"#1565C0",fontWeight:c.requisicao?700:400}}>{c.requisicao||"—"}</td>
                               <td style={{fontSize:11,maxWidth:140,color:"#888"}}>{c.obs||"—"}</td>
                               <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
                               <td style={{whiteSpace:"nowrap"}}>
