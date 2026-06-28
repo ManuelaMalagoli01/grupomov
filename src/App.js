@@ -3261,203 +3261,290 @@ export default function App(){
 
       {/* ── RUPTURA ALMOXARIFADO ── */}
         {tab==="ruptura_almox"&&(()=>{
-          const SOLICITACAO_OPTS=RUP_SOLICITACAO;
-          const TICKET_OPTS=RUP_TICKET_OPTS;
-          const STATUS_OPTS=RUP_STATUS;
-          const diffDaysNow=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.floor((Date.now()-dt.getTime())/86400000);};
-          const EMPTY={solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false};
-          const form=rupturaForm; const setForm=setRupturaForm;
+          const SOL_LABEL={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguardando",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
+          const ST={aguardando:{l:"Aguardando",c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD",bg:"#F6F0FB",icon:"🏛️"},separado_suporte:{l:"Separado no Suporte",c:"#1565C0",bg:"#EFF6FF",icon:"📦"},liberado_almox:{l:"Liberado pelo Almox",c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}};
           const lista=rupturas.filter(r=>showArqRuptura||!r.arquivado);
-          const sla=(r)=>{
-            if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
-            return diffDaysNow(r.data);
-          };
-
-          const salvar=()=>{
-            if(!form.peca){alert("Informe a peça.");return;}
-            if(editRuptura){
-              updateRuptura(editRuptura.id,{...form});
-              setEditRuptura(null);setModalRuptura(false);
-            } else {
-              const row={...EMPTY,...form,id:`RUP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString()};
-              setRupturas(p=>[row,...p]);db.save("rupturas_alm",row.id,row);
-              setModalRuptura(false);
+          const byStatus={aguardando:lista.filter(r=>r.status==="aguardando"||!r.status),aguard_aprov_dir:lista.filter(r=>r.status==="aguard_aprov_dir"),separado_suporte:lista.filter(r=>r.status==="separado_suporte"),liberado_almox:lista.filter(r=>r.status==="liberado_almox")};
+          const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          const [rupMonth,setRupMonth]=useState(TODAY.getMonth());
+          const [rupYear,setRupYear]=useState(TODAY.getFullYear());
+          const [rupFiltroStatus,setRupFiltroStatus]=useState("todos");
+          const [rupSearch,setRupSearch]=useState("");
+          const ym=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}`;
+          const diasNoMes=new Date(rupYear,rupMonth+1,0).getDate();
+          const diasArr=Array.from({length:diasNoMes},(_,i)=>i+1);
+          const listaFiltrada=lista.filter(r=>{
+            if(rupFiltroStatus!=="todos"&&r.status!==rupFiltroStatus) return false;
+            if(rupSearch){
+              const q=rupSearch.toLowerCase();
+              return (r.requisicao||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.osRel||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.pat||"").toLowerCase().includes(q);
             }
-            notify("✅ Salvo!");
+            return true;
+          });
+          const [viewMode,setViewMode]=useState("cards");
+          const slaD=(r)=>{
+            if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
+            if(!r.data) return null;
+            const dt=new Date(r.data); if(isNaN(dt)) return null;
+            return Math.floor((Date.now()-dt.getTime())/86400000);
           };
-          const abrirEditar=(r)=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0],dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);};
-          const stCfg=(v)=>STATUS_OPTS.find(s=>s.v===v)||STATUS_OPTS[0];
-          const solLabel=(v)=>SOLICITACAO_OPTS.find(s=>s.v===v)?.l||v;
-
+          // Gráfico por status
+          const chartStatusRup={labels:Object.values(ST).map(s=>s.l),datasets:[{data:Object.keys(ST).map(k=>byStatus[k]?.length||0),backgroundColor:Object.values(ST).map(s=>s.c),borderWidth:0,borderRadius:6}]};
+          // Gráfico evolução por mês (últimos 6)
+          const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+          const allM=[...new Set(lista.map(r=>getMes(r.data)).filter(Boolean))].sort().slice(-6);
+          const chartEvolRup={labels:allM.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Rupturas",data:allM.map(m=>lista.filter(r=>getMes(r.data)===m).length),backgroundColor:"#E67E00",borderRadius:6,borderSkipped:false}]};
+          const barOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
           return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              {/* Modal */}
-              {modalRuptura&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalRuptura(false);setEditRuptura(null);}}}>
-                  <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:660,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
-                    <div style={{padding:"16px 20px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
-                      <div style={{fontWeight:800,fontSize:16}}>{editRuptura?"✏️ Editar Ruptura":"➕ Nova Ruptura — Almoxarifado"}</div>
-                      <button onClick={()=>{setModalRuptura(false);setEditRuptura(null);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888"}}>✕</button>
+          <div style={{animation:"fadeIn .3s ease"}}>
+            {/* Modal criar/editar */}
+            {modalRuptura&&(
+              <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalRuptura(false);setEditRuptura(null);}}}>
+                <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:680,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+                  <div style={{background:"#1A1A1A",padding:"18px 24px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:1}}>
+                    <div style={{fontWeight:900,fontSize:18,color:"#F5C200"}}>{editRuptura?"✏️ Editar Ruptura":"🔴 Nova Ruptura — Almoxarifado"}</div>
+                    <button onClick={()=>{setModalRuptura(false);setEditRuptura(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                  </div>
+                  <div style={{padding:24,display:"flex",flexDirection:"column",gap:16}}>
+                    {/* Solicitação + Data */}
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:12}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Tipo de Solicitação</label>
+                        <select value={rupturaForm.solicitacao||"sem_estoque"} onChange={e=>setRupturaForm(p=>({...p,solicitacao:e.target.value,ticket:RUP_TICKET_OPTS.includes(e.target.value)?p.ticket:""}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",fontWeight:600,background:"#FAFAFA"}}>
+                          {RUP_SOLICITACAO.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                        </select>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Data</label>
+                        <input type="date" value={rupturaForm.data||TODAY_STR} onChange={e=>setRupturaForm(p=>({...p,data:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                      </div>
                     </div>
-                    <div style={{padding:20,display:"flex",flexDirection:"column",gap:13}}>
-                      {/* Solicitação + Data */}
-                      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Solicitação</label>
-                          <select value={form.solicitacao||"sem_estoque"} onChange={e=>setForm(p=>({...p,solicitacao:e.target.value,ticket:TICKET_OPTS.includes(e.target.value)?p.ticket:""}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:600}}>
-                            {SOLICITACAO_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
-                          </select>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data</label>
-                          <input type="date" value={form.data||TODAY_STR} onChange={e=>setForm(p=>({...p,data:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
+                    {/* Ticket condicional */}
+                    {RUP_TICKET_OPTS.includes(rupturaForm.solicitacao)&&(
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#9C27B0",textTransform:"uppercase",letterSpacing:.8}}>🎫 Ticket</label>
+                        <input type="text" value={rupturaForm.ticket||""} onChange={e=>setRupturaForm(p=>({...p,ticket:e.target.value}))} placeholder="Nº do ticket" style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #9C27B0",background:"#F9F0FF"}}/>
                       </div>
-                      {/* Ticket — só se solicitação relevante */}
-                      {TICKET_OPTS.includes(form.solicitacao)&&(
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Ticket</label>
-                          <input type="text" value={form.ticket||""} onChange={e=>setForm(p=>({...p,ticket:e.target.value}))} placeholder="Nº do ticket" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                    )}
+                    {/* Peça + Código + Qtd + Requisição */}
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px 1fr",gap:10}}>
+                      {[["Peça","peca","Nome da peça"],["Código","codigo","Cód."],["Qtd","quantidade","0"],["Requisição","requisicao","REQ-000"]].map(([lbl,field,ph])=>(
+                        <div key={field} style={{display:"flex",flexDirection:"column",gap:6}}>
+                          <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>{lbl}</label>
+                          <input type="text" value={rupturaForm[field]||""} onChange={e=>setRupturaForm(p=>({...p,[field]:e.target.value}))} placeholder={ph} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                         </div>
-                      )}
-                      {/* Peça + Código + Qtd + Requisição */}
-                      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label>
-                          <input type="text" value={form.peca||""} onChange={e=>setForm(p=>({...p,peca:e.target.value}))} placeholder="Nome da peça" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                      ))}
+                    </div>
+                    {/* OS/REL + PAT + Empresa + Técnico */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+                      {[["OS / REL","osRel","OS_REL"],["PAT","pat","Patrimônio"],["Empresa","empresa","Cliente"]].map(([lbl,field,ph])=>(
+                        <div key={field} style={{display:"flex",flexDirection:"column",gap:6}}>
+                          <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>{lbl}</label>
+                          <input type="text" value={rupturaForm[field]||""} onChange={e=>setRupturaForm(p=>({...p,[field]:e.target.value}))} placeholder={ph} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                         </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Código</label>
-                          <input type="text" value={form.codigo||""} onChange={e=>setForm(p=>({...p,codigo:e.target.value}))} placeholder="Cód." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd</label>
-                          <input type="text" value={form.quantidade||""} onChange={e=>setForm(p=>({...p,quantidade:e.target.value}))} placeholder="0" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Requisição</label>
-                          <input type="text" value={form.requisicao||""} onChange={e=>setForm(p=>({...p,requisicao:e.target.value}))} placeholder="REQ-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
+                      ))}
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Técnico</label>
+                        <select value={rupturaForm.tecnico||ALL_TECHS[0]} onChange={e=>setRupturaForm(p=>({...p,tecnico:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                          {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
+                        </select>
                       </div>
-                      {/* OS/REL + PAT + Empresa + Técnico */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>OS / REL</label>
-                          <input type="text" value={form.osRel||""} onChange={e=>setForm(p=>({...p,osRel:e.target.value}))} placeholder="OS_REL" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>PAT</label>
-                          <input type="text" value={form.pat||""} onChange={e=>setForm(p=>({...p,pat:e.target.value}))} placeholder="Patrimônio" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label>
-                          <input type="text" value={form.empresa||""} onChange={e=>setForm(p=>({...p,empresa:e.target.value}))} placeholder="Cliente" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label>
-                          <select value={form.tecnico||ALL_TECHS[0]} onChange={e=>setForm(p=>({...p,tecnico:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>
-                            {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
-                          </select>
-                        </div>
+                    </div>
+                    {/* Status + Data liberação */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Status</label>
+                        <select value={rupturaForm.status||"aguardando"} onChange={e=>setRupturaForm(p=>({...p,status:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"none",fontWeight:700,color:ST[rupturaForm.status||"aguardando"]?.c||"#E67E00",background:ST[rupturaForm.status||"aguardando"]?.bg||"#FFF8F0"}}>
+                          {RUP_STATUS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                        </select>
                       </div>
-                      {/* Status + Data liberação */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label>
-                          <select value={form.status||"aguardando"} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"none",fontWeight:700,color:stCfg(form.status).c,background:stCfg(form.status).bg}}>
-                            {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
-                          </select>
-                        </div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data de Liberação p/ Suporte</label>
-                          <input type="date" value={form.dataLiberacao||""} onChange={e=>setForm(p=>({...p,dataLiberacao:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                        </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Data Liberação p/ Suporte</label>
+                        <input type="date" value={rupturaForm.dataLiberacao||""} onChange={e=>setRupturaForm(p=>({...p,dataLiberacao:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                       </div>
-                      {/* Obs */}
-                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                        <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observações</label>
-                        <textarea value={form.obs||""} onChange={e=>setForm(p=>({...p,obs:e.target.value}))} placeholder="Observações..." rows={3} style={{fontSize:12,padding:"8px",borderRadius:6,border:"1px solid #E0E0E0",resize:"vertical",fontFamily:"inherit"}}/>
-                      </div>
-                      <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
-                        <BtnG onClick={()=>{setModalRuptura(false);setEditRuptura(null);}}>Cancelar</BtnG>
-                        <BtnY onClick={salvar}>{editRuptura?"Salvar Alterações":"Adicionar"}</BtnY>
-                      </div>
+                    </div>
+                    {/* Obs */}
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Observações</label>
+                      <textarea value={rupturaForm.obs||""} onChange={e=>setRupturaForm(p=>({...p,obs:e.target.value}))} placeholder="Descreva observações relevantes..." rows={3} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",resize:"vertical",fontFamily:"inherit"}}/>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"flex-end",gap:10,paddingTop:4}}>
+                      <BtnG onClick={()=>{setModalRuptura(false);setEditRuptura(null);}}>Cancelar</BtnG>
+                      <BtnY onClick={()=>{
+                        if(!rupturaForm.peca){alert("Informe a peça.");return;}
+                        if(editRuptura){
+                          updateRuptura(editRuptura.id,{...rupturaForm});
+                          setEditRuptura(null);setModalRuptura(false);
+                        } else {
+                          const row={...rupturaForm,id:`RUP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false};
+                          setRupturas(p=>[row,...p]);db.save("rupturas_alm",row.id,row);
+                          setModalRuptura(false);
+                        }
+                        notify("✅ Salvo!");
+                      }}>{editRuptura?"Salvar Alterações":"Adicionar Ruptura"}</BtnY>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Header */}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div>
-                  <div style={{fontWeight:900,fontSize:22,marginBottom:2}}>🔴 Ruptura Almoxarifado</div>
-                  <div style={{fontSize:13,color:"#888"}}>{lista.length} registro(s) · {rupturas.filter(r=>!r.arquivado&&r.status==="aguardando").length} aguardando</div>
-                </div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRuptura?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqRuptura?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"}]}/>
-                  <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({...EMPTY});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
                 </div>
               </div>
+            )}
 
-              {/* Tabela */}
-              {lista.length===0?(
-                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
-                  <div style={{fontSize:32,marginBottom:12}}>🔴</div>
-                  Nenhuma ruptura registrada.
+            {/* ── Header ── */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div>
+                <div style={{fontWeight:900,fontSize:26,color:"#1A1A1A",letterSpacing:-.5}}>🔴 Ruptura Almoxarifado</div>
+                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#E67E00",fontWeight:700}}>{byStatus.aguardando?.length||0} aguardando</span></div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"Ocultar":"Ver Arquivados"}</button>
+                <button onClick={()=>setViewMode(v=>v==="cards"?"calendario":"cards")} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontWeight:600}}>{viewMode==="cards"?"📅 Calendário":"🃏 Cards"}</button>
+                <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"}]}/>
+                <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
+              </div>
+            </div>
+
+            {/* ── KPIs ── */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+              {Object.entries(ST).map(([k,s])=>(
+                <div key={k} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${s.c}`,background:s.bg,cursor:"pointer",transition:"transform .15s",outline:rupFiltroStatus===k?"2px solid "+s.c:"none"}} onClick={()=>setRupFiltroStatus(rupFiltroStatus===k?"todos":k)}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{s.icon} {s.l}</div>
+                  <div style={{fontSize:34,fontWeight:900,color:s.c,lineHeight:1}}>{byStatus[k]?.length||0}</div>
+                  {rupFiltroStatus===k&&<div style={{fontSize:9,color:s.c,marginTop:4,fontWeight:700}}>● FILTRO ATIVO</div>}
+                </div>
+              ))}
+            </div>
+
+            {/* ── Gráficos ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1.8fr",gap:14,marginBottom:20}}>
+              <div className="card" style={{padding:16}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📊 Por Status</div>
+                <ChartCanvas type="doughnut" data={chartStatusRup} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}}}} height={160}/>
+              </div>
+              <div className="card" style={{padding:16}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Evolução Mensal</div>
+                <ChartCanvas type="bar" data={chartEvolRup} options={barOpts} height={160}/>
+              </div>
+            </div>
+
+            {/* ── Filtros de busca ── */}
+            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}>
+                <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:14}}>🔍</span>
+                <input type="text" value={rupSearch} onChange={e=>setRupSearch(e.target.value)} placeholder="Buscar por requisição, peça, OS/REL, empresa, PAT..." style={{width:"100%",padding:"9px 12px 9px 32px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/>
+              </div>
+              {viewMode==="calendario"&&(
+                <>
+                  <select value={rupMonth} onChange={e=>setRupMonth(Number(e.target.value))} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}>
+                    {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={i}>{m}</option>)}
+                  </select>
+                  <select value={rupYear} onChange={e=>setRupYear(Number(e.target.value))} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}>
+                    {[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}
+                  </select>
+                </>
+              )}
+              {rupSearch&&<button onClick={()=>setRupSearch("")} style={{padding:"8px 14px",borderRadius:20,background:"#F0F0F0",border:"none",cursor:"pointer",fontSize:12,color:"#555"}}>✕ Limpar</button>}
+              <span style={{fontSize:11,color:"#AAA"}}>{listaFiltrada.length} resultado(s)</span>
+            </div>
+
+            {/* ── View: Cards ── */}
+            {viewMode==="cards"&&(
+              listaFiltrada.length===0?(
+                <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+                  <div style={{fontSize:15,fontWeight:600}}>Nenhuma ruptura encontrada</div>
+                  <div style={{fontSize:13,marginTop:6}}>Tente ajustar os filtros ou clique em "+ Nova Ruptura"</div>
                 </div>
               ):(
-                <div className="card" style={{overflow:"hidden"}}>
-                  <div className="tbl-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Data</th><th>Solicitação</th><th>Ticket</th><th>Requisição</th>
-                          <th>Peça</th><th>Cód.</th><th>Qtd</th><th>OS/REL</th>
-                          <th>PAT</th><th>Empresa</th><th>Técnico</th>
-                          <th>SLA</th><th>Status</th><th>Dt Liberação</th>
-                          <th>Obs</th><th>Reg. por</th><th>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lista.map(r=>{
-                          const st=stCfg(r.status);
-                          return(
-                            <tr key={r.id} style={{opacity:r.arquivado?0.5:1}}>
-                              <td style={{whiteSpace:"nowrap",fontSize:11}}>{r.data||"—"}</td>
-                              <td style={{fontSize:11,maxWidth:160}}><span title={solLabel(r.solicitacao)} style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:150}}>{solLabel(r.solicitacao)}</span></td>
-                              <td style={{fontSize:11}}>{TICKET_OPTS.includes(r.solicitacao)?r.ticket||"—":"—"}</td>
-                              <td style={{fontSize:11,color:"#1565C0",fontWeight:r.requisicao?700:400}}>{r.requisicao||"—"}</td>
-                              <td style={{fontWeight:700,fontSize:12}}>{r.peca||"—"}</td>
-                              <td style={{fontSize:11,color:"#888"}}>{r.codigo||"—"}</td>
-                              <td style={{fontSize:11,textAlign:"center"}}>{r.quantidade||"—"}</td>
-                              <td style={{fontSize:11,color:"#1565C0"}}>{r.osRel||"—"}</td>
-                              <td style={{fontSize:11}}>{r.pat||"—"}</td>
-                              <td style={{fontSize:11}}>{r.empresa||"—"}</td>
-                              <td style={{fontSize:11}}>{r.tecnico||"—"}</td>
-                              <td>{(()=>{const _d=sla(r);if(_d===null)return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅</span>;const _c=_d>10?"#C62828":_d>5?"#E67E00":"#1A7A3C";return <span style={{fontSize:11,fontWeight:700,color:_c,background:_c+"22",borderRadius:20,padding:"2px 8px"}}>{_d}d</span>;})()}</td>
-                              <td>
-                                <select value={r.status||"aguardando"} onChange={e=>updateRuptura(r.id,{status:e.target.value,dataLiberacao:e.target.value==="liberado_almox"&&!r.dataLiberacao?TODAY_STR:r.dataLiberacao})} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"none",color:st.c,background:st.bg}}>
-                                  {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
-                                </select>
-                              </td>
-                              <td style={{fontSize:11,whiteSpace:"nowrap",color:r.dataLiberacao?"#1A7A3C":"#888"}}>{r.dataLiberacao||"—"}</td>
-                              <td style={{maxWidth:160}}><textarea value={r.obs||""} onChange={e=>updateRuptura(r.id,{obs:e.target.value})} rows={1} style={{fontSize:10,padding:"2px 4px",borderRadius:4,border:"1px solid #E0E0E0",resize:"none",width:"100%",minWidth:100,fontFamily:"inherit"}}/></td>
-                              <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}</td>
-                              <td style={{whiteSpace:"nowrap"}}>
-                                <button onClick={()=>abrirEditar(r)} title="Editar" style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 7px",fontSize:13,marginRight:3}}>✏️</button>
-                                <button onClick={()=>updateRuptura(r.id,{arquivado:!r.arquivado})} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:13,marginRight:3}}>{r.arquivado?"📤":"🗄️"}</button>
-                                <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delRuptura(r.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                  {listaFiltrada.map(r=>{
+                    const st=ST[r.status||"aguardando"]||ST.aguardando;
+                    const d=slaD(r);
+                    const slaC=d===null?null:d>10?"#C62828":d>5?"#E67E00":"#1A7A3C";
+                    return(
+                      <div key={r.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1,transition:"box-shadow .2s"}}>
+                        {/* Card header */}
+                        <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                            <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px",whiteSpace:"nowrap"}}>{st.icon} {st.l}</span>
+                            {d!==null&&<span style={{fontSize:10,fontWeight:700,color:slaC,background:slaC+"18",borderRadius:20,padding:"2px 8px"}}>{d}d</span>}
+                          </div>
+                          <div style={{display:"flex",gap:3}}>
+                            <button onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                            <button onClick={()=>updateRuptura(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delRuptura(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                          </div>
+                        </div>
+                        {/* Card body */}
+                        <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                            <div style={{flex:1}}>
+                              <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",lineHeight:1.2,marginBottom:3}}>{r.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div>
+                              <div style={{fontSize:11,color:"#888"}}>📅 {r.data||"—"} · {SOL_LABEL[r.solicitacao]||"—"}</div>
+                            </div>
+                            {r.codigo&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px",whiteSpace:"nowrap"}}>{r.codigo}</span>}
+                          </div>
+                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                            <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                              <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Empresa / PAT</div>
+                              <div style={{fontSize:12,fontWeight:700,color:"#333"}}>{r.empresa||"—"}</div>
+                              {r.pat&&<div style={{fontSize:10,color:"#888"}}>PAT {r.pat}</div>}
+                            </div>
+                            <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                              <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>OS/REL · Requisição</div>
+                              <div style={{fontSize:12,fontWeight:700,color:"#1565C0"}}>{r.osRel||"—"}</div>
+                              {r.requisicao&&<div style={{fontSize:10,color:"#8E44AD",fontWeight:600}}>{r.requisicao}</div>}
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+                            {r.tecnico&&<span style={{fontSize:10,background:"#EFF6FF",color:"#1565C0",borderRadius:12,padding:"2px 8px",fontWeight:600}}>👷 {r.tecnico}</span>}
+                            {r.quantidade&&<span style={{fontSize:10,background:"#F5F5F5",color:"#555",borderRadius:12,padding:"2px 8px",fontWeight:600}}>Qtd: {r.quantidade}</span>}
+                            {r.ticket&&<span style={{fontSize:10,background:"#F6F0FB",color:"#8E44AD",borderRadius:12,padding:"2px 8px",fontWeight:600}}>🎫 {r.ticket}</span>}
+                          </div>
+                          {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
+                          {r.dataLiberacao&&<div style={{fontSize:11,color:"#1A7A3C",fontWeight:600,background:"#F0FFF5",borderRadius:8,padding:"5px 10px"}}>✅ Liberado em {r.dataLiberacao}</div>}
+                          <div style={{marginTop:2}}>
+                            <select value={r.status||"aguardando"} onChange={e=>updateRuptura(r.id,{status:e.target.value,dataLiberacao:e.target.value==="liberado_almox"&&!r.dataLiberacao?TODAY_STR:r.dataLiberacao})} style={{width:"100%",fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                              {RUP_STATUS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+              )
+            )}
+
+            {/* ── View: Calendário ── */}
+            {viewMode==="calendario"&&(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8}}>
+                {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map(d=>(
+                  <div key={d} style={{textAlign:"center",fontSize:11,fontWeight:700,color:"#AAA",padding:"6px 0",background:"#F8F8F8",borderRadius:8}}>{d}</div>
+                ))}
+                {Array.from({length:new Date(rupYear,rupMonth,1).getDay()}).map((_,i)=>(
+                  <div key={"empty"+i}/>
+                ))}
+                {diasArr.map(dia=>{
+                  const dStr=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}-${String(dia).padStart(2,"0")}`;
+                  const dayRups=listaFiltrada.filter(r=>r.data===dStr);
+                  const isToday=dStr===TODAY_STR;
+                  return(
+                    <div key={dia} style={{minHeight:80,background:isToday?"#FFFBF0":"#FFF",border:isToday?"2px solid #F5C200":"1px solid #F0F0F0",borderRadius:10,padding:6,transition:"background .15s"}}>
+                      <div style={{fontSize:12,fontWeight:isToday?800:600,color:isToday?"#C47D00":"#555",marginBottom:4,textAlign:"right"}}>{dia}</div>
+                      {dayRups.map((r,i)=>{
+                        const st=ST[r.status||"aguardando"]||ST.aguardando;
+                        return(
+                          <div key={i} style={{background:st.bg,border:`1px solid ${st.c}44`,borderRadius:6,padding:"3px 6px",marginBottom:3,cursor:"pointer"}} title={`${r.peca||"—"} · ${r.empresa||"—"}`}
+                            onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}}>
+                            <div style={{fontSize:9,fontWeight:700,color:st.c,textOverflow:"ellipsis",overflow:"hidden",whiteSpace:"nowrap"}}>{r.peca||"—"}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           );
         })()}
 
