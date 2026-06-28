@@ -865,6 +865,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     if(user.apenasOfi150) return ["agenda_ofi_150","dashboard_ofi_150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="sogusnao") return user.id!=="gustavo";
+    if(tipo==="ruptura_almox") return ["manuela","gustavo","renato"].includes(user.id);
     if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_gustavo","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
     if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
@@ -960,6 +961,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       <Btn k="dashboard_processos" l="📊 Dash Processos"/>
       <Btn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
       <Btn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
+      {canSee("ruptura_almox")&&<Btn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
       <Btn k="dashboard_req" l="📊 Dash Requisições"/>
       <Btn k="sas" l="📄 SAS"/>
       <Btn k="carros" l="🚙 Carros"/>
@@ -993,6 +995,12 @@ export default function App(){
   const [reports,setReports]=useState(REAL_REPORTS);
   const [processosMU,setProcessosMU]=useState([]);
   const [processosAF,setProcessosAF]=useState([]);
+  const [rupturas,setRupturas]=useState([]);
+  const [modalRuptura,setModalRuptura]=useState(false);
+  const [editRuptura,setEditRuptura]=useState(null);
+  const [showArqRuptura,setShowArqRuptura]=useState(false);
+  const RUP_EMPTY={solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0],dataLiberacao:"",obs:"",status:"aguardando",arquivado:false};
+  const [rupturaForm,setRupturaForm]=useState(RUP_EMPTY);
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
   const [requisicoes,setRequisicoes]=useState([]);
@@ -1201,12 +1209,12 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
         safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("pendencias_gustavo"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus")
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -1230,6 +1238,7 @@ export default function App(){
       if(ap150Rows.length>0) setApontamentos150(ap150Rows);
       if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
       if(matRows.length>0) setPendMatheus(matRows);
+      if(rupRows&&rupRows.length>0) setRupturas(rupRows);
       if(escRows.length>0){ const sched={}; const prev={}; escRows.forEach(r=>{ const rk=r.key||(r.data&&r.data.key); const rs=r.slots||(r.data&&r.data.slots)||[]; if(rk){ if(rk.startsWith("PREV__")) prev[rk.slice(6)]=rs; else sched[rk]=rs; } }); setSchedule(sched); setAgendaPrev(prev); }
       if(usrs.length>0){
         const merged=[...USERS];
@@ -1259,6 +1268,8 @@ export default function App(){
   const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateRuptura=(id,changes)=>{const updated=rupturas.map(r=>r.id===id?{...r,...changes}:r);setRupturas(updated);db.save("rupturas_alm",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const delRuptura=(id)=>{setRupturas(p=>p.filter(x=>x.id!==id));db.delete("rupturas_alm",id);};
   const updateMU=(id,changes)=>{const updated=processosMU.map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   // Requisições — salvar no banco (visível para todos)
@@ -3121,8 +3132,232 @@ export default function App(){
           );
         })()}
 
+      {/* ── RUPTURA ALMOXARIFADO ── */}
+        {tab==="ruptura_almox"&&canSee("ruptura_almox")&&(()=>{
+          const SOLICITACAO_OPTS=[
+            {v:"sem_estoque",         l:"Sem estoque no almoxarifado"},
+            {v:"cadastro_compra",     l:"Solicitação de cadastro e compra"},
+            {v:"cadastrado_aguard",   l:"Cadastrado e aguardando compra"},
+            {v:"compra_aguard_ret",   l:"Compra realizada aguardando retorno"},
+            {v:"consumo_gilberto",    l:"Consumo Gilberto compras praça"},
+          ];
+          const TICKET_OPTS=["cadastro_compra","cadastrado_aguard","compra_aguard_ret"];
+          const STATUS_OPTS=[
+            {v:"aguardando",          l:"Aguardando",              c:"#E67E00", bg:"#FFF8F0"},
+            {v:"aguard_aprov_dir",    l:"Aguardando aprovação diretoria", c:"#8E44AD", bg:"#F6F0FB"},
+            {v:"separado_suporte",    l:"Separado no Suporte",    c:"#1565C0", bg:"#F0F4FF"},
+            {v:"liberado_almox",      l:"Liberado pelo Almox",    c:"#1A7A3C", bg:"#F0FFF5"},
+          ];
+          const diffDaysNow=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.floor((Date.now()-dt.getTime())/86400000);};
+          const EMPTY=RUP_EMPTY;
+          const form=rupturaForm; const setForm=setRupturaForm;
+          const lista=rupturas.filter(r=>showArqRuptura||!r.arquivado);
+          const sla=(r)=>{
+            if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
+            return diffDaysNow(r.data);
+          };
+          const SlaDias=({r})=>{
+            const d=sla(r);
+            if(d===null) return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅ Finalizado</span>;
+            const c=d>10?"#C62828":d>5?"#E67E00":"#1A7A3C";
+            return <span style={{fontSize:11,fontWeight:700,color:c,background:c+"22",borderRadius:20,padding:"2px 8px"}}>{d}d</span>;
+          };
+          const salvar=()=>{
+            if(!form.peca){alert("Informe a peça.");return;}
+            if(editRuptura){
+              updateRuptura(editRuptura.id,{...form});
+              setEditRuptura(null);setModalRuptura(false);
+            } else {
+              const row={...EMPTY,...form,id:`RUP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString()};
+              setRupturas(p=>[row,...p]);db.save("rupturas_alm",row.id,row);
+              setModalRuptura(false);
+            }
+            notify("✅ Salvo!");
+          };
+          const abrirEditar=(r)=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0],dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);};
+          const stCfg=(v)=>STATUS_OPTS.find(s=>s.v===v)||STATUS_OPTS[0];
+          const solLabel=(v)=>SOLICITACAO_OPTS.find(s=>s.v===v)?.l||v;
+          const F=({label,field,type="text",placeholder=""})=>(
+            <div style={{display:"flex",flexDirection:"column",gap:3}}>
+              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{label}</label>
+              <input type={type} value={form[field]||""} onChange={e=>setForm(p=>({...p,[field]:e.target.value}))} placeholder={placeholder} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+            </div>
+          );
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              {/* Modal */}
+              {modalRuptura&&(
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalRuptura(false);setEditRuptura(null);}}}>
+                  <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:660,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+                    <div style={{padding:"16px 20px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
+                      <div style={{fontWeight:800,fontSize:16}}>{editRuptura?"✏️ Editar Ruptura":"➕ Nova Ruptura — Almoxarifado"}</div>
+                      <button onClick={()=>{setModalRuptura(false);setEditRuptura(null);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888"}}>✕</button>
+                    </div>
+                    <div style={{padding:20,display:"flex",flexDirection:"column",gap:13}}>
+                      {/* Solicitação + Data */}
+                      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:10}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Solicitação</label>
+                          <select value={form.solicitacao||"sem_estoque"} onChange={e=>setForm(p=>({...p,solicitacao:e.target.value,ticket:TICKET_OPTS.includes(e.target.value)?p.ticket:""}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:600}}>
+                            {SOLICITACAO_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                          </select>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data</label>
+                          <input type="date" value={form.data||TODAY_STR} onChange={e=>setForm(p=>({...p,data:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                      </div>
+                      {/* Ticket — só se solicitação relevante */}
+                      {TICKET_OPTS.includes(form.solicitacao)&&(
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Ticket</label>
+                          <input type="text" value={form.ticket||""} onChange={e=>setForm(p=>({...p,ticket:e.target.value}))} placeholder="Nº do ticket" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                      )}
+                      {/* Peça + Código + Qtd + Requisição */}
+                      <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr",gap:10}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label>
+                          <input type="text" value={form.peca||""} onChange={e=>setForm(p=>({...p,peca:e.target.value}))} placeholder="Nome da peça" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Código</label>
+                          <input type="text" value={form.codigo||""} onChange={e=>setForm(p=>({...p,codigo:e.target.value}))} placeholder="Cód." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd</label>
+                          <input type="text" value={form.quantidade||""} onChange={e=>setForm(p=>({...p,quantidade:e.target.value}))} placeholder="0" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Requisição</label>
+                          <input type="text" value={form.requisicao||""} onChange={e=>setForm(p=>({...p,requisicao:e.target.value}))} placeholder="REQ-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                      </div>
+                      {/* OS/REL + PAT + Empresa + Técnico */}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>OS / REL</label>
+                          <input type="text" value={form.osRel||""} onChange={e=>setForm(p=>({...p,osRel:e.target.value}))} placeholder="OS_REL" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>PAT</label>
+                          <input type="text" value={form.pat||""} onChange={e=>setForm(p=>({...p,pat:e.target.value}))} placeholder="Patrimônio" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label>
+                          <input type="text" value={form.empresa||""} onChange={e=>setForm(p=>({...p,empresa:e.target.value}))} placeholder="Cliente" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label>
+                          <select value={form.tecnico||ALL_TECHS[0]} onChange={e=>setForm(p=>({...p,tecnico:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>
+                            {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      {/* Status + Data liberação */}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label>
+                          <select value={form.status||"aguardando"} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"none",fontWeight:700,color:stCfg(form.status).c,background:stCfg(form.status).bg}}>
+                            {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                          </select>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data de Liberação p/ Suporte</label>
+                          <input type="date" value={form.dataLiberacao||""} onChange={e=>setForm(p=>({...p,dataLiberacao:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
+                        </div>
+                      </div>
+                      {/* Obs */}
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                        <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observações</label>
+                        <textarea value={form.obs||""} onChange={e=>setForm(p=>({...p,obs:e.target.value}))} placeholder="Observações..." rows={3} style={{fontSize:12,padding:"8px",borderRadius:6,border:"1px solid #E0E0E0",resize:"vertical",fontFamily:"inherit"}}/>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                        <BtnG onClick={()=>{setModalRuptura(false);setEditRuptura(null);}}>Cancelar</BtnG>
+                        <BtnY onClick={salvar}>{editRuptura?"Salvar Alterações":"Adicionar"}</BtnY>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Header */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div>
+                  <div style={{fontWeight:900,fontSize:22,marginBottom:2}}>🔴 Ruptura Almoxarifado</div>
+                  <div style={{fontSize:13,color:"#888"}}>{lista.length} registro(s) · {rupturas.filter(r=>!r.arquivado&&r.status==="aguardando").length} aguardando</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRuptura?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqRuptura?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"}]}/>
+                  <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({...EMPTY});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
+                </div>
+              </div>
+
+              {/* Tabela */}
+              {lista.length===0?(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>🔴</div>
+                  Nenhuma ruptura registrada.
+                </div>
+              ):(
+                <div className="card" style={{overflow:"hidden"}}>
+                  <div className="tbl-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Data</th><th>Solicitação</th><th>Ticket</th><th>Requisição</th>
+                          <th>Peça</th><th>Cód.</th><th>Qtd</th><th>OS/REL</th>
+                          <th>PAT</th><th>Empresa</th><th>Técnico</th>
+                          <th>SLA</th><th>Status</th><th>Dt Liberação</th>
+                          <th>Obs</th><th>Reg. por</th><th>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lista.map(r=>{
+                          const st=stCfg(r.status);
+                          return(
+                            <tr key={r.id} style={{opacity:r.arquivado?0.5:1}}>
+                              <td style={{whiteSpace:"nowrap",fontSize:11}}>{r.data||"—"}</td>
+                              <td style={{fontSize:11,maxWidth:160}}><span title={solLabel(r.solicitacao)} style={{display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:150}}>{solLabel(r.solicitacao)}</span></td>
+                              <td style={{fontSize:11}}>{TICKET_OPTS.includes(r.solicitacao)?r.ticket||"—":"—"}</td>
+                              <td style={{fontSize:11,color:"#1565C0",fontWeight:r.requisicao?700:400}}>{r.requisicao||"—"}</td>
+                              <td style={{fontWeight:700,fontSize:12}}>{r.peca||"—"}</td>
+                              <td style={{fontSize:11,color:"#888"}}>{r.codigo||"—"}</td>
+                              <td style={{fontSize:11,textAlign:"center"}}>{r.quantidade||"—"}</td>
+                              <td style={{fontSize:11,color:"#1565C0"}}>{r.osRel||"—"}</td>
+                              <td style={{fontSize:11}}>{r.pat||"—"}</td>
+                              <td style={{fontSize:11}}>{r.empresa||"—"}</td>
+                              <td style={{fontSize:11}}>{r.tecnico||"—"}</td>
+                              <td><SlaDias r={r}/></td>
+                              <td>
+                                <select value={r.status||"aguardando"} onChange={e=>updateRuptura(r.id,{status:e.target.value,dataLiberacao:e.target.value==="liberado_almox"&&!r.dataLiberacao?TODAY_STR:r.dataLiberacao})} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"none",color:st.c,background:st.bg}}>
+                                  {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                                </select>
+                              </td>
+                              <td style={{fontSize:11,whiteSpace:"nowrap",color:r.dataLiberacao?"#1A7A3C":"#888"}}>{r.dataLiberacao||"—"}</td>
+                              <td style={{maxWidth:160}}><textarea value={r.obs||""} onChange={e=>updateRuptura(r.id,{obs:e.target.value})} rows={1} style={{fontSize:10,padding:"2px 4px",borderRadius:4,border:"1px solid #E0E0E0",resize:"none",width:"100%",minWidth:100,fontFamily:"inherit"}}/></td>
+                              <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}</td>
+                              <td style={{whiteSpace:"nowrap"}}>
+                                <button onClick={()=>abrirEditar(r)} title="Editar" style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 7px",fontSize:13,marginRight:3}}>✏️</button>
+                                <button onClick={()=>updateRuptura(r.id,{arquivado:!r.arquivado})} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:13,marginRight:3}}>{r.arquivado?"📤":"🗄️"}</button>
+                                <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delRuptura(r.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       {/* ── DASHBOARD REQUISIÇÕES ── */}
         {tab==="dashboard_req"&&(()=>{
+          const rupturas_alm=rupturas||[];
           const allReqs=[...emprestimos,...saidaEntrada];
           const totalEmp=emprestimos.length;
           const totalSai=saidaEntrada.length;
@@ -3178,11 +3413,12 @@ export default function App(){
               </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:20}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:20}}>
                 <KPIR icon="📦" label="Total" value={total} color="#1A1A1A"/>
                 <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
                 <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
-                <KPIR icon="🔴" label="Rupturas" value={rupturas.length} color="#C62828" bg="#FFF8F8"/>
+                <KPIR icon="🔴" label="Rupturas S/E" value={rupturas.length} color="#C62828" bg="#FFF8F8"/>
+                <KPIR icon="🏭" label="Ruptura Almox" value={(rupturas_alm||[]).filter(r=>!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
                 <KPIR icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
                 <KPIR icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
               </div>
@@ -3258,6 +3494,32 @@ export default function App(){
                     <tbody>{todasPecasAplicadas.map((p,i)=>(
                       <tr key={i}><td style={{fontWeight:700,color:"#1565C0"}}>{p.rel}</td><td>{p.peca}</td><td style={{fontSize:11,color:"#888"}}>{p.empresa}</td></tr>
                     ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+              {/* Ruptura Almox no Dashboard */}
+              {rupturas_alm.filter(r=>!r.arquivado).length>0&&(
+                <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #AD1457"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({rupturas_alm.filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Data</th><th>Peça</th><th>Cód.</th><th>Empresa</th><th>PAT</th><th>Técnico</th><th>Solicitação</th><th>SLA</th><th>Status</th></tr></thead>
+                    <tbody>{rupturas_alm.filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
+                      const dias=r.status==="separado_suporte"||r.status==="liberado_almox"?null:r.data?Math.floor((Date.now()-new Date(r.data).getTime())/86400000):null;
+                      const SOLS={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguard.",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
+                      const STATS={aguardando:{l:"Aguardando",c:"#E67E00"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD"},separado_suporte:{l:"Separado Suporte",c:"#1565C0"},liberado_almox:{l:"Liberado",c:"#1A7A3C"}};
+                      const st=STATS[r.status]||STATS.aguardando;
+                      return(<tr key={i}>
+                        <td style={{fontSize:11,whiteSpace:"nowrap"}}>{r.data||"—"}</td>
+                        <td style={{fontWeight:700}}>{r.peca||"—"}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{r.codigo||"—"}</td>
+                        <td style={{fontSize:11}}>{r.empresa||"—"}</td>
+                        <td style={{fontSize:11}}>{r.pat||"—"}</td>
+                        <td style={{fontSize:11}}>{r.tecnico||"—"}</td>
+                        <td style={{fontSize:11}}>{SOLS[r.solicitacao]||r.solicitacao||"—"}</td>
+                        <td>{dias!==null?<span style={{fontSize:11,fontWeight:700,color:dias>10?"#C62828":dias>5?"#E67E00":"#1A7A3C"}}>{dias}d</span>:<span style={{fontSize:10,color:"#1A7A3C"}}>✅</span>}</td>
+                        <td><span style={{fontSize:10,fontWeight:700,color:st.c}}>{st.l}</span></td>
+                      </tr>);
+                    })}</tbody>
                   </table></div>
                 </div>
               )}
@@ -4022,6 +4284,7 @@ export default function App(){
     dashboard_processos: (processosMU||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length+(processosAF||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
     emprestimos: (emprestimos||[]).filter(e=>!e.arquivado&&(e.statusEmp==="pendente"||e.status==="pendente")).length,
     saida_entrada: (saidaEntrada||[]).filter(s=>!s.arquivado&&(s.statusFinal==="pendente"||s.status==="pendente")).length,
+    ruptura_almox: (rupturas||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").length,
     dashboard_req: (requisicoes||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
     sas: (sas||[]).filter(s=>s.status==="pendente").length,
     pendencias_frota: (frota||[]).filter(f=>!f.arquivado&&f.status==="pendente").length,
