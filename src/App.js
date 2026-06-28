@@ -952,7 +952,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
           </div>
         </button>
         {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-          {canSee("oficina")&&<>
+          <Btn k="relatorios" l="📋 Conf. Relatórios"/>
+      {canSee("oficina")&&<>
             <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
@@ -1523,6 +1524,135 @@ export default function App(){
   const renderTab = () => {
     return (
       <>
+        {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
+        {tab==="relatorios"&&(()=>{
+          const lista=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado").filter(r=>{
+            if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
+            if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
+            if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
+            if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
+            if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
+            if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
+            return true;
+          });
+          const totalConc=lista.filter(r=>r.statusFinal==="Concluído").length;
+          const totalPend=lista.filter(r=>r.statusFinal!=="Concluído").length;
+          const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
+          const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
+          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#EFF6FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
+          const addPecaRel=(id)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",obs:""}]});};
+          const updatePecaRel=(id,pi,changes)=>{const r=reports.find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
+          const delPecaRel=(id,pi)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            {/* Header */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div>
+                <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📋 Conferência de Relatórios</div>
+                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} relatório(s) · <span style={{color:"#C62828",fontWeight:700}}>{totalPend} pendentes</span></div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"Ocultar":"Arquivados"}</button>
+                <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:20,border:"none",background:pdfLoading?"#E0E0E0":"#1565C0",color:"#FFF",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
+                  {pdfLoading?"⏳ Lendo...":"📄 Ler PDF"}
+                  <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
+                    const file=e.target.files?.[0]; if(!file)return;
+                    setPdfLoading(true);
+                    try{
+                      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                      const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                      const respText=await resp.text();
+                      if(!resp.ok){let m="Erro API ("+resp.status+")";try{const j=JSON.parse(respText);m=j.error||m;}catch(e){}throw new Error(m);}
+                      let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
+                      const txt=data.content?.[0]?.text||"{}";
+                      const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
+                      const pecasAPI=(parsed.pecasUsadas||[]).map(p=>({situacao:"Peça Solicitada",peca:p.peca||"",cod:p.cod||"",quantidade:p.quantidade||"1",obs:""}));
+                      const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:pecasAPI,processoStatus:"em_andamento",reportNum:parsed.reportNum||""};
+                      setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Relatório criado via PDF!");
+                    }catch(err){alert("Erro ao processar PDF: "+err.message);}
+                    setPdfLoading(false);e.target.value="";
+                  }}/>
+                </label>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>setModalRel(true)}>+ Novo Relatório</BtnY>
+              </div>
+            </div>
+            {/* KPIs */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:totalPend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#E67E00",bg:"#FFF8F0",i:"🔧"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {/* Filtros */}
+            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
+              <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",minWidth:140}}/>
+              <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",width:100}}/>
+              <select value={relFiltroTech} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+              <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option><option>Pendente Peças</option><option>Concluído</option></select>
+              {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>
+            {/* Cards */}
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:13,marginTop:6}}>Use "+ Novo Relatório" ou "Ler PDF"</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(r=>{
+                  const isCorr=r.atendimento==="corretivo";
+                  const isConc=r.statusFinal==="Concluído";
+                  const pecas=r.pecas||[];
+                  const borderC=isConc?"#1A7A3C":isCorr?"#C62828":"#1565C0";
+                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:isConc?"#F0FFF5":isCorr?"#FFF0F0":"#EFF6FF",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"2px 10px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
+                        <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:isConc?"#1A7A3C":"#C62828",background:isConc?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option>Pendente Peças</option><option>Concluído</option></select>
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:6,color:"#E67E00",cursor:"pointer",padding:"4px 7px",fontSize:13,fontWeight:700}}>+📦</button>
+                        <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
+                        {r.reportNum&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px"}}>#{r.reportNum}</span>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Técnico</div><select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço</div><select value={r.servico||"Mecânica"} onChange={e=>updateReport(r.id,{servico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Cidade</div><input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      </div>
+                      {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
+                      {pecas.length>0&&<div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
+                        <div style={{fontSize:10,fontWeight:800,color:"#E67E00",textTransform:"uppercase",marginBottom:6}}>📦 Peças ({pecas.length})</div>
+                        {pecas.map((p,pi)=>{
+                          const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
+                          return(<div key={pi} style={{background:stP.bg,borderRadius:8,padding:"8px 10px",marginBottom:4,borderLeft:`3px solid ${stP.c}`}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                              <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,color:stP.c,background:"transparent",border:"none",cursor:"pointer",outline:"none",padding:0}}>{STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}</select>
+                              <button onClick={()=>delPecaRel(r.id,pi)} style={{background:"none",border:"none",color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700}}>✕</button>
+                            </div>
+                            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 60px",gap:4}}>
+                              <input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Nome da peça" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
+                              <input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="Código" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
+                              <input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none",textAlign:"center"}}/>
+                            </div>
+                          </div>);
+                        })}
+                      </div>}
+                      <div style={{fontSize:10,color:"#CCC",textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
+
         {tab==="apontamentos_oficina"&&(()=>{
           const lista=apontamentos.filter(a=>(showArqApon||!a.arquivado)&&(()=>{
             if(ofiNovaData&&a.data!==ofiNovaData)return false;
