@@ -1341,6 +1341,8 @@ export default function App(){
   const updateApon150=(id,changes)=>{ setApontamentos150(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("apontamentos_150",id,row); return np; }); };
   const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
+  const abrirEditar150=(a)=>{setEditApon150(a);setApon150Form({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||OFICINA_TECHS[0]||"",servico:a.servico||SERVICOS_OFICINA[0]||"",inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"150",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon150(true);};
+  const salvar150=()=>{const total=calcHoras(apon150Form.inicio,apon150Form.termino)||apon150Form.total;if(editApon150){updateApon150(editApon150.id,{...apon150Form,total});setModalApon150(false);setEditApon150(null);notify("✅ Atualizado!");}else{const row={id:`AP150${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...apon150Form,total};setApontamentos150(p=>[row,...p]);db.save("apontamentos_150",row.id,row);setModalApon150(false);notify("✅ Apontamento salvo!");}};
   const froCrud=mkCrud("pendencias_frota",setFrota);
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
@@ -4119,7 +4121,7 @@ export default function App(){
 
         {/* ── APONTAMENTOS OFICINA 150 ── */}
         {tab==="apontamentos_150"&&(()=>{
-          const TECHS_150=OFI150_TECHS||OFICINA_TECHS;
+          const TECHS_150=OFICINA_TECHS;
           const lista=apontamentos150.filter(a=>(showArqApon150||!a.arquivado)&&(()=>{
             if(ofi150From&&(a.data||"")<ofi150From)return false;
             if(ofi150To&&(a.data||"")>ofi150To)return false;
@@ -4127,18 +4129,7 @@ export default function App(){
           })()).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
           const totalMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
-          const abrirEditar150=(a)=>{setEditApon150(a);setApon150Form({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||TECHS_150[0]||"",servico:a.servico||SERVICOS_OFICINA[0]||"",inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"150",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon150(true);};
-          const salvar150=()=>{
-            const total=calcHoras(apon150Form.inicio,apon150Form.termino)||apon150Form.total;
-            if(editApon150){
-              updateApon150(editApon150.id,{...apon150Form,total});
-              setModalApon150(false);setEditApon150(null);notify("✅ Atualizado!");
-            } else {
-              const row={id:`AP150${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,...apon150Form,total};
-              setApontamentos150(p=>[row,...p]);db.save("apontamentos_150",row.id,row);
-              setModalApon150(false);notify("✅ Apontamento salvo!");
-            }
-          };
+
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Modal */}
             {modalApon150&&(
@@ -4151,7 +4142,7 @@ export default function App(){
                   <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                       <div style={{display:"flex",flexDirection:"column",gap:5}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Data</label><input type="date" value={apon150Form.data} onChange={e=>setApon150Form(p=>({...p,data:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                      <div style={{display:"flex",flexDirection:"column",gap:5}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Técnico</label><select value={apon150Form.tecnico} onChange={e=>setApon150Form(p=>({...p,tecnico:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>{TECHS_150.map(t=><option key={t}>{t}</option>)}</select></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:5}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Técnico</label><select value={apon150Form.tecnico} onChange={e=>setApon150Form(p=>({...p,tecnico:e.target.value}))} style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                       <div style={{display:"flex",flexDirection:"column",gap:5}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>OS</label><input type="text" value={apon150Form.os} onChange={e=>setApon150Form(p=>({...p,os:e.target.value}))} placeholder="OS-001" style={{fontSize:13,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
@@ -4185,7 +4176,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqApon150?"#1A1A1A":"#FFF",color:showArqApon150?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqApon150?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(apontamentos150,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={()=>{setEditApon150(null);setApon150Form({data:TODAY_STR,os:"",patrimonio:"",tecnico:TECHS_150[0]||"",servico:SERVICOS_OFICINA[0]||"",inicio:"",termino:"",total:"",oficina:"150",relatorio:"",obs:""});setModalApon150(true);}}>+ Novo Apontamento</BtnY>
+                <BtnY onClick={()=>{setEditApon150(null);setApon150Form({data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0]||"",servico:SERVICOS_OFICINA[0]||"",inicio:"",termino:"",total:"",oficina:"150",relatorio:"",obs:""});setModalApon150(true);}}>+ Novo Apontamento</BtnY>
               </div>
             </div>
 
