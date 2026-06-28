@@ -474,16 +474,16 @@ function ImportExcelModal({onClose,onImport}){
 }
 
 // ── MODAL PROCESSO (Mau Uso / A Faturar) ─────────────────────────────────────
-function ProcessoModal({onClose,onSave,tipo}){
+function ProcessoModal({onClose,onSave,tipo,initial}){
   const isMU=tipo==="mau_uso";
-  const [form,setForm]=useState({date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
+  const [form,setForm]=useState(initial||{date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const sla=form.enviadoAprovacao==="sim"&&form.dataEnvio?diffDays(form.dataEnvio):null;
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>{isMU?"⚠️ Novo Processo Mau Uso":"💰 Novo Processo A Faturar"}</div>
+          <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>{initial?(isMU?"✏️ Editar Mau Uso":"✏️ Editar A Faturar"):(isMU?"⚠️ Novo Mau Uso":"💰 Novo A Faturar")}</div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
@@ -1164,7 +1164,9 @@ export default function App(){
   const [modalReport,setModalReport]=useState(false);
   const [modalImport,setModalImport]=useState(false);
   const [modalMU,setModalMU]=useState(false);
+  const [editMU,setEditMU]=useState(null);
   const [modalAF,setModalAF]=useState(false);
+  const [editAF,setEditAF]=useState(null);
   const [modalEmp,setModalEmp]=useState(null);
   const [modalSaida,setModalSaida]=useState(null);
   const [editEmp,setEditEmp]=useState(null);
@@ -1487,8 +1489,8 @@ export default function App(){
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
-        {modalMU&&<ProcessoModal onClose={()=>setModalMU(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}} tipo="mau_uso"/>}
-        {modalAF&&<ProcessoModal onClose={()=>setModalAF(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}} tipo="a_faturar"/>}
+        {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
+        {modalAF&&<ProcessoModal onClose={()=>{setModalAF(false);setEditAF(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editAF){setProcessosAF(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_af",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}setEditAF(null);setModalAF(false);}} tipo="a_faturar" initial={editAF}/>}
         {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
         {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
   </>);
@@ -2288,105 +2290,217 @@ export default function App(){
         )}
 
         {/* ── PROCESSOS MAU USO ── */}
-        {tab==="mau_uso"&&(
+        {tab==="mau_uso"&&(()=>{
+          const ST_MU={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
+          const lista=processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado");
+          const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
+          const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
+          const conc=lista.filter(p=>p.processoStatus==="concluido").length;
+          return(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⚠️ Processos Mau Uso</div><div style={{fontSize:13,color:"#888"}}>{processosMU.filter(p=>!showArqMU?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
-              <div style={{display:"flex",gap:8}}>
-              <ExportBar data={processosMU.filter(p=>p.processoStatus!=="arquivado")} filename="mau_uso" cols={[{key:"data",label:"Data"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"}]}/>
-                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMU?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMU?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado"),"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"enviadoAprovacao",label:"Enviado Aprov."},{key:"aprovado",label:"Aprovado"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovadoPor",label:"Aprovado por"},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/>
+            {/* Header */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div>
+                <div style={{fontWeight:900,fontSize:26,color:"#1A1A1A",letterSpacing:-.5}}>⚠️ Mau Uso</div>
+                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"Ocultar Arquivados":"Ver Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>setModalMU(true)}>+ Novo Processo</BtnY>
               </div>
             </div>
-            {processosMU.length===0?(
-              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum processo cadastrado. Clique em "+ Novo Processo" para começar.</div>
-            ):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>Nº Mau Uso</th><th>OV</th><th>Valor</th><th>Aprovado por</th><th>Processo</th><th>Obs</th><th>Ações</th></tr></thead>
-                    <tbody>
-                      {processosMU.map(p=>{
-                        const sla=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):null;
-                        const pendSLA=p.enviadoAprovacao==="nao"?diffDays(p.date):null;
-                        return(
-                          <tr key={p.id}>
-                             <td><input type="date" value={p.date||""} onChange={e=>updateMU(p.id,{date:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                             <td><input type="text" value={p.empresa||""} onChange={e=>updateMU(p.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                             <td><input type="text" value={p.patrimonio||""} onChange={e=>updateMU(p.id,{patrimonio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><select value={p.enviadoAprovacao} onChange={e=>updateMU(p.id,{enviadoAprovacao:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
-                            <td>{p.enviadoAprovacao==="sim"?<SlaBadge days={sla}/>:<span style={{fontSize:11,color:"#C62828",fontWeight:700}}>⏱{pendSLA}d</span>}</td>
-                            <td><select value={p.aprovado} onChange={e=>updateMU(p.id,{aprovado:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:p.aprovado==="sim"?"#1A7A3C":"#C62828",fontWeight:700}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
-                            <td><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} style={{width:70,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.aprovadoPor||""} onChange={e=>updateMU(p.id,{aprovadoPor:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.obs||""} onChange={e=>updateMU(p.id,{obs:e.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
-                            <td><PSSelect value={p.processoStatus} onChange={v=>updateMU(p.id,{processoStatus:v})}/></td>
-                            <td style={{whiteSpace:"nowrap"}}><button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button><button onClick={()=>{if(window.confirm('Excluir permanentemente?')){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_mu',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+            {/* KPIs */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",icon:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",icon:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",icon:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.icon} {k.l}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
+              ))}
+            </div>
+            {/* Cards */}
+            {lista.length===0?(
+              <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}>
+                <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
+                <div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div>
+                <div style={{fontSize:13,marginTop:6}}>Clique em "+ Novo Processo" para começar</div>
+              </div>
+            ):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(p=>{
+                  const st=ST_MU[p.processoStatus||"pendente"]||ST_MU.pendente;
+                  const slaD=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):p.date?diffDays(p.date):null;
+                  const aprovCor=p.aprovado==="sim"?"#1A7A3C":"#C62828";
+                  return(
+                    <div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,transition:"box-shadow .2s"}}>
+                      {/* Card Header */}
+                      <div style={{padding:"12px 16px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                          <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                          {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#1A7A3C",background:slaD>10?"#FFF0F0":slaD>5?"#FFF8F0":"#F0FFF5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
+                        </div>
+                        <div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>{setEditMU(p);setModalMU(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 8px",fontSize:13}}>✏️</button>
+                          <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 8px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:12,fontWeight:700}}>✕</button>
+                        </div>
+                      </div>
+                      {/* Card Body */}
+                      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
+                        <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div>
+                            <div style={{fontSize:12,color:"#888"}}>📅 {p.date||"—"} · PAT: <b style={{color:"#555"}}>{p.patrimonio||"—"}</b></div>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontSize:10,color:"#AAA",marginBottom:2}}>Aprovado</div>
+                            <span style={{fontSize:11,fontWeight:700,color:aprovCor,background:aprovCor+"15",borderRadius:12,padding:"2px 8px"}}>{p.aprovado==="sim"?"✅ Sim":"❌ Não"}</span>
+                          </div>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Relatório</div>
+                            <input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Chamado</div>
+                            <input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Nº Mau Uso</div>
+                            <input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Valor / OV</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{p.valor||"—"} {p.ov?<span style={{fontSize:10,color:"#888",fontWeight:400}}>· OV {p.ov}</span>:""}</div>
+                          </div>
+                        </div>
+                        {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
+                          <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                            <option value="pendente">⏳ Pendente</option>
+                            <option value="em_andamento">🔄 Em Andamento</option>
+                            <option value="concluido">✅ Concluído</option>
+                            <option value="arquivado">🗄️ Arquivado</option>
+                          </select>
+                          <span style={{fontSize:10,color:"#CCC"}}>{p.registradoPor||""}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── PROCESSOS A FATURAR ── */}
-        {tab==="a_faturar"&&(
+        {tab==="a_faturar"&&(()=>{
+          const ST_AF={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
+          const lista=processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado");
+          const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
+          const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
+          const conc=lista.filter(p=>p.processoStatus==="concluido").length;
+          const aprovados=lista.filter(p=>p.aprovado==="sim").length;
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          return(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Processos A Faturar</div><div style={{fontSize:13,color:"#888"}}>{processosAF.filter(p=>!showArqAF?p.processoStatus!=="arquivado":true).length} processo(s)</div></div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqAF?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqAF?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado"),"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"aprovado",label:"Aprovado"},{key:"ov",label:"OV"},{key:"aprovadoPor",label:"Aprovado por"},{key:"servicoExecutado",label:"Serviço Exec."},{key:"processoStatus",label:"Processo"},{key:"obs",label:"Obs"}])}/><BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY></div>
-              <ExportBar data={processosAF.filter(p=>p.processoStatus!=="arquivado")} filename="a_faturar" cols={[{key:"data",label:"Data"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}]}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div>
+                <div style={{fontWeight:900,fontSize:26,color:"#1A1A1A",letterSpacing:-.5}}>💰 A Faturar</div>
+                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"Ocultar":"Ver Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY>
+              </div>
             </div>
-            {processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado").length===0?(
-              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum processo cadastrado. Clique em "+ Novo Processo" para começar.</div>
-            ):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead><tr><th>Data</th><th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Chamado</th><th>Enviado Aprov.</th><th>SLA</th><th>Aprovado</th><th>OV</th><th>Aprovado por</th><th>Serviço Exec.</th><th>Nº Chamado</th><th>Nº Relatório</th><th>Processo</th><th>Obs</th><th>Ações</th></tr></thead>
-                    <tbody>
-                      {processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado").map(p=>{
-                        const sla=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):null;
-                        const pendSLA=p.enviadoAprovacao==="nao"?diffDays(p.date):null;
-                        return(
-                          <tr key={p.id}>
-                             <td><input type="date" value={p.date||""} onChange={e=>updateAF(p.id,{date:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                             <td><input type="text" value={p.empresa||""} onChange={e=>updateAF(p.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                             <td><input type="text" value={p.patrimonio||""} onChange={e=>updateAF(p.id,{patrimonio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.chamado||""} onChange={e=>updateAF(p.id,{chamado:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><select value={p.enviadoAprovacao} onChange={e=>updateAF(p.id,{enviadoAprovacao:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
-                            <td>{p.enviadoAprovacao==="sim"?<SlaBadge days={sla}/>:<span style={{fontSize:11,color:"#C62828",fontWeight:700}}>⏱{pendSLA}d</span>}</td>
-                            <td><select value={p.aprovado} onChange={e=>updateAF(p.id,{aprovado:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:p.aprovado==="sim"?"#1A7A3C":"#C62828",fontWeight:700}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
-                            <td><input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} style={{width:70,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.aprovadoPor||""} onChange={e=>updateAF(p.id,{aprovadoPor:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><select value={p.servicoExecutado} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:11,padding:"3px 6px",color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",fontWeight:700}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
-                            <td><input type="text" value={p.numChamado2||""} onChange={e=>updateAF(p.id,{numChamado2:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.relatorio2||""} onChange={e=>updateAF(p.id,{relatorio2:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={p.obs||""} onChange={e=>updateAF(p.id,{obs:e.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
-                            <td><PSSelect value={p.processoStatus} onChange={v=>updateAF(p.id,{processoStatus:v})}/></td>
-                            <td style={{whiteSpace:"nowrap"}}><button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button><button onClick={()=>{if(window.confirm('Excluir permanentemente?')){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete('processos_af',p.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+            {/* KPIs */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",icon:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",icon:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"},{l:"Aprovados",v:aprovados,c:"#6A1B9A",bg:"#F3E5F5",icon:"👍"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.icon} {k.l}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
+              ))}
+            </div>
+            {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:20,background:"linear-gradient(90deg,#1A7A3C,#2e9e57)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:24}}>💵</div>
+              <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+            </div>}
+            {lista.length===0?(
+              <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}>
+                <div style={{fontSize:40,marginBottom:12}}>💰</div>
+                <div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div>
+              </div>
+            ):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(p=>{
+                  const st=ST_AF[p.processoStatus||"pendente"]||ST_AF.pendente;
+                  const slaD=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):p.date?diffDays(p.date):null;
+                  return(
+                    <div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
+                      <div style={{padding:"12px 16px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                          <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                          {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#1A7A3C",background:slaD>10?"#FFF0F0":slaD>5?"#FFF8F0":"#F0FFF5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
+                        </div>
+                        <div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 8px",fontSize:13}}>✏️</button>
+                          <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 8px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:12,fontWeight:700}}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                          <div>
+                            <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div>
+                            <div style={{fontSize:12,color:"#888"}}>📅 {p.date||"—"} · PAT: <b style={{color:"#555"}}>{p.patrimonio||"—"}</b></div>
+                          </div>
+                          <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não Aprovado"}</span>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Relatório</div>
+                            <input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>OV</div>
+                            <input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Valor</div>
+                            <input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          </div>
+                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
+                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Serviço Exec.</div>
+                            <select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:700,color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",border:"none",background:"transparent",outline:"none",cursor:"pointer",padding:0}}><option value="nao">Não</option><option value="sim">Sim</option></select>
+                          </div>
+                        </div>
+                        {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
+                          <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                            <option value="pendente">⏳ Pendente</option>
+                            <option value="em_andamento">🔄 Em Andamento</option>
+                            <option value="concluido">✅ Concluído</option>
+                            <option value="arquivado">🗄️ Arquivado</option>
+                          </select>
+                          <span style={{fontSize:10,color:"#CCC"}}>{p.registradoPor||""}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
-        {/* ── REQ. EMPRÉSTIMO ── */}
+        {/* ── REQ. EMPRÉSTIMO ── */}        {/* ── REQ. EMPRÉSTIMO ── */}
         {tab==="emprestimos"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
