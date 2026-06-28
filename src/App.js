@@ -1304,6 +1304,11 @@ export default function App(){
   const saveAgendaPrev=(key,slots)=>{ setAgendaPrev(p=>({...p,[key]:slots})); db.save("escala", "PREV__"+key, {key:"PREV__"+key, slots}); };
 
   const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
+  const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#EFF6FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
+  const addPecaRel=(id)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",obs:""}]});};
+  const updatePecaRel=(id,pi,changes)=>{const r=reports.find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
+  const delPecaRel=(id,pi)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
   const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateRuptura=(id,changes)=>{const updated=rupturas.map(r=>r.id===id?{...r,...changes}:r);setRupturas(updated);db.save("rupturas_alm",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
@@ -1538,11 +1543,7 @@ export default function App(){
           const totalConc=lista.filter(r=>r.statusFinal==="Concluído").length;
           const totalPend=lista.filter(r=>r.statusFinal!=="Concluído").length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
-          const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
-          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#EFF6FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
-          const addPecaRel=(id)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",obs:""}]});};
-          const updatePecaRel=(id,pi,changes)=>{const r=reports.find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
-          const delPecaRel=(id,pi)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
+
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Header */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
