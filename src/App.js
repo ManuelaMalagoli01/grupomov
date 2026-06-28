@@ -79,6 +79,20 @@ const CARRO_STATUS = {
   oficina:           {l:"Oficina",           c:"#E67E00",bg:"#FFF8F0"},
   liberado:          {l:"Liberado",          c:"#1A7A3C",bg:"#F0FFF5"},
 };
+const RUP_SOLICITACAO=[
+  {v:"sem_estoque",       l:"Sem estoque no almoxarifado"},
+  {v:"cadastro_compra",   l:"Solicitação de cadastro e compra"},
+  {v:"cadastrado_aguard", l:"Cadastrado e aguardando compra"},
+  {v:"compra_aguard_ret", l:"Compra realizada aguardando retorno"},
+  {v:"consumo_gilberto",  l:"Consumo Gilberto compras praça"},
+];
+const RUP_TICKET_OPTS=["cadastro_compra","cadastrado_aguard","compra_aguard_ret"];
+const RUP_STATUS=[
+  {v:"aguardando",        l:"Aguardando",                    c:"#E67E00",bg:"#FFF8F0"},
+  {v:"aguard_aprov_dir",  l:"Aguardando aprovação diretoria",c:"#8E44AD",bg:"#F6F0FB"},
+  {v:"separado_suporte",  l:"Separado no Suporte",           c:"#1565C0",bg:"#F0F4FF"},
+  {v:"liberado_almox",    l:"Liberado pelo Almox",           c:"#1A7A3C",bg:"#F0FFF5"},
+];
 const PEND_ACOES = ["Reunião","Envio de Email","Treinamento","Feedback","Retorno para Cliente","Diretoria","Gustavo","Gilberto","Almox","Relatórios","Escala Técnica","Outros"];
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODAY      = new Date();
@@ -999,8 +1013,7 @@ export default function App(){
   const [modalRuptura,setModalRuptura]=useState(false);
   const [editRuptura,setEditRuptura]=useState(null);
   const [showArqRuptura,setShowArqRuptura]=useState(false);
-  const RUP_EMPTY={solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0],dataLiberacao:"",obs:"",status:"aguardando",arquivado:false};
-  const [rupturaForm,setRupturaForm]=useState(RUP_EMPTY);
+  const [rupturaForm,setRupturaForm]=useState({solicitacao:"sem_estoque",data:"",ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
   const [requisicoes,setRequisicoes]=useState([]);
@@ -3133,23 +3146,12 @@ export default function App(){
         })()}
 
       {/* ── RUPTURA ALMOXARIFADO ── */}
-        {tab==="ruptura_almox"&&canSee("ruptura_almox")&&(()=>{
-          const SOLICITACAO_OPTS=[
-            {v:"sem_estoque",         l:"Sem estoque no almoxarifado"},
-            {v:"cadastro_compra",     l:"Solicitação de cadastro e compra"},
-            {v:"cadastrado_aguard",   l:"Cadastrado e aguardando compra"},
-            {v:"compra_aguard_ret",   l:"Compra realizada aguardando retorno"},
-            {v:"consumo_gilberto",    l:"Consumo Gilberto compras praça"},
-          ];
-          const TICKET_OPTS=["cadastro_compra","cadastrado_aguard","compra_aguard_ret"];
-          const STATUS_OPTS=[
-            {v:"aguardando",          l:"Aguardando",              c:"#E67E00", bg:"#FFF8F0"},
-            {v:"aguard_aprov_dir",    l:"Aguardando aprovação diretoria", c:"#8E44AD", bg:"#F6F0FB"},
-            {v:"separado_suporte",    l:"Separado no Suporte",    c:"#1565C0", bg:"#F0F4FF"},
-            {v:"liberado_almox",      l:"Liberado pelo Almox",    c:"#1A7A3C", bg:"#F0FFF5"},
-          ];
+        {tab==="ruptura_almox"&&(()=>{
+          const SOLICITACAO_OPTS=RUP_SOLICITACAO;
+          const TICKET_OPTS=RUP_TICKET_OPTS;
+          const STATUS_OPTS=RUP_STATUS;
           const diffDaysNow=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.floor((Date.now()-dt.getTime())/86400000);};
-          const EMPTY=RUP_EMPTY;
+          const EMPTY={solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false};
           const form=rupturaForm; const setForm=setRupturaForm;
           const lista=rupturas.filter(r=>showArqRuptura||!r.arquivado);
           const sla=(r)=>{
