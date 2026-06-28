@@ -9,7 +9,7 @@ const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        headers: {"apikey": SUPA_KEY}
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
       });
       if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
       const rows = await res.json();
@@ -20,7 +20,7 @@ const db = {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
         method: "POST",
-        headers: {"apikey": SUPA_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
         body: JSON.stringify({id, data})
       });
       if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
@@ -30,7 +30,7 @@ const db = {
     try {
       await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
         method: "DELETE",
-        headers: {"apikey": SUPA_KEY}
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
       });
     } catch(e) { console.error("DB delete error:", e); }
   }
