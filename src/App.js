@@ -1506,199 +1506,126 @@ export default function App(){
       <>
         {tab==="relatorios"&&(()=>{
           const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
-          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#F0F4FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS_FINAL_COR={"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"},"Pendente Peças":{c:"#C62828",bg:"#FFF0F0"}};
-          const list=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado");
-
-          const addPecaRel=(id)=>{
-            const r=reports.find(x=>x.id===id);
-            const pecas=[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",relatorioPendencia:"",relatorioExecucao:"",dataExecucao:"",obs:""}];
-            updateReport(id,{pecas});
-          };
-          const updatePecaRel=(id,pi,changes)=>{
-            const r=reports.find(x=>x.id===id);
-            const pecas=[...(r.pecas||[])];
-            pecas[pi]={...pecas[pi],...changes};
-            updateReport(id,{pecas});
-          };
-          const delPecaRel=(id,pi)=>{
-            const r=reports.find(x=>x.id===id);
-            const pecas=(r.pecas||[]).filter((_,i)=>i!==pi);
-            updateReport(id,{pecas});
-          };
-
-
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div>
-                  <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📋 Conferência de Relatórios</div>
-                  <div style={{fontSize:13,color:"#888"}}>{list.length} registro(s)</div>
-                </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRel?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit",color:"#888"}}>{showArqRel?"✓ Arquivados":"📁 Arquivados"}</button>
-                  <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,border:"none",background:pdfLoading?"#E0E0E0":"#1565C0",color:"#FFF",fontSize:12,fontWeight:700,fontFamily:"inherit",opacity:pdfLoading?.7:1}}>
-                    {pdfLoading?"⏳ Lendo PDF...":"📄 Ler PDF"}
-                    <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
-                      const file=e.target.files?.[0]; if(!file)return;
-                      setPdfLoading(true);
-                      try{
-                        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                        const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
-                        const respText=await resp.text();
-                        if(!resp.ok){
-                          let errMsg="Erro API ("+resp.status+")";
-                          try{const errJson=JSON.parse(respText);errMsg=errJson.error||errMsg;}catch(e){}
-                          throw new Error(errMsg);
-                        }
-                        let data;
-                        try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
-                        const txt=data.content?.[0]?.text||"{}";
-                        const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
-                        const row={
-                          id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
-                          atendimento:parsed.tipoAtendimento||"preventivo",
-                          statusFinal:parsed.statusFinal||"Pendente Peças",
-                          dataAtendimento:parsed.dataAtendimento||TODAY_STR,
-                          empresa:parsed.empresa||"",cidade:parsed.cidade||"",
-                          patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",
-                          tecnico:parsed.tecnico||ALL_TECHS[0],
-                          chamado:parsed.chamado||"",relatorio:parsed.relatorio||"",
-                          servico:"Mecânica",obs:parsed.observacoes||"",
-                          pecas:[],processoStatus:"em_andamento"
-                        };
-                        setReports(p=>[row,...p]);db.save("relatorios",row.id,row);
-                        notify("✅ PDF lido! Verifique e complete os dados.");
-                      }catch(err){notify("❌ Erro: "+err.message);}
-                      finally{setPdfLoading(false);e.target.value="";}
-                    }}/>
-                  </label>
-                  <BtnY onClick={()=>{
-                    const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),
-                      atendimento:"preventivo",statusFinal:"Pendente Peças",dataAtendimento:TODAY_STR,
-                      empresa:"",cidade:"",patrimonio:"",horimetro:"",tecnico:ALL_TECHS[0],
-                      chamado:"",relatorio:"",servico:"Mecânica",obs:"",pecas:[],processoStatus:"em_andamento"};
-                    setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Registro criado!");
-                  }}>+ Novo Registro</BtnY>
-                </div>
-              </div>
-
-              {/* Filtros */}
-              <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
-                <input type="date" value={relFiltroData||""} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12}} title="Filtrar por data"/>
-                <input type="text" value={relFiltroEmp||""} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{width:150,fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                <input type="text" value={relFiltroPat||""} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{width:100,fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-                <select value={relFiltroTech||"todos"} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                <select value={relFiltroAtend||"todos"} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:12}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
-                <select value={relFiltroStatus||"todos"} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:12}}><option value="todos">Todos status</option><option value="Pendente Peças">Pendente Peças</option><option value="Concluído">Concluído</option></select>
-                {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&
-                  <BtnG onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}}>✕ Limpar</BtnG>}
-              </div>
-
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Nº</th>
-                        <th>Atendimento</th>
-                        <th>Status</th>
-                        <th>Data</th>
-                        <th>Empresa</th>
-                        <th>Cidade</th>
-                        <th>PAT</th>
-                        <th>Horímetro</th>
-                        <th>Técnico</th>
-                        <th>Chamado</th>
-                        <th>Serviço</th>
-                        <th>Obs</th>
-                        <th>Reg. por</th>
-                        <th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {list.filter(r=>{
-                        if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
-                        if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
-                        if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
-                        if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
-                        if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
-                        if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
-                        return true;
-                      }).map((r,ridx)=>{
-                        const isCorr=r.atendimento==="corretivo";
-                        const stFinal=STS_FINAL_COR[r.statusFinal]||STS_FINAL_COR["Pendente Peças"];
-                        const pecas=r.pecas||[];
-                        return(
-                          <Fragment key={r.id}>
-                            <tr style={{opacity:r.processoStatus==="arquivado"?.5:1,background:pecas.length>0?"#FFFDE7":"#FFF"}}>
-                              <td style={{fontWeight:800,color:"#999",textAlign:"center"}}>{String(ridx+1).padStart(2,"0")}</td>
-                              <td>
-                                <select value={r.atendimento||"preventivo"} onChange={e=>updateReport(r.id,{atendimento:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:isCorr?"#C62828":"#1565C0",background:isCorr?"#FFF0F0":"#F0F4FF",border:"none",borderRadius:5}}>
-                                  <option value="preventivo">Preventivo</option>
-                                  <option value="corretivo">Corretivo</option>
-                                </select>
-                              </td>
-                              <td>
-                                <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:stFinal.c,background:stFinal.bg,border:"none",borderRadius:5,minWidth:110}}>
-                                  <option>Pendente Peças</option>
-                                  <option>Concluído</option>
-                                </select>
-                              </td>
-                              <td><input type="date" value={r.dataAtendimento||""} onChange={e=>updateReport(r.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><input type="text" value={r.empresa||""} onChange={e=>updateReport(r.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="Cidade" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><input type="text" value={r.patrimonio||""} onChange={e=>updateReport(r.id,{patrimonio:e.target.value})} placeholder="PAT" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><input type="text" value={r.horimetro||""} onChange={e=>updateReport(r.id,{horimetro:e.target.value})} placeholder="Hor." style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td>
-                                <select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>
-                                  {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
-                                </select>
-                              </td>
-                              <td><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="Chamado" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td><select value={r.servico||"Mecânica"} onChange={e=>updateReport(r.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600,color:"#1565C0",background:"#F0F4FF",border:"none",borderRadius:5}}>
-                                {SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}
-                              </select></td>
-                              <td><input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observação" style={{width:180,fontSize:11,padding:"3px 6px"}}/></td>
-                              <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                              <td style={{whiteSpace:"nowrap"}}>
-                                <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:5,color:"#E67E00",cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3,fontWeight:700}}>+📦</button>
-                                <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button>
-                                <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
-                              </td>
-                            </tr>
-                            {/* Linha de peças expandida */}
-                            {pecas.map((p,pi)=>{
-                              const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
-                              return(
-                                <tr key={`${r.id}-p${pi}`} style={{background:"#FFFBF5",borderLeft:"3px solid #E67E00"}}>
-                                  <td colSpan={3} style={{paddingLeft:24}}>
-                                    <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,color:stP.c,background:stP.bg,border:"none",borderRadius:5,minWidth:120}}>
-                                      {STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}
-                                    </select>
-                                  </td>
-                                  <td><input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Peça" style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td><input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="COD" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td><input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{width:60,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                                  <td><input type="text" value={p.relatorioPendencia||""} onChange={e=>updatePecaRel(r.id,pi,{relatorioPendencia:e.target.value})} placeholder="Rel. Pendência" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td><input type="text" value={p.relatorioExecucao||""} onChange={e=>updatePecaRel(r.id,pi,{relatorioExecucao:e.target.value})} placeholder="Rel. Execução" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td><input type="date" value={p.dataExecucao||""} onChange={e=>updatePecaRel(r.id,pi,{dataExecucao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td colSpan={3}><input type="text" value={p.obs||""} onChange={e=>updatePecaRel(r.id,pi,{obs:e.target.value})} placeholder="Observação" style={{width:"100%",fontSize:11,padding:"3px 6px"}}/></td>
-                                  <td></td>
-                                  <td><button onClick={()=>delPecaRel(r.id,pi)} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 6px",fontSize:11,fontWeight:700}}>✕</button></td>
-                                </tr>
-                              );
-                            })}
-                          </Fragment>
-                        );
-                      })}
-                      {list.length===0&&<tr><td colSpan={14} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
+          const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#EFF6FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
+          const addPecaRel=(id)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",relatorioPendencia:"",relatorioExecucao:"",dataExecucao:"",obs:""}]});};
+          const updatePecaRel=(id,pi,changes)=>{const r=reports.find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
+          const delPecaRel=(id,pi)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
+          const lista=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado").filter(r=>{
+            if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
+            if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
+            if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
+            if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
+            if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
+            if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
+            return true;
+          });
+          const totalConc=lista.filter(r=>r.statusFinal==="Concluído").length;
+          const totalPend=lista.filter(r=>r.statusFinal!=="Concluído").length;
+          const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
+          const totalPrev=lista.filter(r=>r.atendimento==="preventivo").length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📋 Conferência de Relatórios</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} relatório(s) · <span style={{color:"#C62828",fontWeight:700}}>{totalPend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"Ocultar":"Arquivados"}</button>
+                <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:20,border:"none",background:pdfLoading?"#E0E0E0":"#1565C0",color:"#FFF",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
+                  {pdfLoading?"⏳ Lendo...":"📄 Ler PDF"}
+                  <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
+                    const file=e.target.files?.[0]; if(!file)return;
+                    setPdfLoading(true);
+                    try{
+                      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                      const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                      const respText=await resp.text();
+                      if(!resp.ok){let m="Erro API ("+resp.status+")";try{const j=JSON.parse(respText);m=j.error||m;}catch(e){}throw new Error(m);}
+                      let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
+                      const txt=data.content?.[0]?.text||"{}";
+                      const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
+                      const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:[],processoStatus:"em_andamento",reportNum:parsed.reportNum||""};
+                      setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Relatório criado via PDF!");
+                    }catch(err){alert("Erro ao processar PDF: "+err.message);}
+                    setPdfLoading(false);e.target.value="";
+                  }}/>
+                </label>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>setModalRel(true)}>+ Novo Relatório</BtnY>
               </div>
             </div>
-          );
+            {/* KPIs */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:totalPend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#E67E00",bg:"#FFF8F0",i:"🔧"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {/* Filtros */}
+            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}} title="Filtrar por data"/>
+              <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",minWidth:140}}/>
+              <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",width:100}}/>
+              <select value={relFiltroTech} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+              <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option><option>Pendente Peças</option><option>Concluído</option></select>
+              {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>
+            {/* Cards */}
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600}}>Nenhum relatório</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(r=>{
+                  const isCorr=r.atendimento==="corretivo";
+                  const isConc=r.statusFinal==="Concluído";
+                  const pecas=r.pecas||[];
+                  const borderC=isConc?"#1A7A3C":isCorr?"#C62828":"#1565C0";
+                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:isConc?"#F0FFF5":isCorr?"#FFF0F0":"#EFF6FF",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"2px 10px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
+                        <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:isConc?"#1A7A3C":"#C62828",background:isConc?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option>Pendente Peças</option><option>Concluído</option></select>
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:6,color:"#E67E00",cursor:"pointer",padding:"4px 7px",fontSize:13,fontWeight:700}}>+📦</button>
+                        <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
+                        {r.reportNum&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px",whiteSpace:"nowrap"}}>#{r.reportNum}</span>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Técnico</div><select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço</div><select value={r.servico||"Mecânica"} onChange={e=>updateReport(r.id,{servico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Cidade</div><input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      </div>
+                      {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
+                      {/* Peças expandidas */}
+                      {pecas.length>0&&<div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
+                        <div style={{fontSize:10,fontWeight:800,color:"#E67E00",textTransform:"uppercase",marginBottom:6}}>📦 Peças ({pecas.length})</div>
+                        {pecas.map((p,pi)=>{
+                          const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
+                          return(<div key={pi} style={{background:stP.bg,borderRadius:8,padding:"8px 10px",marginBottom:4,borderLeft:`3px solid ${stP.c}`}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                              <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,color:stP.c,background:"transparent",border:"none",cursor:"pointer",outline:"none",padding:0}}>{STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}</select>
+                              <button onClick={()=>delPecaRel(r.id,pi)} style={{background:"none",border:"none",color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700}}>✕</button>
+                            </div>
+                            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 60px",gap:4}}>
+                              <input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Nome da peça" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
+                              <input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="Código" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
+                              <input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none",textAlign:"center"}}/>
+                            </div>
+                          </div>);
+                        })}
+                      </div>}
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
         })()}
 
         {tab==="apontamentos_oficina"&&(
@@ -2296,320 +2223,266 @@ export default function App(){
 
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
-          const ST_MU={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
+          const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
           const lista=processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
-          return(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            {/* Header */}
+          return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div>
-                <div style={{fontWeight:900,fontSize:26,color:"#1A1A1A",letterSpacing:-.5}}>⚠️ Mau Uso</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div>
-              </div>
-              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"Ocultar Arquivados":"Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={()=>setModalMU(true)}>+ Novo Processo</BtnY>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>⚠️ Mau Uso</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"Ocultar":"Ver Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",icon:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",icon:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",icon:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}].map((k,i)=>(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.icon} {k.l}</div>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            {/* Cards */}
-            {lista.length===0?(
-              <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}>
-                <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
-                <div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div>
-                <div style={{fontSize:13,marginTop:6}}>Clique em "+ Novo Processo" para começar</div>
-              </div>
-            ):(
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⚠️</div><div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div><div style={{fontSize:13,marginTop:6}}>Clique em "+ Novo Processo"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {lista.map(p=>{
-                  const st=ST_MU[p.processoStatus||"pendente"]||ST_MU.pendente;
-                  const slaD=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):p.date?diffDays(p.date):null;
-                  const aprovCor=p.aprovado==="sim"?"#1A7A3C":"#C62828";
-                  return(
-                    <div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,transition:"box-shadow .2s"}}>
-                      {/* Card Header */}
-                      <div style={{padding:"12px 16px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                          <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
-                          {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#1A7A3C",background:slaD>10?"#FFF0F0":slaD>5?"#FFF8F0":"#F0FFF5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
-                        </div>
-                        <div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>{setEditMU(p);setModalMU(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 8px",fontSize:13}}>✏️</button>
-                          <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 8px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:12,fontWeight:700}}>✕</button>
-                        </div>
+                  const st=ST[p.processoStatus||"pendente"]||ST.pendente;
+                  const slaD=p.date?diffDays(p.date):null;
+                  return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
+                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                        {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
                       </div>
-                      {/* Card Body */}
-                      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
-                        <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
-                          <div style={{flex:1}}>
-                            <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div>
-                            <div style={{fontSize:12,color:"#888"}}>📅 {p.date||"—"} · PAT: <b style={{color:"#555"}}>{p.patrimonio||"—"}</b></div>
-                          </div>
-                          <div style={{textAlign:"right"}}>
-                            <div style={{fontSize:10,color:"#AAA",marginBottom:2}}>Aprovado</div>
-                            <span style={{fontSize:11,fontWeight:700,color:aprovCor,background:aprovCor+"15",borderRadius:12,padding:"2px 8px"}}>{p.aprovado==="sim"?"✅ Sim":"❌ Não"}</span>
-                          </div>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Relatório</div>
-                            <input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Chamado</div>
-                            <input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Nº Mau Uso</div>
-                            <input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Valor / OV</div>
-                            <div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{p.valor||"—"} {p.ov?<span style={{fontSize:10,color:"#888",fontWeight:400}}>· OV {p.ov}</span>:""}</div>
-                          </div>
-                        </div>
-                        {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
-                          <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
-                            <option value="pendente">⏳ Pendente</option>
-                            <option value="em_andamento">🔄 Em Andamento</option>
-                            <option value="concluido">✅ Concluído</option>
-                            <option value="arquivado">🗄️ Arquivado</option>
-                          </select>
-                          <span style={{fontSize:10,color:"#CCC"}}>{p.registradoPor||""}</span>
-                        </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setEditMU(p);setModalMU(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                        <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                  );
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.date||"—"} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
+                        <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Nº Mau Uso</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Valor / OV</div><div style={{fontSize:13,fontWeight:800,color:"#1A7A3C"}}>{p.valor||"—"}{p.ov&&<span style={{fontSize:10,color:"#888",fontWeight:400}}> · OV {p.ov}</span>}</div></div>
+                      </div>
+                      {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                        <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
+                      </select>
+                    </div>
+                  </div>);
                 })}
               </div>
             )}
-          </div>
-          );
+          </div>);
         })()}
 
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(()=>{
-          const ST_AF={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
+          const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
           const lista=processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
-          const aprovados=lista.filter(p=>p.aprovado==="sim").length;
+          const aprov=lista.filter(p=>p.aprovado==="sim").length;
           const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
-          return(
-          <div style={{animation:"fadeIn .3s ease"}}>
+          return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div>
-                <div style={{fontWeight:900,fontSize:26,color:"#1A1A1A",letterSpacing:-.5}}>💰 A Faturar</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div>
-              </div>
-              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"Ocultar":"Ver Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={()=>setModalAF(true)}>+ Novo Processo</BtnY>
+                <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",icon:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",icon:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"},{l:"Aprovados",v:aprovados,c:"#6A1B9A",bg:"#F3E5F5",icon:"👍"}].map((k,i)=>(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Aprovados",v:aprov,c:"#6A1B9A",bg:"#F3E5F5",i:"👍"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:18,background:"linear-gradient(90deg,#1A7A3C,#2e9e57)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:24}}>💵</div>
+              <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+            </div>}
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💰</div><div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(p=>{
+                  const st=ST[p.processoStatus||"pendente"]||ST.pendente;
+                  const slaD=p.date?diffDays(p.date):null;
+                  return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
+                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                        {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setEditAF(p);setModalAF(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                        <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.date||"—"} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
+                        <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço Exec.</div><select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:700,color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",border:"none",background:"transparent",outline:"none",cursor:"pointer",padding:0}}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+                      </div>
+                      {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                        <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
+                      </select>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
+
+        {/* ── REQ. EMPRÉSTIMO ── */}
+        {tab==="emprestimos"&&(()=>{
+          const SIT={Aprovado:{c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},Atendido:{c:"#1565C0",bg:"#EFF6FF",i:"📦"},Pendente:{c:"#E67E00",bg:"#FFF8F0",i:"⏳"},"Parcialmente Atendido":{c:"#8E44AD",bg:"#F6F0FB",i:"🔀"},"Retorno Concluído":{c:"#00838F",bg:"#E0F7FA",i:"🔁"},Ruptura:{c:"#C62828",bg:"#FFF0F0",i:"🔴"}};
+          const lista=emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado");
+          const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
+          const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🔄 Empréstimo e Retorno</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s){atrasados>0&&<span style={{color:"#C62828",fontWeight:700}}> · ⚠️ {atrasados} em atraso</span>}</div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEmp?"#1A1A1A":"#FFF",color:showArqEmp?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEmp?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Item"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"dataRetorno",label:"Retorno"},{key:"observacao",label:"Obs"}])}/>
+                <BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Atraso",v:atrasados,c:"#C62828",bg:"#FFF0F0",i:"⚠️"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.icon} {k.l}</div>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:20,background:"linear-gradient(90deg,#1A7A3C,#2e9e57)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{fontSize:24}}>💵</div>
-              <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-            </div>}
-            {lista.length===0?(
-              <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}>
-                <div style={{fontSize:40,marginBottom:12}}>💰</div>
-                <div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div>
-              </div>
-            ):(
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🔄</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma requisição</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(p=>{
-                  const st=ST_AF[p.processoStatus||"pendente"]||ST_AF.pendente;
-                  const slaD=p.enviadoAprovacao==="sim"&&p.dataEnvio?diffDays(p.dataEnvio):p.date?diffDays(p.date):null;
-                  return(
-                    <div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
-                      <div style={{padding:"12px 16px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                          <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
-                          {slaD!==null&&<span style={{fontSize:10,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#1A7A3C",background:slaD>10?"#FFF0F0":slaD>5?"#FFF8F0":"#F0FFF5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
-                        </div>
-                        <div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 8px",fontSize:13}}>✏️</button>
-                          <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 8px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 8px",fontSize:12,fontWeight:700}}>✕</button>
-                        </div>
+                {lista.map(e=>{
+                  const sc=SIT[e.situacao]||SIT.Pendente;
+                  const sla=e.dataRetorno?diffDays(e.dataRetorno):null;
+                  const atrasado=sla!==null&&sla<0;
+                  return(<div key={e.id} className="card" style={{borderTop:`4px solid ${sc.c}`,padding:0,overflow:"hidden",opacity:e.processoStatus==="arquivado"?0.55:1,outline:atrasado?"2px solid #C62828":"none"}}>
+                    <div style={{padding:"11px 14px",background:sc.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:sc.c,background:"#FFF",border:`1px solid ${sc.c}33`,borderRadius:20,padding:"2px 10px"}}>{sc.i} {e.situacao||"Pendente"}</span>
+                        {atrasado&&<span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFF0F0",borderRadius:20,padding:"2px 8px"}}>⚠️ {Math.abs(sla)}d</span>}
                       </div>
-                      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                          <div>
-                            <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div>
-                            <div style={{fontSize:12,color:"#888"}}>📅 {p.date||"—"} · PAT: <b style={{color:"#555"}}>{p.patrimonio||"—"}</b></div>
-                          </div>
-                          <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não Aprovado"}</span>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Relatório</div>
-                            <input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>OV</div>
-                            <input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Valor</div>
-                            <input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          </div>
-                          <div style={{background:"#F8F9FA",borderRadius:8,padding:"8px 10px"}}>
-                            <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Serviço Exec.</div>
-                            <select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:700,color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",border:"none",background:"transparent",outline:"none",cursor:"pointer",padding:0}}><option value="nao">Não</option><option value="sim">Sim</option></select>
-                          </div>
-                        </div>
-                        {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
-                          <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"5px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
-                            <option value="pendente">⏳ Pendente</option>
-                            <option value="em_andamento">🔄 Em Andamento</option>
-                            <option value="concluido">✅ Concluído</option>
-                            <option value="arquivado">🗄️ Arquivado</option>
-                          </select>
-                          <span style={{fontSize:10,color:"#CCC"}}>{p.registradoPor||""}</span>
-                        </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setEditEmp(e);setModalEmp(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                        <button onClick={()=>updateEmp(e.id,{processoStatus:e.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{e.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete("emprestimos",e.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                  );
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{e.item||e.descricao||<span style={{color:"#CCC"}}>Sem item</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {e.data||"—"} · <b>{e.requerente||"—"}</b></div></div>
+                        {e.req&&<span style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"3px 8px"}}>{e.req}</span>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Qtd · PAT</div><div style={{fontSize:12,fontWeight:700}}>{e.quant||"—"} {e.centroResultado&&<span style={{color:"#888",fontWeight:400,fontSize:10}}>· {e.centroResultado}</span>}</div></div>
+                        <div style={{background:atrasado?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Retorno</div><div style={{fontSize:12,fontWeight:700,color:atrasado?"#C62828":"#333"}}>{e.dataRetorno||"—"}</div></div>
+                        {e.relatorioAplicado&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório Aplicado</div><div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{e.relatorioAplicado}{e.dataAplicacao&&<span style={{fontSize:10,color:"#888",fontWeight:400}}> · {e.dataAplicacao}</span>}</div></div>}
+                      </div>
+                      {e.observacao&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {e.observacao}</div>}
+                      <select value={e.situacao||"Pendente"} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${sc.c}44`,color:sc.c,background:sc.bg,fontWeight:700,cursor:"pointer"}}>
+                        {Object.entries(SIT).map(([v,s])=><option key={v} value={v}>{s.i} {v}</option>)}
+                      </select>
+                    </div>
+                  </div>);
                 })}
               </div>
             )}
-          </div>
-          );
+          </div>);
         })()}
 
-        {/* ── REQ. EMPRÉSTIMO ── */}        {/* ── REQ. EMPRÉSTIMO ── */}
-        {tab==="emprestimos"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔄 Requisições de Empréstimo</div>
-                  <ExportBar data={emprestimos.filter(e=>!e.arquivado)} filename="emprestimos" cols={[{key:"dataEmp",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Item"},{key:"retorno",label:"Retorno"},{key:"status",label:"Situação"}]}/>
-                <div style={{fontSize:13,color:"#888"}}>{emprestimos.length} registros · {empAlerta>0&&<span style={{color:"#C62828",fontWeight:700}}>{empAlerta} com retorno em atraso!</span>}</div>
-              </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqEmp?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqEmp?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnExcel onClick={()=>exportCSV(emprestimos,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Ítem"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"retorno",label:"Retorno"},{key:"dataRetorno",label:"Data Retorno"},{key:"numRelatorio",label:"Nº Relatório"},{key:"observacao",label:"Obs"},{key:"processoStatus",label:"Processo"}])}/><BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY></div>
-            </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>REQ</th><th>Data</th><th>Requerente</th><th>Ítem</th><th>Descrição</th><th>Situação</th><th>Centro/PAT</th><th>Qtd</th><th>Retorno</th><th>Requisição de Retorno</th><th>Data Retorno</th><th>SLA Retorno</th><th>Relatório Aplicado</th><th>Data de Aplicação</th><th>Status</th><th>Obs</th><th>Ações</th></tr></thead>
-                  <tbody>
-                    {emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado").map(e=>{
-                      const sc=empSitCfg[e.situacao]||{color:"#888",bg:"#F8F8F8"};
-                      const sla=e.dataRetorno?diffDays(e.dataRetorno):null;
-                      const atrasado=sla!==null&&sla<0;
-                      return(
-                        <tr key={e.id} style={{background:atrasado?"#FFF8F8":""}}>
-                           <td><input type="text" value={e.req||""} onChange={ev=>updateEmp(e.id,{req:ev.target.value})} style={{width:70,fontSize:11,padding:"3px 6px",fontWeight:700}}/>{atrasado&&<span style={{marginLeft:4,color:"#C62828",fontSize:10}}>⚠️</span>}</td>
-                           <td><input type="date" value={e.data||""} onChange={ev=>updateEmp(e.id,{data:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                           <td><input type="text" value={e.requerente||""} onChange={ev=>updateEmp(e.id,{requerente:ev.target.value})} style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                           <td><input type="text" value={e.item||""} onChange={ev=>updateEmp(e.id,{item:ev.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                           <td><input type="text" value={e.descricao||""} onChange={ev=>updateEmp(e.id,{descricao:ev.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><select value={e.situacao} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"3px 5px",color:sc.color,background:sc.bg,border:"none",borderRadius:5,fontWeight:700,minWidth:130}}><option value="Aprovado">Aprovado</option><option value="Atendido">Atendido</option><option value="Pendente">Pendente</option><option value="Parcialmente Atendido">Parc. Atendido</option><option value="Retorno Concluído">Retorno Concluído</option><option value="Ruptura">⚠️ Ruptura</option></select></td>
-                           <td><input type="text" value={e.centroResultado||""} onChange={ev=>updateEmp(e.id,{centroResultado:ev.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                           <td><input type="text" value={e.quant||""} onChange={ev=>updateEmp(e.id,{quant:ev.target.value})} style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                           <td><select value={e.retorno||"nao"} onChange={ev=>updateEmp(e.id,{retorno:ev.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td><td><input type="text" value={e.reqRetorno||""} onChange={ev=>updateEmp(e.id,{reqRetorno:ev.target.value})} placeholder="REQ-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                           <td><input type="date" value={e.dataRetorno||""} onChange={ev=>updateEmp(e.id,{dataRetorno:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px",color:atrasado?"#C62828":"inherit"}}/></td>
-                          <td><SlaBadge days={sla}/></td>
-                          <td><input type="text" value={e.relatorioAplicado||""} onChange={ev=>updateEmp(e.id,{relatorioAplicado:ev.target.value})} placeholder="REL-001" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="date" value={e.dataAplicacao||""} onChange={ev=>updateEmp(e.id,{dataAplicacao:ev.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><select value={e.statusEmp||"pendente"} onChange={ev=>updateEmp(e.id,{statusEmp:ev.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:e.statusEmp==="concluido"?"#1A7A3C":"#C62828",background:e.statusEmp==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
-                          <td><input type="text" value={e.observacao||""} onChange={ev=>updateEmp(e.id,{observacao:ev.target.value})} placeholder="Obs..." style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>updateEmp(e.id,{processoStatus:e.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={e.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{e.processoStatus==="arquivado"?"📤":"🗄️"}</button><button onClick={()=>{if(window.confirm('Excluir permanentemente?')){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete('emprestimos',e.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── SAÍDA/ENTRADA ── */}
-        {tab==="saida_entrada"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📦 Requisições Entrada/Saída</div>
-                <div style={{fontSize:13,color:"#888"}}>{saidaEntrada.length} registros</div>
-              </div>
-              <div style={{display:"flex",gap:8}}><button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSaida?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSaida?"✓ Arquivados":"📁 Ver Arquivados"}</button><BtnY onClick={()=>{const row={id:`SAI${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Nova Entrada/Saída</BtnY></div>
-            </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>Data</th><th>Rel. Solicitação</th><th>Empresa</th><th>Patrimônio</th><th>Peça</th><th>Cód</th><th>Qtd</th><th>REQ Gerada</th><th>Status</th><th>SLA (dias)</th><th>Data Atendimento</th><th>Local da Peça</th><th>Data Entrega Técnico</th><th>Rel. Aplicado</th><th>Observação</th><th>Status Final</th><th>Processo</th><th>Ações</th></tr></thead>
-                  <tbody>
-                    {saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado").map(s=>{
-                      const isRuptura=s.statusReq==="ruptura";
-                      const isAtendido=s.statusReq==="atendido";
-                      const slaRuptura=s.data?diffDays(s.data):null;
-                      return(
-                        <tr key={s.id}>
-                          <td><input type="date" value={s.data||""} onChange={e=>updateSaida(s.id,{data:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.empresa||""} onChange={e=>updateSaida(s.id,{empresa:e.target.value})} placeholder="Empresa" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.peca||""} onChange={e=>updateSaida(s.id,{peca:e.target.value})} placeholder="Nome da peça" style={{width:120,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.codigo||""} onChange={e=>updateSaida(s.id,{codigo:e.target.value})} placeholder="Cód" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.quantidade||""} onChange={e=>updateSaida(s.id,{quantidade:e.target.value})} placeholder="1" style={{width:50,fontSize:11,padding:"3px 6px",textAlign:"center"}}/></td>
-                          <td><input type="text" value={s.req||""} onChange={e=>updateSaida(s.id,{req:e.target.value})} placeholder="REQ" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td>
-                            <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})}
-                              style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",
-                                color:s.statusReq==="atendido"?"#1A7A3C":s.statusReq==="ruptura"?"#C62828":"#888",
-                                background:s.statusReq==="atendido"?"#F0FFF5":s.statusReq==="ruptura"?"#FFF0F0":"#F8F8F8"}}>
-                              <option value="">Selecione...</option>
-                              <option value="atendido">✅ Atendido</option>
-                              <option value="ruptura">🔴 Ruptura</option>
-                            </select>
-                          </td>
-                          <td>{isRuptura?<SlaBadge days={slaRuptura}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="date" value={s.dataAtendimento||""} onChange={e=>updateSaida(s.id,{dataAtendimento:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<select value={s.localPeca||""} onChange={e=>updateSaida(s.id,{localPeca:e.target.value})} style={{fontSize:11,padding:"3px 5px",borderRadius:5}}><option value="">Selecione...</option><option value="suporte">📦 Suporte</option><option value="entregue_tecnico">🧑‍🔧 Entregue ao Técnico</option></select>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="date" value={s.dataEntregaTecnico||""} onChange={e=>updateSaida(s.id,{dataEntregaTecnico:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{isAtendido?<input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td>{(isAtendido||isRuptura)?<input type="text" value={s.obs||""} onChange={e=>updateSaida(s.id,{obs:e.target.value})} placeholder="Obs..." style={{width:110,fontSize:11,padding:"3px 6px"}}/>:<span style={{color:"#CCC",fontSize:11}}>—</span>}</td>
-                          <td><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:s.statusFinal==="concluido"?"#1A7A3C":"#C62828",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
-                          <td><PSSelect value={s.processoStatus} onChange={v=>updateSaida(s.id,{processoStatus:v})}/></td>
-                          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={s.processoStatus==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button><button onClick={()=>{if(window.confirm('Excluir permanentemente?')){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete('saida_entrada',s.id);}}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+        {tab==="saida_entrada"&&(()=>{
+          const lista=saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado");
+          const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
+          const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
+          const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Novo Registro</BtnY>
               </div>
             </div>
-          </div>
-        )}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Rupturas",v:rupturas,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Atendidos",v:atendidos,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📦</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(s=>{
+                  const isRuptura=s.statusReq==="ruptura";
+                  const isAtendido=s.statusReq==="atendido";
+                  const slaRuptura=isRuptura&&s.data?diffDays(s.data):null;
+                  const borderC=isRuptura?"#C62828":isAtendido?"#1A7A3C":"#E0E0E0";
+                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:s.processoStatus==="arquivado"?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:isRuptura?"#FFF0F0":isAtendido?"#F0FFF5":"#F8F9FA",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:isRuptura?"#C62828":isAtendido?"#1A7A3C":"#888",background:isRuptura?"#FFE0E0":isAtendido?"#DCFFE4":"#F0F0F0",cursor:"pointer"}}>
+                          <option value="">— Status —</option><option value="atendido">✅ Atendido</option><option value="ruptura">🔴 Ruptura</option>
+                        </select>
+                        {isRuptura&&slaRuptura!==null&&<span style={{fontSize:10,fontWeight:700,color:slaRuptura>5?"#C62828":"#E67E00",background:"#FFF0F0",borderRadius:20,padding:"2px 8px"}}>⏱ {slaRuptura}d</span>}
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {s.data||"—"} · {s.empresa||"—"}</div></div>
+                        {s.req&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{s.req}</span>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Cód.</div><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Qtd · Código</div><div style={{fontSize:12,fontWeight:700}}>{s.quantidade||"—"} <span style={{color:"#888",fontWeight:400,fontSize:10}}>{s.codigo?`· ${s.codigo}`:""}</span></div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. Solicitação</div><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="OS_REL" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {isAtendido&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. Aplicado</div><input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>}
+                      </div>
+                      {s.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {s.obs}</div>}
+                      <select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:"1px solid #E0E0E0",color:s.statusFinal==="concluido"?"#1A7A3C":"#E67E00",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
+                        <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option>
+                      </select>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
 
         {/* ── REQUISIÇÕES ── */}
         {/* ── AGENDA (mensal, todos os técnicos) ── */}
@@ -2976,186 +2849,180 @@ export default function App(){
 
 
         {/* ── UBER ── */}
-        {tab==="uber"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚗 Pedidos Uber</div>
-                <div style={{fontSize:13,color:"#888"}}>{uberPedidos.length} pedido(s) registrado(s)</div>
-              </div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqUber?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqUber?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(uberPedidos,"uber_grupomov",[
-                  {key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"departamento",label:"Departamento"},
-                  {key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"relatorio",label:"Relatório"},
-                  {key:"endereco",label:"Endereço"},{key:"valor",label:"Valor (R$)"},{key:"status",label:"Status"},{key:"obs",label:"Obs"}
-                ])}/>
+        {tab==="uber"&&(()=>{
+          const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
+          const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
+          const conc=lista.filter(p=>p.status==="concluido").length;
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚗 Uber / Transporte</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} pedido(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"uber_grupomov",[{key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"endereco",label:"Endereço"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnY onClick={addUber}>+ Novo Pedido</BtnY>
               </div>
             </div>
-
-            {uberPedidos.length===0?(
-              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
-                <div style={{fontSize:32,marginBottom:12}}>🚗</div>
-                Nenhum pedido. Clique em "+ Novo Pedido" para começar.
-              </div>
-            ):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data</th><th>Solicitante</th><th>Departamento</th><th>Motivo</th>
-                        <th>Empresa</th><th>Patrimônio</th><th>Relatório</th><th>Endereço</th><th>Valor (R$)</th>
-                        <th>Status</th><th>Obs</th><th>Registrado por</th><th>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {uberPedidos.filter(p=>showArqUber||!p.arquivado).map(p=>(
-                        <tr key={p.id}>
-                          <td><input type="date" value={p.data||""} onChange={e=>updateUber(p.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={p.solicitante||""} onChange={e=>updateUber(p.id,{solicitante:e.target.value})} style={{width:110,fontSize:11,padding:"3px 6px"}} placeholder="Nome"/></td>
-                          <td>
-                            <select value={p.departamento||"MANUTENÇÃO"} onChange={e=>updateUber(p.id,{departamento:e.target.value,motivo:e.target.value==="MANUTENÇÃO"?p.motivo:"OUTROS"})} style={{fontSize:11,padding:"3px 5px",fontWeight:600}}>
-                              {["MANUTENÇÃO","RH","COMERCIAL","FROTAS","FINANCEIRO","COMPRAS","ALMOXARIFADO","FISCAL","GILBERTO","GUSTAVO"].map(d=><option key={d}>{d}</option>)}
-                            </select>
-                          </td>
-                          <td>
-                            <select value={p.motivo||""} onChange={e=>updateUber(p.id,{motivo:e.target.value})} style={{fontSize:11,padding:"3px 5px"}}>
-                              <option value="">Selecione...</option>
-                              {p.departamento==="MANUTENÇÃO"?<option value="ENVIO DE PEÇAS">ENVIO DE PEÇAS</option>:null}
-                              <option value="OUTROS">OUTROS</option>
-                            </select>
-                          </td>
-                          <td><input type="text" value={p.empresa||""} onChange={e=>updateUber(p.id,{empresa:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Empresa"/></td>
-                          <td><input type="text" value={p.patrimonio||""} onChange={e=>updateUber(p.id,{patrimonio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
-                          <td><input type="text" value={p.relatorio||""} onChange={e=>updateUber(p.id,{relatorio:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
-                          <td><input type="text" value={p.endereco||""} onChange={e=>updateUber(p.id,{endereco:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}} placeholder="Rua, número..."/></td>
-                          <td><input type="text" value={p.valor||""} onChange={e=>updateUber(p.id,{valor:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="0,00"/></td>
-                          <td>
-                            <select value={p.status||"pendente"} onChange={e=>updateUber(p.id,{status:e.target.value})}
-                              style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",
-                                color:p.status==="concluido"?"#1A7A3C":p.status==="cancelado"?"#C62828":"#E67E00",
-                                background:p.status==="concluido"?"#F0FFF5":p.status==="cancelado"?"#FFF0F0":"#FFF8F0"}}>
-                              <option value="pendente">⏳ Pendente</option>
-                              <option value="em_andamento">🚗 Em Andamento</option>
-                              <option value="concluido">✅ Concluído</option>
-                              <option value="cancelado">❌ Cancelado</option>
-                            </select>
-                          </td>
-                          <td><input type="text" value={p.obs||""} onChange={e=>updateUber(p.id,{obs:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                          <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{p.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(p.registradoEm)}</span></td>
-                          <td style={{whiteSpace:"nowrap"}}>
-                            <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{p.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir pedido?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:i===3?18:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
+              ))}
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚗</div><div style={{fontSize:15,fontWeight:600}}>Nenhum pedido</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(p=>{
+                  const ok=p.status==="concluido";
+                  return(<div key={p.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":"#E67E00"}`,padding:0,overflow:"hidden",opacity:p.arquivado?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":"#FFF8F0",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <select value={p.status||"pendente"} onChange={e=>updateUber(p.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#E67E00",background:"#FFF",cursor:"pointer"}}>
+                        <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="cancelado">❌ Cancelado</option>
+                      </select>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.data||"—"} · <b>{p.empresa||"—"}</b></div></div>
+                        <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Motivo</div><input type="text" value={p.motivo||""} onChange={e=>updateUber(p.id,{motivo:e.target.value})} placeholder="Motivo" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Relatório</div><div style={{fontSize:11,fontWeight:700}}>{p.patrimonio||"—"} {p.relatorio&&<span style={{color:"#1565C0"}}>· {p.relatorio}</span>}</div></div>
+                      </div>
+                      {p.endereco&&<div style={{fontSize:11,color:"#555",background:"#F8F9FA",borderRadius:8,padding:"6px 10px"}}>📍 {p.endereco}</div>}
+                      {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{p.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
               </div>
             )}
-          </div>
-        )}
-
+          </div>);
+        })()}
 
         {/* ── FINANCEIRO ── */}
-        {tab==="financeiro"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>💰 Financeiro</div>
-                <div style={{fontSize:13,color:"#888"}}>{financeiro.length} lançamento(s)</div>
-              </div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqFin?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqFin?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(financeiro,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"Patrimônio"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Data Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Valor Reembolso"},{key:"ticketReembolso",label:"Ticket Reembolso"},{key:"registradoPor",label:"Registrado por"}])}/>
+        {tab==="financeiro"&&(()=>{
+          const SOL={combustivel:{l:"⛽ Combustível",c:"#E67E00",bg:"#FFF8F0"},alimentacao:{l:"🍽️ Alimentação",c:"#1A7A3C",bg:"#F0FFF5"},viagem:{l:"✈️ Viagem",c:"#1565C0",bg:"#EFF6FF"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
+          const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
+          const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
+          const pago=lista.filter(f=>f.situacao==="pago").length;
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💳 Financeiro</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} lançamento(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFin?"#1A1A1A":"#FFF",color:showArqFin?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFin?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"PAT"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Dt Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Vl Reembolso"}])}/>
                 <BtnY onClick={addFin}>+ Novo Lançamento</BtnY>
               </div>
             </div>
-
-            {financeiro.length===0?(
-              <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
-                <div style={{fontSize:32,marginBottom:12}}>💰</div>
-                Nenhum lançamento. Clique em "+ Novo Lançamento".
-              </div>
-            ):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap">
-                  <table>
-                    <thead><tr><th>Data</th><th>Ticket</th><th>Técnico</th><th>Solicitação</th><th>Atendimento</th><th>Patrimônio</th><th>Valor</th><th>Situação</th><th>Acerto</th><th>Data Acerto</th><th>Reembolso</th><th>Valor Reemb.</th><th>Ticket Reemb.</th><th>Registrado por</th><th>Ações</th></tr></thead>
-                    <tbody>
-                      {financeiro.filter(f=>showArqFin||!f.arquivado).map(f=>{
-                        const pend=f.situacao==="pendente";
-                        const semAcerto=f.acerto==="nao";
-                        return(
-                          <tr key={f.id}>
-                            <td><input type="date" value={f.data||""} onChange={e=>updateFin(f.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><input type="text" value={f.ticket||""} onChange={e=>updateFin(f.id,{ticket:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="Ticket"/></td>
-                            <td><select value={f.tecnico||""} onChange={e=>updateFin(f.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                            <td><select value={f.solicitacao||"combustivel"} onChange={e=>updateFin(f.id,{solicitacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="combustivel">⛽ Combustível</option><option value="alimentacao">🍽️ Alimentação</option><option value="viagem">✈️ Viagem</option><option value="outros">📦 Outros</option></select></td>
-                            <td><input type="text" value={f.atendimento||""} onChange={e=>updateFin(f.id,{atendimento:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}} placeholder="Atendimento"/></td>
-                            <td><input type="text" value={f.patrimonio||""} onChange={e=>updateFin(f.id,{patrimonio:e.target.value})} style={{width:100,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
-                            <td><input type="text" value={f.valor||""} onChange={e=>updateFin(f.id,{valor:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="R$ 0,00"/></td>
-                            <td><select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:pend?"#C62828":"#1A7A3C",background:pend?"#FFF0F0":"#F0FFF5"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select></td>
-                            <td><select value={f.acerto||"nao"} onChange={e=>updateFin(f.id,{acerto:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:semAcerto?"#C62828":"#1A7A3C",background:semAcerto?"#FFF0F0":"#F0FFF5"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
-                            <td><input type="date" value={f.dataAcerto||""} onChange={e=>updateFin(f.id,{dataAcerto:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                            <td><select value={f.reembolso||"nao"} onChange={e=>updateFin(f.id,{reembolso:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
-                            <td><input type="text" value={f.valorReembolso||""} onChange={e=>updateFin(f.id,{valorReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px",textAlign:"right"}} placeholder="R$ 0,00"/></td>
-                            <td><input type="text" value={f.ticketReembolso||""} onChange={e=>updateFin(f.id,{ticketReembolso:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="Ticket"/></td>
-                            <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{f.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(f.registradoEm)}</span></td>
-                            <td style={{whiteSpace:"nowrap"}}>
-                              <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} title={f.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{f.arquivado?"📤":"🗄️"}</button>
-                              <button onClick={()=>{if(window.confirm("Excluir este lançamento?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Pagos",v:pago,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Sem Acerto",v:semAcerto,c:"#E67E00",bg:"#FFF8F0",i:"⚠️"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
+              ))}
+            </div>
+            {totalVal>0&&<div className="card" style={{padding:"12px 20px",marginBottom:16,background:"linear-gradient(90deg,#1565C0,#1976D2)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:22}}>💵</div><div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase"}}>Total em Lançamentos</div><div style={{fontSize:20,fontWeight:900}}>R$ {totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+            </div>}
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:15,fontWeight:600}}>Nenhum lançamento</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(f=>{
+                  const sol=SOL[f.solicitacao||"outros"]||SOL.outros;
+                  const pago=f.situacao==="pago";
+                  return(<div key={f.id} className="card" style={{borderTop:`4px solid ${sol.c}`,padding:0,overflow:"hidden",opacity:f.arquivado?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:sol.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:sol.c,background:"#FFF",border:`1px solid ${sol.c}33`,borderRadius:20,padding:"2px 10px"}}>{sol.l}</span>
+                        <select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:pago?"#1A7A3C":"#C62828",background:pago?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select>
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{f.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#888"}}>📅 {f.data||"—"} · Ticket: <b style={{color:"#1565C0"}}>{f.ticket||"—"}</b></div></div>
+                        <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{f.valor?`R$ ${f.valor}`:"R$ —"}</div>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Atendimento / PAT</div><input type="text" value={f.atendimento||""} onChange={e=>updateFin(f.id,{atendimento:e.target.value})} placeholder="Atendimento" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Acerto</div>
+                          <select value={f.acerto||"nao"} onChange={e=>updateFin(f.id,{acerto:e.target.value})} style={{fontSize:11,fontWeight:700,color:f.acerto==="sim"?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
+                        </div>
+                        {f.reembolso==="sim"&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Reembolso</div><div style={{fontSize:12,fontWeight:700,color:"#1565C0"}}>R$ {f.valorReembolso||"—"} · Ticket: {f.ticketReembolso||"—"}</div></div>}
+                      </div>
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{f.registradoPor||""} · {f.data||""}</div>
+                    </div>
+                  </div>);
+                })}
               </div>
             )}
-          </div>
-        )}
+          </div>);
+        })()}
 
         {/* ── PENDÊNCIAS FROTA ── */}
         {tab==="pendencias_frota"&&(()=>{
-          const list=frota.filter(r=>showArqFro||!r.arquivado);
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
-                  <ExportBar data={frota.filter(f=>!f.arquivado)} filename="pendencias_frota" cols={[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"descricao",label:"Descrição"},{key:"status",label:"Status"}]}/>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqFro?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqFro?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
-                </div>
+          const TIPO={bateria:{l:"🔋 Bateria",c:"#F5C200",bg:"#FFFBF0"},carregador:{l:"🔌 Carregador",c:"#1565C0",bg:"#EFF6FF"},estrado:{l:"🟫 Estrado",c:"#8B5E3C",bg:"#FDF5EC"},maquina:{l:"🏗️ Máquina",c:"#546E7A",bg:"#ECEFF1"}};
+          const lista=frota.filter(r=>showArqFro||!r.arquivado);
+          const pend=lista.filter(r=>r.resolvido!=="sim").length;
+          const resolvidos=lista.filter(r=>r.resolvido==="sim").length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFro?"#1A1A1A":"#FFF",color:showArqFro?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFro?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"pendencias_frota",[{key:"dataEnvio",label:"Dt Envio"},{key:"rel",label:"REL"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"pat",label:"PAT"},{key:"patTipo",label:"Tipo"},{key:"resolvido",label:"Resolvido"},{key:"novoPat",label:"Novo PAT"},{key:"nf",label:"NF"},{key:"relEntrega",label:"Rel Entrega"}])}/>
+                <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data Envio</th><th>Rel</th><th>Empresa</th><th>Técnico</th><th>PAT</th><th>Tipo</th><th>Resolvido</th><th>Novo PAT</th><th>Data</th><th>NF</th><th>Rel Entrega</th><th>Registrado por</th><th>Ações</th></tr></thead>
-                  <tbody>{list.map(r=>{const ok=r.resolvido==="sim";return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.dataEnvio||""} onChange={e=>froCrud.update(r.id,{dataEnvio:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.rel||""} onChange={e=>froCrud.update(r.id,{rel:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="REL-001"/></td>
-                      <td><input type="text" value={r.empresa||""} onChange={e=>froCrud.update(r.id,{empresa:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><select value={r.tecnico||""} onChange={e=>froCrud.update(r.id,{tecnico:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></td>
-                      <td><input type="text" value={r.pat||""} onChange={e=>froCrud.update(r.id,{pat:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="PAT-001"/></td>
-                      <td><select value={r.patTipo||"bateria"} onChange={e=>froCrud.update(r.id,{patTipo:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}><option value="bateria">🔋 Bateria</option><option value="carregador">🔌 Carregador</option><option value="estrado">🟫 Estrado</option><option value="maquina">🏗️ Máquina</option></select></td>
-                      <td><select value={r.resolvido||"nao"} onChange={e=>froCrud.update(r.id,{resolvido:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:ok?"#1A7A3C":"#C62828",background:ok?"#F0FFF5":"#FFF0F0"}}><option value="sim">Sim</option><option value="nao">Não</option></select></td>
-                      <td><input type="text" value={r.novoPat||""} onChange={e=>froCrud.update(r.id,{novoPat:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="—"/></td>
-                      <td><input type="date" value={r.data||""} onChange={e=>froCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.nf||""} onChange={e=>froCrud.update(r.id,{nf:e.target.value})} style={{width:80,fontSize:11,padding:"3px 6px"}} placeholder="NF"/></td>
-                      <td><input type="text" value={r.relEntrega||""} onChange={e=>froCrud.update(r.id,{relEntrega:e.target.value})} style={{width:90,fontSize:11,padding:"3px 6px"}} placeholder="—"/></td>
-                      <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>froCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
             </div>
-          );
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Resolvidos",v:resolvidos,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚜</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma pendência</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(r=>{
+                  const tp=TIPO[r.patTipo||"bateria"]||TIPO.bateria;
+                  const ok=r.resolvido==="sim";
+                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":tp.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":tp.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:ok?"#1A7A3C":tp.c,background:"#FFF",border:`1px solid ${ok?"#1A7A3C":tp.c}33`,borderRadius:20,padding:"2px 10px"}}>{tp.l}</span>
+                        <select value={r.resolvido||"nao"} onChange={e=>froCrud.update(r.id,{resolvido:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#C62828",background:ok?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="sim">✅ Resolvido</option><option value="nao">⏳ Pendente</option></select>
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>froCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · <b>{r.tecnico||"—"}</b></div></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Novo PAT</div><input type="text" value={r.pat||""} onChange={e=>froCrud.update(r.id,{pat:e.target.value})} placeholder="PAT" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório · NF</div><input type="text" value={r.rel||""} onChange={e=>froCrud.update(r.id,{rel:e.target.value})} placeholder="REL-001" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {ok&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Novo PAT · Rel. Entrega</div><div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{r.novoPat||"—"} {r.relEntrega&&<span style={{fontSize:10,color:"#888"}}>· {r.relEntrega}</span>}</div></div>}
+                      </div>
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
         })()}
 
         {/* ── PRIORIDADES CLIENTES (somente Manuela) ── */}
@@ -3195,37 +3062,61 @@ export default function App(){
         })()}
 
         {/* ── RH-FISCAL (somente Manuela) ── */}
-        {tab==="rh_fiscal"&&user.id==="manuela"&&(()=>{
-          const list=rhFiscal.filter(r=>showArqRh||!r.arquivado);
-          const MOT={folga:"Folga",falta:"Falta",atestado:"Atestado",ferias:"Férias",acesso_tecnico:"Acesso Técnico",treinamento:"Treinamento",sala_reuniao:"Separar Sala de Reunião",demissao:"Demissão",promocao:"Promoção",liberacao:"Liberação"};
-          const STS={concluido:"Concluído",pendente_luana:"Pendente Luana",pendente_elci:"Pendente Elci",escalado:"Escalado"};
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🧾 RH-Fiscal</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqRh(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqRh?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqRh?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>rhCrud.add({dataEnvio:TODAY_STR,responsavel:"Luana",motivo:"folga",funcionario:"",status:"pendente_luana",obs:""})}>+ Novo Item</BtnY>
-                </div>
+        {tab==="rh_fiscal"&&(()=>{
+          const MOT={folga:"🏖️ Folga",ferias:"🌴 Férias",afastamento:"🏥 Afastamento",atestado:"📋 Atestado",demissao:"❌ Demissão",admissao:"✅ Admissão",outros:"📦 Outros"};
+          const STS={pendente_luana:{l:"⏳ Pend. Luana",c:"#E67E00",bg:"#FFF8F0"},pendente_elci:{l:"⏳ Pend. Elci",c:"#8E44AD",bg:"#F6F0FB"},em_andamento:{l:"🔄 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"✅ Concluído",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const lista=rhFiscal.filter(r=>showArqRH||!r.arquivado);
+          const pend=lista.filter(r=>r.status==="pendente_luana"||r.status==="pendente_elci"||!r.status).length;
+          const conc=lista.filter(r=>r.status==="concluido").length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🧾 RH-Fiscal</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqRH(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRH?"#1A1A1A":"#FFF",color:showArqRH?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRH?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"rh_fiscal",[{key:"dataEnvio",label:"Data"},{key:"responsavel",label:"Responsável"},{key:"motivo",label:"Motivo"},{key:"funcionario",label:"Funcionário"},{key:"status",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>rhCrud.add({dataEnvio:TODAY_STR,responsavel:"Luana",motivo:"folga",funcionario:"",status:"pendente_luana",obs:""})}>+ Novo Item</BtnY>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhum item.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data de Envio</th><th>Responsável</th><th>Motivo</th><th>Funcionário</th><th>Status</th><th>Observação</th><th>Registrado por</th><th>Ações</th></tr></thead>
-                  <tbody>{list.map(r=>{const conc=r.status==="concluido";return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.dataEnvio||""} onChange={e=>rhCrud.update(r.id,{dataEnvio:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><select value={r.responsavel||"Luana"} onChange={e=>rhCrud.update(r.id,{responsavel:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option>Luana</option><option>Elci</option></select></td>
-                      <td><select value={r.motivo||"folga"} onChange={e=>rhCrud.update(r.id,{motivo:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}>{Object.entries(MOT).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.funcionario||""} onChange={e=>rhCrud.update(r.id,{funcionario:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}} placeholder="Nome do funcionário"/></td>
-                      <td><select value={r.status||"pendente_luana"} onChange={e=>rhCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:conc?"#1A7A3C":"#C47D00",background:conc?"#F0FFF5":"#FFFBF0",minWidth:140}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>rhCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                      <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
             </div>
-          );
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600}}>Nenhum item</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(r=>{
+                  const st=STS[r.status||"pendente_luana"]||STS.pendente_luana;
+                  const mot=MOT[r.motivo||"outros"]||"📦";
+                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <select value={r.status||"pendente_luana"} onChange={e=>rhCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:st.c,background:"#FFF",cursor:"pointer"}}>
+                        {Object.entries(STS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
+                      </select>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.funcionario||<span style={{color:"#CCC"}}>Funcionário</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · {r.responsavel||"—"}</div></div>
+                        <span style={{fontSize:12,background:"#F5F5F5",borderRadius:8,padding:"4px 10px",fontWeight:600}}>{mot}</span>
+                      </div>
+                      <select value={r.motivo||"outros"} onChange={e=>rhCrud.update(r.id,{motivo:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:"1px solid #E0E0E0",fontWeight:600,cursor:"pointer"}}>
+                        {Object.entries(MOT).map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                      </select>
+                      {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
+                      <textarea value={r.obs||""} onChange={e=>rhCrud.update(r.id,{obs:e.target.value})} placeholder="Observações..." rows={2} style={{fontSize:11,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",resize:"none",fontFamily:"inherit",background:"#FAFAFA"}}/>
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
         })()}
 
         {/* ── PENDÊNCIAS GUSTAVO (somente Manuela) ── */}
@@ -3877,56 +3768,66 @@ export default function App(){
         })()}
 
         {/* ── SAS ── */}
-        {tab==="sas"&&(
-          <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📄 SAS</div><div style={{fontSize:13,color:"#888"}}>{sas.length} registro(s)</div></div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqSas?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqSas?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(sas,"sas_grupomov",[{key:"dataSolicitacao",label:"Data Solicitação"},{key:"email",label:"E-mail"},{key:"nfNum",label:"Nº NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"tel",label:"Tel"},{key:"emailContato",label:"Email Contato"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Data Realização"},{key:"relatorioMov",label:"Relatório MOV"},{key:"envioFaturamento",label:"Envio Faturamento"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"dataEnvioSas",label:"Data Envio SAS"}])}/>
+        {tab==="sas"&&(()=>{
+          const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
+          const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
+          const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
+          const conc=lista.filter(s=>s.status==="concluido").length;
+          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"sas_grupomov",[{key:"dataSolicitacao",label:"Dt Solic."},{key:"email",label:"Email"},{key:"nfNum",label:"NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Dt Realiz."},{key:"relatorioMov",label:"Rel MOV"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnY onClick={addSas}>+ Novo SAS</BtnY>
               </div>
             </div>
-            <div className="card" style={{overflow:"hidden"}}>
-              <div className="tbl-wrap">
-                <table>
-                  <thead><tr><th>Data Solic.</th><th>E-mail</th><th>Nº NF</th><th>Equipamento</th><th>Cliente</th><th>Nome</th><th>Tel</th><th>Email Contato</th><th>Serviço</th><th>Data Realização</th><th>Relatório MOV</th><th>Envio Faturamento</th><th>Valor</th><th>Status</th><th>SLA / Data Envio SAS</th><th>Registrado por</th><th>Ações</th></tr></thead>
-                  <tbody>
-                    {sas.length===0&&<tr><td colSpan={17} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo SAS".</td></tr>}
-                    {sas.filter(s=>showArqSas||!s.arquivado).map(s=>{
-                      const isPend=s.status==="pendente";
-                      const slaVal=isPend&&s.dataSolicitacao?diffDays(s.dataSolicitacao):null;
-                      return(
-                        <tr key={s.id}>
-                          <td><input type="date" value={s.dataSolicitacao||""} onChange={e=>updateSas(s.id,{dataSolicitacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.email||""} onChange={e=>updateSas(s.id,{email:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.nfNum||""} onChange={e=>updateSas(s.id,{nfNum:e.target.value})} placeholder="NF-001" style={{width:80,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equipamento" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.cliente||""} onChange={e=>updateSas(s.id,{cliente:e.target.value})} placeholder="Cliente" style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.nome||""} onChange={e=>updateSas(s.id,{nome:e.target.value})} placeholder="Nome" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.tel||""} onChange={e=>updateSas(s.id,{tel:e.target.value})} placeholder="Tel" style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.emailContato||""} onChange={e=>updateSas(s.id,{emailContato:e.target.value})} placeholder="email@..." style={{width:110,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><select value={s.servico||"entrega_tecnica"} onChange={e=>updateSas(s.id,{servico:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:600,color:"#1565C0"}}><option value="entrega_tecnica">📦 Entrega Técnica</option><option value="manutencao_externa">🔧 Manutenção Externa</option></select></td>
-                          <td><input type="date" value={s.dataRealizacao||""} onChange={e=>updateSas(s.id,{dataRealizacao:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-001" style={{width:90,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.envioFaturamento||""} onChange={e=>updateSas(s.id,{envioFaturamento:e.target.value})} placeholder="Info..." style={{width:100,fontSize:11,padding:"3px 6px"}}/></td>
-                          <td><input type="text" value={s.valor||""} onChange={e=>updateSas(s.id,{valor:e.target.value})} placeholder="0,00" style={{width:80,fontSize:11,padding:"3px 6px",textAlign:"right"}}/></td>
-                          <td><select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 5px",fontWeight:700,borderRadius:5,border:"none",color:s.status==="concluido"?"#1A7A3C":"#C62828",background:s.status==="concluido"?"#F0FFF5":"#FFF0F0"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option></select></td>
-                          <td>{isPend?<SlaBadge days={slaVal}/>:<input type="date" value={s.dataEnvioSas||""} onChange={e=>updateSas(s.id,{dataEnvioSas:e.target.value})} style={{width:130,fontSize:11,padding:"3px 6px"}}/>}</td>
-                          <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{s.registradoPor||"—"}</td>
-                          <td style={{whiteSpace:"nowrap"}}>
-                            <button onClick={()=>updateSas(s.id,{arquivado:!s.arquivado})} title={s.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>{s.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm('Excluir?'))delSas(s.id);}} style={{background:'#FFF0F0',border:'none',borderRadius:5,color:'#C62828',cursor:'pointer',padding:'3px 8px',fontSize:11,fontWeight:700}}>✕</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:i===3?16:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
             </div>
-          </div>
-        )}
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+                {lista.map(s=>{
+                  const serv=SERV[s.servico||"outros"]||SERV.outros;
+                  const ok=s.status==="concluido";
+                  const pend=s.status==="pendente"||!s.status;
+                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":pend?"#C62828":serv.c}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:serv.c,background:"#FFF",border:`1px solid ${serv.c}33`,borderRadius:20,padding:"2px 10px"}}>{serv.l}</span>
+                        <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":pend?"#C62828":"#555",background:ok?"#DCFFE4":pend?"#FFE0E0":"#F0F0F0",cursor:"pointer"}}>
+                          <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
+                        </select>
+                      </div>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {s.dataSolicitacao||"—"} · <b style={{color:"#1565C0"}}>{s.nfNum?`NF ${s.nfNum}`:""}</b></div></div>
+                        {s.valor&&<div style={{fontSize:17,fontWeight:900,color:"#1A7A3C"}}>R$ {s.valor}</div>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equip." style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Data Realiz.</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {s.envioFaturamento&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Envio Faturamento</div><div style={{fontSize:11,fontWeight:700,color:"#1A7A3C"}}>{s.envioFaturamento}</div></div>}
+                      </div>
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{s.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
 
         {/* ── CARROS ── */}
         {tab==="carros"&&(()=>{
