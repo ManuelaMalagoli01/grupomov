@@ -1089,6 +1089,7 @@ export default function App(){
   const [carroFiltroData,setCarroFiltroData]=useState("");
   const [carroFiltroStatus,setCarroFiltroStatus]=useState("todos");
   const [showArqCarros,setShowArqCarros]=useState(false);
+  const [carSearch,setCarSearch]=useState(""); const [carFrom,setCarFrom]=useState(""); const [carTo,setCarTo]=useState(""); const [carMes,setCarMes]=useState(""); const [carAno,setCarAno]=useState("");
   const [modalCarros,setModalCarros]=useState(false);
   const [editCarro,setEditCarro]=useState(null);
   const [showArqPendMan,setShowArqPendMan]=useState(false);
@@ -2405,6 +2406,15 @@ export default function App(){
           const lista=emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado");
           const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
           const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
+                    const applyFilter=(r,d=r.data||"")=>{
+            if(empSearch){const q=empSearch.toLowerCase();if(!((r.req||"").toLowerCase().includes(q)||(r.requerente||"").toLowerCase().includes(q)||(r.item||"").toLowerCase().includes(q)||(r.descricao||"").toLowerCase().includes(q)||(r.centroResultado||"").toLowerCase().includes(q)||(r.observacao||"").toLowerCase().includes(q)))return false;}
+            if(empFrom&&d<empFrom)return false;
+            if(empTo&&d>empTo)return false;
+            if(empMes&&!d.slice(5,7).startsWith(empMes))return false;
+            if(empAno&&!d.startsWith(empAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🔄 Empréstimo e Retorno</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s){atrasados>0&&<span style={{color:"#C62828",fontWeight:700}}> · ⚠️ {atrasados} em atraso</span>}</div></div>
@@ -2422,9 +2432,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🔄</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma requisição</div></div>):(
+            {lista.length===0?(            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={empSearch} onChange={e=>setEmpSearch(e.target.value)} placeholder="Buscar REQ, requerente, item, descrição..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={empFrom} onChange={e=>setEmpFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={empTo} onChange={e=>setEmpTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={empMes} onChange={e=>setEmpMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={empAno} onChange={e=>setEmpAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(empSearch||empFrom||empTo||empMes||empAno)}&&<button onClick={()=>{setEmpSearch('');setEmpFrom('');setEmpTo('');setEmpMes('');setEmpAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🔄</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma requisição</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(e=>{
+                {listaFil.map(e=>{
                   const sc=SIT[e.situacao]||SIT.Pendente;
                   const sla=e.dataRetorno?diffDays(e.dataRetorno):null;
                   const atrasado=sla!==null&&sla<0;
@@ -2468,6 +2486,15 @@ export default function App(){
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
+                    const applyFilter=(r,d=r.data||"")=>{
+            if(saiSearch){const q=saiSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.codigo||"").toLowerCase().includes(q)||(r.req||"").toLowerCase().includes(q)||(r.relSolicitacao||"").toLowerCase().includes(q)||(r.relatorioAplicado||"").toLowerCase().includes(q)))return false;}
+            if(saiFrom&&d<saiFrom)return false;
+            if(saiTo&&d>saiTo)return false;
+            if(saiMes&&!d.slice(5,7).startsWith(saiMes))return false;
+            if(saiAno&&!d.startsWith(saiAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
@@ -2485,9 +2512,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📦</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro</div></div>):(
+            {lista.length===0?(            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={saiSearch} onChange={e=>setSaiSearch(e.target.value)} placeholder="Buscar empresa, PAT, peça, REQ..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={saiFrom} onChange={e=>setSaiFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={saiTo} onChange={e=>setSaiTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={saiMes} onChange={e=>setSaiMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={saiAno} onChange={e=>setSaiAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(saiSearch||saiFrom||saiTo||saiMes||saiAno)}&&<button onClick={()=>{setSaiSearch('');setSaiFrom('');setSaiTo('');setSaiMes('');setSaiAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📦</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(s=>{
+                {listaFil.map(s=>{
                   const isRuptura=s.statusReq==="ruptura";
                   const isAtendido=s.statusReq==="atendido";
                   const slaRuptura=isRuptura&&s.data?diffDays(s.data):null;
@@ -2974,6 +3009,15 @@ export default function App(){
           const pago=lista.filter(f=>f.situacao==="pago").length;
           const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
+                    const applyFilter=(r,d=r.data||"")=>{
+            if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
+            if(finFrom&&d<finFrom)return false;
+            if(finTo&&d>finTo)return false;
+            if(finMes&&!d.slice(5,7).startsWith(finMes))return false;
+            if(finAno&&!d.startsWith(finAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💳 Financeiro</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} lançamento(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -2994,9 +3038,17 @@ export default function App(){
             {totalVal>0&&<div className="card" style={{padding:"12px 20px",marginBottom:16,background:"linear-gradient(90deg,#1565C0,#1976D2)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
               <div style={{fontSize:22}}>💵</div><div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase"}}>Total em Lançamentos</div><div style={{fontSize:20,fontWeight:900}}>R$ {totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
             </div>}
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:15,fontWeight:600}}>Nenhum lançamento</div></div>):(
+            {lista.length===0?(            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={finSearch} onChange={e=>setFinSearch(e.target.value)} placeholder="Buscar técnico, ticket, atendimento, PAT..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={finFrom} onChange={e=>setFinFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={finTo} onChange={e=>setFinTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={finMes} onChange={e=>setFinMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={finAno} onChange={e=>setFinAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(finSearch||finFrom||finTo||finMes||finAno)}&&<button onClick={()=>{setFinSearch('');setFinFrom('');setFinTo('');setFinMes('');setFinAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:15,fontWeight:600}}>Nenhum lançamento</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(f=>{
+                {listaFil.map(f=>{
                   const sol=SOL[f.solicitacao||"outros"]||SOL.outros;
                   const pago=f.situacao==="pago";
                   return(<div key={f.id} className="card" style={{borderTop:`4px solid ${sol.c}`,padding:0,overflow:"hidden",opacity:f.arquivado?0.55:1}}>
@@ -3037,6 +3089,15 @@ export default function App(){
           const lista=frota.filter(r=>showArqFro||!r.arquivado);
           const pend=lista.filter(r=>r.resolvido!=="sim").length;
           const resolvidos=lista.filter(r=>r.resolvido==="sim").length;
+                    const applyFilter=(r,d=r.dataEnvio||"")=>{
+            if(froSearch){const q=froSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.pat||"").toLowerCase().includes(q)||(r.tecnico||"").toLowerCase().includes(q)||(r.rel||"").toLowerCase().includes(q)||(r.novoPat||"").toLowerCase().includes(q)||(r.relEntrega||"").toLowerCase().includes(q)||(r.nf||"").toLowerCase().includes(q)))return false;}
+            if(froFrom&&d<froFrom)return false;
+            if(froTo&&d>froTo)return false;
+            if(froMes&&!d.slice(5,7).startsWith(froMes))return false;
+            if(froAno&&!d.startsWith(froAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3054,9 +3115,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚜</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma pendência</div></div>):(
+            {lista.length===0?(            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={froSearch} onChange={e=>setFroSearch(e.target.value)} placeholder="Buscar empresa, PAT, técnico, relatório..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={froFrom} onChange={e=>setFroFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={froTo} onChange={e=>setFroTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={froMes} onChange={e=>setFroMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={froAno} onChange={e=>setFroAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(froSearch||froFrom||froTo||froMes||froAno)}&&<button onClick={()=>{setFroSearch('');setFroFrom('');setFroTo('');setFroMes('');setFroAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚜</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma pendência</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(r=>{
+                {listaFil.map(r=>{
                   const tp=TIPO[r.patTipo||"bateria"]||TIPO.bateria;
                   const ok=r.resolvido==="sim";
                   return(<div key={r.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":tp.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
@@ -3129,6 +3198,15 @@ export default function App(){
           const lista=rhFiscal.filter(r=>showArqRH||!r.arquivado);
           const pend=lista.filter(r=>r.status==="pendente_luana"||r.status==="pendente_elci"||!r.status).length;
           const conc=lista.filter(r=>r.status==="concluido").length;
+                    const applyFilter=(r,d=r.dataEnvio||"")=>{
+            if(rhSearch){const q=rhSearch.toLowerCase();if(!((r.funcionario||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
+            if(rhFrom&&d<rhFrom)return false;
+            if(rhTo&&d>rhTo)return false;
+            if(rhMes&&!d.slice(5,7).startsWith(rhMes))return false;
+            if(rhAno&&!d.startsWith(rhAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🧾 RH-Fiscal</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3146,9 +3224,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600}}>Nenhum item</div></div>):(
+            {lista.length===0?(            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={rhSearch} onChange={e=>setRhSearch(e.target.value)} placeholder="Buscar funcionário, responsável, obs..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={rhFrom} onChange={e=>setRhFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={rhTo} onChange={e=>setRhTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={rhMes} onChange={e=>setRhMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={rhAno} onChange={e=>setRhAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(rhSearch||rhFrom||rhTo||rhMes||rhAno)}&&<button onClick={()=>{setRhSearch('');setRhFrom('');setRhTo('');setRhMes('');setRhAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            <div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600}}>Nenhum item</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(r=>{
+                {listaFil.map(r=>{
                   const st=STS[r.status||"pendente_luana"]||STS.pendente_luana;
                   const mot=MOT[r.motivo||"outros"]||"📦";
                   return(<div key={r.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
@@ -3926,6 +4012,15 @@ export default function App(){
           };
           const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||"",requisicao:c.requisicao||""});setModalCarros(true);};
           const lista=carros.filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
+          const applyFilter=(r,d=r.data||"")=>{
+            if(carSearch){const q=carSearch.toLowerCase();if(!((r.placa||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.oficina||"").toLowerCase().includes(q)||(r.requisicao||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
+            if(carFrom&&d<carFrom)return false;
+            if(carTo&&d>carTo)return false;
+            if(carMes&&!d.slice(5,7).startsWith(carMes))return false;
+            if(carAno&&!d.startsWith(carAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           const itensSubstLabel=(c)=>(c.itensSubstituidos||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
           const itensProxLabel=(c)=>(c.itensProximaRevisao||[]).map(v=>ITENS_REVISAO.find(i=>i.v===v)?.l||v).join(", ")||"—";
 
@@ -4013,7 +4108,15 @@ export default function App(){
               </div>
 
               {/* Tabela */}
-              {lista.length===0?(
+              <div className="card" style={padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}>
+                <div style={position:"relative",flex:1,minWidth:200}><span style={position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}>🔍</span><input type="text" value={carSearch} onChange={e=>setCarSearch(e.target.value)} placeholder="Buscar placa, responsável, oficina, requisição..." style={width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}/></div>
+                <div style={display:"flex",alignItems:"center",gap:4}><span style={fontSize:10,color:"#888",fontWeight:600}>De</span><input type="date" value={carFrom} onChange={e=>setCarFrom(e.target.value)} style={fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}/></div>
+                <div style={display:"flex",alignItems:"center",gap:4}><span style={fontSize:10,color:"#888",fontWeight:600}>Até</span><input type="date" value={carTo} onChange={e=>setCarTo(e.target.value)} style={fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}/></div>
+                <select value={carMes} onChange={e=>setCarMes(e.target.value)} style={fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}><option value="">Mês</option>["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)</select>
+                <select value={carAno} onChange={e=>setCarAno(e.target.value)} style={fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}><option value="">Ano</option>[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)</select>
+                {(carSearch||carFrom||carTo||carMes||carAno)&&<button onClick={()=>{setCarSearch("");setCarFrom("");setCarTo("");setCarMes("");setCarAno("");}} style={padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}>✕ Limpar</button>}
+              </div>
+              {listaFil.length===0?(
                 <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
                   <div style={{fontSize:32,marginBottom:12}}>🚙</div>
                   Nenhum registro. Clique em "+ Novo Registro" para começar.
@@ -4032,7 +4135,7 @@ export default function App(){
                         </tr>
                       </thead>
                       <tbody>
-                        {lista.map(c=>{
+                        {listaFil.map(c=>{
                           const st=CARRO_STATUS[c.status]||CARRO_STATUS.orcamento_pendente;
                           return(
                             <tr key={c.id} style={{opacity:c.arquivado?0.5:1}}>
