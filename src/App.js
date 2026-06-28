@@ -3156,8 +3156,7 @@ export default function App(){
             if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
             return diffDaysNow(r.data);
           };
-          const slaColor=(d)=>d>10?"#C62828":d>5?"#E67E00":"#1A7A3C";
-          const slaCell=(r)=>{const d=sla(r);if(d===null)return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅ Finalizado</span>;const c=slaColor(d);return <span style={{fontSize:11,fontWeight:700,color:c,background:c+"22",borderRadius:20,padding:"2px 8px"}}>{d}d</span>;};
+
           const salvar=()=>{
             if(!form.peca){alert("Informe a peça.");return;}
             if(editRuptura){
@@ -3320,7 +3319,7 @@ export default function App(){
                               <td style={{fontSize:11}}>{r.pat||"—"}</td>
                               <td style={{fontSize:11}}>{r.empresa||"—"}</td>
                               <td style={{fontSize:11}}>{r.tecnico||"—"}</td>
-                              <td>{slaCell(r)}</td>
+                              <td>{(()=>{const _d=sla(r);if(_d===null)return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅</span>;const _c=_d>10?"#C62828":_d>5?"#E67E00":"#1A7A3C";return <span style={{fontSize:11,fontWeight:700,color:_c,background:_c+"22",borderRadius:20,padding:"2px 8px"}}>{_d}d</span>;})()}</td>
                               <td>
                                 <select value={r.status||"aguardando"} onChange={e=>updateRuptura(r.id,{status:e.target.value,dataLiberacao:e.target.value==="liberado_almox"&&!r.dataLiberacao?TODAY_STR:r.dataLiberacao})} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"none",color:st.c,background:st.bg}}>
                                   {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
