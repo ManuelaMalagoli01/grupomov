@@ -1531,7 +1531,7 @@ export default function App(){
             if(ofiNovaTech!=="todos"&&a.tecnico!==ofiNovaTech)return false;
             if(ofiNovaServ!=="todos"&&a.servico!==ofiNovaServ)return false;
             return true;
-          })());
+          })()).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
           const totalHorasMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalHorasStr=`${Math.floor(totalHorasMin/60)}h${String(totalHorasMin%60).padStart(2,"0")}m`;
           const abrirEditar=(a)=>{setEditApon(a);setAponForm({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||OFICINA_TECHS[0],servico:a.servico||SERVICOS_OFICINA[0],inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"1340",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon(true);};
@@ -4124,7 +4124,7 @@ export default function App(){
             if(ofi150From&&(a.data||"")<ofi150From)return false;
             if(ofi150To&&(a.data||"")>ofi150To)return false;
             return true;
-          })());
+          })()).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
           const totalMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
           const abrirEditar150=(a)=>{setEditApon150(a);setApon150Form({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||TECHS_150[0]||"",servico:a.servico||SERVICOS_OFICINA[0]||"",inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"150",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon150(true);};
