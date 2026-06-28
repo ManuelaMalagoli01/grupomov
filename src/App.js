@@ -3349,14 +3349,14 @@ export default function App(){
 
       {/* ── DASHBOARD REQUISIÇÕES ── */}
         {tab==="dashboard_req"&&(()=>{
-          const rupturas_alm=rupturas||[];
+          const ruptAlmox=rupturas||[];
           const allReqs=[...emprestimos,...saidaEntrada];
           const totalEmp=emprestimos.length;
           const totalSai=saidaEntrada.length;
           const total=allReqs.length;
-          // Rupturas
-          const rupturas=saidaEntrada.filter(s=>s.statusReq==="ruptura");
-          const rupturasInfo=rupturas.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
+          // Rupturas S/E
+          const rupturasS=saidaEntrada.filter(s=>s.statusReq==="ruptura");
+          const rupturasInfo=rupturasS.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
           const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
           const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length+saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
           const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length+saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
@@ -3384,7 +3384,7 @@ export default function App(){
           const chartTipoTech={labels:techsAtivos,datasets:[{label:"Entrada/Saída",data:techsAtivos.map(t=>empByTech[t]||0),backgroundColor:"#1565C0",borderRadius:4},{label:"Empréstimo/Retorno",data:techsAtivos.map(t=>empByTechEmp[t]||0),backgroundColor:"#F5C200",borderRadius:4}]};
           // Gráficos status
           const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#C62828","#1A7A3C"],borderWidth:0}]};
-          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturas.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
+          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturasS.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
           const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
           const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
           const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
@@ -3409,8 +3409,8 @@ export default function App(){
                 <KPIR icon="📦" label="Total" value={total} color="#1A1A1A"/>
                 <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
                 <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
-                <KPIR icon="🔴" label="Rupturas S/E" value={rupturas.length} color="#C62828" bg="#FFF8F8"/>
-                <KPIR icon="🏭" label="Ruptura Almox" value={(rupturas_alm||[]).filter(r=>!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
+                <KPIR icon="🔴" label="Rupturas S/E" value={rupturasS.length} color="#C62828" bg="#FFF8F8"/>
+                <KPIR icon="🏭" label="Ruptura Almox" value={(ruptAlmox).filter(r=>!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
                 <KPIR icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
                 <KPIR icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
               </div>
@@ -3459,9 +3459,9 @@ export default function App(){
               </div>
 
               {/* Rupturas detalhadas */}
-              {rupturas.length>0&&(
+              {rupturasS.length>0&&(
                 <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #C62828"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas em Aberto ({rupturas.length})</div>
+                  <div style={{fontSize:12,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas em Aberto ({rupturasS.length})</div>
                   <div className="tbl-wrap"><table>
                     <thead><tr><th>Peça</th><th>Código</th><th>Empresa</th><th>Data</th><th>SLA (dias)</th></tr></thead>
                     <tbody>{rupturasInfo.map((r,i)=>(
@@ -3469,7 +3469,7 @@ export default function App(){
                         <td style={{fontWeight:700}}>{r.peca}</td>
                         <td style={{fontSize:11,color:"#888"}}>{r.codigo}</td>
                         <td>{r.empresa}</td>
-                        <td style={{fontSize:11,color:"#888"}}>{rupturas[i]?.data||"—"}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{rupturasS[i]?.data||"—"}</td>
                         <td><SlaBadge days={r.dias}/></td>
                       </tr>
                     ))}</tbody>
@@ -3490,12 +3490,12 @@ export default function App(){
                 </div>
               )}
               {/* Ruptura Almox no Dashboard */}
-              {rupturas_alm.filter(r=>!r.arquivado).length>0&&(
+              {ruptAlmox.filter(r=>!r.arquivado).length>0&&(
                 <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #AD1457"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({rupturas_alm.filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
+                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({ruptAlmox.filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
                   <div className="tbl-wrap"><table>
                     <thead><tr><th>Data</th><th>Peça</th><th>Cód.</th><th>Empresa</th><th>PAT</th><th>Técnico</th><th>Solicitação</th><th>SLA</th><th>Status</th></tr></thead>
-                    <tbody>{rupturas_alm.filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
+                    <tbody>{ruptAlmox.filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
                       const dias=r.status==="separado_suporte"||r.status==="liberado_almox"?null:r.data?Math.floor((Date.now()-new Date(r.data).getTime())/86400000):null;
                       const SOLS={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguard.",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
                       const STATS={aguardando:{l:"Aguardando",c:"#E67E00"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD"},separado_suporte:{l:"Separado Suporte",c:"#1565C0"},liberado_almox:{l:"Liberado",c:"#1A7A3C"}};
