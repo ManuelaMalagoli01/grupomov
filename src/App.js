@@ -1013,6 +1013,11 @@ export default function App(){
   const [modalRuptura,setModalRuptura]=useState(false);
   const [editRuptura,setEditRuptura]=useState(null);
   const [showArqRuptura,setShowArqRuptura]=useState(false);
+  const [rupMonth,setRupMonth]=useState(TODAY.getMonth());
+  const [rupYear,setRupYear]=useState(TODAY.getFullYear());
+  const [rupFiltroStatus,setRupFiltroStatus]=useState("todos");
+  const [rupSearch,setRupSearch]=useState("");
+  const [rupViewMode,setRupViewMode]=useState("cards");
   const [rupturaForm,setRupturaForm]=useState({solicitacao:"sem_estoque",data:"",ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
@@ -3266,10 +3271,6 @@ export default function App(){
           const lista=rupturas.filter(r=>showArqRuptura||!r.arquivado);
           const byStatus={aguardando:lista.filter(r=>r.status==="aguardando"||!r.status),aguard_aprov_dir:lista.filter(r=>r.status==="aguard_aprov_dir"),separado_suporte:lista.filter(r=>r.status==="separado_suporte"),liberado_almox:lista.filter(r=>r.status==="liberado_almox")};
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-          const [rupMonth,setRupMonth]=useState(TODAY.getMonth());
-          const [rupYear,setRupYear]=useState(TODAY.getFullYear());
-          const [rupFiltroStatus,setRupFiltroStatus]=useState("todos");
-          const [rupSearch,setRupSearch]=useState("");
           const ym=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}`;
           const diasNoMes=new Date(rupYear,rupMonth+1,0).getDate();
           const diasArr=Array.from({length:diasNoMes},(_,i)=>i+1);
@@ -3281,7 +3282,7 @@ export default function App(){
             }
             return true;
           });
-          const [viewMode,setViewMode]=useState("cards");
+          const viewMode=rupViewMode; const setViewMode=setRupViewMode;
           const slaD=(r)=>{
             if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
             if(!r.data) return null;
