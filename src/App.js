@@ -870,7 +870,9 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   const [oficinasOpen, setOficinasOpen] = useState(
     ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab)
   );
+  const [tecExtOpen,setTecExtOpen]=useState(false);
   const oficinasAtiva = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab);
+  const tecExtAtiva = ["agenda_prev","dashboard","relatorios"].includes(tab);
 
   const canSee=(tipo)=>{
     if(user.apenasAgenda) return ["agenda","dashboard"].includes(tipo);
@@ -939,8 +941,16 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 
   return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="agenda_prev" l="🗓 Agenda"/>
-      <Btn k="dashboard" l="📊 Dashboard"/>
+      {/* TÉCNICOS EXTERNOS - ACORDEÃO */}
+      <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.12)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+        <span>🚛 Técnicos Externos</span>
+        <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:tecExtOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+      </button>
+      {tecExtOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
+        <SubBtn k="agenda_prev" l="🗓 Agenda"/>
+        <SubBtn k="dashboard" l="📊 Dashboard"/>
+        <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
+      </div>}
 
       {/* OFICINAS - ACORDEÃO */}
       {canSee("oficinas")&&<>
@@ -952,8 +962,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
           </div>
         </button>
         {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-          <Btn k="relatorios" l="📋 Conf. Relatórios"/>
-      {canSee("oficina")&&<>
+          {canSee("oficina")&&<>
             <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
