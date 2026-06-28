@@ -1,6 +1,6 @@
         /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
-// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v2
+// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v3
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
@@ -943,7 +943,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {/* TÉCNICOS EXTERNOS - ACORDEÃO */}
       <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.12)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-        <span>🚛 Técnicos Externos</span>
+        <span>👷 Técnicos Externos</span>
         <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:tecExtOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
       </button>
       {tecExtOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
