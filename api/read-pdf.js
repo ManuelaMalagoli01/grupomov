@@ -55,8 +55,18 @@ export default async function handler(req, res) {
               },
               {
                 type: "text",
-                text: `Analise este relatório de assistência técnica e retorne APENAS um JSON válido (sem markdown, sem texto extra) com esta estrutura:
-{"numeroRelatorio":"","data":"","cliente":"","patrimonio":"","equipamento":"","tecnico":"","servico":"","descricao":"","pecasUsadas":[],"horasTrabalhadas":"","statusFinal":""}`,
+                text: `Analise este relatório de assistência técnica da Grupo MOV e retorne APENAS um JSON válido (sem markdown, sem texto extra) com esta estrutura exata:
+{"reportNum":"","dataAtendimento":"YYYY-MM-DD","empresa":"","cidade":"","patrimonio":"","horimetro":"","tecnico":"","tipoAtendimento":"corretivo ou preventivo","servico":"","numChamado":"","statusFinal":"Pendente Peças ou Concluído","obs":"","pecasUsadas":[{"peca":"","cod":"","quantidade":""}]}
+
+Regras:
+- dataAtendimento: formato YYYY-MM-DD, extraia do relatório
+- tipoAtendimento: use exatamente "corretivo" ou "preventivo"
+- statusFinal: use "Concluído" se o serviço foi finalizado, "Pendente Peças" se há peças pendentes
+- reportNum: número do relatório/OS se houver
+- patrimonio: número de patrimônio do equipamento
+- horimetro: leitura do horímetro se houver
+- pecasUsadas: lista de peças utilizadas no serviço
+- Se um campo não existir no documento, deixe como string vazia ""`,
               },
             ],
           },
