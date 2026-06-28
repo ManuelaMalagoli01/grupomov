@@ -39,18 +39,18 @@ const db = {
 
 
 const USERS = [
-  { id:"manuela", name:"Manuela Malagoli", role:"Administradora", password:"mov2026", canDelete:true  },
-  { id:"gustavo", name:"Gustavo Coelho", role:"Administrador", password:"mov2026", canDelete:true  },
-  { id:"renato",  name:"Renato",  role:"Assistente", password:"mov2026", canDelete:true  },
-  { id:"hebert_ofi", name:"Hebert Oficina", role:"Oficina", password:"ofi2026", canDelete:true,  apenasOficina:true },
-  { id:"matheus_ofi", name:"Matheus", role:"Oficina150", password:"mat2026", canDelete:true,  apenasOfi150:true },
-  { id:"rafael", name:"Rafael", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"helbert", name:"Helbert", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"dilson", name:"Dilson", role:"Líder Metropolitana BH", password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"anderson", name:"Anderson", role:"Líder Metropolitana BH", password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"bruno", name:"Bruno", role:"Líder Centro Oeste", password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"pedro_pimentel", name:"Pedro Pimentel", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda150:true },
-  { id:"pedro_souza_v", name:"Pedro Souza", role:"Técnico", password:"mov2026", canDelete:true, apenasAgenda150:true },
+  { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
+  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
+  { id:"renato",       username:"renato.tecnico",    name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
+  { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
+  { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
+  { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"helbert",      username:"helbert.tecnico",   name:"Helbert",          role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"dilson",       username:"dilson.tecnico",    name:"Dilson",           role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"anderson",     username:"anderson.tecnico",  name:"Anderson",         role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"bruno",        username:"bruno.tecnico",     name:"Bruno",            role:"Líder Centro Oeste",      password:"mov2026", canDelete:true, apenasAgenda:true },
+  { id:"pedro_pimentel",username:"pedro.tecnico",   name:"Pedro Pimentel",   role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda150:true },
+  { id:"pedro_souza_v", username:"pedro_souza.tecnico", name:"Pedro Souza",  role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda150:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
@@ -221,29 +221,29 @@ const SlaBadge=({days})=>{if(days===null||days===undefined)return<span style={{c
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
 function LoginScreen({onLogin, users=USERS}){
   const list = users&&users.length?users:USERS;
-  const [user,setUser]=useState(list[0]?.id||"manuela");
+  const [username,setUsername]=useState("");
   const [pass,setPass]=useState("");
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
+  const usernameRef=useRef();
   const handle=()=>{
+    if(!username.trim()){setErr("Informe seu usuário.");return;}
     setLoading(true);
     setTimeout(()=>{
-      const u=list.find(x=>x.id===user&&x.password===pass)||USERS.find(x=>x.id===user&&x.password===pass);
+      const u=list.find(x=>(x.username||x.id)===username.trim().toLowerCase()&&x.password===pass)
+               ||USERS.find(x=>(x.username||x.id)===username.trim().toLowerCase()&&x.password===pass);
       if(u)onLogin(u);
-      else{setErr("Senha incorreta. Tente novamente.");setLoading(false);}
+      else{setErr("Usuário ou senha incorretos.");setLoading(false);}
     },400);
   };
   return(
     <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-      {/* Elementos decorativos */}
       <div style={{position:"fixed",top:-100,right:-100,width:400,height:400,background:"radial-gradient(circle,rgba(245,194,0,.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",bottom:-100,left:-100,width:300,height:300,background:"radial-gradient(circle,rgba(245,194,0,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
 
       <div style={{background:"#FFF",borderRadius:20,padding:48,width:"100%",maxWidth:420,boxShadow:"0 32px 80px rgba(0,0,0,.5)",position:"relative",overflow:"hidden"}}>
-        {/* Faixa amarela topo */}
         <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"#F5C200"}}/>
 
-        {/* Logo e título */}
         <div style={{textAlign:"center",marginBottom:36}}>
           <div style={{width:80,height:80,borderRadius:16,background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",boxShadow:"0 8px 24px rgba(0,0,0,.2)"}}>
             <img src={LOGO_MOV} alt="Grupo MOV" style={{height:52,width:"auto"}}/>
@@ -252,16 +252,13 @@ function LoginScreen({onLogin, users=USERS}){
           <div style={{fontSize:12,color:"#AAA",marginTop:4,letterSpacing:.5}}>Sistema de Gestão de Manutenção</div>
         </div>
 
-        {/* Campos */}
         <div style={{marginBottom:16}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Usuário</label>
-          <select value={user} onChange={e=>{setUser(e.target.value);setErr("");}} style={{width:"100%",padding:"12px 14px",fontSize:13,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA"}}>
-            {list.map(u=><option key={u.id} value={u.id}>{u.name} — {u.role}</option>)}
-          </select>
+          <input ref={usernameRef} type="text" value={username} autoComplete="username" onChange={e=>{setUsername(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="nome.cargo" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA",boxSizing:"border-box"}}/>
         </div>
         <div style={{marginBottom:24}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Senha</label>
-          <input type="password" value={pass} onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA"}}/>
+          <input type="password" value={pass} autoComplete="current-password" onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA",boxSizing:"border-box"}}/>
         </div>
 
         {err&&<div style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#C62828",marginBottom:16,fontWeight:600}}>⚠️ {err}</div>}
