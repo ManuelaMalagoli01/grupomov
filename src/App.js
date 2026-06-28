@@ -1058,6 +1058,16 @@ export default function App(){
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
+  // ── Filtros de pesquisa por aba ──
+  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState("");
+  const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState("");
+  const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
+  const [saiSearch,setSaiSearch]=useState(""); const [saiFrom,setSaiFrom]=useState(""); const [saiTo,setSaiTo]=useState(""); const [saiMes,setSaiMes]=useState(""); const [saiAno,setSaiAno]=useState("");
+  const [finSearch,setFinSearch]=useState(""); const [finFrom,setFinFrom]=useState(""); const [finTo,setFinTo]=useState(""); const [finMes,setFinMes]=useState(""); const [finAno,setFinAno]=useState("");
+  const [froSearch,setFroSearch]=useState(""); const [froFrom,setFroFrom]=useState(""); const [froTo,setFroTo]=useState(""); const [froMes,setFroMes]=useState(""); const [froAno,setFroAno]=useState("");
+  const [rhSearch,setRhSearch]=useState(""); const [rhFrom,setRhFrom]=useState(""); const [rhTo,setRhTo]=useState(""); const [rhMes,setRhMes]=useState(""); const [rhAno,setRhAno]=useState("");
+  const [uberSearch,setUberSearch]=useState(""); const [uberFrom,setUberFrom]=useState(""); const [uberTo,setUberTo]=useState(""); const [uberMes,setUberMes]=useState(""); const [uberAno,setUberAno]=useState("");
+  const [sasSearch,setSasSearch]=useState(""); const [sasFrom,setSasFrom]=useState(""); const [sasTo,setSasTo]=useState(""); const [sasMes,setSasMes]=useState(""); const [sasAno,setSasAno]=useState("");
   const [showArqReq,setShowArqReq]=useState(false);
   const [uberPedidos,setUberPedidos]=useState([]);
   const [showArqUber,setShowArqUber]=useState(false);
@@ -2228,6 +2238,15 @@ export default function App(){
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
+          const applyFilter=(r,d=r.date||"")=>{
+            if(muSearch){const q=muSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.numMauUso||"").toLowerCase().includes(q)||(r.chamado||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)))return false;}
+            if(muFrom&&d<muFrom)return false;
+            if(muTo&&d>muTo)return false;
+            if(muMes&&!d.slice(5,7).startsWith(muMes))return false;
+            if(muAno&&!d.startsWith(muAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>⚠️ Mau Uso</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -2245,9 +2264,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⚠️</div><div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div><div style={{fontSize:13,marginTop:6}}>Clique em "+ Novo Processo"</div></div>):(
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={muSearch} onChange={e=>setMuSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, chamado..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={muFrom} onChange={e=>setMuFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={muTo} onChange={e=>setMuTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={muMes} onChange={e=>setMuMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={muAno} onChange={e=>setMuAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(muSearch||muFrom||muTo||muMes||muAno)}&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⚠️</div><div style={{fontSize:15,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(p=>{
+                {listaFil.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
@@ -2293,6 +2320,15 @@ export default function App(){
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
           const aprov=lista.filter(p=>p.aprovado==="sim").length;
+          const applyFilter=(r,d=r.date||"")=>{
+            if(afSearch){const q=afSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.aprovadoPor||"").toLowerCase().includes(q)))return false;}
+            if(afFrom&&d<afFrom)return false;
+            if(afTo&&d>afTo)return false;
+            if(afMes&&!d.slice(5,7).startsWith(afMes))return false;
+            if(afAno&&!d.startsWith(afAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
@@ -2315,9 +2351,17 @@ export default function App(){
               <div style={{fontSize:24}}>💵</div>
               <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
             </div>}
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💰</div><div style={{fontSize:15,fontWeight:600}}>Nenhum processo cadastrado</div></div>):(
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, OV..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={afMes} onChange={e=>setAfMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={afAno} onChange={e=>setAfAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(afSearch||afFrom||afTo||afMes||afAno)}&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💰</div><div style={{fontSize:15,fontWeight:600}}>{afSearch||afFrom||afTo||afMes||afAno?"Nenhum resultado":"Nenhum processo"}</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(p=>{
+                {listaFil.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
@@ -2854,6 +2898,15 @@ export default function App(){
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
           const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const applyFilter=(r,d=r.data||"")=>{
+            if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
+            if(uberFrom&&d<uberFrom)return false;
+            if(uberTo&&d>uberTo)return false;
+            if(uberMes&&!d.slice(5,7).startsWith(uberMes))return false;
+            if(uberAno&&!d.startsWith(uberAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚗 Uber / Transporte</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} pedido(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -2871,9 +2924,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚗</div><div style={{fontSize:15,fontWeight:600}}>Nenhum pedido</div></div>):(
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={uberSearch} onChange={e=>setUberSearch(e.target.value)} placeholder="Buscar solicitante, empresa, motivo..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={uberFrom} onChange={e=>setUberFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={uberTo} onChange={e=>setUberTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={uberMes} onChange={e=>setUberMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={uberAno} onChange={e=>setUberAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(uberSearch||uberFrom||uberTo||uberMes||uberAno)}&&<button onClick={()=>{setUberSearch('');setUberFrom('');setUberTo('');setUberMes('');setUberAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚗</div><div style={{fontSize:15,fontWeight:600}}>Nenhum pedido</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(p=>{
+                {listaFil.map(p=>{
                   const ok=p.status==="concluido";
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":"#E67E00"}`,padding:0,overflow:"hidden",opacity:p.arquivado?0.55:1}}>
                     <div style={{padding:"11px 14px",background:ok?"#F0FFF5":"#FFF8F0",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -3774,6 +3835,15 @@ export default function App(){
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
           const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const applyFilter=(r,d=r.dataSolicitacao||"")=>{
+            if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
+            if(sasFrom&&d<sasFrom)return false;
+            if(sasTo&&d>sasTo)return false;
+            if(sasMes&&!d.slice(5,7).startsWith(sasMes))return false;
+            if(sasAno&&!d.startsWith(sasAno))return false;
+            return true;
+          };
+          const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3791,9 +3861,17 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={sasSearch} onChange={e=>setSasSearch(e.target.value)} placeholder="Buscar cliente, equipamento, NF, relatório..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={sasFrom} onChange={e=>setSasFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={sasTo} onChange={e=>setSasTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+              <select value={sasMes} onChange={e=>setSasMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={sasAno} onChange={e=>setSasAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(sasSearch||sasFrom||sasTo||sasMes||sasAno)}&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>
+            </div>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {lista.map(s=>{
+                {listaFil.map(s=>{
                   const serv=SERV[s.servico||"outros"]||SERV.outros;
                   const ok=s.status==="concluido";
                   const pend=s.status==="pendente"||!s.status;
