@@ -11,7 +11,7 @@ const db = {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
         headers: {"apikey": SUPA_KEY}
       });
-      if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
+      if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
       const rows = await res.json();
       return Array.isArray(rows) ? rows.map(r => r.data) : [];
     } catch(e) { console.error("DB get error:", e); return []; }
@@ -23,7 +23,7 @@ const db = {
         headers: {"apikey": SUPA_KEY, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
         body: JSON.stringify({id, data})
       });
-      if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
+      if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
     } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); }
   },
   async delete(table, id) {
@@ -3156,12 +3156,8 @@ export default function App(){
             if(r.status==="separado_suporte"||r.status==="liberado_almox") return null;
             return diffDaysNow(r.data);
           };
-          const SlaDias=({r})=>{
-            const d=sla(r);
-            if(d===null) return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅ Finalizado</span>;
-            const c=d>10?"#C62828":d>5?"#E67E00":"#1A7A3C";
-            return <span style={{fontSize:11,fontWeight:700,color:c,background:c+"22",borderRadius:20,padding:"2px 8px"}}>{d}d</span>;
-          };
+          const slaColor=(d)=>d>10?"#C62828":d>5?"#E67E00":"#1A7A3C";
+          const slaCell=(r)=>{const d=sla(r);if(d===null)return <span style={{fontSize:10,color:"#1A7A3C",fontWeight:700}}>✅ Finalizado</span>;const c=slaColor(d);return <span style={{fontSize:11,fontWeight:700,color:c,background:c+"22",borderRadius:20,padding:"2px 8px"}}>{d}d</span>;};
           const salvar=()=>{
             if(!form.peca){alert("Informe a peça.");return;}
             if(editRuptura){
@@ -3177,12 +3173,7 @@ export default function App(){
           const abrirEditar=(r)=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0],dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);};
           const stCfg=(v)=>STATUS_OPTS.find(s=>s.v===v)||STATUS_OPTS[0];
           const solLabel=(v)=>SOLICITACAO_OPTS.find(s=>s.v===v)?.l||v;
-          const F=({label,field,type="text",placeholder=""})=>(
-            <div style={{display:"flex",flexDirection:"column",gap:3}}>
-              <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{label}</label>
-              <input type={type} value={form[field]||""} onChange={e=>setForm(p=>({...p,[field]:e.target.value}))} placeholder={placeholder} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/>
-            </div>
-          );
+
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               {/* Modal */}
@@ -3329,7 +3320,7 @@ export default function App(){
                               <td style={{fontSize:11}}>{r.pat||"—"}</td>
                               <td style={{fontSize:11}}>{r.empresa||"—"}</td>
                               <td style={{fontSize:11}}>{r.tecnico||"—"}</td>
-                              <td><SlaDias r={r}/></td>
+                              <td>{slaCell(r)}</td>
                               <td>
                                 <select value={r.status||"aguardando"} onChange={e=>updateRuptura(r.id,{status:e.target.value,dataLiberacao:e.target.value==="liberado_almox"&&!r.dataLiberacao?TODAY_STR:r.dataLiberacao})} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"none",color:st.c,background:st.bg}}>
                                   {STATUS_OPTS.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
