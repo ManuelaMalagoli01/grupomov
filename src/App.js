@@ -4122,25 +4122,136 @@ export default function App(){
               </div>
             </div>
 
-            {/* Gráficos */}
-            <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr",gap:14,marginBottom:20}}>
+            {/* ── ROW 1: Evolução linha + Donut status ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
               <div className="card" style={{padding:18}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução de Valores por Mês</div>
-                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
+                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="line" data={{
+                  labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
+                  datasets:[
+                    {label:"Mau Uso",data:meses.map(m=>allMU.filter(p=>getMes(p.date)===m).length),borderColor:"#C62828",backgroundColor:"#C6282818",fill:true,tension:.4,pointRadius:5,pointBackgroundColor:"#C62828"},
+                    {label:"A Faturar",data:meses.map(m=>allAF.filter(p=>getMes(p.date)===m).length),borderColor:"#1565C0",backgroundColor:"#1565C018",fill:true,tension:.4,pointRadius:5,pointBackgroundColor:"#1565C0"},
+                  ]
+                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}}} height={180}/>}
               </div>
-              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:10}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5}}>🏆 Top Empresas por Valor</div>
-                {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
-                  <div key={i} style={{display:"flex",flexDirection:"column",gap:4}}>
+              <div className="card" style={{padding:18}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🍕 Status dos Processos</div>
+                <ChartCanvas type="doughnut" data={{
+                  labels:["Pendente","Em Andamento","Concluído"],
+                  datasets:[{data:[
+                    [...allMU,...allAF].filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length,
+                    [...allMU,...allAF].filter(p=>p.processoStatus==="em_andamento").length,
+                    [...allMU,...allAF].filter(p=>p.processoStatus==="concluido").length,
+                  ],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:6}]
+                }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}}}} height={180}/>
+              </div>
+            </div>
+
+            {/* ── ROW 2: Evolução valores + Top empresas ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
+              <div className="card" style={{padding:18}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>💵 Evolução de Valores por Mês</div>
+                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
+              </div>
+              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Empresas por Valor</div>
+                {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.slice(0,8).map(([emp,val],i)=>(
+                  <div key={i} style={{display:"flex",flexDirection:"column",gap:3}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:12,fontWeight:700,color:"#333"}}>{emp}</span>
-                      <span style={{fontSize:12,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:"#333",maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {emp}</span>
+                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
                     </div>
-                    <div style={{background:"#F0F0F0",borderRadius:4,height:6}}>
-                      <div style={{background:`hsl(${200+i*30},70%,40%)`,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .5s"}}/>
+                    <div style={{background:"#F0F0F0",borderRadius:4,height:5}}>
+                      <div style={{background:`hsl(${210+i*15},70%,${45-i*3}%)`,height:5,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* ── ROW 3: Funil aprovação + Termômetro meta + Mapa calor ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
+              {/* Funil */}
+              <div className="card" style={{padding:18}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:14}}>🔽 Funil de Aprovação</div>
+                {(()=>{
+                  const funnelSteps=[
+                    {l:"Em Aberto",v:[...allMU,...allAF].length,c:"#1565C0"},
+                    {l:"Aguard. Retorno",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_retorno"||!p.aprovCliente).length,c:"#E67E00"},
+                    {l:"Em Negociação",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="em_negociacao").length,c:"#8E44AD"},
+                    {l:"Aprovado",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length,c:"#1A7A3C"},
+                    {l:"Faturado",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").length,c:"#6A1B9A"},
+                  ];
+                  const max=funnelSteps[0].v||1;
+                  return(<div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {funnelSteps.map((s,i)=>(
+                      <div key={i} style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
+                        <div style={{width:`${Math.max(30,100-i*12)}%`,background:s.c,borderRadius:6,padding:"6px 10px",textAlign:"center",transition:"width .5s"}}>
+                          <div style={{fontSize:10,fontWeight:700,color:"#FFF",opacity:.9}}>{s.l}</div>
+                          <div style={{fontSize:16,fontWeight:900,color:"#FFF"}}>{s.v}</div>
+                        </div>
+                        {i<funnelSteps.length-1&&<div style={{fontSize:14,color:"#CCC"}}>▼</div>}
+                      </div>
+                    ))}
+                  </div>);
+                })()}
+              </div>
+
+              {/* Termômetro de meta */}
+              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5}}>🎯 Meta de Recebimento</div>
+                {(()=>{
+                  const meta=50000;
+                  const recebido=valFaturado;
+                  const pct=Math.min(100,(recebido/meta)*100);
+                  const cor=pct>=100?"#1A7A3C":pct>=60?"#E67E00":"#C62828";
+                  return(<>
+                    <div style={{textAlign:"center"}}>
+                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Faturado vs Meta</div>
+                      <div style={{fontSize:28,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
+                      <div style={{fontSize:12,color:"#888"}}>{fmtR(recebido)} de {fmtR(meta)}</div>
+                    </div>
+                    {/* Gauge visual */}
+                    <div style={{position:"relative",height:120,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <svg viewBox="0 0 200 110" style={{width:"100%",maxWidth:200}}>
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F0F0F0" strokeWidth="16" strokeLinecap="round"/>
+                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={cor} strokeWidth="16" strokeLinecap="round"
+                          strokeDasharray={`${(pct/100)*251.2} 251.2`} style={{transition:"stroke-dasharray .8s ease"}}/>
+                        <text x="100" y="95" textAnchor="middle" fontSize="13" fontWeight="800" fill={cor}>{fmtR(recebido)}</text>
+                        <text x="20" y="115" textAnchor="middle" fontSize="9" fill="#AAA">R$0</text>
+                        <text x="180" y="115" textAnchor="middle" fontSize="9" fill="#AAA">{fmtR(meta)}</text>
+                      </svg>
+                    </div>
+                    <div style={{background:cor+"18",borderRadius:8,padding:"8px 12px",textAlign:"center",border:`1px solid ${cor}33`}}>
+                      <div style={{fontSize:10,fontWeight:700,color:cor}}>{pct>=100?"🎉 Meta atingida!":pct>=60?"⚡ Em bom caminho":"🔴 Abaixo da meta"}</div>
+                      <div style={{fontSize:11,color:"#888",marginTop:2}}>Falta {fmtR(Math.max(0,meta-recebido))}</div>
+                    </div>
+                  </>);
+                })()}
+              </div>
+
+              {/* Mapa de calor por dia da semana */}
+              <div className="card" style={{padding:18}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
+                {(()=>{
+                  const dias=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+                  const counts=Array(7).fill(0);
+                  [...allMU,...allAF].forEach(p=>{if(p.date){const d=new Date(p.date);if(!isNaN(d))counts[d.getDay()]++;}});
+                  const maxCount=Math.max(...counts,1);
+                  return(<div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {dias.map((dia,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:11,fontWeight:600,color:"#555",width:28,textAlign:"right"}}>{dia}</span>
+                        <div style={{flex:1,background:"#F0F0F0",borderRadius:6,height:22,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:6,background:counts[i]>0?`hsl(${200+i*20},70%,${50-Math.floor((counts[i]/maxCount)*20)}%)`:"transparent",width:`${(counts[i]/maxCount)*100}%`,transition:"width .5s",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                            {counts[i]>0&&<span style={{fontSize:10,fontWeight:700,color:"#FFF"}}>{counts[i]}</span>}
+                          </div>
+                        </div>
+                        <span style={{fontSize:10,color:"#AAA",width:20,textAlign:"right"}}>{counts[i]}</span>
+                      </div>
+                    ))}
+                  </div>);
+                })()}
               </div>
             </div>
 
