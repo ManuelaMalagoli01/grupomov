@@ -1601,7 +1601,7 @@ export default function App(){
                   }}/>
                 </label>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={()=>setModalRel(true)}>+ Novo Relatório</BtnY>
+                <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
               </div>
             </div>
             {/* KPIs */}
