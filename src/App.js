@@ -63,7 +63,7 @@ const REGIONS = {
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
-const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Matheus","Lucio","Davi","Pedro Souza","Pedro Pimentel","Reginaldo"];
+const OFICINA_TECHS = ["Hebert","Eduardo","João","André","Junio","Lucio","Davi","Reginaldo"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
@@ -1156,8 +1156,8 @@ export default function App(){
   const [aponNovaData,setAponNovaData]=useState(TODAY_STR);
   const [aponNovaOS,setAponNovaOS]=useState("");
   const [aponNovaPat,setAponNovaPat]=useState("");
-  const [aponNovaTech,setAponNovaTech]=useState("");
-  const [aponNovaServ,setAponNovaServ]=useState("");
+  const [aponNovaTech,setAponNovaTech]=useState(OFICINA_TECHS[0]||"Hebert");
+  const [aponNovaServ,setAponNovaServ]=useState(SERVICOS_OFICINA[0]||"Mecânica");
   const [aponNovaInicio,setAponNovaInicio]=useState("");
   const [aponNovaTermino,setAponNovaTermino]=useState("");
   const [aponNovaRel,setAponNovaRel]=useState("");
@@ -1171,8 +1171,8 @@ export default function App(){
   const [apon150NovaData,setApon150NovaData]=useState(TODAY_STR);
   const [apon150NovaOS,setApon150NovaOS]=useState("");
   const [apon150NovaPat,setApon150NovaPat]=useState("");
-  const [apon150NovaTech,setApon150NovaTech]=useState("");
-  const [apon150NovaServ,setApon150NovaServ]=useState("");
+  const [apon150NovaTech,setApon150NovaTech]=useState(OFICINA_150_TECHS[0]||"Matheus");
+  const [apon150NovaServ,setApon150NovaServ]=useState(SERVICOS_OFICINA[0]||"Mecânica");
   const [apon150NovaInicio,setApon150NovaInicio]=useState("");
   const [apon150NovaTermino,setApon150NovaTermino]=useState("");
   const [apon150NovaRel,setApon150NovaRel]=useState("");
@@ -1682,109 +1682,88 @@ export default function App(){
         })()}
 
         {tab==="apontamentos_oficina"&&(()=>{
-          const lista=apontamentos.filter(a=>showArqApon||!a.arquivado).filter(a=>{
+          const lista=apontamentos.filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
             if(ofiNovaFrom&&(a.data||"")<ofiNovaFrom)return false;
             if(ofiNovaTo&&(a.data||"")>ofiNovaTo)return false;
             if(ofiNovaOS&&!(a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
-            if(ofiNovaPat&&!(a.patrimonio||"").toLowerCase().includes(ofiNovaPat.toLowerCase()))return false;
             if(ofiNovaTech!=="todos"&&a.tecnico!==ofiNovaTech)return false;
             if(ofiNovaServ!=="todos"&&a.servico!==ofiNovaServ)return false;
             return true;
           }).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
           const totalMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
-          // Form de inserção
           const inserir=()=>{
             const total=calcHoras(aponNovaInicio,aponNovaTermino);
-            const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,oficina:novaOficina,relatorio:aponNovaRel,obs:aponNovaObs,arquivado:false};
-            setApontamentos(p=>[...p,row]);
-            db.save("apontamentos_oficina",row.id,row);
-            setAponNovaOS("");setAponNovaPat("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaRel("");setAponNovaObs("");
+            const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,oficina:"1340",obs:aponNovaObs,arquivado:false};
+            setApontamentos(p=>[...p,row]);db.save("apontamentos_oficina",row.id,row);
+            setAponNovaOS("");setAponNovaPat("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");
             notify("✅ Apontamento salvo!");
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
-              <div>
-                <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📝 Apontamentos Oficina 1340</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C47D00",fontWeight:700}}>⏱ {totalStr}</span></div>
-              </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqApon?"#1A1A1A":"#FFF",color:showArqApon?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"oficina",label:"Oficina"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
-              </div>
-            </div>
-
-            {/* Formulário de inserção */}
-            <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #F5C200"}}>
-              <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>➕ Novo Apontamento</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"flex-end"}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:90}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:100}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>setAponNovaTech(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Serviço</label><select value={aponNovaServ} onChange={e=>setAponNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Início</label><input type="time" value={aponNovaInicio} onChange={e=>setAponNovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Término</label><input type="time" value={aponNovaTermino} onChange={e=>setAponNovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                {(aponNovaInicio&&aponNovaTermino)&&<div style={{display:"flex",flexDirection:"column",gap:4,justifyContent:"flex-end"}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Total</label><span style={{fontSize:13,fontWeight:800,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"7px 10px"}}>{calcHoras(aponNovaInicio,aponNovaTermino)}</span></div>}
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Relatório</label><input type="text" value={aponNovaRel} onChange={e=>setAponNovaRel(e.target.value)} placeholder="REL-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:90}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Observação</label><input type="text" value={aponNovaObs} onChange={e=>setAponNovaObs(e.target.value)} placeholder="Obs..." style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:"100%"}}/></div>
-                <BtnY onClick={inserir} style={{alignSelf:"flex-end"}}>Salvar</BtnY>
-              </div>
-            </div>
-
-            {/* Filtros */}
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"7px 10px 7px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofiNovaFrom} onChange={e=>setOfiNovaFrom(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofiNovaTo} onChange={e=>setOfiNovaTo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-              {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
-
-            {/* Tabela */}
-            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Nenhum apontamento</div>):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div style={{overflowX:"auto"}}>
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                    <thead><tr style={{background:"#F8F9FA",borderBottom:"2px solid #E0E0E0"}}>
-                      {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Oficina","Relatório","Observação","Reg. por",""].map((h,i)=>(
-                        <th key={i} style={{padding:"10px 8px",textAlign:"left",fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
-                      ))}
-                    </tr></thead>
-                    <tbody>
-                      {lista.map((a,idx)=>{
-                        const corServ=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Funilaria:"#8E44AD",Outros:"#888"})[a.servico]||"#555";
-                        return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.5:1}}>
-                          <td style={{padding:"8px",whiteSpace:"nowrap",fontWeight:600,color:"#333"}}>{a.data||"—"}</td>
-                          <td style={{padding:"8px",fontWeight:700,color:"#1565C0"}}>{a.os||"—"}</td>
-                          <td style={{padding:"8px",fontSize:12}}>{a.patrimonio||"—"}</td>
-                          <td style={{padding:"8px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                          <td style={{padding:"8px"}}><span style={{fontSize:11,fontWeight:700,color:corServ,background:corServ+"15",borderRadius:12,padding:"2px 8px"}}>{a.servico||"—"}</span></td>
-                          <td style={{padding:"8px",fontSize:12,color:"#555"}}>{a.inicio||"—"}</td>
-                          <td style={{padding:"8px",fontSize:12,color:"#555"}}>{a.termino||"—"}</td>
-                          <td style={{padding:"8px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:800,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"3px 8px"}}>{a.total||"—"}</span></td>
-                          <td style={{padding:"8px",fontSize:12}}>{a.oficina||"—"}</td>
-                          <td style={{padding:"8px",fontSize:12,color:"#1A7A3C",fontWeight:600}}>{a.relatorio||"—"}</td>
-                          <td style={{padding:"8px",fontSize:11,color:"#888",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
-                          <td style={{padding:"8px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                          <td style={{padding:"8px",whiteSpace:"nowrap"}}>
-                            <div style={{display:"flex",gap:4}}>
-                              <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
-                              <button onClick={()=>{if(window.confirm("Excluir?"))delApon(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
-                            </div>
-                          </td>
-                        </tr>);
-                      })}
-                    </tbody>
-                    <tfoot><tr style={{background:"#F8F9FA",borderTop:"2px solid #E0E0E0"}}>
-                      <td colSpan={7} style={{padding:"10px 8px",fontSize:12,fontWeight:700,color:"#555"}}>{lista.length} registro(s)</td>
-                      <td style={{padding:"10px 8px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
-                      <td colSpan={5}/>
-                    </tr></tfoot>
-                  </table>
+            <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
+              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
+                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
               </div>
+              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>setAponNovaTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Serviço</label><select value={aponNovaServ} onChange={e=>setAponNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={aponNovaInicio} onChange={e=>setAponNovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={aponNovaTermino} onChange={e=>setAponNovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                {(aponNovaInicio&&aponNovaTermino)&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Total</label><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFF",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"7px 10px"}}>{calcHoras(aponNovaInicio,aponNovaTermino)}</span></div>}
+                <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Obs</label><input type="text" value={aponNovaObs} onChange={e=>setAponNovaObs(e.target.value)} placeholder="Observação..." style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
+                <BtnY onClick={inserir}>Salvar</BtnY>
+              </div>
+              <div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofiNovaFrom} onChange={e=>setOfiNovaFrom(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofiNovaTo} onChange={e=>setOfiNovaTo(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
+                <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Preencha o formulário acima e clique em Salvar</div>):(
+              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse"}}>
+                  <thead><tr style={{background:"#1A1A1A"}}>
+                    {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Reg. por",""].map((h,i)=>(
+                      <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {lista.map((a,idx)=>{
+                      const cor=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Pintura:"#8E44AD","Pequenos Reparos":"#1A7A3C",Soldagem:"#546E7A",Usinagem:"#37474F",Carregador:"#00838F",Outros:"#888"})[a.servico]||"#555";
+                      return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
+                        <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{a.data||"—"}</td>
+                        <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
+                        <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
+                        <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
+                        <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
+                        <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))delApon(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                        </div></td>
+                      </tr>);
+                    })}
+                  </tbody>
+                  <tfoot><tr style={{background:"#1A1A1A"}}>
+                    <td colSpan={7} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
+                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
+                    <td colSpan={3}/>
+                  </tr></tfoot>
+                </table></div></div>
             )}
           </div>);
         })()}
@@ -4258,99 +4237,88 @@ export default function App(){
 
         {/* ── APONTAMENTOS OFICINA 150 ── */}
         {tab==="apontamentos_150"&&(()=>{
-          const lista=apontamentos150.filter(a=>showArqApon150||!a.arquivado).filter(a=>{
+          const lista=apontamentos150.filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
             if(ofi150From&&(a.data||"")<ofi150From)return false;
             if(ofi150To&&(a.data||"")>ofi150To)return false;
+            if(ofi150OS&&!(a.os||"").toLowerCase().includes(ofi150OS.toLowerCase()))return false;
+            if(ofi150Tech!=="todos"&&a.tecnico!==ofi150Tech)return false;
+            if(ofi150Serv!=="todos"&&a.servico!==ofi150Serv)return false;
             return true;
           }).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
           const totalMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
           const inserir=()=>{
             const total=calcHoras(apon150NovaInicio,apon150NovaTermino);
-            const row={id:`AP150${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:apon150NovaData,os:apon150NovaOS,patrimonio:apon150NovaPat,tecnico:apon150NovaTech,servico:apon150NovaServ,inicio:apon150NovaInicio,termino:apon150NovaTermino,total,oficina:"150",relatorio:apon150NovaRel,obs:apon150NovaObs,arquivado:false};
-            setApontamentos150(p=>[...p,row]);
-            db.save("apontamentos_150",row.id,row);
-            setApon150NovaOS("");setApon150NovaPat("");setApon150NovaInicio("");setApon150NovaTermino("");setApon150NovaRel("");setApon150NovaObs("");
+            const row={id:`AP150${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:apon150NovaData,os:apon150NovaOS,patrimonio:apon150NovaPat,tecnico:apon150NovaTech,servico:apon150NovaServ,inicio:apon150NovaInicio,termino:apon150NovaTermino,total,oficina:"150",obs:apon150NovaObs,arquivado:false};
+            setApontamentos150(p=>[...p,row]);db.save("apontamentos_150",row.id,row);
+            setApon150NovaOS("");setApon150NovaPat("");setApon150NovaInicio("");setApon150NovaTermino("");setApon150NovaObs("");
             notify("✅ Apontamento salvo!");
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
-              <div>
-                <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📝 Apontamentos Oficina 150</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C47D00",fontWeight:700}}>⏱ {totalStr}</span></div>
-              </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqApon150?"#1A1A1A":"#FFF",color:showArqApon150?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqApon150?"Ocultar":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}])}/>
-              </div>
-            </div>
-
-            {/* Formulário */}
-            <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #F5C200"}}>
-              <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>➕ Novo Apontamento</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"flex-end"}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Data</label><input type="date" value={apon150NovaData} onChange={e=>setApon150NovaData(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>OS</label><input type="text" value={apon150NovaOS} onChange={e=>setApon150NovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:90}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>PAT</label><input type="text" value={apon150NovaPat} onChange={e=>setApon150NovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:100}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Técnico</label><select value={apon150NovaTech} onChange={e=>setApon150NovaTech(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Serviço</label><select value={apon150NovaServ} onChange={e=>setApon150NovaServ(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Início</label><input type="time" value={apon150NovaInicio} onChange={e=>setApon150NovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Término</label><input type="time" value={apon150NovaTermino} onChange={e=>setApon150NovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                {(apon150NovaInicio&&apon150NovaTermino)&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Total</label><span style={{fontSize:13,fontWeight:800,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"7px 10px"}}>{calcHoras(apon150NovaInicio,apon150NovaTermino)}</span></div>}
-                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Relatório</label><input type="text" value={apon150NovaRel} onChange={e=>setApon150NovaRel(e.target.value)} placeholder="REL-001" style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:90}}/></div>
-                <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:10,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Observação</label><input type="text" value={apon150NovaObs} onChange={e=>setApon150NovaObs(e.target.value)} placeholder="Obs..." style={{fontSize:12,padding:"7px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",width:"100%"}}/></div>
-                <BtnY onClick={inserir}>Salvar</BtnY>
-              </div>
-            </div>
-
-            {/* Filtros */}
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofi150From} onChange={e=>setOfi150From(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofi150To} onChange={e=>setOfi150To(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              {(ofi150From||ofi150To)&&<button onClick={()=>{setOfi150From("");setOfi150To("");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
-
-            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Nenhum apontamento</div>):(
-              <div className="card" style={{overflow:"hidden"}}>
-                <div style={{overflowX:"auto"}}>
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                    <thead><tr style={{background:"#F8F9FA",borderBottom:"2px solid #E0E0E0"}}>
-                      {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Relatório","Observação","Reg. por",""].map((h,i)=>(
-                        <th key={i} style={{padding:"10px 8px",textAlign:"left",fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
-                      ))}
-                    </tr></thead>
-                    <tbody>
-                      {lista.map((a,idx)=>{
-                        const corServ=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Funilaria:"#8E44AD",Outros:"#888"})[a.servico]||"#555";
-                        return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.5:1}}>
-                          <td style={{padding:"8px",whiteSpace:"nowrap",fontWeight:600,color:"#333"}}>{a.data||"—"}</td>
-                          <td style={{padding:"8px",fontWeight:700,color:"#1565C0"}}>{a.os||"—"}</td>
-                          <td style={{padding:"8px",fontSize:12}}>{a.patrimonio||"—"}</td>
-                          <td style={{padding:"8px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                          <td style={{padding:"8px"}}><span style={{fontSize:11,fontWeight:700,color:corServ,background:corServ+"15",borderRadius:12,padding:"2px 8px"}}>{a.servico||"—"}</span></td>
-                          <td style={{padding:"8px",fontSize:12,color:"#555"}}>{a.inicio||"—"}</td>
-                          <td style={{padding:"8px",fontSize:12,color:"#555"}}>{a.termino||"—"}</td>
-                          <td style={{padding:"8px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:800,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"3px 8px"}}>{a.total||"—"}</span></td>
-                          <td style={{padding:"8px",fontSize:12,color:"#1A7A3C",fontWeight:600}}>{a.relatorio||"—"}</td>
-                          <td style={{padding:"8px",fontSize:11,color:"#888",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
-                          <td style={{padding:"8px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                          <td style={{padding:"8px",whiteSpace:"nowrap"}}>
-                            <div style={{display:"flex",gap:4}}>
-                              <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
-                              <button onClick={()=>{if(window.confirm("Excluir?"))delApon150(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
-                            </div>
-                          </td>
-                        </tr>);
-                      })}
-                    </tbody>
-                    <tfoot><tr style={{background:"#F8F9FA",borderTop:"2px solid #E0E0E0"}}>
-                      <td colSpan={7} style={{padding:"10px 8px",fontSize:12,fontWeight:700,color:"#555"}}>{lista.length} registro(s)</td>
-                      <td style={{padding:"10px 8px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
-                      <td colSpan={4}/>
-                    </tr></tfoot>
-                  </table>
+            <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
+              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
+                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
               </div>
+              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={apon150NovaData} onChange={e=>setApon150NovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={apon150NovaOS} onChange={e=>setApon150NovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={apon150NovaPat} onChange={e=>setApon150NovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={apon150NovaTech} onChange={e=>setApon150NovaTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Serviço</label><select value={apon150NovaServ} onChange={e=>setApon150NovaServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={apon150NovaInicio} onChange={e=>setApon150NovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={apon150NovaTermino} onChange={e=>setApon150NovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                {(apon150NovaInicio&&apon150NovaTermino)&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Total</label><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFF",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"7px 10px"}}>{calcHoras(apon150NovaInicio,apon150NovaTermino)}</span></div>}
+                <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Obs</label><input type="text" value={apon150NovaObs} onChange={e=>setApon150NovaObs(e.target.value)} placeholder="Observação..." style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
+                <BtnY onClick={inserir}>Salvar</BtnY>
+              </div>
+              <div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofi150OS} onChange={e=>setOfi150OS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofi150From} onChange={e=>setOfi150From(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofi150To} onChange={e=>setOfi150To(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
+                <select value={ofi150Tech} onChange={e=>setOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={ofi150Serv} onChange={e=>setOfi150Serv(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+                {(ofi150From||ofi150To||ofi150OS||ofi150Tech!=="todos"||ofi150Serv!=="todos")&&<button onClick={()=>{setOfi150From("");setOfi150To("");setOfi150OS("");setOfi150Tech("todos");setOfi150Serv("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Preencha o formulário acima e clique em Salvar</div>):(
+              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse"}}>
+                  <thead><tr style={{background:"#1A1A1A"}}>
+                    {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Reg. por",""].map((h,i)=>(
+                      <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {lista.map((a,idx)=>{
+                      const cor=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Pintura:"#8E44AD","Pequenos Reparos":"#1A7A3C",Soldagem:"#546E7A",Usinagem:"#37474F",Carregador:"#00838F",Outros:"#888"})[a.servico]||"#555";
+                      return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
+                        <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{a.data||"—"}</td>
+                        <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
+                        <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
+                        <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
+                        <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
+                        <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))delApon150(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                        </div></td>
+                      </tr>);
+                    })}
+                  </tbody>
+                  <tfoot><tr style={{background:"#1A1A1A"}}>
+                    <td colSpan={7} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
+                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
+                    <td colSpan={3}/>
+                  </tr></tfoot>
+                </table></div></div>
             )}
           </div>);
         })()}
@@ -4479,8 +4447,8 @@ export default function App(){
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
           const techAtivos=OFICINA_150_TECHS.filter(t=>byTech[t].aps.length>0);
-          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
-          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_150_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_150_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_150_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_150_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_150_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_150_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
           const SERV_COLORS150=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
           const chartServ={labels:servAtivos,datasets:[
