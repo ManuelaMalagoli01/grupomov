@@ -288,7 +288,7 @@ function LoginScreen({onLogin, users=USERS}){
 }
 
 
-function ReportModal({onClose,onSave,techs=ALL_TECHS}){
+function ReportModal({onClose,onSave,techs=ALL_TECHS,initial}){
   const [mode,setMode]=useState("manual");
   const [text,setText]=useState("");
   const [analyzing,setAnalyzing]=useState(false);
@@ -1212,6 +1212,15 @@ export default function App(){
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
+  const [editReport,setEditReport]=useState(null);
+  const [finEdit,setFinEdit]=useState(null);
+  const [finModalOpen,setFinModalOpen]=useState(false);
+  const [uberEdit,setUberEdit]=useState(null);
+  const [uberModal,setUberModal]=useState(false);
+  const [sasEdit,setSasEdit]=useState(null);
+  const [sasModal,setSasModal]=useState(false);
+  const [froEdit,setFroEdit]=useState(null);
+  const [froModal,setFroModal]=useState(false);
   const [modalImport,setModalImport]=useState(false);
   const [modalMU,setModalMU]=useState(false);
   const [editMU,setEditMU]=useState(null);
@@ -1541,8 +1550,79 @@ export default function App(){
           setEditSlot(null);
         }}
         />}
-        {modalReport&&<ReportModal onClose={()=>setModalReport(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}}/>}
+        {modalReport&&<ReportModal initial={editReport} onClose={()=>{setModalReport(false);setEditReport(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editReport){setReports(p=>p.map(x=>x.id===dd.id?dd:x));db.save("relatorios",dd.id,dd);notify("✅ Atualizado!");}else{setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}setEditReport(null);setModalReport(false);}}/>}
         {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
+
+        {uberModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setUberModal(false);setUberEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{uberEdit?.id?"✏️ Editar":"🚗 Novo"} Pedido Uber</div><button onClick={()=>{setUberModal(false);setUberEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                {[["data","Data","date"],["solicitante","Solicitante","text"],["empresa","Empresa","text"],["patrimonio","PAT","text"],["relatorio","Relatório","text"],["motivo","Motivo","text"],["valor","Valor","text"],["endereco","Endereço","text"],["obs","Obs","text"]].map(([k,l,t])=>(
+                  <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={uberEdit?.[k]||""} onChange={e=>setUberEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                ))}
+                <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                  <BtnG onClick={()=>{setUberModal(false);setUberEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={()=>{const d=uberEdit;if(!d?.solicitante){alert("Informe o solicitante.");return;}if(d.id){updateUber(d.id,d);}else{const row={...d,id:`UBR${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),status:"pendente",arquivado:false};setUberPedidos(p=>[row,...p]);db.save("uber",row.id,row);}notify("✅ Salvo!");setUberModal(false);setUberEdit(null);}}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {finModalOpen&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFinModalOpen(false);setFinEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{finEdit?.id?"✏️ Editar":"💳 Novo"} Lançamento Financeiro</div><button onClick={()=>{setFinModalOpen(false);setFinEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                {[["data","Data","date"],["ticket","Ticket","text"],["atendimento","Atendimento","text"],["patrimonio","PAT","text"],["valor","Valor","text"],["obs","Obs","text"]].map(([k,l,t])=>(
+                  <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={finEdit?.[k]||""} onChange={e=>setFinEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                ))}
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Tipo</label><select value={finEdit?.solicitacao||"combustivel"} onChange={e=>setFinEdit(p=>({...p,solicitacao:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="combustivel">⛽ Combustível</option><option value="alimentacao">🍽️ Alimentação</option><option value="viagem">✈️ Viagem</option><option value="outros">📦 Outros</option></select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label><select value={finEdit?.tecnico||ALL_TECHS[0]} onChange={e=>setFinEdit(p=>({...p,tecnico:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Situação</label><select value={finEdit?.situacao||"pendente"} onChange={e=>setFinEdit(p=>({...p,situacao:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="pendente">⏳ Pendente</option><option value="pago">✅ Pago</option></select></div>
+                <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                  <BtnG onClick={()=>{setFinModalOpen(false);setFinEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={()=>{const d=finEdit;if(d?.id){updateFin(d.id,d);}else{const row={...d,id:`FIN${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false};setFinanceiro(p=>[row,...p]);db.save("financeiro",row.id,row);}notify("✅ Salvo!");setFinModalOpen(false);setFinEdit(null);}}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {sasModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setSasModal(false);setSasEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{sasEdit?.id?"✏️ Editar":"📄 Novo"} SAS</div><button onClick={()=>{setSasModal(false);setSasEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                {[["dataSolicitacao","Dt Solicitação","date"],["email","Email","email"],["nfNum","NF","text"],["cliente","Cliente","text"],["nome","Nome","text"],["equipamento","Equipamento","text"],["relatorioMov","Rel. MOV","text"],["valor","Valor","text"],["dataRealizacao","Dt Realização","date"],["envioFaturamento","Envio Faturamento","date"]].map(([k,l,t])=>(
+                  <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={sasEdit?.[k]||""} onChange={e=>setSasEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                ))}
+                <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                  <BtnG onClick={()=>{setSasModal(false);setSasEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={()=>{const d=sasEdit;if(!d?.cliente&&!d?.nome){alert("Informe o cliente.");return;}if(d?.id){updateSas(d.id,d);}else{const row={...d,id:`SAS${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),status:"pendente",arquivado:false};setSas(p=>[row,...p]);db.save("sas",row.id,row);}notify("✅ Salvo!");setSasModal(false);setSasEdit(null);}}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {froModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFroModal(false);setFroEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{froEdit?.id?"✏️ Editar":"🚜 Nova"} Pendência Frota</div><button onClick={()=>{setFroModal(false);setFroEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                {[["dataEnvio","Data Envio","date"],["rel","Relatório","text"],["empresa","Empresa","text"],["pat","PAT","text"],["nf","NF","text"],["novoPat","Novo PAT","text"],["relEntrega","Rel. Entrega","text"]].map(([k,l,t])=>(
+                  <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={froEdit?.[k]||""} onChange={e=>setFroEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                ))}
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Tipo</label><select value={froEdit?.patTipo||"bateria"} onChange={e=>setFroEdit(p=>({...p,patTipo:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="bateria">🔋 Bateria</option><option value="carregador">🔌 Carregador</option><option value="estrado">🟫 Estrado</option><option value="maquina">🏗️ Máquina</option></select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label><select value={froEdit?.tecnico||ALL_TECHS[0]} onChange={e=>setFroEdit(p=>({...p,tecnico:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Resolvido</label><select value={froEdit?.resolvido||"nao"} onChange={e=>setFroEdit(p=>({...p,resolvido:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="nao">⏳ Não</option><option value="sim">✅ Sim</option></select></div>
+                <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+                  <BtnG onClick={()=>{setFroModal(false);setFroEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={()=>{const d=froEdit;if(!d?.empresa){alert("Informe a empresa.");return;}if(d?.id){froCrud.update(d.id,d);}else{froCrud.add({...d,arquivado:false});}notify("✅ Salvo!");setFroModal(false);setFroEdit(null);}}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
@@ -1639,6 +1719,7 @@ export default function App(){
                       </div>
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:6,color:"#E67E00",cursor:"pointer",padding:"4px 7px",fontSize:13,fontWeight:700}}>+📦</button>
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.processoStatus==="arquivado"?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -1752,6 +1833,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>{setAponNovaData(a.data||TODAY_STR);setAponNovaOS(a.os||"");setAponNovaPat(a.patrimonio||"");setAponNovaTech(a.tecnico||OFICINA_TECHS[0]);setAponNovaServ(a.servico||SERVICOS_OFICINA[0]);setAponNovaInicio(a.inicio||"");setAponNovaTermino(a.termino||"");setAponNovaObs(a.obs||"");delApon(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 7px",fontSize:13}}>✏️</button>
                           <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir?"))delApon(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
                         </div></td>
@@ -2531,6 +2613,7 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Qtd · PAT</div><div style={{fontSize:12,fontWeight:700}}>{e.quant||"—"} {e.centroResultado&&<span style={{color:"#888",fontWeight:400,fontSize:10}}>· {e.centroResultado}</span>}</div></div>
                         <div style={{background:atrasado?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Retorno</div><div style={{fontSize:12,fontWeight:700,color:atrasado?"#C62828":"#333"}}>{e.dataRetorno||"—"}</div></div>
                         {e.relatorioAplicado&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório Aplicado</div><div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{e.relatorioAplicado}{e.dataAplicacao&&<span style={{fontSize:10,color:"#888",fontWeight:400}}> · {e.dataAplicacao}</span>}</div></div>}
+                        {e.retornoAlmox&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🔁 Retorno ao Almox</div><div style={{fontSize:12,fontWeight:700,color:"#1565C0"}}>{e.retornoAlmox}{e.dataRetorno&&<span style={{fontSize:10,color:"#888",fontWeight:400}}> · {e.dataRetorno}</span>}</div></div>}
                       </div>
                       {e.observacao&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {e.observacao}</div>}
                       <select value={e.situacao||"Pendente"} onChange={ev=>updateEmp(e.id,{situacao:ev.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${sc.c}44`,color:sc.c,background:sc.bg,fontWeight:700,cursor:"pointer"}}>
@@ -2600,7 +2683,8 @@ export default function App(){
                         {isRuptura&&slaRuptura!==null&&<span style={{fontSize:10,fontWeight:700,color:slaRuptura>5?"#C62828":"#E67E00",background:"#FFF0F0",borderRadius:20,padding:"2px 8px"}}>⏱ {slaRuptura}d</span>}
                       </div>
                       <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{const row={...s};setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);const nr={...row,id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`};setSaidaEntrada(p=>[nr,...p]);db.save("saida_entrada",nr.id,nr);}} title="Duplicar p/ editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                      <button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
@@ -3012,7 +3096,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"uber_grupomov",[{key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"endereco",label:"Endereço"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
-                <BtnY onClick={addUber}>+ Novo Pedido</BtnY>
+                <BtnY onClick={()=>{setUberEdit({data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:""});setUberModal(true);}}>+ Novo Pedido</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
@@ -3041,6 +3125,7 @@ export default function App(){
                         <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="cancelado">❌ Cancelado</option>
                       </select>
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setUberEdit(p);setUberModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -3088,7 +3173,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFin?"#1A1A1A":"#FFF",color:showArqFin?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFin?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"PAT"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Dt Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Vl Reembolso"}])}/>
-                <BtnY onClick={addFin}>+ Novo Lançamento</BtnY>
+                <BtnY onClick={()=>{setFinEdit({data:TODAY_STR,ticket:"",solicitacao:"combustivel",tecnico:ALL_TECHS[0],atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",obs:""});setFinModalOpen(true);}}>+ Novo Lançamento</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
@@ -3122,6 +3207,7 @@ export default function App(){
                         <select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:pago?"#1A7A3C":"#C62828",background:pago?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select>
                       </div>
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setFinEdit(f);setFinModalOpen(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{f.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -3168,7 +3254,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFro?"#1A1A1A":"#FFF",color:showArqFro?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFro?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"pendencias_frota",[{key:"dataEnvio",label:"Dt Envio"},{key:"rel",label:"REL"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"pat",label:"PAT"},{key:"patTipo",label:"Tipo"},{key:"resolvido",label:"Resolvido"},{key:"novoPat",label:"Novo PAT"},{key:"nf",label:"NF"},{key:"relEntrega",label:"Rel Entrega"}])}/>
-                <BtnY onClick={()=>froCrud.add({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",data:"",nf:"",relEntrega:""})}>+ Nova Pendência</BtnY>
+                <BtnY onClick={()=>{setFroEdit({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",nf:"",relEntrega:""});setFroModal(true);}}>+ Nova Pendência</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
@@ -3199,6 +3285,7 @@ export default function App(){
                         <select value={r.resolvido||"nao"} onChange={e=>froCrud.update(r.id,{resolvido:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#C62828",background:ok?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="sim">✅ Resolvido</option><option value="nao">⏳ Pendente</option></select>
                       </div>
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setFroEdit({...r});setFroModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>froCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -3307,6 +3394,7 @@ export default function App(){
                         {Object.entries(STS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                       </select>
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{const cp={...r,id:`RH${Date.now()}`,arquivado:false};rhCrud.del(r.id);rhCrud.add(cp);notify("✏️ Aberto para edição");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -4000,7 +4088,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"sas_grupomov",[{key:"dataSolicitacao",label:"Dt Solic."},{key:"email",label:"Email"},{key:"nfNum",label:"NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Dt Realiz."},{key:"relatorioMov",label:"Rel MOV"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
-                <BtnY onClick={addSas}>+ Novo SAS</BtnY>
+                <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
@@ -4034,6 +4122,7 @@ export default function App(){
                         </select>
                       </div>
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
@@ -4307,6 +4396,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>{setApon150NovaData(a.data||TODAY_STR);setApon150NovaOS(a.os||"");setApon150NovaPat(a.patrimonio||"");setApon150NovaTech(a.tecnico||OFICINA_150_TECHS[0]);setApon150NovaServ(a.servico||SERVICOS_OFICINA[0]);setApon150NovaInicio(a.inicio||"");setApon150NovaTermino(a.termino||"");setApon150NovaObs(a.obs||"");delApon150(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 7px",fontSize:13}}>✏️</button>
                           <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir?"))delApon150(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
                         </div></td>
