@@ -79,6 +79,14 @@ const CARRO_STATUS = {
   oficina:           {l:"Oficina",           c:"#E67E00",bg:"#FFF8F0"},
   liberado:          {l:"Liberado",          c:"#1A7A3C",bg:"#F0FFF5"},
 };
+const APROV_STATUS={
+  aguardando_retorno:{l:"⏳ Aguardando Retorno",c:"#E67E00",bg:"#FFF8F0"},
+  em_negociacao:{l:"🤝 Em Negociação",c:"#1565C0",bg:"#EFF6FF"},
+  aprovado_cliente:{l:"✅ Aprovado pelo Cliente",c:"#1A7A3C",bg:"#F0FFF5"},
+  negado_cliente:{l:"❌ Negado pelo Cliente",c:"#C62828",bg:"#FFF0F0"},
+  cobrado_faturado:{l:"💰 Cobrado / Faturado",c:"#6A1B9A",bg:"#F3E5F5"},
+  encerrado_sem_cobranca:{l:"🔒 Encerrado s/ Cobrança",c:"#546E7A",bg:"#ECEFF1"},
+};
 const RUP_SOLICITACAO=[
   {v:"sem_estoque",       l:"Sem estoque no almoxarifado"},
   {v:"cadastro_compra",   l:"Solicitação de cadastro e compra"},
@@ -2448,6 +2456,12 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Valor / OV</div><div style={{fontSize:13,fontWeight:800,color:"#1A7A3C"}}>{p.valor||"—"}{p.ov&&<span style={{fontSize:10,color:"#888",fontWeight:400}}> · OV {p.ov}</span>}</div></div>
                       </div>
                       {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Status Aprovação Cliente</div>
+                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,padding:"7px 10px",borderRadius:10,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
+                          {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
+                        </select>
+                      </div>
                       <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
                         <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
                       </select>
@@ -2535,6 +2549,12 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço Exec.</div><select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:700,color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",border:"none",background:"transparent",outline:"none",cursor:"pointer",padding:0}}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
                       </div>
                       {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Status Aprovação Cliente</div>
+                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateAF(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,padding:"7px 10px",borderRadius:10,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
+                          {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
+                        </select>
+                      </div>
                       <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
                         <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
                       </select>
@@ -3919,154 +3939,141 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const mu=processosMU||[];
-          const af=processosAF||[];
+          const allMU=processosMU.filter(p=>p.processoStatus!=="arquivado");
+          const allAF=processosAF.filter(p=>p.processoStatus!=="arquivado");
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+          // Valores
+          const valMU=allMU.reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valAF=allAF.reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valTotal=valMU+valAF;
+          // Por status aprovação
+          const aprovMU_ok=allMU.filter(p=>p.aprovCliente==="aprovado_cliente");
+          const aprovAF_ok=allAF.filter(p=>p.aprovCliente==="aprovado_cliente");
+          const valAprovMU=aprovMU_ok.reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valAprovAF=aprovAF_ok.reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valAprovTotal=valAprovMU+valAprovAF;
+          const valNegado=[...allMU,...allAF].filter(p=>p.aprovCliente==="negado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valNegociacao=[...allMU,...allAF].filter(p=>p.aprovCliente==="em_negociacao").reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valFaturado=[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          // Gráfico aprovação por status
+          const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
+            label:s.l,
+            total:[...allMU,...allAF].filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
+            valor:[...allMU,...allAF].filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((acc,p)=>acc+parseVal(p.valor),0),
+            c:s.c,bg:s.bg
+          }));
+          // Evolução mensal
+          const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-          const nomesMes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-          // Evolução MU+AF por mês
-          const mesMU={};mu.forEach(p=>{const m=getMes(p.date||p.registradoEm);if(m)mesMU[m]=(mesMU[m]||0)+1;});
-          const mesAF={};af.forEach(p=>{const m=getMes(p.date||p.registradoEm);if(m)mesAF[m]=(mesAF[m]||0)+1;});
-          const allMeses=[...new Set([...Object.keys(mesMU),...Object.keys(mesAF)])].sort().slice(-6);
-          const mesesLabel=allMeses.map(m=>{const[y,mo]=m.split("-");return`${nomesMes[parseInt(mo)-1]}/${y.slice(2)}`;});
-          const chartEvolProc={labels:mesesLabel,datasets:[{label:"⚠️ Mau Uso",data:allMeses.map(m=>mesMU[m]||0),backgroundColor:"#C62828",borderRadius:4},{label:"💰 A Faturar",data:allMeses.map(m=>mesAF[m]||0),backgroundColor:"#F5C200",borderRadius:4}]};
-          // Top empresas combinadas
-          const empCount={};
-          mu.forEach(p=>{const e=p.empresa||"";if(e)empCount[e]=(empCount[e]||0)+1;});
-          af.forEach(p=>{const e=p.empresa||"";if(e)empCount[e]=(empCount[e]||0)+1;});
-          const topEmpresas=Object.entries(empCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-          // Status MU
-          const muPend=mu.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
-          const muAnd=mu.filter(p=>p.processoStatus==="em_andamento").length;
-          const muConc=mu.filter(p=>p.processoStatus==="concluido").length;
-          const muArq=mu.filter(p=>p.processoStatus==="arquivado").length;
-          // Status AF
-          const afPend=af.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
-          const afAnd=af.filter(p=>p.processoStatus==="em_andamento").length;
-          const afConc=af.filter(p=>p.processoStatus==="concluido").length;
-          // Aprovação AF
-          const afAprov=af.filter(p=>p.aprovado==="sim").length;
-          const afServExec=af.filter(p=>p.servicoExecutado==="sim").length;
-          // Valor total AF
-          const valorAF=af.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
-          const chartMuStatus={labels:["Pendente","Em Andamento","Concluído","Arquivado"],datasets:[{data:[muPend,muAnd,muConc,muArq],backgroundColor:["#C62828","#1565C0","#1A7A3C","#888"],borderWidth:0}]};
-          const chartAfStatus={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[afPend,afAnd,afConc],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
-          const chartAfAprov={labels:["Aprovado","Pendente"],datasets:[{data:[afAprov,af.length-afAprov],backgroundColor:["#1A7A3C","#E0E0E0"],borderWidth:0}]};
-          const chartEmpTop={labels:topEmpresas.map(([e])=>e),datasets:[{label:"Processos",data:topEmpresas.map(([,q])=>q),backgroundColor:topEmpresas.map((_,i)=>i%2===0?"#F5C200":"#C62828"),borderRadius:4,borderSkipped:false}]};
-          const donutOpts=(pos="bottom")=>({plugins:{legend:{position:pos,labels:{font:{size:9}}}},cutout:"60%",maintainAspectRatio:false});
-          const barOpts={plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},maintainAspectRatio:false};
-          const barOptsStack={plugins:{legend:{position:"bottom",labels:{font:{size:10}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}},maintainAspectRatio:false};
-          const KPIP=({icon,label,value,color="#1A1A1A",bg="#FFF",sub})=>(
-            <div className="card" style={{padding:"14px 18px",borderTop:`3px solid ${color}`,background:bg}}>
-              <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{icon} {label}</div>
-              <div style={{fontSize:28,fontWeight:900,color,lineHeight:1}}>{value}</div>
-              {sub&&<div style={{fontSize:10,color:"#AAA",marginTop:3}}>{sub}</div>}
+          const allProc=[...allMU.map(p=>({...p,_tipo:"mu"})),...allAF.map(p=>({...p,_tipo:"af"}))];
+          const meses=[...new Set(allProc.map(p=>getMes(p.date)).filter(Boolean))].sort().slice(-6);
+          const chartEvolData={labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[
+            {label:"Mau Uso",data:meses.map(m=>allMU.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:"#C62828",borderRadius:5,borderSkipped:false},
+            {label:"A Faturar",data:meses.map(m=>allAF.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},
+          ]};
+          const barOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+          // Top empresas por valor
+          const empValMap={};
+          allProc.forEach(p=>{if(p.empresa){empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);}});
+          const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5,marginBottom:20}}>📊 Dashboard de Processos</div>
+
+            {/* KPIs principais */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #1A1A1A",background:"#FFF"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Total Processos</div>
+                <div style={{fontSize:32,fontWeight:900,color:"#1A1A1A"}}>{allMU.length+allAF.length}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {allMU.length} · AF: {allAF.length}</div>
+              </div>
+              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #E67E00",background:"#FFF8F0"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valor Total em Aberto</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#E67E00"}}>{fmtR(valTotal)}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {fmtR(valMU)} · AF: {fmtR(valAF)}</div>
+              </div>
+              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #1A7A3C",background:"#F0FFF5"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado pelo Cliente</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#1A7A3C"}}>{fmtR(valAprovTotal)}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>{aprovMU_ok.length+aprovAF_ok.length} processo(s)</div>
+              </div>
+              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Cobrado / Faturado</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#6A1B9A"}}>{fmtR(valFaturado)}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").length} processo(s)</div>
+              </div>
             </div>
-          );
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-                <div style={{fontWeight:900,fontSize:24}}>📊 Dashboard Processos</div>
-                <span style={{fontSize:11,background:"#FFF0E0",color:"#C47D00",borderRadius:20,padding:"3px 12px",fontWeight:700}}>⚠️ Mau Uso + 💰 A Faturar</span>
-              </div>
 
-              {/* KPIs gerais */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
-                <KPIP icon="⚠️" label="Total Mau Uso" value={mu.length} color="#C62828" bg="#FFF8F8"/>
-                <KPIP icon="💰" label="Total A Faturar" value={af.length} color="#F5C200"/>
-                <KPIP icon="✅" label="AF Aprovados" value={afAprov} color="#1A7A3C" bg="#F0FFF5" sub={`de ${af.length} processos`}/>
-                <KPIP icon="🔧" label="Serviço Executado" value={afServExec} color="#1565C0" bg="#F0F4FF" sub={`de ${af.length} A Faturar`}/>
+            {/* Painel Aprovação Cliente */}
+            <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20,borderTop:"4px solid #F5C200"}}>
+              <div style={{padding:"14px 20px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:18}}>🤝</span>
+                <div><div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>Painel de Aprovação pelo Cliente</div><div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>Situação de cada processo junto ao cliente</div></div>
               </div>
-              {valorAF>0&&(
-                <div className="card" style={{padding:"14px 20px",marginBottom:16,background:"linear-gradient(90deg,#1A7A3C 0%,#2e9e57 100%)",color:"#FFF",display:"flex",alignItems:"center",gap:16}}>
-                  <div style={{fontSize:28}}>💵</div>
-                  <div>
-                    <div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:.8}}>Valor Total A Faturar</div>
-                    <div style={{fontSize:26,fontWeight:900}}>R$ {valorAF.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+              <div style={{padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                {aprovCounts.map((a,i)=>(
+                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"14px 16px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6}}>
+                    <div style={{fontSize:11,fontWeight:800,color:a.c}}>{a.label}</div>
+                    <div style={{fontSize:26,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:a.c,opacity:.8}}>{fmtR(a.valor)}</div>
+                    {/* mini barra de proporção */}
+                    <div style={{background:"rgba(0,0,0,.08)",borderRadius:4,height:4}}>
+                      <div style={{background:a.c,height:4,borderRadius:4,width:`${valTotal>0?Math.min(100,(a.valor/valTotal)*100):0}%`,transition:"width .5s"}}/>
+                    </div>
+                    <div style={{fontSize:9,color:a.c,opacity:.6,fontWeight:600}}>{valTotal>0?`${((a.valor/valTotal)*100).toFixed(0)}% do total`:"0%"}</div>
                   </div>
-                </div>
-              )}
-
-              {/* Linha 1: Evolução + Top Empresas */}
-              <div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr",gap:16,marginBottom:16}}>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Evolução por Mês</div>
-                  <div style={{height:200}}><ChartCanvas type="bar" data={chartEvolProc} options={barOptsStack} height={200}/></div>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🏢 Top Empresas</div>
-                  <div style={{height:200}}><ChartCanvas type="bar" data={chartEmpTop} options={{...barOpts,indexAxis:"y"}} height={200}/></div>
-                </div>
+                ))}
               </div>
-
-              {/* Linha 2: Status MU, Status AF, Aprovação AF */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:16}}>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#C62828",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>⚠️ Status Mau Uso</div>
-                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartMuStatus} options={donutOpts("bottom")} height={180}/></div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:10}}>
-                    {[{l:"Pendentes",v:muPend,c:"#C62828"},{l:"Em Andamento",v:muAnd,c:"#1565C0"},{l:"Concluídos",v:muConc,c:"#1A7A3C"},{l:"Arquivados",v:muArq,c:"#888"}].map((s,i)=>(
-                      <div key={i} style={{fontSize:10,color:s.c,fontWeight:700,background:"#F8F8F8",borderRadius:6,padding:"4px 8px"}}>{s.v} {s.l}</div>
-                    ))}
-                  </div>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#C47D00",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>💰 Status A Faturar</div>
-                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartAfStatus} options={donutOpts("bottom")} height={180}/></div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:10}}>
-                    {[{l:"Pendentes",v:afPend,c:"#E67E00"},{l:"Em Andamento",v:afAnd,c:"#1565C0"},{l:"Concluídos",v:afConc,c:"#1A7A3C"}].map((s,i)=>(
-                      <div key={i} style={{fontSize:10,color:s.c,fontWeight:700,background:"#F8F8F8",borderRadius:6,padding:"4px 8px"}}>{s.v} {s.l}</div>
-                    ))}
-                  </div>
-                </div>
-                <div className="card" style={{padding:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#1A7A3C",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>✅ Aprovação A Faturar</div>
-                  <div style={{height:180}}><ChartCanvas type="doughnut" data={chartAfAprov} options={donutOpts("bottom")} height={180}/></div>
-                  <div style={{marginTop:10,textAlign:"center"}}>
-                    <div style={{fontSize:22,fontWeight:900,color:"#1A7A3C"}}>{af.length>0?Math.round(afAprov/af.length*100):0}%</div>
-                    <div style={{fontSize:10,color:"#888"}}>taxa de aprovação</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Processos pendentes rápidos */}
-              {(muPend+afPend)>0&&(
-                <div className="card" style={{padding:16,borderLeft:"4px solid #E67E00"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#E67E00",marginBottom:10}}>⏳ Processos Pendentes ({muPend+afPend})</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-                    {muPend>0&&<div>
-                      <div style={{fontSize:10,fontWeight:700,color:"#C62828",marginBottom:6}}>⚠️ Mau Uso Pendentes</div>
-                      {mu.filter(p=>!p.processoStatus||p.processoStatus==="pendente").slice(0,5).map((p,i)=>(
-                        <div key={i} style={{fontSize:11,padding:"4px 0",borderBottom:"1px solid #F5F5F5",display:"flex",gap:8}}>
-                          <span style={{color:"#888"}}>{p.date||"—"}</span>
-                          <span style={{fontWeight:600}}>{p.empresa||"—"}</span>
-                          <span style={{color:"#888"}}>{p.patrimonio||""}</span>
-                        </div>
-                      ))}
-                    </div>}
-                    {afPend>0&&<div>
-                      <div style={{fontSize:10,fontWeight:700,color:"#C47D00",marginBottom:6}}>💰 A Faturar Pendentes</div>
-                      {af.filter(p=>!p.processoStatus||p.processoStatus==="pendente").slice(0,5).map((p,i)=>(
-                        <div key={i} style={{fontSize:11,padding:"4px 0",borderBottom:"1px solid #F5F5F5",display:"flex",gap:8}}>
-                          <span style={{color:"#888"}}>{p.date||"—"}</span>
-                          <span style={{fontWeight:600}}>{p.empresa||"—"}</span>
-                          <span style={{color:"#888"}}>{p.ov?"OV:"+p.ov:""}</span>
-                        </div>
-                      ))}
-                    </div>}
-                  </div>
-                </div>
-              )}
-              {mu.length===0&&af.length===0&&(
-                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
-                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
-                  Nenhum processo cadastrado ainda.
-                </div>
-              )}
             </div>
-          );
+
+            {/* Gráficos */}
+            <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr",gap:14,marginBottom:20}}>
+              <div className="card" style={{padding:18}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução de Valores por Mês</div>
+                <ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>
+              </div>
+              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:10}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5}}>🏆 Top Empresas por Valor</div>
+                {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
+                  <div key={i} style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:12,fontWeight:700,color:"#333"}}>{emp}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
+                    </div>
+                    <div style={{background:"#F0F0F0",borderRadius:4,height:6}}>
+                      <div style={{background:`hsl(${200+i*25},70%,45%)`,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .5s"}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Resumo por tipo */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              {[[allMU,"⚠️ Mau Uso","#C62828"],[allAF,"💰 A Faturar","#1565C0"]].map(([list,titulo,cor],ti)=>(
+                <div key={ti} className="card" style={{padding:0,overflow:"hidden"}}>
+                  <div style={{padding:"12px 16px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontWeight:800,fontSize:14,color:"#FFF"}}>{titulo}</div>
+                    <div style={{fontWeight:900,fontSize:16,color:"#FFF"}}>{fmtR(list.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
+                  </div>
+                  <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:6}}>
+                    {Object.entries(APROV_STATUS).map(([k,s])=>{
+                      const items=list.filter(p=>(p.aprovCliente||"aguardando_retorno")===k);
+                      if(items.length===0)return null;
+                      return(<div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 10px",background:s.bg,borderRadius:8,border:`1px solid ${s.c}22`}}>
+                        <span style={{fontSize:11,fontWeight:700,color:s.c}}>{s.l}</span>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:12,fontWeight:800,color:s.c}}>{fmtR(items.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
+                          <div style={{fontSize:9,color:"#AAA"}}>{items.length} processo(s)</div>
+                        </div>
+                      </div>);
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>);
         })()}
-
-        {/* ── SAS ── */}
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
