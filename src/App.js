@@ -41,7 +41,7 @@ const db = {
 const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
-  { id:"renato",       username:"renato.tecnico",    name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
+  { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
   { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
   { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
   { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
@@ -259,34 +259,49 @@ function LoginScreen({onLogin, users=USERS}){
     },400);
   };
   return(
-    <div style={{minHeight:"100vh",background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{position:"fixed",top:-100,right:-100,width:400,height:400,background:"radial-gradient(circle,rgba(245,194,0,.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
-      <div style={{position:"fixed",bottom:-100,left:-100,width:300,height:300,background:"radial-gradient(circle,rgba(245,194,0,.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+    <div style={{minHeight:"100vh",background:"radial-gradient(circle at 20% 20%, #2A2A2A 0%, #0D0D0D 60%)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"fixed",top:"-15%",right:"-10%",width:500,height:500,background:"radial-gradient(circle,rgba(245,194,0,.15) 0%,transparent 70%)",pointerEvents:"none",animation:"float1 8s ease-in-out infinite"}}/>
+      <div style={{position:"fixed",bottom:"-15%",left:"-10%",width:400,height:400,background:"radial-gradient(circle,rgba(245,194,0,.10) 0%,transparent 70%)",pointerEvents:"none",animation:"float2 10s ease-in-out infinite"}}/>
+      <div style={{position:"fixed",top:"40%",left:"50%",width:300,height:300,background:"radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <style>{`
+        @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
+        @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes glow{0%,100%{box-shadow:0 8px 32px rgba(245,194,0,.25)}50%{box-shadow:0 8px 48px rgba(245,194,0,.4)}}
+      `}</style>
 
-      <div style={{background:"#FFF",borderRadius:20,padding:48,width:"100%",maxWidth:420,boxShadow:"0 32px 80px rgba(0,0,0,.5)",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"#F5C200"}}/>
+      <div style={{background:"rgba(255,255,255,.97)",backdropFilter:"blur(20px)",borderRadius:24,padding:48,width:"100%",maxWidth:430,boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)",position:"relative",overflow:"hidden",animation:"slideUp .5s ease"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:5,background:"linear-gradient(90deg,#F5C200,#FFE066,#F5C200)"}}/>
 
         <div style={{textAlign:"center",marginBottom:36}}>
-          <div style={{width:80,height:80,borderRadius:16,background:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",boxShadow:"0 8px 24px rgba(0,0,0,.2)"}}>
-            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:52,width:"auto"}}/>
+          <div style={{width:84,height:84,borderRadius:20,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
+            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto"}}/>
           </div>
-          <div style={{fontSize:22,fontWeight:900,color:"#1A1A1A",letterSpacing:-.5}}>Grupo MOV</div>
-          <div style={{fontSize:12,color:"#AAA",marginTop:4,letterSpacing:.5}}>Sistema de Gestão de Manutenção</div>
+          <div style={{fontSize:24,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
+          <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
         </div>
 
-        <div style={{marginBottom:16}}>
-          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Usuário</label>
-          <input ref={usernameRef} type="text" value={username} autoComplete="username" onChange={e=>{setUsername(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="nome.cargo" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA",boxSizing:"border-box"}}/>
+        <div style={{marginBottom:18}}>
+          <label style={{display:"block",fontSize:11,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1.2,marginBottom:8}}>Usuário</label>
+          <div style={{position:"relative"}}>
+            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#BBB"}}>👤</span>
+            <input ref={usernameRef} type="text" value={username} autoComplete="username" onChange={e=>{setUsername(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="nome.cargo" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:12,border:"2px solid #EEE",background:"#FAFAFA",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#EEE";e.target.style.background="#FAFAFA";}}/>
+          </div>
         </div>
-        <div style={{marginBottom:24}}>
-          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Senha</label>
-          <input type="password" value={pass} autoComplete="current-password" onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"12px 14px",fontSize:14,borderRadius:10,border:"2px solid #F0F0F0",background:"#FAFAFA",boxSizing:"border-box"}}/>
+        <div style={{marginBottom:26}}>
+          <label style={{display:"block",fontSize:11,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1.2,marginBottom:8}}>Senha</label>
+          <div style={{position:"relative"}}>
+            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#BBB"}}>🔒</span>
+            <input type="password" value={pass} autoComplete="current-password" onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:12,border:"2px solid #EEE",background:"#FAFAFA",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#EEE";e.target.style.background="#FAFAFA";}}/>
+          </div>
         </div>
 
-        {err&&<div style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:8,padding:"10px 14px",fontSize:12,color:"#C62828",marginBottom:16,fontWeight:600}}>⚠️ {err}</div>}
+        {err&&<div style={{background:"#FFF0F0",border:"1.5px solid #FFCDD2",borderRadius:10,padding:"11px 14px",fontSize:12,color:"#C62828",marginBottom:18,fontWeight:700,display:"flex",alignItems:"center",gap:6,animation:"slideUp .3s ease"}}><span>⚠️</span>{err}</div>}
 
-        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:10,border:"none",background:loading?"#E0E0E0":"#F5C200",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .2s",boxShadow:loading?"none":"0 4px 16px rgba(245,194,0,.4)",letterSpacing:.3}}>
-          {loading?"Entrando...":"Entrar →"}
+        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"15px",borderRadius:12,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C200,#E0AD00)",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .25s",boxShadow:loading?"none":"0 6px 20px rgba(245,194,0,.45)",letterSpacing:.3}}
+          onMouseEnter={e=>{if(!loading){e.target.style.transform="translateY(-2px)";e.target.style.boxShadow="0 8px 26px rgba(245,194,0,.55)";}}}
+          onMouseLeave={e=>{e.target.style.transform="translateY(0)";e.target.style.boxShadow=loading?"none":"0 6px 20px rgba(245,194,0,.45)";}}>
+          {loading?"⏳ Entrando...":"Entrar →"}
         </button>
 
         <div style={{textAlign:"center",marginTop:24,fontSize:11,color:"#CCC"}}>Grupo MOV © {new Date().getFullYear()}</div>
