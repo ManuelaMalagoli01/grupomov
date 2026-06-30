@@ -56,9 +56,9 @@ const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
-  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Bruno"] },
+  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
   roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
-  centroOeste:  { label:"Centro-Oeste",      techs:["Marcus"] },
+  centroOeste:  { label:"Centro-Oeste",      techs:["Bruno","Marcus"] },
 };
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
