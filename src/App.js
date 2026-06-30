@@ -56,9 +56,9 @@ const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
-  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
+  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme","Bruno"] },
   roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
-  centroOeste:  { label:"Centro-Oeste",      techs:["Bruno","Marcus"] },
+  centroOeste:  { label:"Centro-Oeste",      techs:["Marcus"] },
 };
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
@@ -1284,6 +1284,7 @@ export default function App(){
   const [agEntrada,setAgEntrada]=useState("");
   const [agSaida,setAgSaida]=useState("");
   const [agRelatorio,setAgRelatorio]=useState("");
+  const [agObs,setAgObs]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
@@ -2761,8 +2762,8 @@ export default function App(){
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
             const horas=calcHoras(agEntrada,agSaida);
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:horas}]);
-            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:horas}]);
+            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");setAgObs("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -2881,6 +2882,14 @@ export default function App(){
                                         placeholder="Nº Relatório"
                                         disabled={isReadOnlyAgenda(user)}
                                         style={{width:"100%",fontSize:11,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:5,marginBottom:4,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFF"}}
+                                      />
+                                      <input
+                                        type="text"
+                                        defaultValue={s.obs||""}
+                                        onBlur={e=>updateSlot({obs:e.target.value})}
+                                        placeholder="📝 Observações..."
+                                        disabled={isReadOnlyAgenda(user)}
+                                        style={{width:"100%",fontSize:11,padding:"4px 6px",border:"1px solid #FFE8A0",borderRadius:5,marginBottom:4,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}
                                       />
                                       {/* Entrada / Saída / Soma */}
                                       <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:4}}>
