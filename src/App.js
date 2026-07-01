@@ -527,10 +527,13 @@ function ProcessoModal({onClose,onSave,tipo,initial}){
             </div>
             <div style={{marginTop:12,display:"grid",gridTemplateColumns:"1fr",gap:12}}>
               <Sel label="Aprovado?" value={form.aprovado} onChange={v=>upd("aprovado",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim — aprovado"}]}/>
-              {form.aprovado==="sim"&&<div style={{display:"grid",gridTemplateColumns:isMU?"1fr 1fr 1fr 1fr":"1fr 1fr",gap:12}}>
-                {isMU&&<Inp label="Nº Mau Uso" value={form.numMauUso} onChange={v=>upd("numMauUso",v)} placeholder="MU-001"/>}
+              {isMU&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <Inp label="💰 Valor (R$)" value={form.valor} onChange={v=>upd("valor",v)} placeholder="0,00"/>
                 <Inp label="OV" value={form.ov} onChange={v=>upd("ov",v)} placeholder="OV-001"/>
-                {isMU&&<Inp label="Valor (R$)" value={form.valor} onChange={v=>upd("valor",v)} placeholder="0,00"/>}
+              </div>}
+              {form.aprovado==="sim"&&<div style={{display:"grid",gridTemplateColumns:isMU?"1fr 1fr":"1fr 1fr",gap:12}}>
+                {isMU&&<Inp label="Nº Mau Uso" value={form.numMauUso} onChange={v=>upd("numMauUso",v)} placeholder="MU-001"/>}
+                {!isMU&&<Inp label="OV" value={form.ov} onChange={v=>upd("ov",v)} placeholder="OV-001"/>}
                 <Inp label="Aprovado por" value={form.aprovadoPor} onChange={v=>upd("aprovadoPor",v)} placeholder="Nome"/>
               </div>}
             </div>
