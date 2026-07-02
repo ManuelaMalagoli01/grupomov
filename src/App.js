@@ -1706,10 +1706,7 @@ export default function App(){
       user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
       null;
     if(allowedTabs && !allowedTabs.includes(tab)){
-      // Redirect to first allowed tab instead of showing lock screen
-      const firstTab = allowedTabs[0];
-      if(firstTab) setTimeout(()=>setTab(firstTab), 0);
-      return null;
+      return <div style={{display:"none"}} ref={el=>{if(el)setTab(allowedTabs[0]);}}/>;
     }
     return (
       <>
