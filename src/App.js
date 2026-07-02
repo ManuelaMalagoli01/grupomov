@@ -1064,14 +1064,22 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState("relatorios");
+  const [tab,setTab]=useState(()=>{
+    // If user is restricted, start on correct tab
+    try{
+      const saved=localStorage.getItem("grupomov_user");
+      if(saved){
+        const p=JSON.parse(saved);
+        const u=USERS.find(x=>x.id===p.id);
+        if(u?.acessoSas&&!u?.acessoComercial) return "sas";
+        if(u?.acessoComercial) return "mau_uso";
+      }
+    }catch(e){}
+    return "relatorios";
+  });
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
-  useEffect(()=>{
-    if(!user) return;
-    if(user.acessoSas&&!user.acessoComercial){if(tab!=="sas")setTab("sas");}
-    else if(user.acessoComercial){const allowed=user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"];if(!allowed.includes(tab))setTab("mau_uso");}
-  });
+  // Tab redirect handled at login and init
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1506,7 +1514,14 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{
+  setUser(u);
+  // Set correct initial tab for restricted users
+  if(u.acessoSas&&!u.acessoComercial) setTab("sas");
+  else if(u.acessoComercial) setTab("mau_uso");
+  try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}
+  notify(`Bem-vinda, ${u.name}!`);
+}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
