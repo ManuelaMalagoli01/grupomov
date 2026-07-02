@@ -1051,6 +1051,10 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 
 export default function App(){
   const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
+  // Limpa cache ao mudar versão — evita necessidade de limpar manualmente
+  const APP_VER="2026-07-02-v2";
+  try{if(localStorage.getItem("grupomov_ver")!==APP_VER){localStorage.removeItem("grupomov_user");localStorage.setItem("grupomov_ver",APP_VER);}}catch(e){}
+
   const [user,setUser]=useState(()=>{
     try{
       const saved=localStorage.getItem("grupomov_user");
