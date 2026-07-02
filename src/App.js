@@ -4541,16 +4541,7 @@ export default function App(){
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia <span style={{fontSize:8,fontWeight:400,color:"#BBB"}}>(+6 meses da realização)</span></div>
-                          {(()=>{
-                            const dtReal=s.dataRealizacao||s.dataSolicitacao;
-                            const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;
-                            const garVal=s.dataGarantia||(auto6m||"");
-                            const dtFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";
-                            return(<>
-                              <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtFmt}</div>
-                              <input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
-                            </>);
-                          })()}
+                          {(()=>{const dtReal=s.dataRealizacao||s.dataSolicitacao;const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;const garVal=s.dataGarantia||(auto6m||"");const dtFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";return <><div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtFmt}</div><input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/></>;})()}
                         </div>
                       </div>
 
