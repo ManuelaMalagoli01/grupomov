@@ -4685,7 +4685,8 @@ export default function App(){
           </div>);
         })()}
 
-        {/* ── CARROS ── */                {/* ── ROW 1: Quantidades ── */}
+        {/* ── CARROS ── */}
+              {/* ── ROW 1: Quantidades ── */}
                 <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📋 Quantidades</div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
                   {[{l:"Total",v:sasDashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},
