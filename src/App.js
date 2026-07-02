@@ -4545,7 +4545,6 @@ export default function App(){
                             const dtReal=s.dataRealizacao||s.dataSolicitacao;
                             const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;
                             const garVal=s.dataGarantia||(auto6m||"");
-                            if(!s.dataGarantia&&auto6m){setTimeout(()=>updateSas(s.id,{dataGarantia:auto6m}),0);}
                             const dtFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";
                             return(<>
                               <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtFmt}</div>
