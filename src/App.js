@@ -4409,7 +4409,34 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          return(<div style={{animation:"fadeIn .3s ease"}}>
+          const sasDashTotal=listaFil.length;
+          const sasDashPend=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+          const sasDashConc=listaFil.filter(s=>s.status==="concluido").length;
+          const sasDashFat=listaFil.filter(s=>s.status==="faturado").length;
+          const sasDashPago=listaFil.filter(s=>s.pago==="sim").length;
+          const sasDashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
+          const sasDashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+          const sasDashValTotal=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.valor),0);
+          const sasDashValTotalPct=sasDashValTotal*0.01;
+          const sasDashDesl=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.deslocamento),0);
+          const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);return v>0&&sasDashParseV(s.deslocamento)>v*0.01;}).length;
+          const sasDashToday=new Date();sasDashToday.setHours(0,0,0,0);
+          const sasDashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=180&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
+          const sasDashGarCrit=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=30&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
+          const sasDashTipoET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
+          const sasDashTipoME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
+          const sasDashTipoMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
+          const sasDashFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const sasDashMeses2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          const sasDashGetMes2=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+          const sasDashML=[...new Set(listaFil.map(s=>sasDashGetMes2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+          const sasDashBD={labels:sasDashML.map(m=>{const[y,mo]=m.split("-");return`${sasDashMeses2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5},{label:"Faturados",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:5}]};
+          const sasDashBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+          const sasDashDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasDashPend,sasDashConc,sasDashFat],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
+          const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
+          const sasDashCM={};listaFil.forEach(s=>{if(s.cliente)sasDashCM[s.cliente]=(sasDashCM[s.cliente]||0)+sasDashParseV(s.valor);});
+          const sasDashTC=Object.entries(sasDashCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
+                    return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
@@ -4447,126 +4474,94 @@ export default function App(){
                 </div>
               ))}
             </div>
-            {/* SAS Dashboard */}
-            {(()=>{
-              const sasDashTotal=listaFil.length;
-              const sasDashPend=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-              const sasDashConc=listaFil.filter(s=>s.status==="concluido").length;
-              const sasDashFat=listaFil.filter(s=>s.status==="faturado").length;
-              const sasDashPago=listaFil.filter(s=>s.pago==="sim").length;
-              const sasDashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
-              const sasDashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
-              const sasDashValTotal=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.valor),0);
-              const sasDashValTotalPct=sasDashValTotal*0.01;
-              const sasDashDesl=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.deslocamento),0);
-              const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);return v>0&&sasDashParseV(s.deslocamento)>v*0.01;}).length;
-              const sasDashToday=new Date();sasDashToday.setHours(0,0,0,0);
-              const sasDashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=180&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
-              const sasDashGarCrit=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=30&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
-              const sasDashTipoET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
-              const sasDashTipoME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
-              const sasDashTipoMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
-              const sasDashFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const sasDashMeses2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const sasDashGetMes2=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const sasDashML=[...new Set(listaFil.map(s=>sasDashGetMes2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const sasDashBD={labels:sasDashML.map(m=>{const[y,mo]=m.split("-");return`${sasDashMeses2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5},{label:"Faturados",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:5}]};
-              const sasDashBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const sasDashDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasDashPend,sasDashConc,sasDashFat],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
-              const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
-              const sasDashCM={};listaFil.forEach(s=>{if(s.cliente)sasDashCM[s.cliente]=(sasDashCM[s.cliente]||0)+sasDashParseV(s.valor);});
-              const sasDashTC=Object.entries(sasDashCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              return(<>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Valor Total",v:sasDashFmt(sasDashValTotal),c:"#1565C0",bg:"#EFF6FF",i:"💵"},
-                    {l:"Valor 1% (limite desl.)",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
-                    {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
-                    {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?13:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},
-                    {l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},
-                    {l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},
-                    {l:"Env. Faturamento",v:sasDashEnvFat,c:"#6A1B9A",bg:"#F3E5F5",i:"📤"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},
-                    {l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* Gráficos */}
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                    {sasDashMesesList.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBarData} options={sasDashBarOpts} height={160}/>}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+                {[{l:"Valor Total",v:sasDashFmt(sasDashValTotal),c:"#1565C0",bg:"#EFF6FF",i:"💵"},
+                  {l:"Valor 1% (limite desl.)",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
+                  {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
+                  {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
+                ].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:typeof k.v==="string"?13:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                   </div>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🍕 Status</div>
-                    <ChartCanvas type="doughnut" data={sasDashDonutStatus} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo Serviço</div>
-                    <ChartCanvas type="doughnut" data={sasDashDonutTipo} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+                {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},
+                  {l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},
+                  {l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},
+                  {l:"Env. Faturamento",v:sasDashEnvFat,c:"#6A1B9A",bg:"#F3E5F5",i:"📤"}
+                ].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                   </div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:6}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes por Valor</div>
-                    {sasDashTopCli.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTopCli.map(([cli,val],ci)=>(
-                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
-                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
-                        </div>
-                        <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
-                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTopCli[0][1]>0?(val/sasDashTopCli[0][1])*100:0}%`}}/>
-                        </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:14}}>
+                {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},
+                  {l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}
+                ].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Gráficos */}
+              <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
+                <div className="card" style={{padding:14}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
+                  {sasDashMesesList.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBarData} options={sasDashBarOpts} height={160}/>}
+                </div>
+                <div className="card" style={{padding:14}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🍕 Status</div>
+                  <ChartCanvas type="doughnut" data={sasDashDonutStatus} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo Serviço</div>
+                  <ChartCanvas type="doughnut" data={sasDashDonutTipo} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
+                </div>
+                <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes por Valor</div>
+                  {sasDashTopCli.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTopCli.map(([cli,val],ci)=>(
+                    <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
+                        <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Gráficos */}
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                    {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBD} options={sasDashBO} height={160}/>}
-                  </div>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🍕 Status</div>
-                    <ChartCanvas type="doughnut" data={sasDashDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo</div>
-                    <ChartCanvas type="doughnut" data={sasDashDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                  </div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:5}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
-                    {sasDashTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTC.map(([cli,val],ci)=>(
-                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
-                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
-                        </div>
-                        <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
-                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTC[0][1]>0?(val/sasDashTC[0][1])*100:0}%`}}/>
-                        </div>
+                      <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
+                        <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTopCli[0][1]>0?(val/sasDashTopCli[0][1])*100:0}%`}}/>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              </>);
-            })()}
+              </div>
+              {/* Gráficos */}
+              <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
+                <div className="card" style={{padding:14}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
+                  {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBD} options={sasDashBO} height={160}/>}
+                </div>
+                <div className="card" style={{padding:14}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🍕 Status</div>
+                  <ChartCanvas type="doughnut" data={sasDashDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo</div>
+                  <ChartCanvas type="doughnut" data={sasDashDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
+                </div>
+                <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:5}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
+                  {sasDashTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTC.map(([cli,val],ci)=>(
+                    <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
+                        <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
+                      </div>
+                      <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
+                        <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTC[0][1]>0?(val/sasDashTC[0][1])*100:0}%`}}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
