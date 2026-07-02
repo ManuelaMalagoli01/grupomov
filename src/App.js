@@ -1724,7 +1724,15 @@ export default function App(){
     const allowedTabs = user?.acessoSas ? ["sas"] :
       user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
       null;
-    if(allowedTabs && !allowedTabs.includes(tab)) return null;
+    if(allowedTabs && !allowedTabs.includes(tab)){
+      // Render first allowed tab content directly - no blank screen
+      const safeTab = allowedTabs[0];
+      if(safeTab !== tab) setTab(safeTab);
+      return(<div style={{padding:40,textAlign:"center",color:"#888"}}>
+        <div style={{fontSize:32,marginBottom:12}}>⏳</div>
+        <div style={{fontWeight:700}}>Carregando...</div>
+      </div>);
+    }
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
