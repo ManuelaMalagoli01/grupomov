@@ -4515,7 +4515,7 @@ export default function App(){
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                         <div>
                           <div style={{fontWeight:900,fontSize:15,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div>
-                          <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao||"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
+                          <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao?new Date(s.dataSolicitacao+'T00:00:00').toLocaleDateString('pt-BR'):"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
                         </div>
                         {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
                       </div>
@@ -4539,8 +4539,18 @@ export default function App(){
                           <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia</div>
-                          <input type="date" value={s.dataGarantia||""} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{width:"100%",fontSize:12,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia <span style={{fontSize:8,fontWeight:400,color:"#BBB"}}>(+6 meses da realização)</span></div>
+                          {(()=>{
+                            const dtReal=s.dataRealizacao||s.dataSolicitacao;
+                            const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;
+                            const garVal=s.dataGarantia||(auto6m||"");
+                            if(!s.dataGarantia&&auto6m){setTimeout(()=>updateSas(s.id,{dataGarantia:auto6m}),0);}
+                            const dtFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";
+                            return(<>
+                              <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtFmt}</div>
+                              <input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
+                            </>);
+                          })()}
                         </div>
                       </div>
 
@@ -4552,7 +4562,8 @@ export default function App(){
                         </div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📅 Data Envio</div>
-                          <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          <div style={{fontSize:12,fontWeight:600,color:"#333",marginBottom:2}}>{s.dataEnvFat?new Date(s.dataEnvFat+'T00:00:00').toLocaleDateString('pt-BR'):"—"}</div>
+                          <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
                         </div>
                         <div style={{background:pago?"#F0FFF5":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💳 Pago</div>
