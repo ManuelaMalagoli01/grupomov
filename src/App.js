@@ -4349,7 +4349,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4386,10 +4386,20 @@ export default function App(){
             </div>
             {/* ── SAS DASHBOARD ── */}
             {(()=>{
+              const parseVS=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
               const total=listaFil.length;
               const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
               const realizados=listaFil.filter(s=>s.status==="realizado").length;
               const faturados=listaFil.filter(s=>s.status==="faturado").length;
+              const pagos=listaFil.filter(s=>s.pago==="sim").length;
+              // Deslocamento
+              const deslIndevidos=listaFil.filter(s=>{const v=parseVS(s.valor);const d=parseVS(s.deslocamento);return v>0&&d>v*0.01;}).length;
+              const totalDesl=listaFil.reduce((acc,s)=>acc+parseVS(s.deslocamento),0);
+              // Garantia
+              const today=new Date();today.setHours(0,0,0,0);
+              const garAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=180;}).length;
+              const garRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
+              const envFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
               const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
               const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
               const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
@@ -4402,11 +4412,21 @@ export default function App(){
               const topCliS=Object.entries(cliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
               const donutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
               return(<>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
+                {/* KPIs Row 1 */}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:10}}>
+                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:pagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:fmtR(totalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
                     <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?13:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                      <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* KPIs Row 2 — Deslocamento + Garantia */}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+                  {[{l:"Desl. Total",v:fmtR(totalDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Desl. Indevidos",v:deslIndevidos,c:deslIndevidos>0?"#C62828":"#1A7A3C",bg:deslIndevidos>0?"#FFF0F0":"#F0FFF5",i:"⚠️"},{l:"Alerta Garantia",v:garAlert,c:garAlert>0?"#C47D00":"#1A7A3C",bg:garAlert>0?"#FFFBF0":"#F0FFF5",i:"⚠️"},{l:"Garantia Crítica",v:garRed,c:garRed>0?"#C62828":"#1A7A3C",bg:garRed>0?"#FFF0F0":"#F0FFF5",i:"🔴"},{l:"Env. Faturamento",v:envFat,c:"#1565C0",bg:"#EFF6FF",i:"📤"}].map((k,i)=>(
+                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
@@ -4431,6 +4451,70 @@ export default function App(){
                           <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
                         </select>
                       </div>
+                      {/* ── NOVOS CAMPOS ── */}
+                      {(()=>{
+                        const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
+                        const valCard=parseV(s.valor);
+                        const limite1pct=valCard*0.01;
+                        const valDesl=parseV(s.deslocamento);
+                        const deslIndevido=valCard>0&&valDesl>limite1pct;
+                        // Garantia
+                        const today=new Date();today.setHours(0,0,0,0);
+                        const dtGar=s.dataGarantia?new Date(s.dataGarantia):null;
+                        const diasGar=dtGar?Math.floor((dtGar-today)/(1000*60*60*24)):null;
+                        const garAlert=diasGar!==null&&diasGar<=180;
+                        const garRed=diasGar!==null&&diasGar<=30;
+                        const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+                        return(<>
+                          <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8,display:"flex",flexDirection:"column",gap:6}}>
+                            {/* Deslocamento */}
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                              <div style={{background:deslIndevido?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px",border:deslIndevido?"1.5px solid #C6282844":"none"}}>
+                                <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento (R$)</div>
+                                <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                                {valCard>0&&<div style={{fontSize:9,color:"#AAA",marginTop:3}}>Limite 1%: {fmtR(limite1pct)}</div>}
+                                {deslIndevido&&<div style={{fontSize:9,fontWeight:800,color:"#C62828",marginTop:2}}>⚠️ INDEVIDO — excede 1% do valor</div>}
+                              </div>
+                              <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💵 Valor 1% (limite)</div>
+                                <div style={{fontSize:12,fontWeight:800,color:valCard>0?"#1A7A3C":"#CCC"}}>{valCard>0?fmtR(limite1pct):"—"}</div>
+                              </div>
+                            </div>
+                            {/* Garantia */}
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                              <div style={{background:garRed?"#FFF0F0":garAlert?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px",border:garRed?"1.5px solid #C6282844":garAlert?"1.5px solid #F5C20044":"none"}}>
+                                <div style={{color:garRed?"#C62828":garAlert?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia</div>
+                                <input type="date" value={s.dataGarantia||""} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:garRed?"#C62828":garAlert?"#C47D00":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                                {garRed&&<div style={{fontSize:9,fontWeight:800,color:"#C62828",marginTop:2}}>🔴 Vence em {diasGar} dia(s)!</div>}
+                                {!garRed&&garAlert&&<div style={{fontSize:9,fontWeight:800,color:"#C47D00",marginTop:2}}>⚠️ Vence em {diasGar} dia(s)</div>}
+                              </div>
+                              <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💰 Valor Fim Garantia</div>
+                                <input type="text" value={s.valorGarantia||""} onChange={e=>updateSas(s.id,{valorGarantia:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                              </div>
+                            </div>
+                            {/* Faturamento + Pagamento */}
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+                              <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📤 Enviado Faturam.</div>
+                                <select value={s.processoEnvFat||"nao"} onChange={e=>updateSas(s.id,{processoEnvFat:e.target.value})} style={{fontSize:11,fontWeight:700,color:s.processoEnvFat==="sim"?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
+                              </div>
+                              <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📅 Data Envio Fat.</div>
+                                <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                              </div>
+                              <div style={{background:s.pago==="sim"?"#F0FFF5":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💳 Pago</div>
+                                <select value={s.pago||"nao"} onChange={e=>updateSas(s.id,{pago:e.target.value})} style={{fontSize:11,fontWeight:700,color:s.pago==="sim"?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
+                              </div>
+                              <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                                <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Status</div>
+                                <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0,color:ok?"#1A7A3C":pend?"#C62828":"#555"}}><option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="faturado">💰 Faturado</option><option value="arquivado">🗄️ Arquivado</option></select>
+                              </div>
+                            </div>
+                          </div>
+                        </>);
+                      })()}
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
