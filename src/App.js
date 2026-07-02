@@ -2561,7 +2561,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3194,7 +3194,7 @@ export default function App(){
           const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
-          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.data||"")=>{
             if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
             if(uberFrom&&d<uberFrom)return false;
@@ -3270,7 +3270,7 @@ export default function App(){
           const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
-          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
                     const applyFilter=(r,d=r.data||"")=>{
             if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
@@ -4041,7 +4041,7 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
           const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4377,7 +4377,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
+          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4428,7 +4428,7 @@ export default function App(){
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
-                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
+                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
                   const valCard=parseV(s.valor);
                   const limite1pct=valCard*0.01;
                   const valDesl=parseV(s.deslocamento);
