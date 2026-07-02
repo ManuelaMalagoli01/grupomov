@@ -45,6 +45,7 @@ const USERS = [
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
   { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
+  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
   { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
   { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
   { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
@@ -927,6 +928,11 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       <Btn k="sas" l="📄 SAS"/>
     </div>
   );
+  if(user.acessoSas) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <Btn k="sas" l="📄 SAS"/>
+    </div>
+  );
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -1057,6 +1063,11 @@ export default function App(){
   const [tab,setTab]=useState("relatorios");
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{
+    if(!user) return;
+    if(user.acessoSas) setTab("sas");
+    else if(user.acessoComercial) setTab("mau_uso");
+  },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1694,13 +1705,12 @@ export default function App(){
     const allowedTabs = user?.acessoSas ? ["sas"] :
       user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
       null;
-    if(allowedTabs && !allowedTabs.includes(tab)) return(
-      <div style={{textAlign:"center",padding:80,color:"#CCC"}}>
-        <div style={{fontSize:48,marginBottom:16}}>🔒</div>
-        <div style={{fontSize:18,fontWeight:700,color:"#888"}}>Acesso restrito</div>
-        <div style={{fontSize:13,marginTop:8}}>Você não tem permissão para visualizar esta aba.</div>
-      </div>
-    );
+    if(allowedTabs && !allowedTabs.includes(tab)){
+      // Redirect to first allowed tab instead of showing lock screen
+      const firstTab = allowedTabs[0];
+      if(firstTab) setTimeout(()=>setTab(firstTab), 0);
+      return null;
+    }
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
