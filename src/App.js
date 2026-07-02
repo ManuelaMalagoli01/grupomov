@@ -944,6 +944,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
       {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
@@ -1715,7 +1716,7 @@ export default function App(){
   const renderTab = () => {
     // Access guard for restricted users
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar"] : ["mau_uso","a_faturar","sas"]) :
+      user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
       user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
