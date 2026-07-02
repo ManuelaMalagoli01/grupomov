@@ -4473,10 +4473,14 @@ export default function App(){
                   const valDesl=parseV(s.deslocamento);
                   const deslIndevido=valCard>0&&valDesl>limite1pct;
                   const today2=new Date();today2.setHours(0,0,0,0);
-                  const dtGar=s.dataGarantia?new Date(s.dataGarantia):null;
+                  const dtReal=s.dataRealizacao||s.dataSolicitacao;
+                  const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;
+                  const garVal=s.dataGarantia||(auto6m||"");
+                  const dtGar=garVal?new Date(garVal+'T00:00:00'):null;
                   const diasGar=dtGar?Math.floor((dtGar-today2)/(1000*60*60*24)):null;
                   const garRed=diasGar!==null&&diasGar<=30;
                   const garYellow=diasGar!==null&&diasGar>30&&diasGar<=180;
+                  const dtGarFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";
                   const fmtR2=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
                   const pago=s.pago==="sim";
                   const enviado=s.processoEnvFat==="sim";
@@ -4541,7 +4545,8 @@ export default function App(){
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia <span style={{fontSize:8,fontWeight:400,color:"#BBB"}}>(+6 meses da realização)</span></div>
-                          {(()=>{const dtReal=s.dataRealizacao||s.dataSolicitacao;const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;const garVal=s.dataGarantia||(auto6m||"");const dtFmt=garVal?new Date(garVal+'T00:00:00').toLocaleDateString('pt-BR'):"—";return <><div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtFmt}</div><input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/></>;})()}
+                          <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtGarFmt}</div>
+                          <input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
                         </div>
                       </div>
 
