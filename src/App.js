@@ -1065,7 +1065,7 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    if(user.acessoSas) setTab("sas");
+    if(user.acessoSas&&!user.acessoComercial) setTab("sas");
     else if(user.acessoComercial) setTab("mau_uso");
   },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
