@@ -4425,6 +4425,64 @@ export default function App(){
                 </div>
               ))}
             </div>
+            {/* SAS Dashboard */}
+            {(()=>{
+              const sasDashTotal=listaFil.length;
+              const sasDashPend=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+              const sasDashConc=listaFil.filter(s=>s.status==="concluido").length;
+              const sasDashFat=listaFil.filter(s=>s.status==="faturado").length;
+              const sasDashPago=listaFil.filter(s=>s.pago==="sim").length;
+              const sasDashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
+              const sasDashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+              const sasDashValTotal=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.valor),0);
+              const sasDashValTotalPct=sasDashValTotal*0.01;
+              const sasDashDesl=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.deslocamento),0);
+              const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);return v>0&&sasDashParseV(s.deslocamento)>v*0.01;}).length;
+              const sasDashToday=new Date();sasDashToday.setHours(0,0,0,0);
+              const sasDashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=180&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
+              const sasDashGarCrit=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=30&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
+              const sasDashTipoET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
+              const sasDashTipoME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
+              const sasDashTipoMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
+              const sasDashFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              return(<>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+                  {[{l:"Valor Total",v:sasDashFmt(sasDashValTotal),c:"#1565C0",bg:"#EFF6FF",i:"💵"},
+                    {l:"Valor 1% (limite desl.)",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
+                    {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
+                    {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?13:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+                  {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},
+                    {l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},
+                    {l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},
+                    {l:"Env. Faturamento",v:sasDashEnvFat,c:"#6A1B9A",bg:"#F3E5F5",i:"📤"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:14}}>
+                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},
+                    {l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+              </>);
+            })()}
+
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
