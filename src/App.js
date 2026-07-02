@@ -4456,63 +4456,7 @@ export default function App(){
           </div>);
         })()}
 
-        {/* ── CARROS ── */
-            {/* ── SAS DASHBOARD ── */}
-            {(()=>{
-              const total=listaSas.length;
-              const pendentes=listaSas.filter(s=>s.status==="pendente"||!s.status).length;
-              const realizados=listaSas.filter(s=>s.status==="realizado").length;
-              const faturados=listaSas.filter(s=>s.status==="faturado").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
-              const totalVal=listaSas.reduce((acc,s)=>acc+parseVal(s.valor),0);
-              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const getMes=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const meses=[...new Set(listaSas.map(s=>getMes(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const chartData={labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[
-                {label:"Solicitações",data:meses.map(m=>listaSas.filter(s=>getMes(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},
-                {label:"Realizadas",data:meses.map(m=>listaSas.filter(s=>getMes(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false},
-              ]};
-              const barOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const cliMap={};
-              listaSas.forEach(s=>{if(s.cliente)cliMap[s.cliente]=(cliMap[s.cliente]||0)+parseVal(s.valor);});
-              const topCli=Object.entries(cliMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const donutData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
-              return(<>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?14:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>
-                    {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={barOpts} height={160}/>}
-                  </div>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div>
-                    <ChartCanvas type="doughnut" data={donutData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/>
-                  </div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
-                    {topCli.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCli.map(([cli,val],i)=>(
-                      <div key={i} style={{display:"flex",flexDirection:"column",gap:3}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span>
-                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
-                        </div>
-                        <div style={{background:"#F0F0F0",borderRadius:4,height:5}}>
-                          <div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCli[0][1]>0?(val/topCli[0][1])*100:0}%`,transition:"width .5s"}}/>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>);
-            })()}}
+        {/* ── CARROS ── */}
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
           const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
