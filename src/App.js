@@ -1056,6 +1056,8 @@ export default function App(){
   const [tab,setTab]=useState("relatorios");
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.acessoSas&&tab!=="sas") setTab("sas"); },[user?.id]);
+  useEffect(()=>{ if(user&&user.acessoComercial&&!user.acessoSas){const first=user.semSas?"mau_uso":"mau_uso";if(tab!==first)setTab(first);} },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
