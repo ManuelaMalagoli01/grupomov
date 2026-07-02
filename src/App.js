@@ -4512,7 +4512,7 @@ export default function App(){
               <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
                 <div className="card" style={{padding:14}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                  {sasDashMesesList.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBarData} options={sasDashBarOpts} height={160}/>}
+                  {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBarData} options={sasDashBarOpts} height={160}/>}
                 </div>
                 <div className="card" style={{padding:14}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🍕 Status</div>
