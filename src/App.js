@@ -4404,36 +4404,36 @@ export default function App(){
             </div>
             {/* ── SAS DASHBOARD ── */}
             {(()=>{
-              const parseVS=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
+              const dashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
               const total=listaFil.length;
               const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
               const realizados=listaFil.filter(s=>s.status==="realizado").length;
               const faturados=listaFil.filter(s=>s.status==="faturado").length;
-              const pagos=listaFil.filter(s=>s.pago==="sim").length;
+              const dashPagos=listaFil.filter(s=>s.pago==="sim").length;
               // Deslocamento
-              const deslIndevidos=listaFil.filter(s=>{const v=parseVS(s.valor);const d=parseVS(s.deslocamento);return v>0&&d>v*0.01;}).length;
-              const totalDesl=listaFil.reduce((acc,s)=>acc+parseVS(s.deslocamento),0);
+              const dashDeslIndevidos=listaFil.filter(s=>{const v=dashParseV(s.valor);const d=dashParseV(s.deslocamento);return v>0&&d>v*0.01;}).length;
+              const dashTotalDesl=listaFil.reduce((acc,s)=>acc+dashParseV(s.deslocamento),0);
               // Garantia
               const today=new Date();today.setHours(0,0,0,0);
-              const garAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=180;}).length;
-              const garRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
-              const envFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
+              const dashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=180;}).length;
+              const dashGarRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
+              const dashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
               const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
               const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
-              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const getMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const mesesS=[...new Set(listaFil.map(s=>getMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const chartSasData={labels:mesesS.map(m=>{const[y,mo]=m.split("-");return`${MESES_S[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
-              const barSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const cliMapS={};listaFil.forEach(s=>{if(s.cliente)cliMapS[s.cliente]=(cliMapS[s.cliente]||0)+parseVal(s.valor);});
-              const topCliS=Object.entries(cliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const donutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
-              const donutTipoData={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length,listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length,listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0,borderRadius:4}]};
+              const dashFmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const dashMesesNames=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const dashGetMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const dashMesesS=[...new Set(listaFil.map(s=>dashGetMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const dashChartSasData={labels:dashMesesS.map(m=>{const[y,mo]=m.split("-");return`${dashMesesNames[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:dashMesesS.map(m=>listaFil.filter(s=>dashGetMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:dashMesesS.map(m=>listaFil.filter(s=>dashGetMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
+              const dashBarSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const dashCliMapS={};listaFil.forEach(s=>{if(s.cliente)dashCliMapS[s.cliente]=(dashCliMapS[s.cliente]||0)+parseVal(s.valor);});
+              const dashTopCliS=Object.entries(dashCliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const dashDonutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
+              const dashDonutTipoData={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length,listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length,listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0,borderRadius:4}]};
               return(<>
                 {/* KPIs Row 1 */}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:pagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:fmtR(totalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
+                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:dashPagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:dashFmtR(totalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
                     <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
                       <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
@@ -4451,7 +4451,7 @@ export default function App(){
                 </div>
                 {/* KPIs Row 3 — Deslocamento + Garantia */}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-                  {[{l:"Desl. Total",v:fmtR(totalDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Desl. Indevidos",v:deslIndevidos,c:deslIndevidos>0?"#C62828":"#1A7A3C",bg:deslIndevidos>0?"#FFF0F0":"#F0FFF5",i:"⚠️"},{l:"Alerta Garantia",v:garAlert,c:garAlert>0?"#C47D00":"#1A7A3C",bg:garAlert>0?"#FFFBF0":"#F0FFF5",i:"⚠️"},{l:"Garantia Crítica",v:garRed,c:garRed>0?"#C62828":"#1A7A3C",bg:garRed>0?"#FFF0F0":"#F0FFF5",i:"🔴"},{l:"Env. Faturamento",v:envFat,c:"#1565C0",bg:"#EFF6FF",i:"📤"}].map((k,i)=>(
+                  {[{l:"Desl. Total",v:dashFmtR(dashTotalDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Desl. Indevidos",v:dashDeslIndevidos,c:dashDeslIndevidos>0?"#C62828":"#1A7A3C",bg:dashDeslIndevidos>0?"#FFF0F0":"#F0FFF5",i:"⚠️"},{l:"Alerta Garantia",v:dashGarAlert,c:dashGarAlert>0?"#C47D00":"#1A7A3C",bg:dashGarAlert>0?"#FFFBF0":"#F0FFF5",i:"⚠️"},{l:"Garantia Crítica",v:dashGarRed,c:dashGarRed>0?"#C62828":"#1A7A3C",bg:dashGarRed>0?"#FFF0F0":"#F0FFF5",i:"🔴"},{l:"Env. Faturamento",v:dashEnvFat,c:"#1565C0",bg:"#EFF6FF",i:"📤"}].map((k,i)=>(
                     <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
                       <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
@@ -4459,9 +4459,9 @@ export default function App(){
                   ))}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{mesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartSasData} options={barSasOpts} height={160}/>}</div>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={donutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{topCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCliS[0][1]>0?(val/topCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{dashMesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={dashChartSasData} options={dashBarSasOpts} height={160}/>}</div>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={dashDonutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{dashTopCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:dashTopCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{dashFmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${dashTopCliS[0][1]>0?(val/dashTopCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
                 </div>
               </>);
             })()}
