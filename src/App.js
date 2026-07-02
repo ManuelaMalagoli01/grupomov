@@ -4467,6 +4467,15 @@ export default function App(){
               const sasDashTipoME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
               const sasDashTipoMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
               const sasDashFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const sasDashMeses2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const sasDashGetMes2=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const sasDashML=[...new Set(listaFil.map(s=>sasDashGetMes2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const sasDashBD={labels:sasDashML.map(m=>{const[y,mo]=m.split("-");return`${sasDashMeses2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5},{label:"Faturados",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:5}]};
+              const sasDashBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const sasDashDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasDashPend,sasDashConc,sasDashFat],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
+              const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
+              const sasDashCM={};listaFil.forEach(s=>{if(s.cliente)sasDashCM[s.cliente]=(sasDashCM[s.cliente]||0)+sasDashParseV(s.valor);});
+              const sasDashTC=Object.entries(sasDashCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
               return(<>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
                   {[{l:"Valor Total",v:sasDashFmt(sasDashValTotal),c:"#1565C0",bg:"#EFF6FF",i:"💵"},
@@ -4524,6 +4533,33 @@ export default function App(){
                         </div>
                         <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
                           <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTopCli[0][1]>0?(val/sasDashTopCli[0][1])*100:0}%`}}/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Gráficos */}
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
+                    {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBD} options={sasDashBO} height={160}/>}
+                  </div>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🍕 Status</div>
+                    <ChartCanvas type="doughnut" data={sasDashDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo</div>
+                    <ChartCanvas type="doughnut" data={sasDashDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
+                  </div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:5}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
+                    {sasDashTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTC.map(([cli,val],ci)=>(
+                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
+                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
+                        </div>
+                        <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
+                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTC[0][1]>0?(val/sasDashTC[0][1])*100:0}%`}}/>
                         </div>
                       </div>
                     ))}
