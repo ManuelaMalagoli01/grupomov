@@ -42,9 +42,16 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
+  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
   { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
+  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"rafael",       username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"anderson",     username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"mov2026", canDelete:false, apenasOficina150:true },
+  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"mov2026", canDelete:false, apenasOficina:true },
   { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
   { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
   { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
@@ -937,7 +944,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
       {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
@@ -1051,10 +1057,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 
 export default function App(){
   const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
-  // Limpa cache ao mudar versão — evita necessidade de limpar manualmente
-  const APP_VER="2026-07-02-v3";
-  try{if(localStorage.getItem("grupomov_ver")!==APP_VER){localStorage.removeItem("grupomov_user");localStorage.setItem("grupomov_ver",APP_VER);}}catch(e){}
-
   const [user,setUser]=useState(()=>{
     try{
       const saved=localStorage.getItem("grupomov_user");
@@ -1064,22 +1066,14 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState(()=>{
-    // If user is restricted, start on correct tab
-    try{
-      const saved=localStorage.getItem("grupomov_user");
-      if(saved){
-        const p=JSON.parse(saved);
-        const u=USERS.find(x=>x.id===p.id);
-        if(u?.acessoSas&&!u?.acessoComercial) return "sas";
-        if(u?.acessoComercial) return "mau_uso";
-      }
-    }catch(e){}
-    return "relatorios";
-  });
+  const [tab,setTab]=useState("relatorios");
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
-  // Tab redirect handled at login and init
+  useEffect(()=>{
+    if(!user) return;
+    if(user.acessoSas&&!user.acessoComercial) setTab("sas");
+    else if(user.acessoComercial) setTab("mau_uso");
+  },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1514,14 +1508,13 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{
-  setUser(u);
-  // Set correct initial tab for restricted users
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);
   if(u.acessoSas&&!u.acessoComercial) setTab("sas");
   else if(u.acessoComercial) setTab("mau_uso");
-  try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}
-  notify(`Bem-vinda, ${u.name}!`);
-}}/>;
+  else if(u.apenasAgenda||u.apenasAgenda150) setTab("agenda_prev");
+  else if(u.apenasOficina) setTab("agenda_ofi");
+  else if(u.apenasOficina150) setTab("agenda_ofi_150");
+  try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -1721,17 +1714,17 @@ export default function App(){
 
   const renderTab = () => {
     // Access guard for restricted users
-    const allowedTabs = user?.acessoSas ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
+    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
+      user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar"] : ["mau_uso","a_faturar","sas"]) :
+      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
+      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
       null;
     if(allowedTabs && !allowedTabs.includes(tab)){
-      // Render first allowed tab content directly - no blank screen
-      const safeTab = allowedTabs[0];
-      if(safeTab !== tab) setTab(safeTab);
-      return(<div style={{padding:40,textAlign:"center",color:"#888"}}>
-        <div style={{fontSize:32,marginBottom:12}}>⏳</div>
-        <div style={{fontWeight:700}}>Carregando...</div>
-      </div>);
+      // Redirect to first allowed tab instead of showing lock screen
+      const firstTab = allowedTabs[0];
+      if(firstTab) setTimeout(()=>setTab(firstTab), 0);
+      return null;
     }
     return (
       <>
@@ -2583,7 +2576,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3216,7 +3209,7 @@ export default function App(){
           const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
-          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.data||"")=>{
             if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
             if(uberFrom&&d<uberFrom)return false;
@@ -3292,7 +3285,7 @@ export default function App(){
           const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
-          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
                     const applyFilter=(r,d=r.data||"")=>{
             if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
@@ -4063,7 +4056,7 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
           const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4399,7 +4392,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
+          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4409,35 +4402,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const sasDashTotal=listaFil.length;
-          const sasDashPend=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-          const sasDashConc=listaFil.filter(s=>s.status==="concluido").length;
-          const sasDashFat=listaFil.filter(s=>s.status==="faturado").length;
-          const sasDashPago=listaFil.filter(s=>s.pago==="sim").length;
-          const sasDashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
-          const sasDashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
-          const sasDashValTotal=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.valor),0);
-          const sasDashValTotalPct=sasDashValTotal*0.01;
-          const sasDashDesl=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.deslocamento),0);
-          const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);const lim=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?v*0.20:v*0.01;return v>0&&sasDashParseV(s.deslocamento)>lim;}).length;
-          const sasDashToday=new Date();sasDashToday.setHours(0,0,0,0);
-          const sasDashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=180&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
-          const sasDashGarCrit=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=30&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
-          const sasDashTipoET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
-          const sasDashTipoME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
-          const sasDashTipoMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
-          const sasDashFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-          const sasDashMeses2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-          const sasDashGetMes2=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-          const sasDashML=[...new Set(listaFil.map(s=>sasDashGetMes2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-          const sasDashBD={labels:sasDashML.map(m=>{const[y,mo]=m.split("-");return`${sasDashMeses2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5},{label:"Faturados",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:5}]};
-          const sasDashBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-          const sasDashDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasDashPend,sasDashConc,sasDashFat],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
-          const sasDashTipoGar=listaFil.filter(s=>s.tipoServico==="Garantia").length;
-              const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna","Garantia"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI,sasDashTipoGar],backgroundColor:["#1A7A3C","#E67E00","#1565C0","#8E44AD"],borderWidth:0}]};
-          const sasDashCM={};listaFil.forEach(s=>{if(s.cliente)sasDashCM[s.cliente]=(sasDashCM[s.cliente]||0)+sasDashParseV(s.valor);});
-          const sasDashTC=Object.entries(sasDashCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
-                    return(<div style={{animation:"fadeIn .3s ease"}}>
+          return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
@@ -4475,107 +4440,14 @@ export default function App(){
                 </div>
               ))}
             </div>
-              {/* ── ROW 1: Quantidades ── */}
-              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📋 Quantidades</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
-                {[{l:"Total",v:sasDashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:sasDashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:sasDashConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},{l:"Faturados",v:sasDashFat,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:sasDashPago,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              {/* ── ROW 2: Valores ── */}
-              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>💵 Valores (R$)</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
-                {[{l:"Valor Total Bruto",v:sasDashFmt(sasDashValTotal),c:"#1A1A1A",bg:"#FFF",i:"💵"},{l:"Valor 1% MOV",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},{l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Líquido (1%−Desl)",v:sasDashFmt(Math.max(0,sasDashValTotalPct-sasDashDesl)),c:sasDashValTotalPct>=sasDashDesl?"#1565C0":"#C62828",bg:sasDashValTotalPct>=sasDashDesl?"#EFF6FF":"#FFF0F0",i:"💧"},{l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:typeof k.v==="string"?12:22,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              {/* ── ROW 3: Manutenções por Tipo ── */}
-              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>🔧 Manutenções por Tipo</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
-                {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},{l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},{l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},{l:"Garantia",v:sasDashTipoGar,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-                {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},{l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
-                    <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-                            {/* Gráficos */}
-              <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
-                <div className="card" style={{padding:14}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                  {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBD} options={sasDashBO} height={160}/>}
-                </div>
-                <div className="card" style={{padding:14}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🍕 Status</div>
-                  <ChartCanvas type="doughnut" data={sasDashDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo Serviço</div>
-                  <ChartCanvas type="doughnut" data={sasDashDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
-                </div>
-                <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:6}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes por Valor</div>
-                  {sasDashTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTC.map(([cli,val],ci)=>(
-                    <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
-                        <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
-                      </div>
-                      <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
-                        <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTC[0][1]>0?(val/sasDashTC[0][1])*100:0}%`}}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Gráficos */}
-              <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
-                <div className="card" style={{padding:14}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                  {sasDashML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBD} options={sasDashBO} height={160}/>}
-                </div>
-                <div className="card" style={{padding:14}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🍕 Status</div>
-                  <ChartCanvas type="doughnut" data={sasDashDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo</div>
-                  <ChartCanvas type="doughnut" data={sasDashDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                </div>
-                <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:5}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
-                  {sasDashTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTC.map(([cli,val],ci)=>(
-                    <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
-                        <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
-                      </div>
-                      <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
-                        <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTC[0][1]>0?(val/sasDashTC[0][1])*100:0}%`}}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
-                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
                   const valCard=parseV(s.valor);
-                  const limite1pct=valCard*0.01;const valorLiquido=Math.max(0,limite1pct-valDesl);
+                  const limite1pct=valCard*0.01;
                   const valDesl=parseV(s.deslocamento);
-                  const limiteDesl=(tipoServ==="Entrega Técnica")?valCard*0.20:valCard*0.01;const deslIndevido=valCard>0&&valDesl>limiteDesl;
+                  const deslIndevido=valCard>0&&valDesl>limite1pct;
                   const today2=new Date();today2.setHours(0,0,0,0);
                   const dtGar=s.dataGarantia?new Date(s.dataGarantia):null;
                   const diasGar=dtGar?Math.floor((dtGar-today2)/(1000*60*60*24)):null;
@@ -4585,7 +4457,7 @@ export default function App(){
                   const pago=s.pago==="sim";
                   const enviado=s.processoEnvFat==="sim";
                   const tipoServ=s.tipoServico||"Entrega Técnica";
-                  const tipoC=tipoServ==="Manutenção Externa"?"#E67E00":tipoServ==="Manutenção Interna"?"#1565C0":tipoServ==="Garantia"?"#8E44AD":"#1A7A3C";
+                  const tipoC=tipoServ==="Manutenção Externa"?"#E67E00":tipoServ==="Manutenção Interna"?"#1565C0":"#1A7A3C";
                   return(<div key={s.id} className="card" style={{borderTop:`4px solid ${tipoC}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
                     {/* ── HEADER ── */}
                     <div style={{padding:"10px 14px",background:tipoC+"18",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -4594,7 +4466,6 @@ export default function App(){
                           <option>Entrega Técnica</option>
                           <option>Manutenção Externa</option>
                           <option>Manutenção Interna</option>
-                          <option>Garantia</option>
                         </select>
                         <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:s.status==="concluido"?"#1A7A3C":s.status==="faturado"?"#6A1B9A":s.status==="arquivado"?"#888":"#C62828",background:s.status==="concluido"?"#DCFFE4":s.status==="faturado"?"#F3E5F5":s.status==="arquivado"?"#F0F0F0":"#FFE0E0",cursor:"pointer",outline:"none"}}>
                           <option value="pendente">⏳ Pendente</option>
@@ -4622,12 +4493,7 @@ export default function App(){
                           <div style={{fontWeight:900,fontSize:15,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                           <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao||"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
                         </div>
-                        {valCard>0&&<div style={{textAlign:"right",flexShrink:0}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginBottom:1}}>💵 Bruto</div>
-                        <div style={{fontSize:16,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>
-                        <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginTop:4,marginBottom:1}}>💧 Líquido (1%−desl)</div>
-                        <div style={{fontSize:13,fontWeight:800,color:valorLiquido>0?"#1565C0":"#C62828",whiteSpace:"nowrap"}}>{fmtR2(valorLiquido)}</div>
-                      </div>}
+                        {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
                       </div>
 
                       {/* Linha 2: Equipamento + Rel. MOV */}
@@ -4635,12 +4501,6 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div>
                           <input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>👷 Técnico Responsável</div>
-                          <select value={s.tecnico||ALL_TECHS[0]} onChange={e=>updateSas(s.id,{tecnico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0,cursor:"pointer"}}>
-                            {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
-                          </select>
                         </div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Dt. Realiz.</div>
@@ -4651,7 +4511,7 @@ export default function App(){
                       {/* Linha 3: Deslocamento + Garantia */}
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                         <div style={{background:deslIndevido?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px",border:deslIndevido?"1.5px solid #C6282844":"none"}}>
-                          <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento · Limite: {valCard>0?fmtR2(limiteDesl):"—"} {tipoServ==="Entrega Técnica"?"(20%)":"(1%)"}</div>
+                          <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento · Limite: {valCard>0?fmtR2(limite1pct):"—"}</div>
                           <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
@@ -4686,62 +4546,6 @@ export default function App(){
         })()}
 
         {/* ── CARROS ── */}
-              {/* ── ROW 1: Quantidades ── */}
-                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📋 Quantidades</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"Total",v:sasDashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},
-                    {l:"Pendentes",v:sasDashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},
-                    {l:"Concluídos",v:sasDashConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},
-                    {l:"Faturados",v:sasDashFat,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},
-                    {l:"Pagos",v:sasDashPago,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* ── ROW 2: Valores ── */}
-                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>💵 Valores (R$)</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"Valor Total Bruto",v:sasDashFmt(sasDashValTotal),c:"#1A1A1A",bg:"#FFF",i:"💵"},
-                    {l:"Valor 1% MOV",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
-                    {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
-                    {l:"Líquido (1%−Desl)",v:sasDashFmt(Math.max(0,sasDashValTotalPct-sasDashDesl)),c:sasDashValTotalPct>=sasDashDesl?"#1565C0":"#C62828",bg:sasDashValTotalPct>=sasDashDesl?"#EFF6FF":"#FFF0F0",i:"💧"},
-                    {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?12:22,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* ── ROW 3: Manutenções por Tipo ── */}
-                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>🔧 Manutenções por Tipo</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},
-                    {l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},
-                    {l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},
-                    {l:"Garantia",v:sasDashTipoGar,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* Garantia Alerts */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},
-                    {l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}
-                  ].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-}
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
           const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
