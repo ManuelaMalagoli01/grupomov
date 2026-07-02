@@ -2550,7 +2550,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3183,7 +3183,7 @@ export default function App(){
           const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
-          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.data||"")=>{
             if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
             if(uberFrom&&d<uberFrom)return false;
@@ -3259,7 +3259,7 @@ export default function App(){
           const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
-          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
                     const applyFilter=(r,d=r.data||"")=>{
             if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
@@ -4030,7 +4030,7 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
           const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4366,7 +4366,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
+          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4403,7 +4403,7 @@ export default function App(){
             </div>
             {/* ── SAS DASHBOARD ── */}
             {(()=>{
-              const parseVS=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+              const parseVS=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
               const total=listaFil.length;
               const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
               const realizados=listaFil.filter(s=>s.status==="realizado").length;
@@ -4417,7 +4417,7 @@ export default function App(){
               const garAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=180;}).length;
               const garRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
               const envFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
               const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
               const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
               const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4473,9 +4473,9 @@ export default function App(){
                   const valDesl=parseV(s.deslocamento);
                   const deslIndevido=valCard>0&&valDesl>limite1pct;
                   const today2=new Date();today2.setHours(0,0,0,0);
-                  const dtReal=s.dataRealizacao||s.dataSolicitacao;
-                  const auto6m=dtReal?(()=>{const d=new Date(dtReal);d.setMonth(d.getMonth()+6);return d.toISOString().slice(0,10);})():null;
-                  const garVal=s.dataGarantia||(auto6m||"");
+                  const dtRealS=s.dataRealizacao||s.dataSolicitacao;
+                  const auto6mS=dtRealS?(new Date(new Date(dtRealS).setMonth(new Date(dtRealS).getMonth()+6))).toISOString().slice(0,10):null;
+                  const garVal=s.dataGarantia||(auto6mS||"");
                   const dtGar=garVal?new Date(garVal+'T00:00:00'):null;
                   const diasGar=dtGar?Math.floor((dtGar-today2)/(1000*60*60*24)):null;
                   const garRed=diasGar!==null&&diasGar<=30;
@@ -4516,13 +4516,12 @@ export default function App(){
                     {/* ── CORPO ── */}
                     <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       {/* Linha 1: Cliente + Valor */}
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,background:"#F8F9FA",borderRadius:10,padding:"10px 12px"}}>
-                        <div style={{flex:1}}>
-                          <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>🏢 Cliente</div>
-                          <input type="text" value={s.cliente||s.nome||""} onChange={e=>updateSas(s.id,{cliente:e.target.value,nome:e.target.value})} placeholder="Nome do cliente..." style={{width:"100%",fontWeight:900,fontSize:16,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                          <div style={{fontSize:11,color:"#888",marginTop:4}}>📅 {s.dataSolicitacao?new Date(s.dataSolicitacao+'T00:00:00').toLocaleDateString('pt-BR'):"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                        <div>
+                          <input type="text" value={s.cliente||s.nome||""} onChange={e=>updateSas(s.id,{cliente:e.target.value,nome:e.target.value})} placeholder="Nome do cliente..." style={{width:"100%",fontWeight:900,fontSize:15,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao?new Date(s.dataSolicitacao+'T00:00:00').toLocaleDateString('pt-BR'):"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
                         </div>
-                        {valCard>0&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginBottom:2}}>Valor</div><div style={{fontSize:17,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div></div>}
+                        {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
                       </div>
 
                       {/* Linha 2: Equipamento + Rel. MOV */}
@@ -4544,8 +4543,8 @@ export default function App(){
                           <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia <span style={{fontSize:8,fontWeight:400,color:"#BBB"}}>(+6 meses da realização)</span></div>
-                          <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:3}}>{dtGarFmt}</div>
+                          <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim Garantia <span style={{fontSize:8,fontWeight:400}}>(+6m)</span></div>
+                          <div style={{fontSize:13,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",marginBottom:2}}>{dtGarFmt}</div>
                           <input type="date" value={garVal} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
                         </div>
                       </div>
@@ -4558,8 +4557,7 @@ export default function App(){
                         </div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📅 Data Envio</div>
-                          <div style={{fontSize:12,fontWeight:600,color:"#333",marginBottom:2}}>{s.dataEnvFat?new Date(s.dataEnvFat+'T00:00:00').toLocaleDateString('pt-BR'):"—"}</div>
-                          <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{fontSize:10,color:"#AAA",border:"none",background:"transparent",outline:"none",padding:0,width:"100%"}}/>
+                          <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/>
                         </div>
                         <div style={{background:pago?"#F0FFF5":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💳 Pago</div>
