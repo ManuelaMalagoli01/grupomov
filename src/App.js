@@ -4419,7 +4419,7 @@ export default function App(){
               const dashGarRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
               const dashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
               const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
-              const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
+              const dashTotalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
               const dashFmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
               const dashMesesNames=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
               const dashGetMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
@@ -4433,7 +4433,7 @@ export default function App(){
               return(<>
                 {/* KPIs Row 1 */}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:dashPagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:dashFmtR(totalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
+                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:dashPagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:dashFmtR(dashTotalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
                     <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
                       <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
