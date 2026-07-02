@@ -4502,6 +4502,33 @@ export default function App(){
                     </div>
                   ))}
                 </div>
+                {/* Gráficos */}
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
+                    {sasDashMesesList.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasDashBarData} options={sasDashBarOpts} height={160}/>}
+                  </div>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🍕 Status</div>
+                    <ChartCanvas type="doughnut" data={sasDashDonutStatus} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginTop:8,marginBottom:4}}>🔧 Tipo Serviço</div>
+                    <ChartCanvas type="doughnut" data={sasDashDonutTipo} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={120}/>
+                  </div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:6}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes por Valor</div>
+                    {sasDashTopCli.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasDashTopCli.map(([cli,val],ci)=>(
+                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
+                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasDashFmt(val)}</span>
+                        </div>
+                        <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
+                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasDashTopCli[0][1]>0?(val/sasDashTopCli[0][1])*100:0}%`}}/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </>);
             })()}
 
