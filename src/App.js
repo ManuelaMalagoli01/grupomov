@@ -4419,7 +4419,7 @@ export default function App(){
           const sasDashValTotal=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.valor),0);
           const sasDashValTotalPct=sasDashValTotal*0.01;
           const sasDashDesl=listaFil.reduce((acc,s)=>acc+sasDashParseV(s.deslocamento),0);
-          const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);return v>0&&sasDashParseV(s.deslocamento)>v*0.01;}).length;
+          const sasDashDeslIndev=listaFil.filter(s=>{const v=sasDashParseV(s.valor);const lim=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?v*0.20:v*0.01;return v>0&&sasDashParseV(s.deslocamento)>lim;}).length;
           const sasDashToday=new Date();sasDashToday.setHours(0,0,0,0);
           const sasDashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=180&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
           const sasDashGarCrit=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+'T00:00:00');return Math.floor((dg-sasDashToday)/86400000)<=30&&Math.floor((dg-sasDashToday)/86400000)>=0;}).length;
@@ -4433,7 +4433,8 @@ export default function App(){
           const sasDashBD={labels:sasDashML.map(m=>{const[y,mo]=m.split("-");return`${sasDashMeses2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5},{label:"Faturados",data:sasDashML.map(m=>listaFil.filter(s=>sasDashGetMes2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:5}]};
           const sasDashBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
           const sasDashDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasDashPend,sasDashConc,sasDashFat],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
-          const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
+          const sasDashTipoGar=listaFil.filter(s=>s.tipoServico==="Garantia").length;
+              const sasDashDT={labels:["Entrega Técnica","Manut. Externa","Manut. Interna","Garantia"],datasets:[{data:[sasDashTipoET,sasDashTipoME,sasDashTipoMI,sasDashTipoGar],backgroundColor:["#1A7A3C","#E67E00","#1565C0","#8E44AD"],borderWidth:0}]};
           const sasDashCM={};listaFil.forEach(s=>{if(s.cliente)sasDashCM[s.cliente]=(sasDashCM[s.cliente]||0)+sasDashParseV(s.valor);});
           const sasDashTC=Object.entries(sasDashCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
                     return(<div style={{animation:"fadeIn .3s ease"}}>
@@ -4476,7 +4477,8 @@ export default function App(){
             </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
                 {[{l:"Valor Total",v:sasDashFmt(sasDashValTotal),c:"#1565C0",bg:"#EFF6FF",i:"💵"},
-                  {l:"Valor 1% (limite desl.)",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
+                  {l:"Valor 1% MOV",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
+                    {l:"Líquido Total (1%−desl)",v:sasDashFmt(Math.max(0,sasDashValTotalPct-sasDashDesl)),c:"#1565C0",bg:"#EFF6FF",i:"💧"},
                   {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
                   {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
                 ].map((k,ki)=>(
@@ -4568,9 +4570,9 @@ export default function App(){
                 {listaFil.map(s=>{
                   const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
                   const valCard=parseV(s.valor);
-                  const limite1pct=valCard*0.01;
+                  const limite1pct=valCard*0.01;const valorLiquido=Math.max(0,limite1pct-valDesl);
                   const valDesl=parseV(s.deslocamento);
-                  const deslIndevido=valCard>0&&valDesl>limite1pct;
+                  const limiteDesl=(tipoServ==="Entrega Técnica")?valCard*0.20:valCard*0.01;const deslIndevido=valCard>0&&valDesl>limiteDesl;
                   const today2=new Date();today2.setHours(0,0,0,0);
                   const dtGar=s.dataGarantia?new Date(s.dataGarantia):null;
                   const diasGar=dtGar?Math.floor((dtGar-today2)/(1000*60*60*24)):null;
@@ -4580,7 +4582,7 @@ export default function App(){
                   const pago=s.pago==="sim";
                   const enviado=s.processoEnvFat==="sim";
                   const tipoServ=s.tipoServico||"Entrega Técnica";
-                  const tipoC=tipoServ==="Manutenção Externa"?"#E67E00":tipoServ==="Manutenção Interna"?"#1565C0":"#1A7A3C";
+                  const tipoC=tipoServ==="Manutenção Externa"?"#E67E00":tipoServ==="Manutenção Interna"?"#1565C0":tipoServ==="Garantia"?"#8E44AD":"#1A7A3C";
                   return(<div key={s.id} className="card" style={{borderTop:`4px solid ${tipoC}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
                     {/* ── HEADER ── */}
                     <div style={{padding:"10px 14px",background:tipoC+"18",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -4589,6 +4591,7 @@ export default function App(){
                           <option>Entrega Técnica</option>
                           <option>Manutenção Externa</option>
                           <option>Manutenção Interna</option>
+                          <option>Garantia</option>
                         </select>
                         <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:s.status==="concluido"?"#1A7A3C":s.status==="faturado"?"#6A1B9A":s.status==="arquivado"?"#888":"#C62828",background:s.status==="concluido"?"#DCFFE4":s.status==="faturado"?"#F3E5F5":s.status==="arquivado"?"#F0F0F0":"#FFE0E0",cursor:"pointer",outline:"none"}}>
                           <option value="pendente">⏳ Pendente</option>
@@ -4616,7 +4619,12 @@ export default function App(){
                           <div style={{fontWeight:900,fontSize:15,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                           <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao||"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
                         </div>
-                        {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
+                        {valCard>0&&<div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginBottom:1}}>💵 Bruto</div>
+                        <div style={{fontSize:16,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>
+                        <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginTop:4,marginBottom:1}}>💧 Líquido (1%−desl)</div>
+                        <div style={{fontSize:13,fontWeight:800,color:valorLiquido>0?"#1565C0":"#C62828",whiteSpace:"nowrap"}}>{fmtR2(valorLiquido)}</div>
+                      </div>}
                       </div>
 
                       {/* Linha 2: Equipamento + Rel. MOV */}
@@ -4624,6 +4632,12 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div>
                           <input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
+                        </div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
+                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>👷 Técnico Responsável</div>
+                          <select value={s.tecnico||ALL_TECHS[0]} onChange={e=>updateSas(s.id,{tecnico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0,cursor:"pointer"}}>
+                            {ALL_TECHS.map(t=><option key={t}>{t}</option>)}
+                          </select>
                         </div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
                           <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Dt. Realiz.</div>
@@ -4634,7 +4648,7 @@ export default function App(){
                       {/* Linha 3: Deslocamento + Garantia */}
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                         <div style={{background:deslIndevido?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px",border:deslIndevido?"1.5px solid #C6282844":"none"}}>
-                          <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento · Limite: {valCard>0?fmtR2(limite1pct):"—"}</div>
+                          <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento · Limite: {valCard>0?fmtR2(limiteDesl):"—"} {tipoServ==="Entrega Técnica"?"(20%)":"(1%)"}</div>
                           <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
                         </div>
                         <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
