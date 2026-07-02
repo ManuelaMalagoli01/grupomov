@@ -680,6 +680,19 @@ const BtnImport = ({onClick}) => (
 );
 
 // Barra de exportação reutilizável
+const exportXLSX = async (data, filename, cols) => {
+  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
+  try{
+    const XLSX = await loadXLSX();
+    const rows = data.map(row=>Object.fromEntries(cols.map(c=>[c.label, row[c.key]||""])));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0,30));
+    XLSX.writeFile(wb, filename+".xlsx");
+  }catch(e){ alert("Erro ao exportar: "+e.message); }
+};
+
+// Exportar PDF simples (tabela)
 const ExportBar = ({data, filename, cols, onImport}) => {
   const [loading, setLoading] = useState(false);
   return(
@@ -705,19 +718,7 @@ const ExportBar = ({data, filename, cols, onImport}) => {
 
 
 // Exportar Excel global
-const exportXLSX = async (data, filename, cols) => {
-  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
-  try{
-    const XLSX = await loadXLSX();
-    const rows = data.map(row=>Object.fromEntries(cols.map(c=>[c.label, row[c.key]||""])));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0,30));
-    XLSX.writeFile(wb, filename+".xlsx");
-  }catch(e){ alert("Erro ao exportar: "+e.message); }
-};
 
-// Exportar PDF simples (tabela)
 const exportPDFTable = (data, filename, cols, title) => {
   if(!data||data.length===0){alert("Sem dados para exportar!");return;}
   const rows = data.map(row=>cols.map(c=>row[c.key]||"").join(" | ")).join("\n");
