@@ -4682,7 +4682,62 @@ export default function App(){
           </div>);
         })()}
 
-        {/* ── CARROS ── */}
+        {/* ── CARROS ── */                {/* ── ROW 1: Quantidades ── */}
+                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📋 Quantidades</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
+                  {[{l:"Total",v:sasDashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},
+                    {l:"Pendentes",v:sasDashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},
+                    {l:"Concluídos",v:sasDashConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},
+                    {l:"Faturados",v:sasDashFat,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},
+                    {l:"Pagos",v:sasDashPago,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* ── ROW 2: Valores ── */}
+                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>💵 Valores (R$)</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
+                  {[{l:"Valor Total Bruto",v:sasDashFmt(sasDashValTotal),c:"#1A1A1A",bg:"#FFF",i:"💵"},
+                    {l:"Valor 1% MOV",v:sasDashFmt(sasDashValTotalPct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},
+                    {l:"Desl. Total",v:sasDashFmt(sasDashDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},
+                    {l:"Líquido (1%−Desl)",v:sasDashFmt(Math.max(0,sasDashValTotalPct-sasDashDesl)),c:sasDashValTotalPct>=sasDashDesl?"#1565C0":"#C62828",bg:sasDashValTotalPct>=sasDashDesl?"#EFF6FF":"#FFF0F0",i:"💧"},
+                    {l:"Desl. Indevidos",v:sasDashDeslIndev,c:sasDashDeslIndev>0?"#C62828":"#1A7A3C",bg:sasDashDeslIndev>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?12:22,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* ── ROW 3: Manutenções por Tipo ── */}
+                <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>🔧 Manutenções por Tipo</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+                  {[{l:"Entrega Técnica",v:sasDashTipoET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},
+                    {l:"Manut. Externa",v:sasDashTipoME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},
+                    {l:"Manut. Interna",v:sasDashTipoMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},
+                    {l:"Garantia",v:sasDashTipoGar,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Garantia Alerts */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasDashGarAlert,c:sasDashGarAlert>0?"#C47D00":"#1A7A3C",bg:sasDashGarAlert>0?"#FFFBF0":"#F0FFF5"},
+                    {l:"🔴 Garantia Crítica (≤30d)",v:sasDashGarCrit,c:sasDashGarCrit>0?"#C62828":"#1A7A3C",bg:sasDashGarCrit>0?"#FFF0F0":"#F0FFF5"}
+                  ].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+}
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
           const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
