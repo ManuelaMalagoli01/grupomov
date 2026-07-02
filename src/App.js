@@ -4402,69 +4402,19 @@ export default function App(){
               <select value={sasAno} onChange={e=>setSasAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {/* ── SAS DASHBOARD ── */}
-            {(()=>{
-              const dashParseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
-              const total=listaFil.length;
-              const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-              const realizados=listaFil.filter(s=>s.status==="realizado").length;
-              const faturados=listaFil.filter(s=>s.status==="faturado").length;
-              const dashPagos=listaFil.filter(s=>s.pago==="sim").length;
-              // Deslocamento
-              const dashDeslIndevidos=listaFil.filter(s=>{const v=dashParseV(s.valor);const d=dashParseV(s.deslocamento);return v>0&&d>v*0.01;}).length;
-              const dashTotalDesl=listaFil.reduce((acc,s)=>acc+dashParseV(s.deslocamento),0);
-              // Garantia
-              const today=new Date();today.setHours(0,0,0,0);
-              const dashGarAlert=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=180;}).length;
-              const dashGarRed=listaFil.filter(s=>{if(!s.dataGarantia)return false;const d=new Date(s.dataGarantia);const dias=Math.floor((d-today)/(1000*60*60*24));return dias>=0&&dias<=30;}).length;
-              const dashEnvFat=listaFil.filter(s=>s.processoEnvFat==="sim").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
-              const dashTotalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
-              const dashFmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const dashMesesNames=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const dashGetMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const dashMesesS=[...new Set(listaFil.map(s=>dashGetMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const dashChartSasData={labels:dashMesesS.map(m=>{const[y,mo]=m.split("-");return`${dashMesesNames[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:dashMesesS.map(m=>listaFil.filter(s=>dashGetMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:dashMesesS.map(m=>listaFil.filter(s=>dashGetMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
-              const dashBarSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const dashCliMapS={};listaFil.forEach(s=>{if(s.cliente)dashCliMapS[s.cliente]=(dashCliMapS[s.cliente]||0)+parseVal(s.valor);});
-              const dashTopCliS=Object.entries(dashCliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const dashDonutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
-              const dashDonutTipoData={labels:["Entrega Técnica","Manut. Externa","Manut. Interna"],datasets:[{data:[listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length,listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length,listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length],backgroundColor:["#1A7A3C","#E67E00","#1565C0"],borderWidth:0,borderRadius:4}]};
-              return(<>
-                {/* KPIs Row 1 */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Total SAS",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:dashPagos,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"},{l:"Valor Total (1%)",v:dashFmtR(dashTotalVal*0.01),c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
+            {/* KPIs simples */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:listaFil.length,c:"#1A1A1A",bg:"#FFF",i:"📄"},
+                {l:"Pendentes",v:listaFil.filter(s=>s.status==="pendente"||!s.status).length,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},
+                {l:"Faturados",v:listaFil.filter(s=>s.status==="faturado").length,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},
+                {l:"Pagos",v:listaFil.filter(s=>s.pago==="sim").length,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}
+              ].map((k,ki)=>(
+                <div key={ki} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:26,fontWeight:900,color:k.c}}>{k.v}</div>
                 </div>
-                {/* KPIs Row 2 — Tipo Serviço */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:10}}>
-                  {[{l:"Entrega Técnica",v:listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},{l:"Manutenção Externa",v:listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},{l:"Manutenção Interna",v:listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length,c:"#1565C0",bg:"#EFF6FF",i:"🏢"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* KPIs Row 3 — Deslocamento + Garantia */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-                  {[{l:"Desl. Total",v:dashFmtR(dashTotalDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Desl. Indevidos",v:dashDeslIndevidos,c:dashDeslIndevidos>0?"#C62828":"#1A7A3C",bg:dashDeslIndevidos>0?"#FFF0F0":"#F0FFF5",i:"⚠️"},{l:"Alerta Garantia",v:dashGarAlert,c:dashGarAlert>0?"#C47D00":"#1A7A3C",bg:dashGarAlert>0?"#FFFBF0":"#F0FFF5",i:"⚠️"},{l:"Garantia Crítica",v:dashGarRed,c:dashGarRed>0?"#C62828":"#1A7A3C",bg:dashGarRed>0?"#FFF0F0":"#F0FFF5",i:"🔴"},{l:"Env. Faturamento",v:dashEnvFat,c:"#1565C0",bg:"#EFF6FF",i:"📤"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?12:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{dashMesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={dashChartSasData} options={dashBarSasOpts} height={160}/>}</div>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={dashDonutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{dashTopCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:dashTopCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{dashFmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${dashTopCliS[0][1]>0?(val/dashTopCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
-                </div>
-              </>);
-            })()}
+              ))}
+            </div>
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
