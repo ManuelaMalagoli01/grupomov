@@ -1052,7 +1052,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 export default function App(){
   const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
   // Limpa cache ao mudar versão — evita necessidade de limpar manualmente
-  const APP_VER="2026-07-02-v2";
+  const APP_VER="2026-07-02-v3";
   try{if(localStorage.getItem("grupomov_ver")!==APP_VER){localStorage.removeItem("grupomov_user");localStorage.setItem("grupomov_ver",APP_VER);}}catch(e){}
 
   const [user,setUser]=useState(()=>{
@@ -1069,9 +1069,9 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    if(user.acessoSas&&!user.acessoComercial) setTab("sas");
-    else if(user.acessoComercial) setTab("mau_uso");
-  },[user?.id]);
+    if(user.acessoSas&&!user.acessoComercial){if(tab!=="sas")setTab("sas");}
+    else if(user.acessoComercial){const allowed=user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"];if(!allowed.includes(tab))setTab("mau_uso");}
+  });
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1709,9 +1709,7 @@ export default function App(){
     const allowedTabs = user?.acessoSas ? ["sas"] :
       user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
       null;
-    if(allowedTabs && !allowedTabs.includes(tab)){
-      return <div style={{display:"none"}} ref={el=>{if(el)setTab(allowedTabs[0]);}}/>;
-    }
+    if(allowedTabs && !allowedTabs.includes(tab)) return null;
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
