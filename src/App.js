@@ -4512,12 +4512,13 @@ export default function App(){
                     {/* ── CORPO ── */}
                     <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       {/* Linha 1: Cliente + Valor */}
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
-                        <div>
-                          <div style={{fontWeight:900,fontSize:15,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div>
-                          <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao?new Date(s.dataSolicitacao+'T00:00:00').toLocaleDateString('pt-BR'):"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,background:"#F8F9FA",borderRadius:10,padding:"10px 12px"}}>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>🏢 Cliente</div>
+                          <input type="text" value={s.cliente||s.nome||""} onChange={e=>updateSas(s.id,{cliente:e.target.value,nome:e.target.value})} placeholder="Nome do cliente..." style={{width:"100%",fontWeight:900,fontSize:16,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                          <div style={{fontSize:11,color:"#888",marginTop:4}}>📅 {s.dataSolicitacao?new Date(s.dataSolicitacao+'T00:00:00').toLocaleDateString('pt-BR'):"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
                         </div>
-                        {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
+                        {valCard>0&&<div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase",marginBottom:2}}>Valor</div><div style={{fontSize:17,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div></div>}
                       </div>
 
                       {/* Linha 2: Equipamento + Rel. MOV */}
