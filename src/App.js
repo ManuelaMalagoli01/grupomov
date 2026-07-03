@@ -279,7 +279,7 @@ function LoginScreen({onLogin, users=USERS}){
           <div style={{width:84,height:84,borderRadius:20,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
             <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto"}}/>
           </div>
-          <div style={{fontSize:24,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
+          <div style={{fontSize:18,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
           <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
         </div>
 
@@ -473,7 +473,7 @@ function ImportExcelModal({onClose,onImport}){
           <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:16}}>
             {IMPORT_COLS.map(c=><span key={c} style={{fontSize:11,background:"#F5F5F5",border:"1px solid #E8E8E8",borderRadius:20,padding:"3px 10px"}}>{c}</span>)}
           </div>
-          <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
+          <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
             <input type="file" ref={fileRef} accept=".xlsx,.xls,.csv" style={{display:"none"}} onChange={e=>onFile(e.target.files[0])}/>
             <BtnY onClick={()=>fileRef.current.click()}>{loading?"⏳ Lendo...":"📎 Escolher arquivo"}</BtnY>
             <BtnG onClick={baixarModelo}>⬇️ Baixar modelo</BtnG>
@@ -1734,7 +1734,7 @@ export default function App(){
               </div>
             </div>
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:totalPend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#E67E00",bg:"#FFF8F0",i:"🔧"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
@@ -1743,7 +1743,7 @@ export default function App(){
               ))}
             </div>
             {/* Filtros */}
-            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+            <div className="card" style={{padding:"8px 12px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
               <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",minWidth:140}}/>
               <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",width:100}}/>
@@ -1773,7 +1773,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
                         {r.reportNum&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px"}}>#{r.reportNum}</span>}
@@ -1832,14 +1832,14 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{padding:"10px 14px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
               </div>
-              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+              <div style={{padding:"10px 14px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
@@ -1958,7 +1958,7 @@ export default function App(){
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
                     <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                      <div style={{padding:"8px 12px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfiMonth]}</div>
                       </div>
@@ -2486,7 +2486,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.date||"—"} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
                         <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
@@ -2543,7 +2543,7 @@ export default function App(){
                 <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Aprovados",v:aprov,c:"#6A1B9A",bg:"#F3E5F5",i:"👍"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
@@ -2553,7 +2553,7 @@ export default function App(){
             </div>
             {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:18,background:"linear-gradient(90deg,#1A7A3C,#2e9e57)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
               <div style={{fontSize:24}}>💵</div>
-              <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+              <div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:16,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
             </div>}
             <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, OV..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
@@ -2580,7 +2580,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.date||"—"} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
                         <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
@@ -2667,7 +2667,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete("emprestimos",e.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{e.item||e.descricao||<span style={{color:"#CCC"}}>Sem item</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {e.data||"—"} · <b>{e.requerente||"—"}</b></div></div>
                         {e.req&&<span style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"3px 8px"}}>{e.req}</span>}
@@ -2751,7 +2751,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {s.data||"—"} · {s.empresa||"—"}</div></div>
                         {s.req&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{s.req}</span>}
@@ -2807,7 +2807,7 @@ export default function App(){
               </div>
 
               {/* Filtros */}
-              <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div className="card" style={{padding:"8px 12px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                   <option value="todas">🌐 Todas Regiões</option>
                   <option value="metropolitana">Metropolitana</option>
@@ -2824,11 +2824,11 @@ export default function App(){
               {/* Formulário novo atendimento */}
               {!isReadOnlyAgenda(user)&&(
               <div className="card" style={{marginBottom:18,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-                <div style={{padding:"12px 18px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:8}}>
+                <div style={{padding:"8px 12px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:16}}>➕</span>
                   <div style={{fontWeight:800,fontSize:14,color:"#F5C200"}}>Novo Atendimento</div>
                 </div>
-                <div style={{padding:"14px 18px",background:"#FFFBF0",display:"flex",gap:9,flexWrap:"wrap",alignItems:"flex-end"}}>
+                <div style={{padding:"10px 14px",background:"#FFFBF0",display:"flex",gap:9,flexWrap:"wrap",alignItems:"flex-end"}}>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
@@ -2851,7 +2851,7 @@ export default function App(){
                 <table style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
                     <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
-                      <th style={{padding:"12px 16px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
+                      <th style={{padding:"8px 12px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
@@ -2873,7 +2873,7 @@ export default function App(){
                       const totalConc=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>(s.status==="preventiva_concluida"||s.status==="corretiva_concluida")&&matchTipo(s)).length;},0);
                       return(
                         <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
+                          <td style={{padding:"8px 12px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
                             <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
                               <span style={{width:11,height:11,borderRadius:"50%",background:color,display:"inline-block",flexShrink:0,boxShadow:`0 0 0 3px ${color}22`}}/>
                               <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
@@ -3008,7 +3008,7 @@ export default function App(){
                     <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} atendimento(s) no filtro</span>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"10px 14px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
                       <ChartCanvas type="doughnut" height={230}
                         data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:2,borderColor:"#FFF",hoverOffset:6}]}}
@@ -3018,19 +3018,19 @@ export default function App(){
                         <span style={{color:RED,fontWeight:700}}>{corr} corr · {pct(corr)}%</span>
                       </div>
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"10px 14px"}}>
                       <div style={chartTitle}>Por região</div>
                       <ChartCanvas type="bar" height={230}
                         data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:4},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:4}]}}
                         options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"10px 14px"}}>
                       <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"10px 14px"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:4}]}}
@@ -3072,7 +3072,7 @@ export default function App(){
                 {l:"Corretivos",v:agendaAtendimentos.filter(r=>r.type==="corretivo").length,c:"#C62828"},
                 {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
               ].map((s,i)=>(
-                <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
+                <div key={i} className="card" style={{padding:"10px 14px",borderTop:`3px solid ${s.c}`}}>
                   <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
                   <div style={{fontSize:34,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
                 </div>
@@ -3087,7 +3087,7 @@ export default function App(){
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
               const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
               return(
-                <div className="card" style={{padding:"16px 20px",marginBottom:20,display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
+                <div className="card" style={{padding:"10px 14px",marginBottom:20,display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
                   <div style={{fontSize:11,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>⏱ Resumo do mês atual</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
                     <div style={{fontSize:38,fontWeight:900,color:"#1A1A1A",lineHeight:1}}>{fmtMin(totalMin)}</div>
@@ -3122,7 +3122,7 @@ export default function App(){
                 const color=techColor(tech);
                 return(
                   <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                    <div style={{padding:"12px 16px",borderBottom:"1px solid #F4F4F4",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{padding:"8px 12px",borderBottom:"1px solid #F4F4F4",display:"flex",alignItems:"center",gap:10}}>
                       <div style={{width:32,height:32,borderRadius:"50%",background:color+"18",border:`2px solid ${color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color,flexShrink:0}}>{tech.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:700,fontSize:13}}>{tech}</div>
@@ -3185,7 +3185,7 @@ export default function App(){
                 <BtnY onClick={()=>{setUberEdit({data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:""});setUberModal(true);}}>+ Novo Pedido</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
@@ -3216,7 +3216,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.data||"—"} · <b>{p.empresa||"—"}</b></div></div>
                         <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
@@ -3262,7 +3262,7 @@ export default function App(){
                 <BtnY onClick={()=>{setFinEdit({data:TODAY_STR,ticket:"",solicitacao:"combustivel",tecnico:ALL_TECHS[0],atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",obs:""});setFinModalOpen(true);}}>+ Novo Lançamento</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Pagos",v:pago,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Sem Acerto",v:semAcerto,c:"#E67E00",bg:"#FFF8F0",i:"⚠️"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
@@ -3298,7 +3298,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#888"}}>📅 {f.data||"—"} · Ticket: <b style={{color:"#1565C0"}}>{f.ticket||"—"}</b></div></div>
                         <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{f.valor?`R$ ${f.valor}`:"R$ —"}</div>
@@ -3384,7 +3384,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · <b>{r.tecnico||"—"}</b></div></div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Novo PAT</div><input type="text" value={r.pat||""} onChange={e=>froCrud.update(r.id,{pat:e.target.value})} placeholder="PAT" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
@@ -3493,7 +3493,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.funcionario||<span style={{color:"#CCC"}}>Funcionário</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · {r.responsavel||"—"}</div></div>
                         <span style={{fontSize:12,background:"#F5F5F5",borderRadius:8,padding:"4px 10px",fontWeight:600}}>{mot}</span>
@@ -3711,7 +3711,7 @@ export default function App(){
             </div>
 
             {/* ── Filtros de busca ── */}
-            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+            <div className="card" style={{padding:"8px 12px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <div style={{position:"relative",flex:1,minWidth:200}}>
                 <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:14}}>🔍</span>
                 <input type="text" value={rupSearch} onChange={e=>setRupSearch(e.target.value)} placeholder="Buscar por requisição, peça, OS/REL, empresa, PAT..." style={{width:"100%",padding:"9px 12px 9px 32px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/>
@@ -3759,7 +3759,7 @@ export default function App(){
                           </div>
                         </div>
                         {/* Card body */}
-                        <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                        <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                             <div style={{flex:1}}>
                               <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",lineHeight:1.2,marginBottom:3}}>{r.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div>
@@ -3875,7 +3875,7 @@ export default function App(){
           const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
           const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
           const KPIR=({label,value,color="#1A1A1A",bg="#FFF",icon,sub})=>(
-            <div className="card" style={{padding:"16px 20px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
+            <div className="card" style={{padding:"10px 14px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
               <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
               <div style={{fontSize:30,fontWeight:900,color,lineHeight:1}}>{value}</div>
               {sub&&<div style={{fontSize:10,color:"#AAA"}}>{sub}</div>}
@@ -4081,7 +4081,7 @@ export default function App(){
             </div>
 
             {/* ── Filtros ── */}
-            <div className="card" style={{padding:"14px 18px",marginBottom:18,borderLeft:"4px solid #F5C200"}}>
+            <div className="card" style={{padding:"10px 14px",marginBottom:18,borderLeft:"4px solid #F5C200"}}>
               <div style={{fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:.8,marginBottom:12}}>🔍 Filtros</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -4169,12 +4169,12 @@ export default function App(){
                 <span style={{fontSize:18}}>🤝</span>
                 <div><div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>Painel de Aprovação pelo Cliente</div><div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>Situação de cada processo junto ao cliente</div></div>
               </div>
-              <div style={{padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              <div style={{padding:"10px 14px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
                 {aprovCounts.map((a,i)=>(
-                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"14px 16px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
+                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"10px 12px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
                     onClick={()=>setFAprov(fAprov===Object.keys(APROV_STATUS)[i]?"todos":Object.keys(APROV_STATUS)[i])}>
                     <div style={{fontSize:11,fontWeight:800,color:a.c}}>{a.label}</div>
-                    <div style={{fontSize:26,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
+                    <div style={{fontSize:20,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
                     <div style={{fontSize:13,fontWeight:700,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
                     <div style={{background:"rgba(0,0,0,.08)",borderRadius:4,height:5}}>
                       <div style={{background:a.c,height:5,borderRadius:4,width:`${valTotal>0?Math.min(100,(a.valor/valTotal)*100):0}%`,transition:"width .5s"}}/>
@@ -4271,7 +4271,7 @@ export default function App(){
                   return(<>
                     <div style={{textAlign:"center"}}>
                       <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Faturado vs Meta</div>
-                      <div style={{fontSize:28,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
+                      <div style={{fontSize:16,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
                       <div style={{fontSize:12,color:"#888"}}>{fmtR(recebido)} de {fmtR(meta)}</div>
                     </div>
                     {/* Gauge visual */}
@@ -4322,11 +4322,11 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               {[[allMU,"⚠️ Mau Uso","#C62828"],[allAF,"💰 A Faturar","#1565C0"]].map(([list,titulo,cor],ti)=>(
                 <div key={ti} className="card" style={{padding:0,overflow:"hidden"}}>
-                  <div style={{padding:"12px 16px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{padding:"8px 12px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{fontWeight:800,fontSize:14,color:"#FFF"}}>{titulo}</div>
                     <div style={{fontWeight:900,fontSize:16,color:"#FFF"}}>{fmtR(list.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
                   </div>
-                  <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:6}}>
                     {Object.entries(APROV_STATUS).map(([k,s])=>{
                       const items=list.filter(p=>(p.aprovCliente||"aguardando_retorno")===k);
                       if(items.length===0)return null;
@@ -4368,7 +4368,7 @@ export default function App(){
                 <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
@@ -4414,32 +4414,32 @@ export default function App(){
               const sasDT2={labels:["ET","ME","MI","Gar"],datasets:[{data:[sasET2,sasME2,sasMI2,sasGar2],backgroundColor:["#1A7A3C","#E67E00","#1565C0","#8E44AD"],borderWidth:0}]};
               return(<>
                 <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valores (R$)</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:10}}>
                   {[{l:"Valor Total Bruto",v:sasFmt2(sasBruto2),c:"#1A1A1A",bg:"#FFF",i:"💵"},{l:"Valor 1% MOV",v:sasFmt2(sas1pct2),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},{l:"Desl. Total",v:sasFmt2(sasDesl2),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Líquido (1%−Desl)",v:sasFmt2(sasLiq2),c:sasLiq2>0?"#1565C0":"#C62828",bg:sasLiq2>0?"#EFF6FF":"#FFF0F0",i:"💧"},{l:"Desl. Indevidos",v:sasDI2,c:sasDI2>0?"#C62828":"#1A7A3C",bg:sasDI2>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div key={ki} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
                       <div style={{fontSize:typeof k.v==="string"?12:22,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
                 <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>🔧 Por Tipo</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:10}}>
                   {[{l:"Entrega Técnica",v:sasET2,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},{l:"Manut. Externa",v:sasME2,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},{l:"Manut. Interna",v:sasMI2,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},{l:"Garantia",v:sasGar2,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div key={ki} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
+                      <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
                   {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasGA2,c:sasGA2>0?"#C47D00":"#1A7A3C",bg:sasGA2>0?"#FFFBF0":"#F0FFF5"},{l:"🔴 Garantia Crítica (≤30d)",v:sasGC2,c:sasGC2>0?"#C62828":"#1A7A3C",bg:sasGC2>0?"#FFF0F0":"#F0FFF5"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div key={ki} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                      <div style={{fontSize:16,fontWeight:900,color:k.c}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:8,marginBottom:10}}>
                   <div className="card" style={{padding:14}}>
                     <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
                     {sasML2.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasBD2} options={sasBO2} height={160}/>}
@@ -4487,7 +4487,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 12px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {s.dataSolicitacao||"—"} · <b style={{color:"#1565C0"}}>{s.nfNum?`NF ${s.nfNum}`:""}</b></div></div>
                         {s.valor&&<div style={{fontSize:17,fontWeight:900,color:"#1A7A3C"}}>R$ {s.valor}</div>}
@@ -4529,15 +4529,15 @@ export default function App(){
               const topCli=Object.entries(cliMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
               const donutData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
               return(<>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
                   {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                       <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
                       <div style={{fontSize:typeof k.v==="string"?14:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:8,marginBottom:12}}>
                   <div className="card" style={{padding:14}}>
                     <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>
                     {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={barOpts} height={160}/>}
@@ -4599,7 +4599,7 @@ export default function App(){
               {modalCarros&&(
                 <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}}>
                   <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
-                    <div style={{padding:"16px 20px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
                       <div style={{fontWeight:800,fontSize:16,color:"#1A1A1A"}}>{editCarro?"✏️ Editar Registro":"➕ Novo Registro — Carros"}</div>
                       <button onClick={()=>{setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
                     </div>
@@ -4761,14 +4761,14 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{padding:"10px 14px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
               </div>
-              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+              <div style={{padding:"10px 14px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={apon150NovaData} onChange={e=>setApon150NovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={apon150NovaOS} onChange={e=>setApon150NovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={apon150NovaPat} onChange={e=>setApon150NovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
@@ -4884,7 +4884,7 @@ export default function App(){
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
                     <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                      <div style={{padding:"8px 12px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfi150Month]}</div>
                       </div>
