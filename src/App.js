@@ -1721,12 +1721,7 @@ export default function App(){
       user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
       null;
-    if(allowedTabs && !allowedTabs.includes(tab)){
-      // Redirect to first allowed tab instead of showing lock screen
-      const firstTab = allowedTabs[0];
-      if(firstTab) setTimeout(()=>setTab(firstTab), 0);
-      return null;
-    }
+    if(allowedTabs && !allowedTabs.includes(tab)) return(<div/>);
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
