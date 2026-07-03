@@ -42,17 +42,8 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
-  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
-  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
-  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"rafael",       username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"anderson",     username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"mov2026", canDelete:false, apenasOficina150:true },
-  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"mov2026", canDelete:false, apenasOficina:true },
-  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
   { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
   { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
   { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
@@ -688,19 +679,6 @@ const BtnImport = ({onClick}) => (
 );
 
 // Barra de exportação reutilizável
-const exportXLSX = async (data, filename, cols) => {
-  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
-  try{
-    const XLSX = await loadXLSX();
-    const rows = data.map(row=>Object.fromEntries(cols.map(c=>[c.label, row[c.key]||""])));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0,30));
-    XLSX.writeFile(wb, filename+".xlsx");
-  }catch(e){ alert("Erro ao exportar: "+e.message); }
-};
-
-// Exportar PDF simples (tabela)
 const ExportBar = ({data, filename, cols, onImport}) => {
   const [loading, setLoading] = useState(false);
   return(
@@ -726,7 +704,19 @@ const ExportBar = ({data, filename, cols, onImport}) => {
 
 
 // Exportar Excel global
+const exportXLSX = async (data, filename, cols) => {
+  if(!data||data.length===0){alert("Sem dados para exportar!");return;}
+  try{
+    const XLSX = await loadXLSX();
+    const rows = data.map(row=>Object.fromEntries(cols.map(c=>[c.label, row[c.key]||""])));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0,30));
+    XLSX.writeFile(wb, filename+".xlsx");
+  }catch(e){ alert("Erro ao exportar: "+e.message); }
+};
 
+// Exportar PDF simples (tabela)
 const exportPDFTable = (data, filename, cols, title) => {
   if(!data||data.length===0){alert("Sem dados para exportar!");return;}
   const rows = data.map(row=>cols.map(c=>row[c.key]||"").join(" | ")).join("\n");
@@ -930,16 +920,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     return true;
   };
 
-  if(user.acessoSas) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="sas" l="📄 SAS"/>
-    </div>
-  );
-  if(user.acessoSas) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="sas" l="📄 SAS"/>
-    </div>
-  );
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -1068,27 +1048,10 @@ export default function App(){
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState(()=>{
-    try{
-      const saved=localStorage.getItem("grupomov_user");
-      if(saved){
-        const p=JSON.parse(saved);const u=USERS.find(x=>x.id===p.id);
-        if(u?.acessoSas&&!u?.acessoComercial) return "sas";
-        if(u?.acessoComercial) return "mau_uso";
-        if(u?.apenasAgenda||u?.apenasAgenda150) return "agenda_prev";
-        if(u?.apenasOficina) return "agenda_ofi";
-        if(u?.apenasOficina150) return "agenda_ofi_150";
-      }
-    }catch(e){}
-    return "relatorios";
+    try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";
   });
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
-
-  useEffect(()=>{
-    if(!user) return;
-    if(user.acessoSas&&!user.acessoComercial) setTab("sas");
-    else if(user.acessoComercial) setTab("mau_uso");
-  },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1523,18 +1486,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);
-  if(u.acessoSas&&!u.acessoComercial) setTab("sas");
-  else if(u.acessoComercial) setTab("mau_uso");
-  else if(u.apenasAgenda||u.apenasAgenda150) setTab("agenda_prev");
-  else if(u.apenasOficina) setTab("agenda_ofi");
-  else if(u.apenasOficina150) setTab("agenda_ofi_150");
-  if(u.acessoSas&&!u.acessoComercial) setTab("sas");
-  else if(u.acessoComercial) setTab("mau_uso");
-  else if(u.apenasAgenda||u.apenasAgenda150) setTab("agenda_prev");
-  else if(u.apenasOficina) setTab("agenda_ofi");
-  else if(u.apenasOficina150) setTab("agenda_ofi_150");
-  try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda||u.apenasAgenda150)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -1733,14 +1685,6 @@ export default function App(){
 
 
   const renderTab = () => {
-    // Access guard for restricted users
-    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
-      user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
-      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
-      null;
-    if(allowedTabs && !allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2527,87 +2471,6 @@ export default function App(){
               <select value={muAno} onChange={e=>setMuAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(muSearch||muFrom||muTo||muMes||muAno)&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {(()=>{
-              const sasPV2=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
-              const sasFmt2=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const sasP2=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-              const sasC2=listaFil.filter(s=>s.status==="concluido").length;const sasF2=listaFil.filter(s=>s.status==="faturado").length;
-              const sasPg2=listaFil.filter(s=>s.pago==="sim").length;
-              const sasBruto2=listaFil.reduce((a,s)=>a+sasPV2(s.valor),0);
-              const sas1pct2=sasBruto2*0.01;const sasDesl2=listaFil.reduce((a,s)=>a+sasPV2(s.deslocamento),0);
-              const sasLiq2=Math.max(0,sas1pct2-sasDesl2);
-              const sasDI2=listaFil.filter(s=>{const v=sasPV2(s.valor);const lim=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?v*0.20:v*0.01;return v>0&&sasPV2(s.deslocamento)>lim;}).length;
-              const sasET2=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
-              const sasME2=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
-              const sasMI2=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
-              const sasGar2=listaFil.filter(s=>s.tipoServico==="Garantia").length;
-              const sasTd2=new Date();sasTd2.setHours(0,0,0,0);
-              const sasGA2=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");return Math.floor((dg-sasTd2)/86400000)<=180&&Math.floor((dg-sasTd2)/86400000)>=0;}).length;
-              const sasGC2=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");return Math.floor((dg-sasTd2)/86400000)<=30&&Math.floor((dg-sasTd2)/86400000)>=0;}).length;
-              const sasGetM2=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const sasMN2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const sasML2=[...new Set(listaFil.map(s=>sasGetM2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const sasBD2={labels:sasML2.map(m=>{const[y,mo]=m.split("-");return`${sasMN2[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasML2.map(m=>listaFil.filter(s=>sasGetM2(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:4},{label:"Faturados",data:sasML2.map(m=>listaFil.filter(s=>sasGetM2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:4}]};
-              const sasBO2={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const sasCM2={};listaFil.forEach(s=>{if(s.cliente)sasCM2[s.cliente]=(sasCM2[s.cliente]||0)+sasPV2(s.valor);});
-              const sasTC2=Object.entries(sasCM2).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const sasDS2={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasP2,sasC2,sasF2],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
-              const sasDT2={labels:["ET","ME","MI","Gar"],datasets:[{data:[sasET2,sasME2,sasMI2,sasGar2],backgroundColor:["#1A7A3C","#E67E00","#1565C0","#8E44AD"],borderWidth:0}]};
-              return(<>
-                <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valores</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"Valor Total Bruto",v:sasFmt2(sasBruto2),c:"#1A1A1A",bg:"#FFF",i:"💵"},{l:"Valor 1% MOV",v:sasFmt2(sas1pct2),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},{l:"Desl. Total",v:sasFmt2(sasDesl2),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Líquido (1%−Desl)",v:sasFmt2(sasLiq2),c:sasLiq2>0?"#1565C0":"#C62828",bg:sasLiq2>0?"#EFF6FF":"#FFF0F0",i:"💧"},{l:"Desl. Indevidos",v:sasDI2,c:sasDI2>0?"#C62828":"#1A7A3C",bg:sasDI2>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?12:22,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>🔧 Manutenções por Tipo</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
-                  {[{l:"Entrega Técnica",v:sasET2,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},{l:"Manut. Externa",v:sasME2,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},{l:"Manut. Interna",v:sasMI2,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},{l:"Garantia",v:sasGar2,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:24,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasGA2,c:sasGA2>0?"#C47D00":"#1A7A3C",bg:sasGA2>0?"#FFFBF0":"#F0FFF5"},{l:"🔴 Garantia Crítica (≤30d)",v:sasGC2,c:sasGC2>0?"#C62828":"#1A7A3C",bg:sasGC2>0?"#FFF0F0":"#F0FFF5"}].map((k,ki)=>(
-                    <div key={ki} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:14}}>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Faturados por Mês</div>
-                    {sasML2.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={sasBD2} options={sasBO2} height={160}/>}
-                  </div>
-                  <div className="card" style={{padding:14}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:6}}>🍕 Status</div>
-                    <ChartCanvas type="doughnut" data={sasDS2} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginTop:8,marginBottom:4}}>🔧 Tipo</div>
-                    <ChartCanvas type="doughnut" data={sasDT2} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={110}/>
-                  </div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:5}}>
-                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:4}}>🏆 Top Clientes</div>
-                    {sasTC2.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:sasTC2.map(([cli,val],ci)=>(
-                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
-                        <div style={{display:"flex",justifyContent:"space-between"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
-                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasFmt2(val)}</span>
-                        </div>
-                        <div style={{background:"#F0F0F0",borderRadius:4,height:4}}>
-                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:4,borderRadius:4,width:`${sasTC2[0][1]>0?(val/sasTC2[0][1])*100:0}%`}}/>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>);
-            })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⚠️</div><div style={{fontSize:15,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(p=>{
@@ -2937,100 +2800,69 @@ export default function App(){
             notify("✅ Atendimento salvo!");
           };
           return(
-            <div style={{animation:"fadeIn .3s ease",background:"#0F172A",minHeight:"100vh",margin:"-24px -24px -60px",padding:"24px"}}>
-              {/* Header */}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:12}}>
                 <div>
-                  <div style={{fontWeight:900,fontSize:28,color:"#F1F5F9",letterSpacing:-.5}}>🗓 Agenda — Técnicos Externos</div>
-                  <div style={{fontSize:13,color:"#64748B",marginTop:3}}>{techsList.length} técnico(s) ativos</div>
+                  <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🗓 Agenda — Técnicos Externos</div>
+                  <div style={{fontSize:13,color:"#888",marginTop:2}}>{techsList.length} técnico(s)</div>
                 </div>
               </div>
 
-              {/* Filtros modernos */}
-              <div style={{background:"#1E293B",borderRadius:16,padding:"16px 20px",marginBottom:20,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",border:"1px solid #334155"}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Região</label>
-                  <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}>
-                    <option value="todas">🌐 Todas</option>
-                    <option value="metropolitana">Metropolitana</option>
-                    <option value="roca">Roça</option>
-                    <option value="centroOeste">Centro-Oeste</option>
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Técnico</label>
-                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Tipo</label>
-                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Status</label>
-                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Mês</label>
-                  <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F5C200",fontWeight:700,cursor:"pointer"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Ano</label>
-                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F5C200",fontWeight:700,cursor:"pointer"}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-                </div>
+              {/* Filtros */}
+              <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <option value="todas">🌐 Todas Regiões</option>
+                  <option value="metropolitana">Metropolitana</option>
+                  <option value="roca">Roça</option>
+                  <option value="centroOeste">Centro-Oeste</option>
+                </select>
+                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
+                <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
               </div>
 
               {/* Formulário novo atendimento */}
               {!isReadOnlyAgenda(user)&&(
-              <div style={{background:"#1E293B",borderRadius:16,marginBottom:20,overflow:"hidden",border:"1px solid #334155"}}>
-                <div style={{padding:"14px 20px",background:"#F5C200",display:"flex",alignItems:"center",gap:8}}>
+              <div className="card" style={{marginBottom:18,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
+                <div style={{padding:"12px 18px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:16}}>➕</span>
-                  <div style={{fontWeight:900,fontSize:14,color:"#1A1A1A"}}>Novo Atendimento</div>
+                  <div style={{fontWeight:800,fontSize:14,color:"#F5C200"}}>Novo Atendimento</div>
                 </div>
-                <div style={{padding:"16px 20px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
-                  {[
-                    {l:"Técnico",el:<select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>},
-                    {l:"Data",el:<input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
-                    {l:"Empresa",el:<input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",minWidth:140}}/>},
-                    {l:"Cidade",el:<input type="text" placeholder="—" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:100}}/>},
-                    {l:"Horímetro",el:<input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:90}}/>},
-                    {l:"Patrimônio",el:<input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:90}}/>},
-                    {l:"Relatório",el:<input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:100}}/>},
-                    {l:"Observação",fl:1,el:<input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:"100%"}}/>},
-                    {l:"Início",el:<input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
-                    {l:"Término",el:<input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
-                    {l:"Tipo",el:<select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:getTipoCor(agTipo),fontWeight:700}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>},
-                    {l:"Status",el:<select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>},
-                  ].map((f,fi)=>(
-                    <div key={fi} style={{display:"flex",flexDirection:"column",gap:4,flex:f.fl||0,minWidth:f.fl?120:undefined}}>
-                      <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.8}}>{f.l}</label>
-                      {f.el}
-                    </div>
-                  ))}
-                  <button onClick={addAtend} style={{padding:"8px 20px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",alignSelf:"flex-end"}}>Adicionar</button>
+                <div style={{padding:"14px 18px",background:"#FFFBF0",display:"flex",gap:9,flexWrap:"wrap",alignItems:"flex-end"}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><input type="text" placeholder="—" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Horímetro</label><input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:140}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
+                  <BtnY onClick={addAtend}>Adicionar</BtnY>
                 </div>
+              </div>
+              )}
+
               {/* Calendário horizontal */}
-              <div style={{overflowX:"auto",paddingBottom:12,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #1E293B"}}>
-                <style>{`.ag-tbl::-webkit-scrollbar{height:8px}.ag-tbl::-webkit-scrollbar-track{background:#1E293B;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb:hover{background:#C47D00}`}</style>
-              <div style={{overflowX:"auto",overflowY:"hidden",paddingBottom:8,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #2A2A2A"}}>
-                <style>{`
-                  .agenda-table::-webkit-scrollbar{height:8px}
-                  .agenda-table::-webkit-scrollbar-track{background:#2A2A2A;border-radius:4px}
-                  .agenda-table::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}
-                  .agenda-table::-webkit-scrollbar-thumb:hover{background:#C47D00}
-                `}</style>
-                <table className="ag-tbl" style={{borderCollapse:"collapse",width:"100%",tableLayout:"fixed"}}>
+              <div style={{overflowX:"auto"}}>
+                <table style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
-                    <tr style={{background:"#0F172A",position:"sticky",top:0,zIndex:3}}>
-                      <th style={{padding:"14px 16px",color:"#F5C200",fontWeight:900,textAlign:"left",position:"sticky",left:0,background:"#0F172A",zIndex:4,minWidth:180,whiteSpace:"nowrap",fontSize:13,borderBottom:"2px solid #F5C200",borderRight:"1px solid #1E293B"}}>👷 Técnico</th>
+                    <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
+                      <th style={{padding:"12px 16px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
-                          <th key={d} style={{padding:"10px 8px",color:isToday?"#1A1A1A":isWkd?"#475569":"#CBD5E1",fontWeight:isToday?900:600,textAlign:"center",minWidth:200,background:isToday?"#F5C200":isWkd?"#1E293B":"#0F172A",borderLeft:"1px solid #1E293B",fontSize:12,borderBottom:isToday?"2px solid #C47D00":"2px solid #334155"}}>
-                            <div style={{fontSize:15,fontWeight:800}}>{isToday&&"📍"} {String(d).padStart(2,"0")}</div>
-                            <div style={{fontSize:10,opacity:.7}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
+                          <th key={d} style={{padding:"10px 6px",color:isToday?"#1A1A1A":isWkd?"#999":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:230,background:isToday?"#F5C200":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12,borderBottom:isToday?"3px solid #C47D00":"3px solid transparent"}}>
+                            <div style={{fontSize:14,fontWeight:800}}>{isToday&&"📍 "}Dia {String(d).padStart(2,"0")}</div>
+                            <div style={{fontSize:10,color:isToday?"#5A4400":"#AAA",fontWeight:600}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
                           </th>
                         );
                       })}
@@ -3042,15 +2874,15 @@ export default function App(){
                       const totalAtend=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s)).length;},0);
                       const totalConc=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>(s.status==="preventiva_concluida"||s.status==="corretiva_concluida")&&matchTipo(s)).length;},0);
                       return(
-                        <tr key={tech} style={{background:ti%2===0?"#1E293B":"#162032",verticalAlign:"top"}}>
-                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#1E293B":"#162032",zIndex:1,borderBottom:"1px solid #334155",borderRight:`2px solid ${color}`}}>
-                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                              <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block",boxShadow:`0 0 0 3px ${color}33`}}/>
-                              <span style={{fontWeight:800,fontSize:13,color:"#F1F5F9"}}>{tech}</span>
+                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
+                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
+                            <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
+                              <span style={{width:11,height:11,borderRadius:"50%",background:color,display:"inline-block",flexShrink:0,boxShadow:`0 0 0 3px ${color}22`}}/>
+                              <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
                             </div>
-                            <div style={{display:"flex",gap:5}}>
-                              <span style={{fontSize:9,fontWeight:700,color:"#3B82F6",background:"#1E3A5F",borderRadius:6,padding:"2px 7px"}}>{totalAtend} atend.</span>
-                              {totalConc>0&&<span style={{fontSize:9,fontWeight:700,color:"#22C55E",background:"#14532D",borderRadius:6,padding:"2px 7px"}}>{totalConc} concl.</span>}
+                            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                              <span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{totalAtend} atend.</span>
+                              {totalConc>0&&<span style={{fontSize:10,fontWeight:700,color:"#1A7A3C",background:"#F0FFF5",borderRadius:8,padding:"2px 7px"}}>{totalConc} concl.</span>}
                             </div>
                           </td>
                           {dias.map(d=>{
@@ -3072,37 +2904,60 @@ export default function App(){
                                     saveSched(key,arr);
                                   };
                                   return(
-                                    <div key={si} style={{background:"#1E293B",border:`1px solid ${tipoC}44`,borderLeft:`3px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",marginBottom:6,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
-                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                                        <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"22",borderRadius:10,padding:"2px 8px",whiteSpace:"nowrap"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
-                                        {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:2}}>
-                                          <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} style={{background:"#1E3A5F",border:"none",borderRadius:6,color:"#60A5FA",cursor:"pointer",fontSize:11,padding:"2px 6px"}}>✏️</button>
-                                          <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} style={{background:"#3B0F0F",border:"none",borderRadius:6,color:"#F87171",cursor:"pointer",fontSize:10,fontWeight:700,padding:"2px 6px"}}>✕</button>
-                                        </div>}
+                                    <div key={si} style={{background:"#FFF",border:`1.5px solid ${tipoC}33`,borderLeft:`4px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",marginBottom:7,boxShadow:"0 2px 8px rgba(0,0,0,.08)",transition:"box-shadow .15s"}}>
+                                      {/* Header: Empresa + botões */}
+                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
+                                        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,marginRight:4}}>
+                                          <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"15",borderRadius:20,padding:"2px 8px",whiteSpace:"nowrap"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
+                                        </div>
+                                        {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:2,flexShrink:0}}>
+                                          <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",fontSize:12,padding:"3px 6px"}}>✏️</button>
+                                          <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
+                                        </div>)}
                                       </div>
-                                      <div style={{fontWeight:700,fontSize:12,color:"#F1F5F9",marginBottom:5,wordBreak:"break-word"}}>{s.client}</div>
-                                      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:5}}>
-                                        {s.patrimonio&&<span style={{fontSize:9,background:"#334155",color:"#94A3B8",borderRadius:6,padding:"1px 6px"}}>🏷️ {s.patrimonio}</span>}
-                                        {s.cidade&&<span style={{fontSize:9,background:"#1E3A5F",color:"#60A5FA",borderRadius:6,padding:"1px 6px"}}>📍 {s.cidade}</span>}
-                                        {s.horimetro&&<span style={{fontSize:9,background:"#1C2B1A",color:"#86EFAC",borderRadius:6,padding:"1px 6px"}}>⏱ {s.horimetro}</span>}
+                                      <div style={{fontWeight:800,fontSize:13,color:"#1A1A1A",marginBottom:6,wordBreak:"break-word"}}>{s.client}</div>
+                                      {/* Patrimônio · Cidade · Horímetro chips */}
+                                      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
+                                        {s.patrimonio&&<span style={{fontSize:10,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
+                                        {s.cidade&&<span style={{fontSize:10,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
+                                        {s.horimetro&&<span style={{fontSize:10,background:"#FFFBF0",color:"#C47D00",borderRadius:8,padding:"2px 7px",fontWeight:600}}>⏱ {s.horimetro}</span>}
                                       </div>
-                                      <input type="text" defaultValue={s.relatorio||""} onBlur={e=>updateSlot({relatorio:e.target.value})} placeholder="Nº Relatório" disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:10,padding:"4px 7px",border:"1px solid #334155",borderRadius:6,marginBottom:4,boxSizing:"border-box",background:"#0F172A",color:"#60A5FA",fontWeight:600}}/>
-                                      <input type="text" defaultValue={s.obs||""} onBlur={e=>updateSlot({obs:e.target.value})} placeholder="📝 Obs..." disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:10,padding:"4px 7px",border:"1px solid #F5C20044",borderRadius:6,marginBottom:4,boxSizing:"border-box",background:"#1C1A0A",color:"#FDE68A"}}/>
-                                      <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:4}}>
-                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,flex:1,background:"#0F172A",color:"#CBD5E1"}}/>
-                                        <span style={{fontSize:10,color:"#475569"}}>→</span>
-                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,flex:1,background:"#0F172A",color:"#CBD5E1"}}/>
-                                        {horas&&<span style={{fontSize:9,fontWeight:800,color:"#22C55E",background:"#14532D",padding:"2px 6px",borderRadius:6,whiteSpace:"nowrap"}}>{horas}</span>}
+                                      {/* Relatório */}
+                                      <input
+                                        type="text"
+                                        defaultValue={s.relatorio||""}
+                                        onBlur={e=>updateSlot({relatorio:e.target.value})}
+                                        placeholder="Nº Relatório"
+                                        disabled={isReadOnlyAgenda(user)}
+                                        style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA",fontWeight:600,color:"#1565C0"}}
+                                      />
+                                      <input
+                                        type="text"
+                                        defaultValue={s.obs||""}
+                                        onBlur={e=>updateSlot({obs:e.target.value})}
+                                        placeholder="📝 Observações..."
+                                        disabled={isReadOnlyAgenda(user)}
+                                        style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #FFE8A0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}
+                                      />
+                                      {/* Entrada / Saída / Soma */}
+                                      <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5}}>
+                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
+                                        <span style={{fontSize:10,color:"#AAA"}}>→</span>
+                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
+                                        {horas&&<span style={{fontSize:11,fontWeight:800,color:"#1A7A3C",background:"#F0FFF5",padding:"4px 7px",borderRadius:8,whiteSpace:"nowrap",border:"1px solid #C8E8D0"}}>{horas}</span>}
                                       </div>
+                                      {/* Data */}
                                       <input type="date" defaultValue={dt} onBlur={e=>{
                                         if(isReadOnlyAgenda(user))return;
                                         if(e.target.value&&e.target.value!==dt){
                                           const newKey=`${tech}__${e.target.value}`;
                                           const oldArr=(schedule[key]||[]).filter((_,j)=>j!==si);
-                                          saveSched(key,oldArr);saveSched(newKey,[...(schedule[newKey]||[]),s]);
+                                          saveSched(key,oldArr);
+                                          saveSched(newKey,[...(schedule[newKey]||[]),s]);
                                         }
-                                      }} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,width:"100%",marginBottom:4,boxSizing:"border-box",background:"#0F172A",color:"#CBD5E1"}}/>
-                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"4px 8px",border:"none",borderRadius:10,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
+                                      }} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,width:"100%",marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
+                                      {/* Status */}
+                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"6px 8px",border:"none",borderRadius:20,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
                                         {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                                       </select>
                                     </div>
@@ -3114,11 +2969,14 @@ export default function App(){
                         </tr>
                       );
                     })}
-                    </tbody>
-                  </table>
+                  </tbody>
+                </table>
               </div>
-          </div>);
+            </div>
+          );
         })()}
+
+        {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:800,fontSize:22,marginBottom:20}}>📊 Dashboard de Atendimentos</div>
@@ -4493,7 +4351,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const parseValSas=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};const totalVal=lista.reduce((acc,s)=>acc+parseValSas(s.valor),0);const totalVal1pct=totalVal*0.01;
+          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4528,116 +4386,70 @@ export default function App(){
               <select value={sasAno} onChange={e=>setSasAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {/* KPIs simples */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[{l:"Total",v:listaFil.length,c:"#1A1A1A",bg:"#FFF",i:"📄"},
-                {l:"Pendentes",v:listaFil.filter(s=>s.status==="pendente"||!s.status).length,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},
-                {l:"Faturados",v:listaFil.filter(s=>s.status==="faturado").length,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},
-                {l:"Pagos",v:listaFil.filter(s=>s.pago==="sim").length,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}
-              ].map((k,ki)=>(
-                <div key={ki} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:26,fontWeight:900,color:k.c}}>{k.v}</div>
+            {/* ── SAS DASHBOARD ── */}
+            {(()=>{
+              const total=listaFil.length;
+              const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+              const realizados=listaFil.filter(s=>s.status==="realizado").length;
+              const faturados=listaFil.filter(s=>s.status==="faturado").length;
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+              const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
+              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const getMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const mesesS=[...new Set(listaFil.map(s=>getMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const chartSasData={labels:mesesS.map(m=>{const[y,mo]=m.split("-");return`${MESES_S[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
+              const barSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const cliMapS={};listaFil.forEach(s=>{if(s.cliente)cliMapS[s.cliente]=(cliMapS[s.cliente]||0)+parseVal(s.valor);});
+              const topCliS=Object.entries(cliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const donutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
+              return(<>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
+                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?13:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{mesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartSasData} options={barSasOpts} height={160}/>}</div>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={donutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{topCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCliS[0][1]>0?(val/topCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
+                </div>
+              </>);
+            })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
-                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
-                  const valCard=parseV(s.valor);
-                  const limite1pct=valCard*0.01;
-                  const valDesl=parseV(s.deslocamento);
-                  const deslIndevido=valCard>0&&valDesl>limite1pct;
-                  const today2=new Date();today2.setHours(0,0,0,0);
-                  const dtGar=s.dataGarantia?new Date(s.dataGarantia):null;
-                  const diasGar=dtGar?Math.floor((dtGar-today2)/(1000*60*60*24)):null;
-                  const garRed=diasGar!==null&&diasGar<=30;
-                  const garYellow=diasGar!==null&&diasGar>30&&diasGar<=180;
-                  const fmtR2=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-                  const pago=s.pago==="sim";
-                  const enviado=s.processoEnvFat==="sim";
-                  const tipoServ=s.tipoServico||"Entrega Técnica";
-                  const tipoC=tipoServ==="Manutenção Externa"?"#E67E00":tipoServ==="Manutenção Interna"?"#1565C0":"#1A7A3C";
-                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${tipoC}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
-                    {/* ── HEADER ── */}
-                    <div style={{padding:"10px 14px",background:tipoC+"18",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-                        <select value={tipoServ} onChange={e=>updateSas(s.id,{tipoServico:e.target.value})} style={{fontSize:11,fontWeight:800,color:tipoC,background:"#FFF",border:`1.5px solid ${tipoC}44`,borderRadius:20,padding:"3px 10px",cursor:"pointer",outline:"none"}}>
-                          <option>Entrega Técnica</option>
-                          <option>Manutenção Externa</option>
-                          <option>Manutenção Interna</option>
+                  const serv=SERV[s.servico||"outros"]||SERV.outros;
+                  const ok=s.status==="concluido";
+                  const pend=s.status==="pendente"||!s.status;
+                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":pend?"#C62828":serv.c}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
+                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:800,color:serv.c,background:"#FFF",border:`1px solid ${serv.c}33`,borderRadius:20,padding:"2px 10px"}}>{serv.l}</span>
+                        <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":pend?"#C62828":"#555",background:ok?"#DCFFE4":pend?"#FFE0E0":"#F0F0F0",cursor:"pointer"}}>
+                          <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
                         </select>
-                        <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:s.status==="concluido"?"#1A7A3C":s.status==="faturado"?"#6A1B9A":s.status==="arquivado"?"#888":"#C62828",background:s.status==="concluido"?"#DCFFE4":s.status==="faturado"?"#F3E5F5":s.status==="arquivado"?"#F0F0F0":"#FFE0E0",cursor:"pointer",outline:"none"}}>
-                          <option value="pendente">⏳ Pendente</option>
-                          <option value="concluido">✅ Concluído</option>
-                          <option value="faturado">💰 Faturado</option>
-                          <option value="arquivado">🗄️ Arquivado</option>
-                        </select>
-                        {pago&&<span style={{fontSize:10,fontWeight:700,color:"#6A1B9A",background:"#F3E5F5",borderRadius:20,padding:"3px 8px"}}>💳 Pago</span>}
-                        {garRed&&<span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFE0E0",borderRadius:20,padding:"3px 8px"}}>🔴 Garantia {diasGar}d</span>}
-                        {garYellow&&<span style={{fontSize:10,fontWeight:700,color:"#C47D00",background:"#FFFBF0",borderRadius:20,padding:"3px 8px"}}>⚠️ Garantia {diasGar}d</span>}
-                        {deslIndevido&&<span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFE0E0",borderRadius:20,padding:"3px 8px"}}>🚗 Desl. Indevido</span>}
                       </div>
-                      <div style={{display:"flex",gap:4,flexShrink:0}}>
-                        <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 8px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} title={s.status==="arquivado"?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir este SAS?"))delSas(s.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                        <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-
-                    {/* ── CORPO ── */}
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
-                      {/* Linha 1: Cliente + Valor */}
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
-                        <div>
-                          <div style={{fontWeight:900,fontSize:15,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div>
-                          <div style={{fontSize:11,color:"#888",marginTop:2}}>📅 {s.dataSolicitacao||"—"}{s.nfNum&&<> · <b style={{color:"#1565C0"}}>NF {s.nfNum}</b></>}</div>
-                        </div>
-                        {valCard>0&&<div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtR2(valCard)}</div>}
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {s.dataSolicitacao||"—"} · <b style={{color:"#1565C0"}}>{s.nfNum?`NF ${s.nfNum}`:""}</b></div></div>
+                        {s.valor&&<div style={{fontSize:17,fontWeight:900,color:"#1A7A3C"}}>R$ {s.valor}</div>}
                       </div>
-
-                      {/* Linha 2: Equipamento + Rel. MOV */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div>
-                          <input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Dt. Realiz.</div>
-                          <input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equip." style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Data Realiz.</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {s.envioFaturamento&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Envio Faturamento</div><div style={{fontSize:11,fontWeight:700,color:"#1A7A3C"}}>{s.envioFaturamento}</div></div>}
                       </div>
-
-                      {/* Linha 3: Deslocamento + Garantia */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                        <div style={{background:deslIndevido?"#FFF0F0":"#F8F9FA",borderRadius:8,padding:"7px 10px",border:deslIndevido?"1.5px solid #C6282844":"none"}}>
-                          <div style={{color:deslIndevido?"#C62828":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Deslocamento · Limite: {valCard>0?fmtR2(limite1pct):"—"}</div>
-                          <input type="text" value={s.deslocamento||""} onChange={e=>updateSas(s.id,{deslocamento:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:deslIndevido?"#C62828":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
-                        <div style={{background:garRed?"#FFF0F0":garYellow?"#FFFBF0":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:garRed?"#C62828":garYellow?"#C47D00":"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🛡️ Fim de Garantia</div>
-                          <input type="date" value={s.dataGarantia||""} onChange={e=>updateSas(s.id,{dataGarantia:e.target.value})} style={{width:"100%",fontSize:12,fontWeight:700,color:garRed?"#C62828":garYellow?"#C47D00":"#333",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
-                      </div>
-
-                      {/* Linha 4: Faturamento */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                        <div style={{background:enviado?"#F0FFF5":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📤 Env. Faturamento</div>
-                          <select value={s.processoEnvFat||"nao"} onChange={e=>updateSas(s.id,{processoEnvFat:e.target.value})} style={{fontSize:11,fontWeight:700,color:enviado?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
-                        </div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📅 Data Envio</div>
-                          <input type="date" value={s.dataEnvFat||""} onChange={e=>updateSas(s.id,{dataEnvFat:e.target.value})} style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/>
-                        </div>
-                        <div style={{background:pago?"#F0FFF5":"#F8F9FA",borderRadius:8,padding:"7px 10px"}}>
-                          <div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💳 Pago</div>
-                          <select value={s.pago||"nao"} onChange={e=>updateSas(s.id,{pago:e.target.value})} style={{fontSize:11,fontWeight:700,color:pago?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
-                        </div>
-                      </div>
-
-                      <div style={{fontSize:10,color:"#CCC",textAlign:"right"}}>{s.registradoPor||""}</div>
+                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{s.registradoPor||""}</div>
                     </div>
                   </div>);
                 })}
@@ -4646,7 +4458,63 @@ export default function App(){
           </div>);
         })()}
 
-        {/* ── CARROS ── */}
+        {/* ── CARROS ── */
+            {/* ── SAS DASHBOARD ── */}
+            {(()=>{
+              const total=listaSas.length;
+              const pendentes=listaSas.filter(s=>s.status==="pendente"||!s.status).length;
+              const realizados=listaSas.filter(s=>s.status==="realizado").length;
+              const faturados=listaSas.filter(s=>s.status==="faturado").length;
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+              const totalVal=listaSas.reduce((acc,s)=>acc+parseVal(s.valor),0);
+              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const getMes=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const meses=[...new Set(listaSas.map(s=>getMes(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const chartData={labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[
+                {label:"Solicitações",data:meses.map(m=>listaSas.filter(s=>getMes(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},
+                {label:"Realizadas",data:meses.map(m=>listaSas.filter(s=>getMes(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false},
+              ]};
+              const barOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const cliMap={};
+              listaSas.forEach(s=>{if(s.cliente)cliMap[s.cliente]=(cliMap[s.cliente]||0)+parseVal(s.valor);});
+              const topCli=Object.entries(cliMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const donutData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
+              return(<>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
+                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?14:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>
+                    {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={barOpts} height={160}/>}
+                  </div>
+                  <div className="card" style={{padding:14}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div>
+                    <ChartCanvas type="doughnut" data={donutData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/>
+                  </div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>
+                    {topCli.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCli.map(([cli,val],i)=>(
+                      <div key={i} style={{display:"flex",flexDirection:"column",gap:3}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span>
+                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
+                        </div>
+                        <div style={{background:"#F0F0F0",borderRadius:4,height:5}}>
+                          <div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCli[0][1]>0?(val/topCli[0][1])*100:0}%`,transition:"width .5s"}}/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>);
+            })()}}
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
           const toggleIt=(field,val)=>setCarForm(p=>{const a=p[field]||[];return{...p,[field]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
@@ -5268,4 +5136,4 @@ export default function App(){
       </div>
     </div>
   );
-}
+
