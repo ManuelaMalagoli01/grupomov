@@ -1072,6 +1072,16 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
+    const allowed = user.acessoSas&&!user.acessoComercial ? ["sas"] :
+      user.acessoComercial ? (user.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
+      user.apenasAgenda ? ["agenda_prev","dashboard_processos"] :
+      user.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
+      user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
+      null;
+    if(allowed && !allowed.includes(tab)) setTab(allowed[0]);
+  },[user?.id, tab]);
+  useEffect(()=>{
+    if(!user) return;
     if(user.acessoSas&&!user.acessoComercial) setTab("sas");
     else if(user.acessoComercial) setTab("mau_uso");
   },[user?.id]);
