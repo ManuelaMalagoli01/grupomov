@@ -2891,8 +2891,14 @@ export default function App(){
               )}
 
               {/* Calendário horizontal */}
-              <div style={{overflowX:"auto"}}>
-                <table style={{borderCollapse:"collapse",width:"100%"}}>
+              <div style={{overflowX:"auto",overflowY:"hidden",paddingBottom:8,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #2A2A2A"}}>
+                <style>{`
+                  .agenda-table::-webkit-scrollbar{height:8px}
+                  .agenda-table::-webkit-scrollbar-track{background:#2A2A2A;border-radius:4px}
+                  .agenda-table::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}
+                  .agenda-table::-webkit-scrollbar-thumb:hover{background:#C47D00}
+                `}</style>
+                <table className="agenda-table" style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
                     <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
                       <th style={{padding:"12px 16px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
@@ -2902,7 +2908,7 @@ export default function App(){
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
-                          <th key={d} style={{padding:"10px 6px",color:isToday?"#1A1A1A":isWkd?"#999":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:230,background:isToday?"#F5C200":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12,borderBottom:isToday?"3px solid #C47D00":"3px solid transparent"}}>
+                          <th key={d} style={{padding:"10px 6px",color:isToday?"#1A1A1A":isWkd?"#999":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:160,background:isToday?"#F5C200":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12,borderBottom:isToday?"3px solid #C47D00":"3px solid transparent"}}>
                             <div style={{fontSize:14,fontWeight:800}}>{isToday&&"📍 "}Dia {String(d).padStart(2,"0")}</div>
                             <div style={{fontSize:10,color:isToday?"#5A4400":"#AAA",fontWeight:600}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
                           </th>
@@ -2946,7 +2952,7 @@ export default function App(){
                                     saveSched(key,arr);
                                   };
                                   return(
-                                    <div key={si} style={{background:"#FFF",border:`1.5px solid ${tipoC}33`,borderLeft:`4px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",marginBottom:7,boxShadow:"0 2px 8px rgba(0,0,0,.08)",transition:"box-shadow .15s"}}>
+                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:7,padding:"6px 8px",marginBottom:4,boxShadow:"0 1px 4px rgba(0,0,0,.06)"}}>
                                       {/* Header: Empresa + botões */}
                                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
                                         <div style={{display:"flex",alignItems:"center",gap:6,flex:1,marginRight:4}}>
@@ -2999,7 +3005,7 @@ export default function App(){
                                         }
                                       }} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,width:"100%",marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
                                       {/* Status */}
-                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"6px 8px",border:"none",borderRadius:20,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
+                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:9,padding:"3px 6px",border:"none",borderRadius:10,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
                                         {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                                       </select>
                                     </div>
