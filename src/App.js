@@ -1067,19 +1067,23 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState("relatorios");
+  const [tab,setTab]=useState(()=>{
+    try{
+      const saved=localStorage.getItem("grupomov_user");
+      if(saved){
+        const p=JSON.parse(saved);const u=USERS.find(x=>x.id===p.id);
+        if(u?.acessoSas&&!u?.acessoComercial) return "sas";
+        if(u?.acessoComercial) return "mau_uso";
+        if(u?.apenasAgenda||u?.apenasAgenda150) return "agenda_prev";
+        if(u?.apenasOficina) return "agenda_ofi";
+        if(u?.apenasOficina150) return "agenda_ofi_150";
+      }
+    }catch(e){}
+    return "relatorios";
+  });
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
-  useEffect(()=>{
-    if(!user) return;
-    const allowed = user.acessoSas&&!user.acessoComercial ? ["sas"] :
-      user.acessoComercial ? (user.semSas ? ["mau_uso","a_faturar","dashboard_processos"] : ["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user.apenasAgenda ? ["agenda_prev","dashboard_processos"] :
-      user.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
-      user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
-      null;
-    if(allowed && !allowed.includes(tab)) setTab(allowed[0]);
-  },[user?.id, tab]);
+
   useEffect(()=>{
     if(!user) return;
     if(user.acessoSas&&!user.acessoComercial) setTab("sas");
@@ -1520,6 +1524,11 @@ export default function App(){
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
   if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);
+  if(u.acessoSas&&!u.acessoComercial) setTab("sas");
+  else if(u.acessoComercial) setTab("mau_uso");
+  else if(u.apenasAgenda||u.apenasAgenda150) setTab("agenda_prev");
+  else if(u.apenasOficina) setTab("agenda_ofi");
+  else if(u.apenasOficina150) setTab("agenda_ofi_150");
   if(u.acessoSas&&!u.acessoComercial) setTab("sas");
   else if(u.acessoComercial) setTab("mau_uso");
   else if(u.apenasAgenda||u.apenasAgenda150) setTab("agenda_prev");
@@ -4535,7 +4544,7 @@ export default function App(){
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(s=>{
-                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."))||0;
+                  const parseV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
                   const valCard=parseV(s.valor);
                   const limite1pct=valCard*0.01;
                   const valDesl=parseV(s.deslocamento);
