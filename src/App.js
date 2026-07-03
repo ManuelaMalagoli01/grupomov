@@ -3112,10 +3112,17 @@ export default function App(){
                                     </div>
                                   );
                                 })}
+                                    </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>);
-        })()}}
+        })()}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:800,fontSize:22,marginBottom:20}}>📊 Dashboard de Atendimentos</div>
