@@ -3057,7 +3057,6 @@ export default function App(){
                             </div>
                           </td>
                           {dias.map(d=>{
-                          {dias.map(d=>{
                             const dt=`${ym}-${String(d).padStart(2,"0")}`;
                             const key=`${tech}__${dt}`;
                             const slots=(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s));
@@ -3116,7 +3115,8 @@ export default function App(){
                             );
                           })}
                         </tr>
-                      ))}
+                      );
+                    })}
                     </tbody>
                   </table>
               </div>
