@@ -3008,9 +3008,6 @@ export default function App(){
                   ))}
                   <button onClick={addAtend} style={{padding:"8px 20px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",alignSelf:"flex-end"}}>Adicionar</button>
                 </div>
-              </div>
-              )}
-
               {/* Calendário horizontal */}
               <div style={{overflowX:"auto",paddingBottom:12,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #1E293B"}}>
                 <style>{`.ag-tbl::-webkit-scrollbar{height:8px}.ag-tbl::-webkit-scrollbar-track{background:#1E293B;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb:hover{background:#C47D00}`}</style>
