@@ -1731,7 +1731,7 @@ export default function App(){
       user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
       null;
-    if(allowedTabs && !allowedTabs.includes(tab)) return(<div/>);
+    // Access handled by useEffect redirect
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
