@@ -279,7 +279,7 @@ function LoginScreen({onLogin, users=USERS}){
           <div style={{width:84,height:84,borderRadius:20,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
             <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto"}}/>
           </div>
-          <div style={{fontSize:16,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
+          <div style={{fontSize:24,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
           <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
         </div>
 
@@ -1047,7 +1047,7 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
+  const [tab,setTab]=useState("relatorios");
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
@@ -1484,7 +1484,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda||u.apenasAgenda150)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -2533,7 +2533,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3166,7 +3166,7 @@ export default function App(){
           const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
-          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.data||"")=>{
             if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
             if(uberFrom&&d<uberFrom)return false;
@@ -3242,7 +3242,7 @@ export default function App(){
           const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
-          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
                     const applyFilter=(r,d=r.data||"")=>{
             if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
@@ -4013,7 +4013,7 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
           const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4171,10 +4171,10 @@ export default function App(){
               </div>
               <div style={{padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
                 {aprovCounts.map((a,i)=>(
-                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"10px 12px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
+                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"14px 16px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
                     onClick={()=>setFAprov(fAprov===Object.keys(APROV_STATUS)[i]?"todos":Object.keys(APROV_STATUS)[i])}>
                     <div style={{fontSize:11,fontWeight:800,color:a.c}}>{a.label}</div>
-                    <div style={{fontSize:18,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
+                    <div style={{fontSize:26,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
                     <div style={{fontSize:13,fontWeight:700,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
                     <div style={{background:"rgba(0,0,0,.08)",borderRadius:4,height:5}}>
                       <div style={{background:a.c,height:5,borderRadius:4,width:`${valTotal>0?Math.min(100,(a.valor/valTotal)*100):0}%`,transition:"width .5s"}}/>
@@ -4271,7 +4271,7 @@ export default function App(){
                   return(<>
                     <div style={{textAlign:"center"}}>
                       <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Faturado vs Meta</div>
-                      <div style={{fontSize:20,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
+                      <div style={{fontSize:28,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
                       <div style={{fontSize:12,color:"#888"}}>{fmtR(recebido)} de {fmtR(meta)}</div>
                     </div>
                     {/* Gauge visual */}
@@ -4349,7 +4349,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4390,7 +4390,7 @@ export default function App(){
               const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
               const realizados=listaFil.filter(s=>s.status==="realizado").length;
               const faturados=listaFil.filter(s=>s.status==="faturado").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
               const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
               const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
               const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
