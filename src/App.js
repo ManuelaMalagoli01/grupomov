@@ -1740,7 +1740,7 @@ export default function App(){
       user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
       null;
-    // Access handled by useEffect redirect
+    if(allowedTabs && !allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2937,55 +2937,83 @@ export default function App(){
             notify("✅ Atendimento salvo!");
           };
           return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:12}}>
+            <div style={{animation:"fadeIn .3s ease",background:"#0F172A",minHeight:"100vh",margin:"-24px -24px -60px",padding:"24px"}}>
+              {/* Header */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
                 <div>
-                  <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🗓 Agenda — Técnicos Externos</div>
-                  <div style={{fontSize:13,color:"#888",marginTop:2}}>{techsList.length} técnico(s)</div>
+                  <div style={{fontWeight:900,fontSize:28,color:"#F1F5F9",letterSpacing:-.5}}>🗓 Agenda — Técnicos Externos</div>
+                  <div style={{fontSize:13,color:"#64748B",marginTop:3}}>{techsList.length} técnico(s) ativos</div>
                 </div>
               </div>
 
-              {/* Filtros */}
-              <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                  <option value="todas">🌐 Todas Regiões</option>
-                  <option value="metropolitana">Metropolitana</option>
-                  <option value="roca">Roça</option>
-                  <option value="centroOeste">Centro-Oeste</option>
-                </select>
-                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
-                <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
-                <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+              {/* Filtros modernos */}
+              <div style={{background:"#1E293B",borderRadius:16,padding:"16px 20px",marginBottom:20,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",border:"1px solid #334155"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Região</label>
+                  <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}>
+                    <option value="todas">🌐 Todas</option>
+                    <option value="metropolitana">Metropolitana</option>
+                    <option value="roca">Roça</option>
+                    <option value="centroOeste">Centro-Oeste</option>
+                  </select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Técnico</label>
+                  <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Tipo</label>
+                  <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Status</label>
+                  <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",cursor:"pointer"}}><option value="todos">Todos</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Mês</label>
+                  <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F5C200",fontWeight:700,cursor:"pointer"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Ano</label>
+                  <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"8px 12px",borderRadius:10,border:"1px solid #334155",background:"#0F172A",color:"#F5C200",fontWeight:700,cursor:"pointer"}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                </div>
               </div>
 
               {/* Formulário novo atendimento */}
               {!isReadOnlyAgenda(user)&&(
-              <div className="card" style={{marginBottom:18,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-                <div style={{padding:"12px 18px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{background:"#1E293B",borderRadius:16,marginBottom:20,overflow:"hidden",border:"1px solid #334155"}}>
+                <div style={{padding:"14px 20px",background:"#F5C200",display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:16}}>➕</span>
-                  <div style={{fontWeight:800,fontSize:14,color:"#F5C200"}}>Novo Atendimento</div>
+                  <div style={{fontWeight:900,fontSize:14,color:"#1A1A1A"}}>Novo Atendimento</div>
                 </div>
-                <div style={{padding:"14px 18px",background:"#FFFBF0",display:"flex",gap:9,flexWrap:"wrap",alignItems:"flex-end"}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><input type="text" placeholder="—" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Horímetro</label><input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:140}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
-                  <BtnY onClick={addAtend}>Adicionar</BtnY>
+                <div style={{padding:"16px 20px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+                  {[
+                    {l:"Técnico",el:<select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>},
+                    {l:"Data",el:<input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
+                    {l:"Empresa",el:<input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",minWidth:140}}/>},
+                    {l:"Cidade",el:<input type="text" placeholder="—" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:100}}/>},
+                    {l:"Horímetro",el:<input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:90}}/>},
+                    {l:"Patrimônio",el:<input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:90}}/>},
+                    {l:"Relatório",el:<input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:100}}/>},
+                    {l:"Observação",fl:1,el:<input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9",width:"100%"}}/>},
+                    {l:"Início",el:<input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
+                    {l:"Término",el:<input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}/>},
+                    {l:"Tipo",el:<select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:getTipoCor(agTipo),fontWeight:700}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>},
+                    {l:"Status",el:<select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #334155",background:"#0F172A",color:"#F1F5F9"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>},
+                  ].map((f,fi)=>(
+                    <div key={fi} style={{display:"flex",flexDirection:"column",gap:4,flex:f.fl||0,minWidth:f.fl?120:undefined}}>
+                      <label style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.8}}>{f.l}</label>
+                      {f.el}
+                    </div>
+                  ))}
+                  <button onClick={addAtend} style={{padding:"8px 20px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",alignSelf:"flex-end"}}>Adicionar</button>
                 </div>
               </div>
               )}
 
               {/* Calendário horizontal */}
+              <div style={{overflowX:"auto",paddingBottom:12,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #1E293B"}}>
+                <style>{`.ag-tbl::-webkit-scrollbar{height:8px}.ag-tbl::-webkit-scrollbar-track{background:#1E293B;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}.ag-tbl::-webkit-scrollbar-thumb:hover{background:#C47D00}`}</style>
               <div style={{overflowX:"auto",overflowY:"hidden",paddingBottom:8,scrollbarWidth:"thin",scrollbarColor:"#F5C200 #2A2A2A"}}>
                 <style>{`
                   .agenda-table::-webkit-scrollbar{height:8px}
@@ -2993,19 +3021,19 @@ export default function App(){
                   .agenda-table::-webkit-scrollbar-thumb{background:#F5C200;border-radius:4px}
                   .agenda-table::-webkit-scrollbar-thumb:hover{background:#C47D00}
                 `}</style>
-                <table className="agenda-table" style={{borderCollapse:"collapse",width:"100%"}}>
+                <table className="ag-tbl" style={{borderCollapse:"collapse",width:"100%",tableLayout:"fixed"}}>
                   <thead>
-                    <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
-                      <th style={{padding:"12px 16px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
+                    <tr style={{background:"#0F172A",position:"sticky",top:0,zIndex:3}}>
+                      <th style={{padding:"14px 16px",color:"#F5C200",fontWeight:900,textAlign:"left",position:"sticky",left:0,background:"#0F172A",zIndex:4,minWidth:180,whiteSpace:"nowrap",fontSize:13,borderBottom:"2px solid #F5C200",borderRight:"1px solid #1E293B"}}>👷 Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
                         const isWkd=dow===0||dow===6;
                         const isToday=dt===TODAY_STR;
                         return(
-                          <th key={d} style={{padding:"10px 6px",color:isToday?"#1A1A1A":isWkd?"#999":"#FFF",fontWeight:isToday?900:600,textAlign:"center",minWidth:160,background:isToday?"#F5C200":isWkd?"#2A2A2A":"#1A1A1A",borderLeft:"1px solid #333",fontSize:12,borderBottom:isToday?"3px solid #C47D00":"3px solid transparent"}}>
-                            <div style={{fontSize:14,fontWeight:800}}>{isToday&&"📍 "}Dia {String(d).padStart(2,"0")}</div>
-                            <div style={{fontSize:10,color:isToday?"#5A4400":"#AAA",fontWeight:600}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
+                          <th key={d} style={{padding:"10px 8px",color:isToday?"#1A1A1A":isWkd?"#475569":"#CBD5E1",fontWeight:isToday?900:600,textAlign:"center",minWidth:200,background:isToday?"#F5C200":isWkd?"#1E293B":"#0F172A",borderLeft:"1px solid #1E293B",fontSize:12,borderBottom:isToday?"2px solid #C47D00":"2px solid #334155"}}>
+                            <div style={{fontSize:15,fontWeight:800}}>{isToday&&"📍"} {String(d).padStart(2,"0")}</div>
+                            <div style={{fontSize:10,opacity:.7}}>{"Dom Seg Ter Qua Qui Sex Sáb".split(" ")[dow]}</div>
                           </th>
                         );
                       })}
@@ -3017,17 +3045,18 @@ export default function App(){
                       const totalAtend=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>matchSt(s)&&matchTipo(s)).length;},0);
                       const totalConc=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>(s.status==="preventiva_concluida"||s.status==="corretiva_concluida")&&matchTipo(s)).length;},0);
                       return(
-                        <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
-                            <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
-                              <span style={{width:11,height:11,borderRadius:"50%",background:color,display:"inline-block",flexShrink:0,boxShadow:`0 0 0 3px ${color}22`}}/>
-                              <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
+                        <tr key={tech} style={{background:ti%2===0?"#1E293B":"#162032",verticalAlign:"top"}}>
+                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#1E293B":"#162032",zIndex:1,borderBottom:"1px solid #334155",borderRight:`2px solid ${color}`}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                              <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block",boxShadow:`0 0 0 3px ${color}33`}}/>
+                              <span style={{fontWeight:800,fontSize:13,color:"#F1F5F9"}}>{tech}</span>
                             </div>
-                            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                              <span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{totalAtend} atend.</span>
-                              {totalConc>0&&<span style={{fontSize:10,fontWeight:700,color:"#1A7A3C",background:"#F0FFF5",borderRadius:8,padding:"2px 7px"}}>{totalConc} concl.</span>}
+                            <div style={{display:"flex",gap:5}}>
+                              <span style={{fontSize:9,fontWeight:700,color:"#3B82F6",background:"#1E3A5F",borderRadius:6,padding:"2px 7px"}}>{totalAtend} atend.</span>
+                              {totalConc>0&&<span style={{fontSize:9,fontWeight:700,color:"#22C55E",background:"#14532D",borderRadius:6,padding:"2px 7px"}}>{totalConc} concl.</span>}
                             </div>
                           </td>
+                          {dias.map(d=>{
                           {dias.map(d=>{
                             const dt=`${ym}-${String(d).padStart(2,"0")}`;
                             const key=`${tech}__${dt}`;
@@ -3047,78 +3076,46 @@ export default function App(){
                                     saveSched(key,arr);
                                   };
                                   return(
-                                    <div key={si} style={{background:"#FFF",border:`1px solid ${tipoC}22`,borderLeft:`3px solid ${tipoC}`,borderRadius:7,padding:"6px 8px",marginBottom:4,boxShadow:"0 1px 4px rgba(0,0,0,.06)"}}>
-                                      {/* Header: Empresa + botões */}
-                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
-                                        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,marginRight:4}}>
-                                          <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"15",borderRadius:20,padding:"2px 8px",whiteSpace:"nowrap"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
-                                        </div>
-                                        {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:2,flexShrink:0}}>
-                                          <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",fontSize:12,padding:"3px 6px"}}>✏️</button>
-                                          <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
-                                        </div>)}
+                                    <div key={si} style={{background:"#1E293B",border:`1px solid ${tipoC}44`,borderLeft:`3px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",marginBottom:6,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
+                                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                                        <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"22",borderRadius:10,padding:"2px 8px",whiteSpace:"nowrap"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
+                                        {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:2}}>
+                                          <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} style={{background:"#1E3A5F",border:"none",borderRadius:6,color:"#60A5FA",cursor:"pointer",fontSize:11,padding:"2px 6px"}}>✏️</button>
+                                          <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} style={{background:"#3B0F0F",border:"none",borderRadius:6,color:"#F87171",cursor:"pointer",fontSize:10,fontWeight:700,padding:"2px 6px"}}>✕</button>
+                                        </div>}
                                       </div>
-                                      <div style={{fontWeight:700,fontSize:11,color:"#1A1A1A",marginBottom:3,wordBreak:"break-word",lineHeight:1.2}}>{s.client}</div>
-                                      <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:3}}>
-                                        {s.patrimonio&&<span style={{fontSize:8,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
-                                        {s.cidade&&<span style={{fontSize:8,background:"#EFF6FF",color:"#1565C0",borderRadius:6,padding:"1px 5px",fontWeight:600}}>📍 {s.cidade}</span>}
-                                        {s.horimetro&&<span style={{fontSize:8,background:"#FFFBF0",color:"#C47D00",borderRadius:6,padding:"1px 5px",fontWeight:600}}>⏱ {s.horimetro}</span>}
+                                      <div style={{fontWeight:700,fontSize:12,color:"#F1F5F9",marginBottom:5,wordBreak:"break-word"}}>{s.client}</div>
+                                      <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:5}}>
+                                        {s.patrimonio&&<span style={{fontSize:9,background:"#334155",color:"#94A3B8",borderRadius:6,padding:"1px 6px"}}>🏷️ {s.patrimonio}</span>}
+                                        {s.cidade&&<span style={{fontSize:9,background:"#1E3A5F",color:"#60A5FA",borderRadius:6,padding:"1px 6px"}}>📍 {s.cidade}</span>}
+                                        {s.horimetro&&<span style={{fontSize:9,background:"#1C2B1A",color:"#86EFAC",borderRadius:6,padding:"1px 6px"}}>⏱ {s.horimetro}</span>}
                                       </div>
-                                      {/* Relatório */}
-                                      <input
-                                        type="text"
-                                        defaultValue={s.relatorio||""}
-                                        onBlur={e=>updateSlot({relatorio:e.target.value})}
-                                        placeholder="Nº Relatório"
-                                        disabled={isReadOnlyAgenda(user)}
-                                        style={{width:"100%",fontSize:9,padding:"3px 5px",border:"1px solid #E0E0E0",borderRadius:5,marginBottom:3,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA",fontWeight:600,color:"#1565C0"}}
-                                      />
-                                      <input
-                                        type="text"
-                                        defaultValue={s.obs||""}
-                                        onBlur={e=>updateSlot({obs:e.target.value})}
-                                        placeholder="📝 Observações..."
-                                        disabled={isReadOnlyAgenda(user)}
-                                        style={{width:"100%",fontSize:9,padding:"3px 5px",border:"1px solid #FFE8A0",borderRadius:5,marginBottom:3,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}
-                                      />
-                                      {/* Entrada / Saída / Soma */}
-                                      <div style={{display:"flex",gap:3,alignItems:"center",marginBottom:3}}>
-                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:9,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                        <span style={{fontSize:10,color:"#AAA"}}>→</span>
-                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:9,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                        {horas&&<span style={{fontSize:9,fontWeight:800,color:"#1A7A3C",background:"#F0FFF5",padding:"2px 5px",borderRadius:5,whiteSpace:"nowrap"}}>{horas}</span>}
+                                      <input type="text" defaultValue={s.relatorio||""} onBlur={e=>updateSlot({relatorio:e.target.value})} placeholder="Nº Relatório" disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:10,padding:"4px 7px",border:"1px solid #334155",borderRadius:6,marginBottom:4,boxSizing:"border-box",background:"#0F172A",color:"#60A5FA",fontWeight:600}}/>
+                                      <input type="text" defaultValue={s.obs||""} onBlur={e=>updateSlot({obs:e.target.value})} placeholder="📝 Obs..." disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:10,padding:"4px 7px",border:"1px solid #F5C20044",borderRadius:6,marginBottom:4,boxSizing:"border-box",background:"#1C1A0A",color:"#FDE68A"}}/>
+                                      <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:4}}>
+                                        <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,flex:1,background:"#0F172A",color:"#CBD5E1"}}/>
+                                        <span style={{fontSize:10,color:"#475569"}}>→</span>
+                                        <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,flex:1,background:"#0F172A",color:"#CBD5E1"}}/>
+                                        {horas&&<span style={{fontSize:9,fontWeight:800,color:"#22C55E",background:"#14532D",padding:"2px 6px",borderRadius:6,whiteSpace:"nowrap"}}>{horas}</span>}
                                       </div>
-                                      {/* Data */}
                                       <input type="date" defaultValue={dt} onBlur={e=>{
                                         if(isReadOnlyAgenda(user))return;
                                         if(e.target.value&&e.target.value!==dt){
                                           const newKey=`${tech}__${e.target.value}`;
                                           const oldArr=(schedule[key]||[]).filter((_,j)=>j!==si);
-                                          saveSched(key,oldArr);
-                                          saveSched(newKey,[...(schedule[newKey]||[]),s]);
+                                          saveSched(key,oldArr);saveSched(newKey,[...(schedule[newKey]||[]),s]);
                                         }
-                                      }} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,width:"100%",marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                      {/* Status */}
-                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:9,padding:"3px 6px",border:"none",borderRadius:10,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
+                                      }} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"3px 5px",border:"1px solid #334155",borderRadius:6,width:"100%",marginBottom:4,boxSizing:"border-box",background:"#0F172A",color:"#CBD5E1"}}/>
+                                      <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:10,padding:"4px 8px",border:"none",borderRadius:10,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
                                         {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                                       </select>
                                     </div>
                                   );
                                 })}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
               </div>
-            </div>
-          );
-        })()}
-
-        {/* ── DASHBOARD ── */}
+            )}
+          </div>);
+        })()}}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:800,fontSize:22,marginBottom:20}}>📊 Dashboard de Atendimentos</div>
