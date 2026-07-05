@@ -1058,6 +1058,11 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 }
 
 export default function App(){
+  // Serviços Administrativos form states
+  const [formServH,setFormServH]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesH,setFiltroMesH]=useState("");
+  const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesM,setFiltroMesM]=useState("");
   const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
   const [user,setUser]=useState(()=>{
     try{
@@ -1068,13 +1073,8 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [formServH,setFormServH]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-  const [filtroMesH,setFiltroMesH]=useState("");
-  const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-  const [filtroMesM,setFiltroMesM]=useState("");
   const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
     const allowed = user.acessoSas&&!user.acessoComercial ? ["sas"] :
@@ -1724,7 +1724,7 @@ export default function App(){
       user?.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
       null;
-    if(allowedTabs&&!allowedTabs.includes(tab))return null;
+    if(allowedTabs&&!allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2258,12 +2258,12 @@ export default function App(){
           const formServ=formServH;const setFormServ=setFormServH;
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
-          const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const resetForm=()=>setFormServ({data:TODAY_STR||"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendHebert(p=>[rec,...p]);db.save("pendencias_hebert",[rec,...pendHebert]);resetForm();notify("Serviço registrado!");};
           const updServ=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
           const archServ=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const filtroMes=filtroMesH;const setFiltroMes=setFiltroMesH;
+          const filtroMes=tab==="pendencias_hebert"?filtroMesH:filtroMesM;const setFiltroMes=tab==="pendencias_hebert"?setFiltroMesH:setFiltroMesM;
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
@@ -5208,15 +5208,15 @@ export default function App(){
           const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const formServ=formServM;const setFormServ=setFormServM;
+          const formServ=formServH;const setFormServ=setFormServH;
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
-          const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const resetForm=()=>setFormServ({data:TODAY_STR||"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendMatheus(p=>[rec,...p]);db.save("pendencias_matheus",[rec,...pendMatheus]);resetForm();notify("Serviço registrado!");};
           const updServ=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const archServ=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const filtroMes=filtroMesM;const setFiltroMes=setFiltroMesM;
+          const filtroMes=tab==="pendencias_hebert"?filtroMesH:filtroMesM;const setFiltroMes=tab==="pendencias_hebert"?setFiltroMesH:setFiltroMesM;
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
