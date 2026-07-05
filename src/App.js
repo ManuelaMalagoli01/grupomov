@@ -1,7 +1,5 @@
         /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
-// Force clear service worker cache
-if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>{regs.forEach(r=>r.unregister());});}
 // ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v4
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
@@ -44,18 +42,10 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
-  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
-  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
-  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"rafael_g",     username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"anderson_s",   username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:false, apenasOficina150:true },
-  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:false, apenasOficina:true },
-  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
-  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
+  { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
+  { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
   { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
   { id:"helbert",      username:"helbert.tecnico",   name:"Helbert",          role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
   { id:"dilson",       username:"dilson.tecnico",    name:"Dilson",           role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
@@ -922,27 +912,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="ruptura_almox") return ["manuela","gustavo","renato"].includes(user.id);
     if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_gustavo","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
-    if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
-    if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
-    if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
-    if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
-    if(tipo==="oficinas") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s"||user.id==="matheus_m";
+    if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
+    if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
+    if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
+    if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
+    if(tipo==="oficinas") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi"||user.id==="matheus_ofi";
     return true;
   };
 
-  if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
-      <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
-      {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
-    </div>
-  );
-  if(user.acessoSas&&!user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="sas" l="📄 SAS"/>
-    </div>
-  );
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -969,7 +946,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOficina) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi","🗓 Agenda"],["apontamentos","📝 Apontamentos"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi","🗓 Agenda Oficina"],["dashboard_ofi","📊 Dashboard Oficina"],["pendencias_hebert","🔧 Pendências Hebert"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -977,7 +954,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"],["pendencias_matheus","🔧 Pendências Matheus"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -1027,14 +1004,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
-            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="📋 Serviços Adm"/>}
+            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Pendências Hebert"/>}
           </>}
           {canSee("ofi150")&&<>
             <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
             <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="📋 Serviços Adm"/>}
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Pendências Matheus"/>}
           </>}
         </div>}
       </>}
@@ -1060,11 +1037,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 }
 
 export default function App(){
-  // Serviços Administrativos form states
-  const [formServH,setFormServH]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-  const [filtroMesH,setFiltroMesH]=useState("");
-  const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-  const [filtroMesM,setFiltroMesM]=useState("");
   const isReadOnlyAgenda = (u)=> !!(u && (u.apenasAgenda || u.apenasAgenda150));
   const [user,setUser]=useState(()=>{
     try{
@@ -1075,18 +1047,9 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
+  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
-  useEffect(()=>{
-    if(!user) return;
-    const allowed = user.acessoSas&&!user.acessoComercial ? ["sas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
-      user.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
-      user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
-      null;
-    if(allowed&&!allowed.includes(tab)) setTab(allowed[0]);
-  },[user?.id]);
+  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1521,7 +1484,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda||u.apenasAgenda150)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -1720,13 +1683,6 @@ export default function App(){
 
 
   const renderTab = () => {
-    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
-      user?.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
-      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
-      null;
-    if(allowedTabs&&!allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2249,143 +2205,41 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
-                {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s")&&(()=>{
-          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
-          const SERVICOS_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
-          const SERVICOS_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
-          const EQUIP_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
-          const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
+        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const formServ=formServH;const setFormServ=setFormServH;
-          const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
-          const showObs2=SERVICOS_OBS.includes(formServ.servico);
-          const resetForm=()=>setFormServ({data:TODAY_STR||"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-          const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendHebert(p=>[rec,...p]);db.save("pendencias_hebert",[rec,...pendHebert]);resetForm();notify("Serviço registrado!");};
-          const updServ=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const archServ=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const filtroMes=tab==="pendencias_hebert"?filtroMesH:filtroMesM;const setFiltroMes=tab==="pendencias_hebert"?setFiltroMesH:setFiltroMesM;
-          const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
-          const dashTotal=listaFiltrada.length;
-          const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
-          const dashAndamento=listaFiltrada.filter(r=>r.status==="em_andamento").length;
-          const dashConc=listaFiltrada.filter(r=>r.status==="concluido").length;
-          const dashServicoCount={};listaFiltrada.forEach(r=>{const s=r.servico||"—";dashServicoCount[s]=(dashServicoCount[s]||0)+1;});
-          const dashTopServ=Object.entries(dashServicoCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
-          const dashPrioCount={urgente:listaFiltrada.filter(r=>r.prioridade==="urgente").length,medio:listaFiltrada.filter(r=>r.prioridade==="medio").length,normal:listaFiltrada.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
+          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 1340</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{listaFiltrada.length} registro(s)</div></div>
-                <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#E67E00":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Mostrar Arquivados":"📦 Arquivados"}</button>
-              </div>
-              {/* ── DASHBOARD ── */}
-              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📊 Painel</div>
-              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
-                <input type="month" value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                {filtroMes&&<button onClick={()=>setFiltroMes("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
-                {[{l:"Total",v:dashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:dashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:dashAndamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:dashConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-                {[{l:"🔴 Urgente",v:dashPrioCount.urgente,c:"#C62828",bg:"#FFF0F0"},{l:"🟡 Médio",v:dashPrioCount.medio,c:"#E67E00",bg:"#FFF8F0"},{l:"🟢 Normal",v:dashPrioCount.normal,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"8px 10px",borderLeft:`3px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>{k.l}</div>
-                    <div style={{fontSize:16,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              {dashTopServ.length>0&&<div className="card" style={{padding:12,marginBottom:14}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:8}}>🔧 Top Serviços</div>
-                {dashTopServ.map(([s,c],i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                    <span style={{fontSize:11,fontWeight:600,color:"#333"}}>{s}</span>
-                    <div style={{display:"flex",alignItems:"center",gap:6}}>
-                      <div style={{background:"#F0F0F0",borderRadius:4,height:6,width:80}}>
-                        <div style={{background:"#1565C0",height:6,borderRadius:4,width:`${dashTopServ[0][1]>0?(c/dashTopServ[0][1])*100:0}%`}}/>
-                      </div>
-                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0",minWidth:20,textAlign:"right"}}>{c}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>}
-              {/* ── FORMULÁRIO NOVO SERVIÇO ── */}
-              <div className="card" style={{padding:16,marginBottom:16,border:"1.5px solid #F5C200"}}>
-                <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>➕ Novo Serviço</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={formServ.data} onChange={e=>setFormServ(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={formServ.servico} onChange={e=>setFormServ(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Hebert Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
                 </div>
-                {showEquip&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #1565C044"}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes do Equipamento</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Categoria</label><select value={formServ.equipCateg} onChange={e=>setFormServ(p=>({...p,equipCateg:e.target.value}))} style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3}}><option value="">Selecione...</option>{EQUIP_OPT.map(o=><option key={o}>{o}</option>)}</select></div>
-                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Detalhe</label><input type="text" value={formServ.equipDetalhe} onChange={e=>setFormServ(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>
-                  </div>
-                  {formServ.equipCateg==="Outros"&&<div style={{marginTop:8}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>}
-                </div>}
-                {showObs2&&<div style={{background:"#FFFBF0",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F5C20044"}}>
-                  <label style={{fontSize:9,fontWeight:800,color:"#C47D00",textTransform:"uppercase"}}>📝 Observação do Serviço</label>
-                  <textarea value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F5C20044",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
-                </div>}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={formServ.descricao} onChange={e=>setFormServ(p=>({...p,descricao:e.target.value}))} placeholder="Descrição do serviço..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={formServ.prioridade} onChange={e=>setFormServ(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={formServ.status} onChange={e=>setFormServ(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
-                </div>
-                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações Gerais</label><textarea value={formServ.obs} onChange={e=>setFormServ(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
-                <button onClick={addServ} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
               </div>
-              {/* ── LISTA DE SERVIÇOS ── */}
-              {listaFiltrada.length===0?<div className="card" style={{padding:40,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço registrado</div></div>:(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340,1fr))",gap:10}}>
-                {listaFiltrada.map((r,ri)=>{
-                  const prio=PRIO_MAP[r.prioridade]||PRIO_MAP.normal;
-                  const hasEquip=SERVICOS_EQUIP.includes(r.servico);
-                  const hasObs2=SERVICOS_OBS.includes(r.servico);
-                  return(
-                    <div key={r.id||ri} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${prio.c}`,background:r.arquivado?"#F8F8F8":"#FFF",opacity:r.arquivado?.6:1}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                        <div style={{display:"flex",gap:5,alignItems:"center"}}>
-                          <span style={{fontSize:9,fontWeight:800,color:prio.c,background:prio.bg,borderRadius:10,padding:"2px 8px"}}>{prio.l}</span>
-                          <span style={{fontSize:9,fontWeight:700,color:STS_MAP[r.status]?"#555":"#AAA",background:"#F0F0F0",borderRadius:10,padding:"2px 8px"}}>{STS_MAP[r.status]||"⏳ Pendente"}</span>
-                        </div>
-                        <div style={{display:"flex",gap:3}}>
-                          <button onClick={()=>archServ(r.id)} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button>
-                          <button onClick={()=>delServ(r.id)} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button>
-                        </div>
-                      </div>
-                      <div style={{fontSize:10,color:"#888",marginBottom:4}}>📅 {r.data||"—"}</div>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:4}}>{r.servico||"—"}</div>
-                      {r.descricao&&<div style={{fontSize:11,color:"#555",marginBottom:6}}>{r.descricao}</div>}
-                      {hasEquip&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #1565C022"}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase",marginBottom:3}}>📦 Equipamento</div>
-                        {r.equipCateg&&<div style={{fontSize:11,fontWeight:600,color:"#333"}}>{r.equipCateg}{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
-                      </div>}
-                      {(hasEquip||hasObs2)&&r.obsCondicional&&<div style={{background:"#FFFBF0",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #F5C20033"}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase",marginBottom:3}}>📝 Obs. Serviço</div>
-                        <div style={{fontSize:11,color:"#555"}}>{r.obsCondicional}</div>
-                      </div>}
-                      {r.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
-                        <select value={r.prioridade||"normal"} onChange={e=>updServ(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
-                        <select value={r.status||"pendente"} onChange={e=>updServ(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
-                      </div>
-                      <div style={{fontSize:9,color:"#CCC",marginTop:6,textAlign:"right"}}>{r.registradoPor||""}</div>
-                    </div>
-                  );
-                })}
-              </div>)}
+              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
+                  <tbody>{list.map(r=>{
+                    const p=PRIO[r.prioridade||"medio"];
+                    const res=r.status==="resolvido";
+                    return(
+                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
+                      <td><input type="date" value={r.data||""} onChange={e=>hebCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                      <td><input type="text" value={r.descricao||""} onChange={e=>hebCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva a pendência..."/></td>
+                      <td><select value={r.prioridade||"medio"} onChange={e=>hebCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
+                      <td><select value={r.status||"pendente"} onChange={e=>hebCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
+                      <td><input type="text" value={r.obs||""} onChange={e=>hebCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
+                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>hebCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))hebCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                    </tr>);})}</tbody>
+                </table></div></div>
+              )}
             </div>
           );
         })()}
+
         {/* ── PENDÊNCIAS MANUELA ── */}
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
@@ -4514,6 +4368,14 @@ export default function App(){
                 <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
             </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:i===3?16:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
             <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={sasSearch} onChange={e=>setSasSearch(e.target.value)} placeholder="Buscar cliente, equipamento, NF, relatório..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={sasFrom} onChange={e=>setSasFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
@@ -4522,94 +4384,37 @@ export default function App(){
               <select value={sasAno} onChange={e=>setSasAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-                        {(()=>{
-              const pv=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
-              const fmt=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2});
-              const sP=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-              const sC=listaFil.filter(s=>s.status==="concluido").length;
-              const sF=listaFil.filter(s=>s.status==="faturado").length;
-              const sPg=listaFil.filter(s=>s.pago==="sim").length;
-              const bruto=listaFil.reduce((a,s)=>a+pv(s.valor),0);
-              const pct1=bruto*0.01;
-              const desl=listaFil.reduce((a,s)=>a+pv(s.deslocamento),0);
-              const liq=Math.max(0,pct1-desl);
-              const dI=listaFil.filter(s=>{const v2=pv(s.valor);const lm=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?v2*0.20:v2*0.01;return v2>0&&pv(s.deslocamento)>lm;}).length;
-              const tET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
-              const tME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
-              const tMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
-              const tGar=listaFil.filter(s=>s.tipoServico==="Garantia").length;
-              const td=new Date();td.setHours(0,0,0,0);
-              const gA=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const d2=Math.floor((dg-td)/86400000);return d2>=0&&d2<=180;}).length;
-              const gC=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const d2=Math.floor((dg-td)/86400000);return d2>=0&&d2<=30;}).length;
-              const gM=d2=>{if(!d2)return null;const dt=new Date(d2);if(isNaN(dt))return null;return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0");};
-              const mN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const mL=[...new Set(listaFil.map(s=>gM(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const bD={labels:mL.map(m=>{const[y,mo]=m.split("-");return mN[parseInt(mo)-1]+"/"+y.slice(2);}),datasets:[{label:"Solicitações",data:mL.map(m=>listaFil.filter(s=>gM(s.dataSolicitacao)===m).length),backgroundColor:"#3B82F6",borderRadius:6},{label:"Faturados",data:mL.map(m=>listaFil.filter(s=>gM(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#10B981",borderRadius:6}]};
-              const bO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:16}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
-              const cM={};listaFil.forEach(s=>{if(s.cliente)cM[s.cliente]=(cM[s.cliente]||0)+pv(s.valor);});
-              const tC=Object.entries(cM).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const dS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sP,sC,sF],backgroundColor:["#F59E0B","#3B82F6","#10B981"],borderWidth:0,borderRadius:4}]};
-              const dT={labels:["Entrega Técnica","Manutenção Externa","Manutenção Interna","Garantia"],datasets:[{data:[tET,tME,tMI,tGar],backgroundColor:["#10B981","#F59E0B","#3B82F6","#8B5CF6"],borderWidth:0,borderRadius:4}]};
+            {/* ── SAS DASHBOARD ── */}
+            {(()=>{
+              const total=listaFil.length;
+              const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+              const realizados=listaFil.filter(s=>s.status==="realizado").length;
+              const faturados=listaFil.filter(s=>s.status==="faturado").length;
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+              const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
+              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const getMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const mesesS=[...new Set(listaFil.map(s=>getMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const chartSasData={labels:mesesS.map(m=>{const[y,mo]=m.split("-");return`${MESES_S[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
+              const barSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const cliMapS={};listaFil.forEach(s=>{if(s.cliente)cliMapS[s.cliente]=(cliMapS[s.cliente]||0)+parseVal(s.valor);});
+              const topCliS=Object.entries(cliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const donutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
               return(<>
-                {/* ── ROW 1: Resumo Executivo ── */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
-                  {[{l:"Total",v:listaFil.length,c:"#1E293B",bg:"linear-gradient(135deg,#F8FAFC,#E2E8F0)",i:"📄"},{l:"Pendentes",v:sP,c:"#D97706",bg:"linear-gradient(135deg,#FFFBEB,#FEF3C7)",i:"⏳"},{l:"Concluídos",v:sC,c:"#2563EB",bg:"linear-gradient(135deg,#EFF6FF,#DBEAFE)",i:"✅"},{l:"Faturados",v:sF,c:"#059669",bg:"linear-gradient(135deg,#ECFDF5,#D1FAE5)",i:"💰"},{l:"Pagos",v:sPg,c:"#7C3AED",bg:"linear-gradient(135deg,#F5F3FF,#EDE9FE)",i:"💳"}].map((k,ki)=>(
-                    <div key={ki} style={{background:k.bg,borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:28,fontWeight:900,color:k.c}}>{k.v}</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
+                    <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?13:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                     </div>
                   ))}
                 </div>
-                {/* ── ROW 2: Valores Financeiros ── */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
-                  {[{l:"Valor Bruto",v:fmt(bruto),c:"#1E293B"},{l:"Comissão 1%",v:fmt(pct1),c:"#059669"},{l:"Deslocamento",v:fmt(desl),c:"#64748B"},{l:"Líquido (1%−Desl)",v:fmt(liq),c:liq>0?"#2563EB":"#DC2626"},{l:"Desl. Indevidos",v:dI+"",c:dI>0?"#DC2626":"#059669"}].map((k,ki)=>(
-                    <div key={ki} style={{background:"#FFF",borderRadius:14,padding:"14px 18px",boxShadow:"0 1px 4px rgba(0,0,0,.05)",borderBottom:`3px solid ${k.c}`}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{k.l}</div>
-                      <div style={{fontSize:ki===4?28:15,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{mesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartSasData} options={barSasOpts} height={160}/>}</div>
+                  <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={donutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
+                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{topCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCliS[0][1]>0?(val/topCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
                 </div>
-                {/* ── ROW 3: Tipos + Garantia ── */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr 1fr",gap:12,marginBottom:16}}>
-                  {[{l:"Entrega Técnica",v:tET,c:"#10B981",i:"🔧"},{l:"Manut. Externa",v:tME,c:"#F59E0B",i:"🏭"},{l:"Manut. Interna",v:tMI,c:"#3B82F6",i:"🏢"},{l:"Garantia",v:tGar,c:"#8B5CF6",i:"🛡️"},{l:"Gar. ≤6m",v:gA,c:gA>0?"#D97706":"#10B981",i:"⚠️"},{l:"Gar. ≤30d",v:gC,c:gC>0?"#DC2626":"#10B981",i:"🔴"}].map((k,ki)=>(
-                    <div key={ki} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",boxShadow:"0 1px 4px rgba(0,0,0,.05)",textAlign:"center"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                {/* ── ROW 4: Gráficos ── */}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:14,marginBottom:16}}>
-                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>📈 Evolução Mensal</div>
-                    {mL.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30,fontSize:13}}>Sem dados</div>:<ChartCanvas type="bar" data={bD} options={bO} height={180}/>}
-                  </div>
-                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>📊 Status</div>
-                    <ChartCanvas type="doughnut" data={dS} options={{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:10,padding:12}}}}} height={160}/>
-                  </div>
-                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🔧 Por Tipo</div>
-                    <ChartCanvas type="doughnut" data={dT} options={{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:10,padding:12}}}}} height={160}/>
-                  </div>
-                </div>
-                {/* ── ROW 5: Top Clientes ── */}
-                {tC.length>0&&<div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:16}}>
-                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏆 Top Clientes por Valor</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10}}>
-                    {tC.map(([cli,val],ci)=>(
-                      <div key={ci} style={{background:"#F8FAFC",borderRadius:10,padding:"12px 14px",borderLeft:`4px solid hsl(${220+ci*30},70%,50%)`}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                          <span style={{fontSize:12,fontWeight:700,color:"#334155"}}>{ci+1}. {cli}</span>
-                          <span style={{fontSize:12,fontWeight:800,color:"#2563EB"}}>{fmt(val)}</span>
-                        </div>
-                        <div style={{background:"#E2E8F0",borderRadius:6,height:6}}>
-                          <div style={{background:`hsl(${220+ci*30},70%,50%)`,height:6,borderRadius:6,width:`${tC[0][1]>0?(val/tC[0][1])*100:0}%`,transition:"width .5s"}}/>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>}
               </>);
             })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
@@ -5202,140 +5007,34 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS MATHEUS ── */}
-                {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m")&&(()=>{
-          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
-          const SERVICOS_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
-          const SERVICOS_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
-          const EQUIP_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
-          const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
+        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const formServ=formServH;const setFormServ=setFormServH;
-          const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
-          const showObs2=SERVICOS_OBS.includes(formServ.servico);
-          const resetForm=()=>setFormServ({data:TODAY_STR||"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
-          const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendMatheus(p=>[rec,...p]);db.save("pendencias_matheus",[rec,...pendMatheus]);resetForm();notify("Serviço registrado!");};
-          const updServ=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const archServ=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const filtroMes=tab==="pendencias_hebert"?filtroMesH:filtroMesM;const setFiltroMes=tab==="pendencias_hebert"?setFiltroMesH:setFiltroMesM;
-          const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
-          const dashTotal=listaFiltrada.length;
-          const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
-          const dashAndamento=listaFiltrada.filter(r=>r.status==="em_andamento").length;
-          const dashConc=listaFiltrada.filter(r=>r.status==="concluido").length;
-          const dashServicoCount={};listaFiltrada.forEach(r=>{const s=r.servico||"—";dashServicoCount[s]=(dashServicoCount[s]||0)+1;});
-          const dashTopServ=Object.entries(dashServicoCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
-          const dashPrioCount={urgente:listaFiltrada.filter(r=>r.prioridade==="urgente").length,medio:listaFiltrada.filter(r=>r.prioridade==="medio").length,normal:listaFiltrada.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
+          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 150</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{listaFiltrada.length} registro(s)</div></div>
-                <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#E67E00":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Mostrar Arquivados":"📦 Arquivados"}</button>
-              </div>
-              {/* ── DASHBOARD ── */}
-              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📊 Painel</div>
-              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
-                <input type="month" value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                {filtroMes&&<button onClick={()=>setFiltroMes("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
-                {[{l:"Total",v:dashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:dashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:dashAndamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:dashConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-                {[{l:"🔴 Urgente",v:dashPrioCount.urgente,c:"#C62828",bg:"#FFF0F0"},{l:"🟡 Médio",v:dashPrioCount.medio,c:"#E67E00",bg:"#FFF8F0"},{l:"🟢 Normal",v:dashPrioCount.normal,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,ki)=>(
-                  <div key={ki} className="card" style={{padding:"8px 10px",borderLeft:`3px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>{k.l}</div>
-                    <div style={{fontSize:16,fontWeight:900,color:k.c}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
-              {dashTopServ.length>0&&<div className="card" style={{padding:12,marginBottom:14}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:8}}>🔧 Top Serviços</div>
-                {dashTopServ.map(([s,c],i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                    <span style={{fontSize:11,fontWeight:600,color:"#333"}}>{s}</span>
-                    <div style={{display:"flex",alignItems:"center",gap:6}}>
-                      <div style={{background:"#F0F0F0",borderRadius:4,height:6,width:80}}>
-                        <div style={{background:"#1565C0",height:6,borderRadius:4,width:`${dashTopServ[0][1]>0?(c/dashTopServ[0][1])*100:0}%`}}/>
-                      </div>
-                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0",minWidth:20,textAlign:"right"}}>{c}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>}
-              {/* ── FORMULÁRIO NOVO SERVIÇO ── */}
-              <div className="card" style={{padding:16,marginBottom:16,border:"1.5px solid #F5C200"}}>
-                <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>➕ Novo Serviço</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={formServ.data} onChange={e=>setFormServ(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={formServ.servico} onChange={e=>setFormServ(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Matheus</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
                 </div>
-                {showEquip&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #1565C044"}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes do Equipamento</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Categoria</label><select value={formServ.equipCateg} onChange={e=>setFormServ(p=>({...p,equipCateg:e.target.value}))} style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3}}><option value="">Selecione...</option>{EQUIP_OPT.map(o=><option key={o}>{o}</option>)}</select></div>
-                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Detalhe</label><input type="text" value={formServ.equipDetalhe} onChange={e=>setFormServ(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>
-                  </div>
-                  {formServ.equipCateg==="Outros"&&<div style={{marginTop:8}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>}
-                </div>}
-                {showObs2&&<div style={{background:"#FFFBF0",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F5C20044"}}>
-                  <label style={{fontSize:9,fontWeight:800,color:"#C47D00",textTransform:"uppercase"}}>📝 Observação do Serviço</label>
-                  <textarea value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F5C20044",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
-                </div>}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={formServ.descricao} onChange={e=>setFormServ(p=>({...p,descricao:e.target.value}))} placeholder="Descrição do serviço..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={formServ.prioridade} onChange={e=>setFormServ(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={formServ.status} onChange={e=>setFormServ(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
-                </div>
-                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações Gerais</label><textarea value={formServ.obs} onChange={e=>setFormServ(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
-                <button onClick={addServ} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
               </div>
-              {/* ── LISTA DE SERVIÇOS ── */}
-              {listaFiltrada.length===0?<div className="card" style={{padding:40,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço registrado</div></div>:(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340,1fr))",gap:10}}>
-                {listaFiltrada.map((r,ri)=>{
-                  const prio=PRIO_MAP[r.prioridade]||PRIO_MAP.normal;
-                  const hasEquip=SERVICOS_EQUIP.includes(r.servico);
-                  const hasObs2=SERVICOS_OBS.includes(r.servico);
-                  return(
-                    <div key={r.id||ri} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${prio.c}`,background:r.arquivado?"#F8F8F8":"#FFF",opacity:r.arquivado?.6:1}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                        <div style={{display:"flex",gap:5,alignItems:"center"}}>
-                          <span style={{fontSize:9,fontWeight:800,color:prio.c,background:prio.bg,borderRadius:10,padding:"2px 8px"}}>{prio.l}</span>
-                          <span style={{fontSize:9,fontWeight:700,color:STS_MAP[r.status]?"#555":"#AAA",background:"#F0F0F0",borderRadius:10,padding:"2px 8px"}}>{STS_MAP[r.status]||"⏳ Pendente"}</span>
-                        </div>
-                        <div style={{display:"flex",gap:3}}>
-                          <button onClick={()=>archServ(r.id)} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button>
-                          <button onClick={()=>delServ(r.id)} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button>
-                        </div>
-                      </div>
-                      <div style={{fontSize:10,color:"#888",marginBottom:4}}>📅 {r.data||"—"}</div>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:4}}>{r.servico||"—"}</div>
-                      {r.descricao&&<div style={{fontSize:11,color:"#555",marginBottom:6}}>{r.descricao}</div>}
-                      {hasEquip&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #1565C022"}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase",marginBottom:3}}>📦 Equipamento</div>
-                        {r.equipCateg&&<div style={{fontSize:11,fontWeight:600,color:"#333"}}>{r.equipCateg}{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
-                      </div>}
-                      {(hasEquip||hasObs2)&&r.obsCondicional&&<div style={{background:"#FFFBF0",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #F5C20033"}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase",marginBottom:3}}>📝 Obs. Serviço</div>
-                        <div style={{fontSize:11,color:"#555"}}>{r.obsCondicional}</div>
-                      </div>}
-                      {r.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
-                        <select value={r.prioridade||"normal"} onChange={e=>updServ(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
-                        <select value={r.status||"pendente"} onChange={e=>updServ(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
-                      </div>
-                      <div style={{fontSize:9,color:"#CCC",marginTop:6,textAlign:"right"}}>{r.registradoPor||""}</div>
-                    </div>
-                  );
-                })}
-              </div>)}
+              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
+                  <tbody>{list.map(r=>{const p=PRIO[r.prioridade||"medio"];const res=r.status==="resolvido";return(
+                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
+                      <td><input type="date" value={r.data||""} onChange={e=>mathCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
+                      <td><input type="text" value={r.descricao||""} onChange={e=>mathCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva..."/></td>
+                      <td><select value={r.prioridade||"medio"} onChange={e=>mathCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
+                      <td><select value={r.status||"pendente"} onChange={e=>mathCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
+                      <td><input type="text" value={r.obs||""} onChange={e=>mathCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
+                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
+                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>mathCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))mathCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
+                    </tr>);})}</tbody>
+                </table></div></div>
+              )}
             </div>
           );
         })()}
