@@ -42,6 +42,16 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
+  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
+  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
+  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
+  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"Comercial",               password:"mov2026", canDelete:false, acessoSas:true },
+  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"rafael_g",     username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"anderson_s",   username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:false, apenasOficina150:true },
+  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:false, apenasOficina:true },
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
   { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
@@ -928,6 +938,19 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
+  if(user.acessoSas&&!user.acessoComercial) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <Btn k="sas" l="📄 SAS"/>
+    </div>
+  );
+  if(user.acessoComercial) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
+      <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
+      {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
+    </div>
+  );
   if(user.apenasAgenda) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_prev","🗓 Agenda"],["dashboard","📊 Dashboard"]].map(([k,l])=>{
@@ -1004,14 +1027,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
-            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Pendências Hebert"/>}
+            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="📋 Serviços Adm"/>}
           </>}
           {canSee("ofi150")&&<>
             <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
             <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Pendências Matheus"/>}
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="📋 Serviços Adm"/>}
           </>}
         </div>}
       </>}
@@ -1047,7 +1070,7 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState("relatorios");
+  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
@@ -1484,7 +1507,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda||u.apenasAgenda150)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -1683,6 +1706,13 @@ export default function App(){
 
 
   const renderTab = () => {
+    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
+      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
+      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
+      null;
+    if(allowedTabs&&!allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2205,41 +2235,143 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
-        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
+                {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s")&&(()=>{
+          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const SERVICOS_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
+          const SERVICOS_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const EQUIP_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
+          const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          const [formServ,setFormServ]=React.useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
+          const showObs2=SERVICOS_OBS.includes(formServ.servico);
+          const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendHebert(p=>[rec,...p]);db.save("pendencias_hebert",[rec,...pendHebert]);resetForm();notify("Serviço registrado!");};
+          const updServ=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const archServ=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const [filtroMes,setFiltroMes]=React.useState("");
+          const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
+          const dashTotal=listaFiltrada.length;
+          const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
+          const dashAndamento=listaFiltrada.filter(r=>r.status==="em_andamento").length;
+          const dashConc=listaFiltrada.filter(r=>r.status==="concluido").length;
+          const dashServicoCount={};listaFiltrada.forEach(r=>{const s=r.servico||"—";dashServicoCount[s]=(dashServicoCount[s]||0)+1;});
+          const dashTopServ=Object.entries(dashServicoCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+          const dashPrioCount={urgente:listaFiltrada.filter(r=>r.prioridade==="urgente").length,medio:listaFiltrada.filter(r=>r.prioridade==="medio").length,normal:listaFiltrada.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Hebert Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 1340</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{listaFiltrada.length} registro(s)</div></div>
+                <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#E67E00":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Mostrar Arquivados":"📦 Arquivados"}</button>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{
-                    const p=PRIO[r.prioridade||"medio"];
-                    const res=r.status==="resolvido";
-                    return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>hebCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>hebCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva a pendência..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>hebCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>hebCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>hebCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>hebCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))hebCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
+              {/* ── DASHBOARD ── */}
+              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📊 Painel</div>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                <input type="month" value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                {filtroMes&&<button onClick={()=>setFiltroMes("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+                {[{l:"Total",v:dashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:dashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:dashAndamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:dashConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+                {[{l:"🔴 Urgente",v:dashPrioCount.urgente,c:"#C62828",bg:"#FFF0F0"},{l:"🟡 Médio",v:dashPrioCount.medio,c:"#E67E00",bg:"#FFF8F0"},{l:"🟢 Normal",v:dashPrioCount.normal,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"8px 10px",borderLeft:`3px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>{k.l}</div>
+                    <div style={{fontSize:16,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {dashTopServ.length>0&&<div className="card" style={{padding:12,marginBottom:14}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:8}}>🔧 Top Serviços</div>
+                {dashTopServ.map(([s,c],i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{fontSize:11,fontWeight:600,color:"#333"}}>{s}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <div style={{background:"#F0F0F0",borderRadius:4,height:6,width:80}}>
+                        <div style={{background:"#1565C0",height:6,borderRadius:4,width:`${dashTopServ[0][1]>0?(c/dashTopServ[0][1])*100:0}%`}}/>
+                      </div>
+                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0",minWidth:20,textAlign:"right"}}>{c}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>}
+              {/* ── FORMULÁRIO NOVO SERVIÇO ── */}
+              <div className="card" style={{padding:16,marginBottom:16,border:"1.5px solid #F5C200"}}>
+                <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>➕ Novo Serviço</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={formServ.data} onChange={e=>setFormServ(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={formServ.servico} onChange={e=>setFormServ(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                </div>
+                {showEquip&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #1565C044"}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes do Equipamento</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Categoria</label><select value={formServ.equipCateg} onChange={e=>setFormServ(p=>({...p,equipCateg:e.target.value}))} style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3}}><option value="">Selecione...</option>{EQUIP_OPT.map(o=><option key={o}>{o}</option>)}</select></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Detalhe</label><input type="text" value={formServ.equipDetalhe} onChange={e=>setFormServ(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>
+                  </div>
+                  {formServ.equipCateg==="Outros"&&<div style={{marginTop:8}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>}
+                </div>}
+                {showObs2&&<div style={{background:"#FFFBF0",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F5C20044"}}>
+                  <label style={{fontSize:9,fontWeight:800,color:"#C47D00",textTransform:"uppercase"}}>📝 Observação do Serviço</label>
+                  <textarea value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F5C20044",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={formServ.descricao} onChange={e=>setFormServ(p=>({...p,descricao:e.target.value}))} placeholder="Descrição do serviço..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={formServ.prioridade} onChange={e=>setFormServ(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={formServ.status} onChange={e=>setFormServ(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                </div>
+                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações Gerais</label><textarea value={formServ.obs} onChange={e=>setFormServ(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                <button onClick={addServ} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+              </div>
+              {/* ── LISTA DE SERVIÇOS ── */}
+              {listaFiltrada.length===0?<div className="card" style={{padding:40,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço registrado</div></div>:(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340,1fr))",gap:10}}>
+                {listaFiltrada.map((r,ri)=>{
+                  const prio=PRIO_MAP[r.prioridade]||PRIO_MAP.normal;
+                  const hasEquip=SERVICOS_EQUIP.includes(r.servico);
+                  const hasObs2=SERVICOS_OBS.includes(r.servico);
+                  return(
+                    <div key={r.id||ri} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${prio.c}`,background:r.arquivado?"#F8F8F8":"#FFF",opacity:r.arquivado?.6:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                        <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                          <span style={{fontSize:9,fontWeight:800,color:prio.c,background:prio.bg,borderRadius:10,padding:"2px 8px"}}>{prio.l}</span>
+                          <span style={{fontSize:9,fontWeight:700,color:STS_MAP[r.status]?"#555":"#AAA",background:"#F0F0F0",borderRadius:10,padding:"2px 8px"}}>{STS_MAP[r.status]||"⏳ Pendente"}</span>
+                        </div>
+                        <div style={{display:"flex",gap:3}}>
+                          <button onClick={()=>archServ(r.id)} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button>
+                          <button onClick={()=>delServ(r.id)} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{fontSize:10,color:"#888",marginBottom:4}}>📅 {r.data||"—"}</div>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:4}}>{r.servico||"—"}</div>
+                      {r.descricao&&<div style={{fontSize:11,color:"#555",marginBottom:6}}>{r.descricao}</div>}
+                      {hasEquip&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #1565C022"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase",marginBottom:3}}>📦 Equipamento</div>
+                        {r.equipCateg&&<div style={{fontSize:11,fontWeight:600,color:"#333"}}>{r.equipCateg}{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
+                      </div>}
+                      {(hasEquip||hasObs2)&&r.obsCondicional&&<div style={{background:"#FFFBF0",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #F5C20033"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase",marginBottom:3}}>📝 Obs. Serviço</div>
+                        <div style={{fontSize:11,color:"#555"}}>{r.obsCondicional}</div>
+                      </div>}
+                      {r.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
+                        <select value={r.prioridade||"normal"} onChange={e=>updServ(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
+                        <select value={r.status||"pendente"} onChange={e=>updServ(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
+                      </div>
+                      <div style={{fontSize:9,color:"#CCC",marginTop:6,textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  );
+                })}
+              </div>)}
             </div>
           );
         })()}
-
         {/* ── PENDÊNCIAS MANUELA ── */}
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
@@ -2533,7 +2665,7 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -3166,7 +3298,7 @@ export default function App(){
           const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
-          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.data||"")=>{
             if(uberSearch){const q=uberSearch.toLowerCase();if(!((r.solicitante||"").toLowerCase().includes(q)||(r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.motivo||"").toLowerCase().includes(q)||(r.endereco||"").toLowerCase().includes(q)))return false;}
             if(uberFrom&&d<uberFrom)return false;
@@ -3242,7 +3374,7 @@ export default function App(){
           const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
-          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const semAcerto=lista.filter(f=>f.acerto==="nao"||!f.acerto).length;
                     const applyFilter=(r,d=r.data||"")=>{
             if(finSearch){const q=finSearch.toLowerCase();if(!((r.tecnico||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)||(r.atendimento||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.ticketReembolso||"").toLowerCase().includes(q)))return false;}
@@ -4013,7 +4145,7 @@ export default function App(){
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
         {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
           const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
           const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4349,7 +4481,7 @@ export default function App(){
           const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
-          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           const applyFilter=(r,d=r.dataSolicitacao||"")=>{
             if(sasSearch){const q=sasSearch.toLowerCase();if(!((r.cliente||"").toLowerCase().includes(q)||(r.nome||"").toLowerCase().includes(q)||(r.equipamento||"").toLowerCase().includes(q)||(r.nfNum||"").toLowerCase().includes(q)||(r.relatorioMov||"").toLowerCase().includes(q)||(r.email||"").toLowerCase().includes(q)))return false;}
             if(sasFrom&&d<sasFrom)return false;
@@ -4390,7 +4522,7 @@ export default function App(){
               const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
               const realizados=listaFil.filter(s=>s.status==="realizado").length;
               const faturados=listaFil.filter(s=>s.status==="faturado").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(",","."));return isNaN(n)?0:n;};
+              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
               const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
               const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
               const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -4414,6 +4546,99 @@ export default function App(){
                   <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>📈 Solicitações vs Realizações por Mês</div>{mesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartSasData} options={barSasOpts} height={160}/>}</div>
                   <div className="card" style={{padding:14}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>🍕 Status</div><ChartCanvas type="doughnut" data={donutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
                   <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{topCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCliS[0][1]>0?(val/topCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
+                </div>
+              </>);
+            })()}
+            {(()=>{
+              const sasPV=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+              const sasFmt=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+              const sasP=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+              const sasC=listaFil.filter(s=>s.status==="concluido").length;
+              const sasF=listaFil.filter(s=>s.status==="faturado").length;
+              const sasPg=listaFil.filter(s=>s.pago==="sim").length;
+              const sasEnv=listaFil.filter(s=>s.processoEnvFat==="sim").length;
+              const sasBruto=listaFil.reduce((a,s)=>a+sasPV(s.valor),0);
+              const sas1pct=sasBruto*0.01;
+              const sasDesl=listaFil.reduce((a,s)=>a+sasPV(s.deslocamento),0);
+              const sasLiq=Math.max(0,sas1pct-sasDesl);
+              const sasDI=listaFil.filter(s=>{const v=sasPV(s.valor);const lim=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?v*0.20:v*0.01;return v>0&&sasPV(s.deslocamento)>lim;}).length;
+              const sasET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
+              const sasME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
+              const sasMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
+              const sasGar=listaFil.filter(s=>s.tipoServico==="Garantia").length;
+              const sasTd=new Date();sasTd.setHours(0,0,0,0);
+              const sasGA=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const dias=Math.floor((dg-sasTd)/86400000);return dias>=0&&dias<=180;}).length;
+              const sasGC=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const dias=Math.floor((dg-sasTd)/86400000);return dias>=0&&dias<=30;}).length;
+              const sasGetM=d2=>{if(!d2)return null;const dt=new Date(d2);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+              const sasMN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const sasML=[...new Set(listaFil.map(s=>sasGetM(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const sasBD={labels:sasML.map(m=>{const[y,mo]=m.split("-");return`${sasMN[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:sasML.map(m=>listaFil.filter(s=>sasGetM(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:4},{label:"Faturados",data:sasML.map(m=>listaFil.filter(s=>sasGetM(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#1A7A3C",borderRadius:4}]};
+              const sasBO={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
+              const sasCM={};listaFil.forEach(s=>{if(s.cliente)sasCM[s.cliente]=(sasCM[s.cliente]||0)+sasPV(s.valor);});
+              const sasTC=Object.entries(sasCM).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const sasDS={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sasP,sasC,sasF],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0}]};
+              const sasDT={labels:["ET","ME","MI","Gar"],datasets:[{data:[sasET,sasME,sasMI,sasGar],backgroundColor:["#1A7A3C","#E67E00","#1565C0","#8E44AD"],borderWidth:0}]};
+              return(<>
+                <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Quantidades</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
+                  {[{l:"Total",v:listaFil.length,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:sasP,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:sasC,c:"#1565C0",bg:"#EFF6FF",i:"✅"},{l:"Faturados",v:sasF,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Pagos",v:sasPg,c:"#6A1B9A",bg:"#F3E5F5",i:"💳"}].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valores (R$)</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
+                  {[{l:"Valor Total Bruto",v:sasFmt(sasBruto),c:"#1A1A1A",bg:"#FFF",i:"💵"},{l:"Valor 1% MOV",v:sasFmt(sas1pct),c:"#1A7A3C",bg:"#F0FFF5",i:"📊"},{l:"Desl. Total",v:sasFmt(sasDesl),c:"#555",bg:"#F8F9FA",i:"🚗"},{l:"Líquido (1%−Desl)",v:sasFmt(sasLiq),c:sasLiq>0?"#1565C0":"#C62828",bg:sasLiq>0?"#EFF6FF":"#FFF0F0",i:"💧"},{l:"Desl. Indevidos",v:sasDI,c:sasDI>0?"#C62828":"#1A7A3C",bg:sasDI>0?"#FFF0F0":"#F0FFF5",i:"⚠️"}].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:typeof k.v==="string"?12:20,fontWeight:900,color:k.c,lineHeight:1.1}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>🔧 Por Tipo · 🛡️ Garantia</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:8}}>
+                  {[{l:"Entrega Técnica",v:sasET,c:"#1A7A3C",bg:"#F0FFF5",i:"🔧"},{l:"Manut. Externa",v:sasME,c:"#E67E00",bg:"#FFF8F0",i:"🏭"},{l:"Manut. Interna",v:sasMI,c:"#1565C0",bg:"#EFF6FF",i:"🏢"},{l:"Garantia",v:sasGar,c:"#8E44AD",bg:"#F8F0FF",i:"🛡️"}].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                  {[{l:"⚠️ Garantia Próxima (≤6m)",v:sasGA,c:sasGA>0?"#C47D00":"#1A7A3C",bg:sasGA>0?"#FFFBF0":"#F0FFF5"},{l:"🔴 Garantia Crítica (≤30d)",v:sasGC,c:sasGC>0?"#C62828":"#1A7A3C",bg:sasGC>0?"#FFF0F0":"#F0FFF5"}].map((k,ki)=>(
+                    <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.l}</div>
+                      <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:10,marginBottom:12}}>
+                  <div className="card" style={{padding:12}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>📈 Solicitações vs Faturados/Mês</div>
+                    {sasML.length===0?<div style={{textAlign:"center",color:"#CCC",padding:20}}>Sem dados</div>:<ChartCanvas type="bar" data={sasBD} options={sasBO} height={150}/>}
+                  </div>
+                  <div className="card" style={{padding:12}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:6}}>🍕 Status</div>
+                    <ChartCanvas type="doughnut" data={sasDS} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={100}/>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginTop:6,marginBottom:4}}>🔧 Tipo</div>
+                    <ChartCanvas type="doughnut" data={sasDT} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={100}/>
+                  </div>
+                  <div className="card" style={{padding:12,display:"flex",flexDirection:"column",gap:4}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:4}}>🏆 Top Clientes</div>
+                    {sasTC.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:12}}>Sem dados</div>:sasTC.map(([cli,val],ci)=>(
+                      <div key={ci} style={{display:"flex",flexDirection:"column",gap:2}}>
+                        <div style={{display:"flex",justifyContent:"space-between"}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#333",maxWidth:90,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ci+1}. {cli}</span>
+                          <span style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{sasFmt(val)}</span>
+                        </div>
+                        <div style={{background:"#F0F0F0",borderRadius:4,height:3}}>
+                          <div style={{background:`hsl(${210+ci*20},70%,45%)`,height:3,borderRadius:4,width:`${sasTC[0][1]>0?(val/sasTC[0][1])*100:0}%`}}/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>);
             })()}
@@ -5007,34 +5232,140 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS MATHEUS ── */}
-        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
+                {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m")&&(()=>{
+          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const SERVICOS_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
+          const SERVICOS_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const EQUIP_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
+          const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
+          const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          const [formServ,setFormServ]=React.useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
+          const showObs2=SERVICOS_OBS.includes(formServ.servico);
+          const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const addServ=()=>{if(!formServ.servico)return notify("Selecione um serviço");const rec={...formServ,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendMatheus(p=>[rec,...p]);db.save("pendencias_matheus",[rec,...pendMatheus]);resetForm();notify("Serviço registrado!");};
+          const updServ=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const archServ=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const [filtroMes,setFiltroMes]=React.useState("");
+          const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
+          const dashTotal=listaFiltrada.length;
+          const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
+          const dashAndamento=listaFiltrada.filter(r=>r.status==="em_andamento").length;
+          const dashConc=listaFiltrada.filter(r=>r.status==="concluido").length;
+          const dashServicoCount={};listaFiltrada.forEach(r=>{const s=r.servico||"—";dashServicoCount[s]=(dashServicoCount[s]||0)+1;});
+          const dashTopServ=Object.entries(dashServicoCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+          const dashPrioCount={urgente:listaFiltrada.filter(r=>r.prioridade==="urgente").length,medio:listaFiltrada.filter(r=>r.prioridade==="medio").length,normal:listaFiltrada.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Matheus</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 150</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{listaFiltrada.length} registro(s)</div></div>
+                <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#E67E00":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Mostrar Arquivados":"📦 Arquivados"}</button>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{const p=PRIO[r.prioridade||"medio"];const res=r.status==="resolvido";return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>mathCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>mathCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>mathCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>mathCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>mathCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>mathCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))mathCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
+              {/* ── DASHBOARD ── */}
+              <div style={{marginBottom:6,fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1}}>📊 Painel</div>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                <input type="month" value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                {filtroMes&&<button onClick={()=>setFiltroMes("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+                {[{l:"Total",v:dashTotal,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:dashPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:dashAndamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:dashConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:18,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+                {[{l:"🔴 Urgente",v:dashPrioCount.urgente,c:"#C62828",bg:"#FFF0F0"},{l:"🟡 Médio",v:dashPrioCount.medio,c:"#E67E00",bg:"#FFF8F0"},{l:"🟢 Normal",v:dashPrioCount.normal,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,ki)=>(
+                  <div key={ki} className="card" style={{padding:"8px 10px",borderLeft:`3px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>{k.l}</div>
+                    <div style={{fontSize:16,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {dashTopServ.length>0&&<div className="card" style={{padding:12,marginBottom:14}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#555",marginBottom:8}}>🔧 Top Serviços</div>
+                {dashTopServ.map(([s,c],i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{fontSize:11,fontWeight:600,color:"#333"}}>{s}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <div style={{background:"#F0F0F0",borderRadius:4,height:6,width:80}}>
+                        <div style={{background:"#1565C0",height:6,borderRadius:4,width:`${dashTopServ[0][1]>0?(c/dashTopServ[0][1])*100:0}%`}}/>
+                      </div>
+                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0",minWidth:20,textAlign:"right"}}>{c}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>}
+              {/* ── FORMULÁRIO NOVO SERVIÇO ── */}
+              <div className="card" style={{padding:16,marginBottom:16,border:"1.5px solid #F5C200"}}>
+                <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>➕ Novo Serviço</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={formServ.data} onChange={e=>setFormServ(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={formServ.servico} onChange={e=>setFormServ(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                </div>
+                {showEquip&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #1565C044"}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes do Equipamento</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Categoria</label><select value={formServ.equipCateg} onChange={e=>setFormServ(p=>({...p,equipCateg:e.target.value}))} style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3}}><option value="">Selecione...</option>{EQUIP_OPT.map(o=><option key={o}>{o}</option>)}</select></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Detalhe</label><input type="text" value={formServ.equipDetalhe} onChange={e=>setFormServ(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>
+                  </div>
+                  {formServ.equipCateg==="Outros"&&<div style={{marginTop:8}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:3,boxSizing:"border-box"}}/></div>}
+                </div>}
+                {showObs2&&<div style={{background:"#FFFBF0",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F5C20044"}}>
+                  <label style={{fontSize:9,fontWeight:800,color:"#C47D00",textTransform:"uppercase"}}>📝 Observação do Serviço</label>
+                  <textarea value={formServ.obsCondicional} onChange={e=>setFormServ(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F5C20044",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={formServ.descricao} onChange={e=>setFormServ(p=>({...p,descricao:e.target.value}))} placeholder="Descrição do serviço..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={formServ.prioridade} onChange={e=>setFormServ(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={formServ.status} onChange={e=>setFormServ(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                </div>
+                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações Gerais</label><textarea value={formServ.obs} onChange={e=>setFormServ(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                <button onClick={addServ} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+              </div>
+              {/* ── LISTA DE SERVIÇOS ── */}
+              {listaFiltrada.length===0?<div className="card" style={{padding:40,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço registrado</div></div>:(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340,1fr))",gap:10}}>
+                {listaFiltrada.map((r,ri)=>{
+                  const prio=PRIO_MAP[r.prioridade]||PRIO_MAP.normal;
+                  const hasEquip=SERVICOS_EQUIP.includes(r.servico);
+                  const hasObs2=SERVICOS_OBS.includes(r.servico);
+                  return(
+                    <div key={r.id||ri} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${prio.c}`,background:r.arquivado?"#F8F8F8":"#FFF",opacity:r.arquivado?.6:1}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                        <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                          <span style={{fontSize:9,fontWeight:800,color:prio.c,background:prio.bg,borderRadius:10,padding:"2px 8px"}}>{prio.l}</span>
+                          <span style={{fontSize:9,fontWeight:700,color:STS_MAP[r.status]?"#555":"#AAA",background:"#F0F0F0",borderRadius:10,padding:"2px 8px"}}>{STS_MAP[r.status]||"⏳ Pendente"}</span>
+                        </div>
+                        <div style={{display:"flex",gap:3}}>
+                          <button onClick={()=>archServ(r.id)} title={r.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button>
+                          <button onClick={()=>delServ(r.id)} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{fontSize:10,color:"#888",marginBottom:4}}>📅 {r.data||"—"}</div>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:4}}>{r.servico||"—"}</div>
+                      {r.descricao&&<div style={{fontSize:11,color:"#555",marginBottom:6}}>{r.descricao}</div>}
+                      {hasEquip&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #1565C022"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase",marginBottom:3}}>📦 Equipamento</div>
+                        {r.equipCateg&&<div style={{fontSize:11,fontWeight:600,color:"#333"}}>{r.equipCateg}{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
+                      </div>}
+                      {(hasEquip||hasObs2)&&r.obsCondicional&&<div style={{background:"#FFFBF0",borderRadius:8,padding:"6px 10px",marginBottom:6,border:"1px solid #F5C20033"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase",marginBottom:3}}>📝 Obs. Serviço</div>
+                        <div style={{fontSize:11,color:"#555"}}>{r.obsCondicional}</div>
+                      </div>}
+                      {r.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
+                        <select value={r.prioridade||"normal"} onChange={e=>updServ(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
+                        <select value={r.status||"pendente"} onChange={e=>updServ(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer"}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
+                      </div>
+                      <div style={{fontSize:9,color:"#CCC",marginTop:6,textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  );
+                })}
+              </div>)}
             </div>
           );
         })()}
