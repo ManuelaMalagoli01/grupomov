@@ -1,5 +1,7 @@
         /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
+// Force clear service worker cache
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>{regs.forEach(r=>r.unregister());});}
 // ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v4
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
