@@ -2243,7 +2243,7 @@ export default function App(){
           const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const [formServ,setFormServ]=React.useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const [formServ,setFormServ]=useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
           const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -2251,7 +2251,7 @@ export default function App(){
           const updServ=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
           const archServ=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const [filtroMes,setFiltroMes]=React.useState("");
+          const [filtroMes,setFiltroMes]=useState("");
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
@@ -5240,7 +5240,7 @@ export default function App(){
           const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const [formServ,setFormServ]=React.useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const [formServ,setFormServ]=useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
           const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -5248,7 +5248,7 @@ export default function App(){
           const updServ=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const archServ=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const [filtroMes,setFiltroMes]=React.useState("");
+          const [filtroMes,setFiltroMes]=useState("");
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
