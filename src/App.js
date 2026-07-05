@@ -969,7 +969,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOficina) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi","🗓 Agenda Oficina"],["dashboard_ofi","📊 Dashboard Oficina"],["pendencias_hebert","🔧 Pendências Hebert"]].map(([k,l])=>{
+      {[["agenda_ofi","🗓 Agenda Oficina"],["dashboard_ofi","📊 Dashboard Oficina"],["pendencias_hebert","📋 Serviços Adm"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -977,7 +977,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"],["pendencias_matheus","🔧 Pendências Matheus"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"],["pendencias_matheus","📋 Serviços Adm"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -1709,8 +1709,8 @@ export default function App(){
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
       user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
       user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
-      user?.apenasOficina ? ["agenda_ofi","apontamentos","dashboard_processos"] :
-      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","dashboard_processos"] :
+      user?.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
+      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
       null;
     if(allowedTabs&&!allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
     return (
