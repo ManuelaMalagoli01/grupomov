@@ -42,10 +42,20 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
+  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
-  { id:"hebert_ofi",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
-  { id:"matheus_ofi",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
+  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"SAS",                     password:"mov2026", canDelete:false, acessoSas:true },
+  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"rafael_g",     username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"anderson_s",   username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
+  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:false, apenasOficina150:true },
+  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:false, apenasOficina:true },
+  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
+  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
+  { id:"hebert_s",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
+  { id:"matheus_m",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
   { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
   { id:"helbert",      username:"helbert.tecnico",   name:"Helbert",          role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
   { id:"dilson",       username:"dilson.tecnico",    name:"Dilson",           role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
@@ -912,14 +922,27 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="ruptura_almox") return ["manuela","gustavo","renato"].includes(user.id);
     if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_gustavo","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
-    if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
-    if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
-    if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi";
-    if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi";
-    if(tipo==="oficinas") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_ofi"||user.id==="matheus_ofi";
+    if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
+    if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
+    if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
+    if(tipo==="oficina") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
+    if(tipo==="oficinas") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s"||user.id==="matheus_m";
     return true;
   };
 
+  if(user.acessoComercial) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
+      <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
+      {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
+    </div>
+  );
+  if(user.acessoSas&&!user.acessoComercial) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <Btn k="sas" l="📄 SAS"/>
+    </div>
+  );
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -946,7 +969,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOficina) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi","🗓 Agenda Oficina"],["dashboard_ofi","📊 Dashboard Oficina"],["pendencias_hebert","🔧 Pendências Hebert"]].map(([k,l])=>{
+      {[["agenda_ofi","🗓 Agenda"],["apontamentos","📝 Apontamentos"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -954,7 +977,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"],["pendencias_matheus","🔧 Pendências Matheus"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -1004,14 +1027,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
-            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Pendências Hebert"/>}
+            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
           </>}
           {canSee("ofi150")&&<>
             <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
             <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Pendências Matheus"/>}
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
           </>}
         </div>}
       </>}
@@ -1049,7 +1072,16 @@ export default function App(){
   const [modalUsers,setModalUsers]=useState(false);
   const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
-  useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{
+    if(!user) return;
+    const al = user.acessoSas&&!user.acessoComercial ? ["sas"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
+      user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
+      user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
+      null;
+    if(al&&!al.includes(tab)) setTab(al[0]);
+  },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1315,6 +1347,10 @@ export default function App(){
   const [agRelatorio,setAgRelatorio]=useState("");
   const [agObs,setAgObs]=useState("");
   const [agpTipo,setAgpTipo]=useState("todos");
+  const [formServH,setFormServH]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesH,setFiltroMesH]=useState("");
+  const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesM,setFiltroMesM]=useState("");
 
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
@@ -1683,6 +1719,13 @@ export default function App(){
 
 
   const renderTab = () => {
+    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
+      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user?.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
+      user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
+      null;
+    if(allowedTabs&&!allowedTabs.includes(tab)) return null;
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2205,14 +2248,14 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
-        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_ofi")&&(()=>{
+        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_s")&&(()=>{
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
           const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Hebert Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Serviços Adm Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                   <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
@@ -2469,6 +2512,83 @@ export default function App(){
               <select value={muAno} onChange={e=>setMuAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(muSearch||muFrom||muTo||muMes||muAno)&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
+            {(()=>{
+              const pv=v=>parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0;
+              const fm=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2});
+              const sP=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
+              const sC=listaFil.filter(s=>s.status==="concluido").length;
+              const sF=listaFil.filter(s=>s.status==="faturado").length;
+              const sPg=listaFil.filter(s=>s.pago==="sim").length;
+              const br=listaFil.reduce((a,s)=>a+pv(s.valor),0);
+              const p1=br*0.01;const dl=listaFil.reduce((a,s)=>a+pv(s.deslocamento),0);
+              const lq=Math.max(0,p1-dl);
+              const di=listaFil.filter(s=>{const vv=pv(s.valor);const lm=(s.tipoServico||"Entrega Técnica")==="Entrega Técnica"?vv*0.20:vv*0.01;return vv>0&&pv(s.deslocamento)>lm;}).length;
+              const tET=listaFil.filter(s=>(s.tipoServico||"Entrega Técnica")==="Entrega Técnica").length;
+              const tME=listaFil.filter(s=>s.tipoServico==="Manutenção Externa").length;
+              const tMI=listaFil.filter(s=>s.tipoServico==="Manutenção Interna").length;
+              const tGr=listaFil.filter(s=>s.tipoServico==="Garantia").length;
+              const td=new Date();td.setHours(0,0,0,0);
+              const gA=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const dd=Math.floor((dg-td)/86400000);return dd>=0&&dd<=180;}).length;
+              const gC=listaFil.filter(s=>{if(!s.dataGarantia)return false;const dg=new Date(s.dataGarantia+"T00:00:00");const dd=Math.floor((dg-td)/86400000);return dd>=0&&dd<=30;}).length;
+              const gM2=d2=>{if(!d2)return null;const dt2=new Date(d2);if(isNaN(dt2))return null;return dt2.getFullYear()+"-"+String(dt2.getMonth()+1).padStart(2,"0");};
+              const mn2=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+              const ml2=[...new Set(listaFil.map(s=>gM2(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
+              const bd2={labels:ml2.map(m=>{const[y,mo]=m.split("-");return mn2[parseInt(mo)-1]+"/"+y.slice(2);}),datasets:[{label:"Solicitações",data:ml2.map(m=>listaFil.filter(s=>gM2(s.dataSolicitacao)===m).length),backgroundColor:"#3B82F6",borderRadius:6},{label:"Faturados",data:ml2.map(m=>listaFil.filter(s=>gM2(s.dataSolicitacao)===m&&s.status==="faturado").length),backgroundColor:"#10B981",borderRadius:6}]};
+              const bo2={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:16}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
+              const cm2={};listaFil.forEach(s=>{if(s.cliente)cm2[s.cliente]=(cm2[s.cliente]||0)+pv(s.valor);});
+              const tc2=Object.entries(cm2).sort((a,b)=>b[1]-a[1]).slice(0,5);
+              const ds2={labels:["Pendente","Concluído","Faturado"],datasets:[{data:[sP,sC,sF],backgroundColor:["#F59E0B","#3B82F6","#10B981"],borderWidth:0}]};
+              const dt2={labels:["ET","ME","MI","Gar"],datasets:[{data:[tET,tME,tMI,tGr],backgroundColor:["#10B981","#F59E0B","#3B82F6","#8B5CF6"],borderWidth:0}]};
+              return(<>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
+                  {[{l:"Total",v:listaFil.length,c:"#1E293B",bg:"linear-gradient(135deg,#F8FAFC,#E2E8F0)"},{l:"Pendentes",v:sP,c:"#D97706",bg:"linear-gradient(135deg,#FFFBEB,#FEF3C7)"},{l:"Concluídos",v:sC,c:"#2563EB",bg:"linear-gradient(135deg,#EFF6FF,#DBEAFE)"},{l:"Faturados",v:sF,c:"#059669",bg:"linear-gradient(135deg,#ECFDF5,#D1FAE5)"},{l:"Pagos",v:sPg,c:"#7C3AED",bg:"linear-gradient(135deg,#F5F3FF,#EDE9FE)"}].map((k,ki)=>(
+                    <div key={ki} style={{background:k.bg,borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.l}</div>
+                      <div style={{fontSize:28,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
+                  {[{l:"Valor Bruto",v:fm(br),c:"#1E293B"},{l:"Comissão 1%",v:fm(p1),c:"#059669"},{l:"Deslocamento",v:fm(dl),c:"#64748B"},{l:"Líquido (1%−Desl)",v:fm(lq),c:lq>0?"#2563EB":"#DC2626"},{l:"Desl. Indevidos",v:di+"",c:di>0?"#DC2626":"#059669"}].map((k,ki)=>(
+                    <div key={ki} style={{background:"#FFF",borderRadius:14,padding:"14px 18px",boxShadow:"0 1px 4px rgba(0,0,0,.05)",borderBottom:`3px solid ${k.c}`}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,marginBottom:6}}>{k.l}</div>
+                      <div style={{fontSize:ki===4?28:15,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:16}}>
+                  {[{l:"ET",v:tET,c:"#10B981"},{l:"ME",v:tME,c:"#F59E0B"},{l:"MI",v:tMI,c:"#3B82F6"},{l:"Garantia",v:tGr,c:"#8B5CF6"},{l:"Gar.≤6m",v:gA,c:gA>0?"#D97706":"#10B981"},{l:"Gar.≤30d",v:gC,c:gC>0?"#DC2626":"#10B981"}].map((k,ki)=>(
+                    <div key={ki} style={{background:"#FFF",borderRadius:12,padding:"12px",boxShadow:"0 1px 4px rgba(0,0,0,.05)",textAlign:"center"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{k.l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:14,marginBottom:16}}>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>📈 Evolução Mensal</div>
+                    {ml2.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={bd2} options={bo2} height={180}/>}
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>📊 Status</div>
+                    <ChartCanvas type="doughnut" data={ds2} options={{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:12}}}}} height={160}/>
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🔧 Tipo</div>
+                    <ChartCanvas type="doughnut" data={dt2} options={{responsive:true,maintainAspectRatio:false,cutout:"65%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:12}}}}} height={160}/>
+                  </div>
+                </div>
+                {tc2.length>0&&<div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:16}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏆 Top Clientes</div>
+                  {tc2.map(([cli,val],ci)=>(
+                    <div key={ci} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                      <span style={{fontSize:12,fontWeight:700,color:"#334155"}}>{ci+1}. {cli}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:"#2563EB"}}>{fm(val)}</span>
+                    </div>
+                  ))}
+                </div>}
+              </>);
+            })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⚠️</div><div style={{fontSize:15,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
                 {listaFil.map(p=>{
@@ -5007,14 +5127,14 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS MATHEUS ── */}
-        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_ofi")&&(()=>{
+        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m")&&(()=>{
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
           const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Pendências Matheus</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
+                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Serviços Adm</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
                   <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
