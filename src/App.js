@@ -1068,9 +1068,23 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
+  const [formServH,setFormServH]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesH,setFiltroMesH]=useState("");
+  const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+  const [filtroMesM,setFiltroMesM]=useState("");
   const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda||u?.apenasAgenda150)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda) setTab("agenda_prev"); },[user?.id]);
+  useEffect(()=>{
+    if(!user) return;
+    const allowed = user.acessoSas&&!user.acessoComercial ? ["sas"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
+      user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
+      user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
+      null;
+    if(allowed&&!allowed.includes(tab)) setTab(allowed[0]);
+  },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasAgenda150) setTab("agenda_ofi_150"); },[user?.id]);
   useEffect(()=>{ if(user&&user.apenasOfi150) setTab("agenda_ofi_150"); },[user?.id]);
   const [reports,setReports]=useState(REAL_REPORTS);
@@ -1710,7 +1724,7 @@ export default function App(){
       user?.apenasOficina ? ["agenda_ofi","apontamentos","pendencias_hebert","dashboard_processos"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_processos"] :
       null;
-    if(allowedTabs&&!allowedTabs.includes(tab)){setTab(allowedTabs[0]);return null;}
+    if(allowedTabs&&!allowedTabs.includes(tab))return null;
     return (
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
@@ -2241,7 +2255,7 @@ export default function App(){
           const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const [formServ,setFormServ]=useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const formServ=formServH;const setFormServ=setFormServH;
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
           const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -2249,7 +2263,7 @@ export default function App(){
           const updServ=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
           const archServ=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const [filtroMes,setFiltroMes]=useState("");
+          const filtroMes=filtroMesH;const setFiltroMes=setFiltroMesH;
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
@@ -5194,7 +5208,7 @@ export default function App(){
           const PRIO_MAP={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},normal:{l:"🟢 Normal",c:"#1A7A3C",bg:"#F0FFF5"}};
           const STS_MAP={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const [formServ,setFormServ]=useState({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const formServ=formServM;const setFormServ=setFormServM;
           const showEquip=SERVICOS_EQUIP.includes(formServ.servico);
           const showObs2=SERVICOS_OBS.includes(formServ.servico);
           const resetForm=()=>setFormServ({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -5202,7 +5216,7 @@ export default function App(){
           const updServ=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const delServ=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const archServ=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const [filtroMes,setFiltroMes]=useState("");
+          const filtroMes=filtroMesM;const setFiltroMes=setFiltroMesM;
           const listaFiltrada=filtroMes?list.filter(r=>r.data&&r.data.startsWith(filtroMes)):list;
           const dashTotal=listaFiltrada.length;
           const dashPend=listaFiltrada.filter(r=>r.status==="pendente"||!r.status).length;
