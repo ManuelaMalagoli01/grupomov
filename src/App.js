@@ -1442,7 +1442,7 @@ export default function App(){
   const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateRuptura=(id,changes)=>{const updated=rupturas.map(r=>r.id===id?{...r,...changes}:r);setRupturas(updated);db.save("rupturas_alm",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const delRuptura=(id)=>{setRupturas(p=>p.filter(x=>x.id!==id));db.delete("rupturas_alm",id);};
-  const updateMU=(id,changes)=>{const updated=processosMU.map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateMU=(id,changes)=>{const updated=(processosMU||[]).map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   // Requisições — salvar no banco (visível para todos)
   const updateReq=(id,changes)=>{ setRequisicoes(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("requisicoes",id,row); return np; }); };
@@ -2564,7 +2564,7 @@ export default function App(){
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=processosMU.filter(p=>showArqMU||p.processoStatus!=="arquivado");
+          const lista=(processosMU||[]).filter(p=>showArqMU||p.processoStatus!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -4176,7 +4176,7 @@ export default function App(){
           };
           const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fPat||fNumMU||fStatus!=="todos"||fAprov!=="todos"||fTipo!=="todos";
           const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFPat("");setFNumMU("");setFStatus("todos");setFAprov("todos");setFTipo("todos");};
-          const allMU=processosMU.filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
+          const allMU=(processosMU||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
           const allAF=processosAF.filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
           const allProc=[...allMU.map(p=>({...p,_tipo:"mu"})),...allAF.map(p=>({...p,_tipo:"af"}))];
           const listaTipo=fTipo==="mu"?allMU:fTipo==="af"?allAF:allProc;
