@@ -2564,7 +2564,7 @@ export default function App(){
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosMU||[]).filter(p=>p&&(showArqMU||p.processoStatus)!=="arquivado");
+          const lista=(processosMU||[]).filter(p=>p&&(showArqMU||p.processoStatus!=="arquivado"));
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -2652,7 +2652,7 @@ export default function App(){
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosAF||[]).filter(p=>p&&(showArqAF||p.processoStatus)!=="arquivado");
+          const lista=(processosAF||[]).filter(p=>p&&(showArqAF||p.processoStatus!=="arquivado"));
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -2745,7 +2745,7 @@ export default function App(){
         {/* ── REQ. EMPRÉSTIMO ── */}
         {tab==="emprestimos"&&(()=>{
           const SIT={Aprovado:{c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},Atendido:{c:"#1565C0",bg:"#EFF6FF",i:"📦"},Pendente:{c:"#E67E00",bg:"#FFF8F0",i:"⏳"},"Parcialmente Atendido":{c:"#8E44AD",bg:"#F6F0FB",i:"🔀"},"Retorno Concluído":{c:"#00838F",bg:"#E0F7FA",i:"🔁"},Ruptura:{c:"#C62828",bg:"#FFF0F0",i:"🔴"}};
-          const lista=(emprestimos||[]).filter(e=>e&&(showArqEmp||e.processoStatus)!=="arquivado");
+          const lista=(emprestimos||[]).filter(e=>e&&(showArqEmp||e.processoStatus!=="arquivado"));
           const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
           const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
                     const applyFilter=(r,d=r.data||"")=>{
@@ -2825,7 +2825,7 @@ export default function App(){
 
         {/* ── SAÍDA/ENTRADA ── */}
         {tab==="saida_entrada"&&(()=>{
-          const lista=(saidaEntrada||[]).filter(s=>s&&(showArqSaida||s.processoStatus)!=="arquivado");
+          const lista=(saidaEntrada||[]).filter(s=>s&&(showArqSaida||s.processoStatus!=="arquivado"));
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
