@@ -2377,7 +2377,7 @@ export default function App(){
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
           const PRI_PM={Urgente:{c:"#C62828",bg:"#FFF0F0"},Normal:{c:"#555",bg:"#F5F5F5"},"Médio Prazo":{c:"#1565C0",bg:"#F0F4FF"}};
-          const list=pendManuela.filter(r=>showArqPendMan||!r.arquivado);
+          const list=(pendManuela||[]).filter(r=>showArqPendMan||!r.arquivado);
           const emptyForm={tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""};
           const form=pendManForm;
           const upd=(k,v)=>setPendManForm(p=>({...p,[k]:v}));
@@ -2652,7 +2652,7 @@ export default function App(){
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=processosAF.filter(p=>showArqAF||p.processoStatus!=="arquivado");
+          const lista=(processosAF||[]).filter(p=>showArqAF||p.processoStatus!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -3296,7 +3296,7 @@ export default function App(){
 
         {/* ── UBER ── */}
         {tab==="uber"&&(()=>{
-          const lista=uberPedidos.filter(p=>showArqUber||!p.arquivado);
+          const lista=(uberPedidos||[]).filter(p=>showArqUber||!p.arquivado);
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
           const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -3372,7 +3372,7 @@ export default function App(){
         {/* ── FINANCEIRO ── */}
         {tab==="financeiro"&&(()=>{
           const SOL={combustivel:{l:"⛽ Combustível",c:"#E67E00",bg:"#FFF8F0"},alimentacao:{l:"🍽️ Alimentação",c:"#1A7A3C",bg:"#F0FFF5"},viagem:{l:"✈️ Viagem",c:"#1565C0",bg:"#EFF6FF"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
-          const lista=financeiro.filter(f=>showArqFin||!f.arquivado);
+          const lista=(financeiro||[]).filter(f=>showArqFin||!f.arquivado);
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
           const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -3463,7 +3463,7 @@ export default function App(){
         {/* ── PENDÊNCIAS FROTA ── */}
         {tab==="pendencias_frota"&&(()=>{
           const TIPO={bateria:{l:"🔋 Bateria",c:"#F5C200",bg:"#FFFBF0"},carregador:{l:"🔌 Carregador",c:"#1565C0",bg:"#EFF6FF"},estrado:{l:"🟫 Estrado",c:"#8B5E3C",bg:"#FDF5EC"},maquina:{l:"🏗️ Máquina",c:"#546E7A",bg:"#ECEFF1"}};
-          const lista=frota.filter(r=>showArqFro||!r.arquivado);
+          const lista=(frota||[]).filter(r=>showArqFro||!r.arquivado);
           const pend=lista.filter(r=>r.resolvido!=="sim").length;
           const resolvidos=lista.filter(r=>r.resolvido==="sim").length;
                     const applyFilter=(r,d=r.dataEnvio||"")=>{
@@ -3535,7 +3535,7 @@ export default function App(){
 
         {/* ── PRIORIDADES CLIENTES (somente Manuela) ── */}
         {tab==="prioridades_clientes"&&user.id==="manuela"&&(()=>{
-          const list=prioridades.filter(r=>showArqPri||!r.arquivado);
+          const list=(prioridades||[]).filter(r=>showArqPri||!r.arquivado);
           const STS={escalado_diretoria:"Escalado Diretoria",escalado_financeiro:"Escalado Financeiro",escalado_comercial:"Escalado Comercial",ag_gilberto:"Ag Sr Gilberto",manutencao:"Manutenção Resolvendo",concluido:"Concluído",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -3573,7 +3573,7 @@ export default function App(){
         {tab==="rh_fiscal"&&(()=>{
           const MOT={folga:"🏖️ Folga",ferias:"🌴 Férias",afastamento:"🏥 Afastamento",atestado:"📋 Atestado",demissao:"❌ Demissão",admissao:"✅ Admissão",outros:"📦 Outros"};
           const STS={pendente_luana:{l:"⏳ Pend. Luana",c:"#E67E00",bg:"#FFF8F0"},pendente_elci:{l:"⏳ Pend. Elci",c:"#8E44AD",bg:"#F6F0FB"},em_andamento:{l:"🔄 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"✅ Concluído",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const lista=rhFiscal.filter(r=>showArqRH||!r.arquivado);
+          const lista=(rhFiscal||[]).filter(r=>showArqRH||!r.arquivado);
           const pend=lista.filter(r=>r.status==="pendente_luana"||r.status==="pendente_elci"||!r.status).length;
           const conc=lista.filter(r=>r.status==="concluido").length;
                     const applyFilter=(r,d=r.dataEnvio||"")=>{
@@ -3647,7 +3647,7 @@ export default function App(){
 
         {/* ── PENDÊNCIAS GUSTAVO (somente Manuela) ── */}
         {tab==="pendencias_gustavo"&&user.id==="manuela"&&(()=>{
-          const list=pendGustavo.filter(r=>showArqGus||!r.arquivado);
+          const list=(pendGustavo||[]).filter(r=>showArqGus||!r.arquivado);
           const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
           const STS={resolvido:"Resolvido",diretoria:"Diretoria",em_andamento:"Em Andamento",pendente:"Pendente"};
           const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
@@ -3685,7 +3685,7 @@ export default function App(){
         {tab==="ruptura_almox"&&(()=>{
           const SOL_LABEL={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguardando",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
           const ST={aguardando:{l:"Aguardando",c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD",bg:"#F6F0FB",icon:"🏛️"},separado_suporte:{l:"Separado no Suporte",c:"#1565C0",bg:"#EFF6FF",icon:"📦"},liberado_almox:{l:"Liberado pelo Almox",c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}};
-          const lista=rupturas.filter(r=>showArqRuptura||!r.arquivado);
+          const lista=(rupturas||[]).filter(r=>showArqRuptura||!r.arquivado);
           const byStatus={aguardando:lista.filter(r=>r.status==="aguardando"||!r.status),aguard_aprov_dir:lista.filter(r=>r.status==="aguard_aprov_dir"),separado_suporte:lista.filter(r=>r.status==="separado_suporte"),liberado_almox:lista.filter(r=>r.status==="liberado_almox")};
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           const ym=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}`;
@@ -4177,7 +4177,7 @@ export default function App(){
           const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fPat||fNumMU||fStatus!=="todos"||fAprov!=="todos"||fTipo!=="todos";
           const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFPat("");setFNumMU("");setFStatus("todos");setFAprov("todos");setFTipo("todos");};
           const allMU=(processosMU||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
-          const allAF=processosAF.filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
+          const allAF=(processosAF||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
           const allProc=[...allMU.map(p=>({...p,_tipo:"mu"})),...allAF.map(p=>({...p,_tipo:"af"}))];
           const listaTipo=fTipo==="mu"?allMU:fTipo==="af"?allAF:allProc;
           // Valores
@@ -4479,7 +4479,7 @@ export default function App(){
         })()}
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
-          const lista=sas.filter(s=>showArqSas||s.status!=="arquivado");
+          const lista=(sas||[]).filter(s=>showArqSas||s.status!=="arquivado");
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
           const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -4611,7 +4611,7 @@ export default function App(){
             }
           };
           const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||"",requisicao:c.requisicao||""});setModalCarros(true);};
-          const lista=carros.filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
+          const lista=(carros||[]).filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
           const applyFilter=(r,d=r.data||"")=>{
             if(carSearch){const q=carSearch.toLowerCase();if(!((r.placa||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.oficina||"").toLowerCase().includes(q)||(r.requisicao||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
             if(carFrom&&d<carFrom)return false;
