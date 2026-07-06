@@ -1360,6 +1360,8 @@ export default function App(){
   const [formServM,setFormServM]=useState({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
   const [filtroMesM,setFiltroMesM]=useState("");
 
+  const [agServicos,setAgServicos]=useState([]);
+  const [agObsServ,setAgObsServ]=useState("");
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
   // ── TÍTULO DO APP ──
@@ -2926,8 +2928,8 @@ export default function App(){
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
             const horas=calcHoras(agEntrada,agSaida);
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:horas}]);
-            setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");setAgObs("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",servicos:agServicos,obsServico:agObsServ,horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:horas}]);
+            setAgServicos([]);setAgObsServ("");setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");setAgObs("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -2939,6 +2941,46 @@ export default function App(){
                 </div>
               </div>
 
+              {/* ── Dashboard Serviços ── */}
+              {(()=>{
+                const allS=Object.values(schedule).flat().filter(Boolean);
+                const SVCS=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
+                const svcCount={};SVCS.forEach(sv=>{svcCount[sv]=allS.filter(a=>a.servicos&&a.servicos.includes(sv)).length;});
+                const svcHoras={};SVCS.forEach(sv=>{svcHoras[sv]=allS.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((acc,a)=>acc+(parseFloat(a.horas)||0),0);});
+                const totalAtend=allS.length;
+                const totalComServ=allS.filter(a=>a.servicos&&a.servicos.length>0).length;
+                const techSvc={};allS.forEach(a=>{if(!a.servicos)return;const tk=Object.entries(schedule).find(([k,v])=>v&&v.includes(a));if(tk){const tn=tk[0].split("__")[0];if(!techSvc[tn])techSvc[tn]={};a.servicos.forEach(sv=>{techSvc[tn][sv]=(techSvc[tn][sv]||0)+1;});}});
+                return(
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>📊 KPIs Serviços</div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
+                      <div style={{background:"linear-gradient(135deg,#F8FAFC,#E2E8F0)",borderRadius:12,padding:"12px 14px"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>Total Atendimentos</div>
+                        <div style={{fontSize:24,fontWeight:900,color:"#1E293B"}}>{totalAtend}</div>
+                      </div>
+                      <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",borderRadius:12,padding:"12px 14px"}}>
+                        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>Com Serviço</div>
+                        <div style={{fontSize:24,fontWeight:900,color:"#15803D"}}>{totalComServ}</div>
+                      </div>
+                      {SVCS.slice(0,2).map((sv,si)=>(
+                        <div key={si} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderBottom:"3px solid #3B82F6",boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>🔧 {sv}</div>
+                          <div style={{fontSize:20,fontWeight:900,color:"#1E293B"}}>{svcCount[sv]} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>({svcHoras[sv].toFixed(1)}h)</span></div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
+                      {SVCS.slice(2).map((sv,si)=>(
+                        <div key={si} style={{background:"#FFF",borderRadius:10,padding:"10px 12px",textAlign:"center",boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                          <div style={{fontSize:8,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>{sv}</div>
+                          <div style={{fontSize:18,fontWeight:900,color:"#1E293B"}}>{svcCount[sv]}</div>
+                          <div style={{fontSize:10,color:"#64748B"}}>{svcHoras[sv].toFixed(1)}h</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Filtros */}
               <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
@@ -2965,7 +3007,7 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><input type="text" placeholder="—" value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><select value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:140}}><option value="">Selecione...</option>{["BH","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba"].map(c=><option key={c}>{c}</option>)}</select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Horímetro</label><input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
@@ -2974,7 +3016,17 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
-                  <BtnY onClick={addAtend}>Adicionar</BtnY>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,width:"100%",marginTop:4}}>
+                     <label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviços</label>
+                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                       {["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"].map(sv=>{const sel=agServicos.includes(sv);return(<button key={sv} type="button" onClick={()=>setAgServicos(p=>sel?p.filter(x=>x!==sv):[...p,sv])} style={{fontSize:10,padding:"4px 10px",borderRadius:16,border:sel?"2px solid #3B82F6":"1.5px solid #E0E0E0",background:sel?"#EFF6FF":"#FFF",color:sel?"#2563EB":"#888",fontWeight:sel?700:500,cursor:"pointer"}}>{sv}</button>);})}
+                     </div>
+                   </div>
+                   <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:200}}>
+                     <label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Obs. Serviço</label>
+                     <input type="text" placeholder="Ex: Troca de rodas..." value={agObsServ} onChange={e=>setAgObsServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/>
+                   </div>
+                   <BtnY onClick={addAtend}>Adicionar</BtnY>
                 </div>
               </div>
               )}
@@ -3050,8 +3102,11 @@ export default function App(){
                                       {/* Patrimônio · Cidade · Horímetro chips */}
                                       <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
                                         {s.patrimonio&&<span style={{fontSize:10,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
-                                        {s.cidade&&<span style={{fontSize:10,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
+                                        {s.cidade&&<span style={{fontSize:10,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}
+                                         >📍 {s.cidade}</span>}
                                         {s.horimetro&&<span style={{fontSize:10,background:"#FFFBF0",color:"#C47D00",borderRadius:8,padding:"2px 7px",fontWeight:600}}>⏱ {s.horimetro}</span>}
+                                         {s.servicos&&s.servicos.length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:3}}>{s.servicos.map((sv,si)=><span key={si} style={{fontSize:9,background:"#F0FDF4",color:"#15803D",borderRadius:10,padding:"2px 8px",fontWeight:600}}>🔧 {sv}</span>)}</div>}
+                                         {s.obsServico&&<div style={{fontSize:10,color:"#D97706",fontStyle:"italic",marginTop:2}}>📝 {s.obsServico}</div>}
                                       </div>
                                       {/* Relatório */}
                                       <input
