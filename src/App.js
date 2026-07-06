@@ -4591,7 +4591,7 @@ export default function App(){
             </div>
           
             {/* ── ROW: Serviços Técnicos Externos ── */}
-            {(()=>{
+            {!user?.acessoComercial&&!user?.acessoSas&&(()=>{
               const allSched=Object.entries(schedule).flatMap(([k,v])=>{const tn=k.split("__")[0];return(v||[]).filter(Boolean).map(s=>({...s,tecnico:tn}));});
               const SVCS=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
               const SCOLS=["#3B82F6","#EF4444","#F59E0B","#8B5CF6","#10B981","#06B6D4","#6366F1"];
@@ -4625,7 +4625,7 @@ export default function App(){
                   </div>
                 </div>
               );
-            })()}
+            })()}}
 </div>);
         })()}
         {tab==="sas"&&(()=>{
