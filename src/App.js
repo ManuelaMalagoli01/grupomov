@@ -4414,7 +4414,30 @@ export default function App(){
                   {svcTotals.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={svcBarData} options={svcBarOpts} height={200}/>}
                 </div>
               </>);
-            })()}
+            
+                <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏗️ Serviços por Patrimônio</div>
+                  {(()=>{
+                    const patSvc={};allAtend.forEach(a=>{if(!a.patrimonio||!a.servicos)return;const p=a.patrimonio;if(!patSvc[p])patSvc[p]={total:0,horas:0,svcs:{},obs:[]};patSvc[p].total++;patSvc[p].horas+=(parseFloat(a.horas)||0);a.servicos.forEach(sv=>{patSvc[p].svcs[sv]=(patSvc[p].svcs[sv]||0)+1;});if(a.obsServico)patSvc[p].obs.push(a.obsServico);});
+                    const patList=Object.entries(patSvc).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+                    return patList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20}}>Sem dados</div>:(
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
+                        {patList.map(([pat,d],i)=>(
+                          <div key={i} style={{background:"#F8FAFC",borderRadius:10,padding:"12px 14px",borderLeft:"4px solid #3B82F6"}}>
+                            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                              <span style={{fontSize:13,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span>
+                              <span style={{fontSize:11,fontWeight:700,color:"#3B82F6"}}>{d.total} atend. · {d.horas.toFixed(1)}h</span>
+                            </div>
+                            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:4}}>
+                              {Object.entries(d.svcs).map(([sv,c],si)=><span key={si} style={{fontSize:9,background:"#EFF6FF",color:"#2563EB",borderRadius:8,padding:"2px 6px",fontWeight:600}}>{sv}: {c}</span>)}
+                            </div>
+                            {d.obs.length>0&&<div style={{fontSize:10,color:"#64748B",fontStyle:"italic",marginTop:4}}>{d.obs.slice(0,2).join(" · ")}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>})()}
 
             {/* ── ROW 3: Funil aprovação + Termômetro meta + Mapa calor ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
