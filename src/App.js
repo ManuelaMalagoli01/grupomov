@@ -2288,6 +2288,33 @@ export default function App(){
                 <div style={{fontSize:11,fontWeight:800,color:"#334155",marginBottom:8}}>🔧 Top Serviços</div>
                 {topS.map(([s,c],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}><span style={{color:"#555"}}>{s}</span><span style={{fontWeight:800,color:"#2563EB"}}>{c}</span></div>)}
               </div>}
+              {(()=>{
+                const prioCnt={urgente:lF.filter(r=>r.prioridade==="urgente").length,medio:lF.filter(r=>r.prioridade==="medio").length,normal:lF.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
+                const svcCnt={};lF.forEach(r=>{const ss=r.servico||"—";svcCnt[ss]=(svcCnt[ss]||0)+1;});
+                const svcTop=Object.entries(svcCnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+                const stsCnt={pendente:dP,em_andamento:dA,concluido:dC};
+                const chSts={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[stsCnt.pendente,stsCnt.em_andamento,stsCnt.concluido],backgroundColor:["#F59E0B","#3B82F6","#10B981"],borderWidth:0}]};
+                const chPrio={labels:["Urgente","Médio","Normal"],datasets:[{data:[prioCnt.urgente,prioCnt.medio,prioCnt.normal],backgroundColor:["#DC2626","#F59E0B","#10B981"],borderWidth:0}]};
+                const chSvc={labels:svcTop.map(s=>s[0].length>15?s[0].slice(0,15)+"…":s[0]),datasets:[{label:"Qtd",data:svcTop.map(s=>s[1]),backgroundColor:"#3B82F6",borderRadius:6}]};
+                const doOpt={responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}}}};
+                const barOpt={responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}},y:{grid:{display:false},ticks:{font:{size:10}}}}};
+                return(
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1.5fr",gap:14,marginBottom:14}}>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>📊 Status</div>
+                      <ChartCanvas type="doughnut" data={chSts} options={doOpt} height={140}/>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>⚡ Prioridade</div>
+                      <ChartCanvas type="doughnut" data={chPrio} options={doOpt} height={140}/>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>🔧 Serviços</div>
+                      {svcTop.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20}}>Sem dados</div>:<ChartCanvas type="bar" data={chSvc} options={barOpt} height={160}/>}
+                    </div>
+                  </div>
+                );
+              })()}
               <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
@@ -5222,6 +5249,33 @@ export default function App(){
                 <div style={{fontSize:11,fontWeight:800,color:"#334155",marginBottom:8}}>🔧 Top Serviços</div>
                 {topS.map(([s,c],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}><span style={{color:"#555"}}>{s}</span><span style={{fontWeight:800,color:"#2563EB"}}>{c}</span></div>)}
               </div>}
+              {(()=>{
+                const prioCnt={urgente:lF.filter(r=>r.prioridade==="urgente").length,medio:lF.filter(r=>r.prioridade==="medio").length,normal:lF.filter(r=>r.prioridade==="normal"||!r.prioridade).length};
+                const svcCnt={};lF.forEach(r=>{const ss=r.servico||"—";svcCnt[ss]=(svcCnt[ss]||0)+1;});
+                const svcTop=Object.entries(svcCnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+                const stsCnt={pendente:dP,em_andamento:dA,concluido:dC};
+                const chSts={labels:["Pendente","Em Andamento","Concluído"],datasets:[{data:[stsCnt.pendente,stsCnt.em_andamento,stsCnt.concluido],backgroundColor:["#F59E0B","#3B82F6","#10B981"],borderWidth:0}]};
+                const chPrio={labels:["Urgente","Médio","Normal"],datasets:[{data:[prioCnt.urgente,prioCnt.medio,prioCnt.normal],backgroundColor:["#DC2626","#F59E0B","#10B981"],borderWidth:0}]};
+                const chSvc={labels:svcTop.map(s=>s[0].length>15?s[0].slice(0,15)+"…":s[0]),datasets:[{label:"Qtd",data:svcTop.map(s=>s[1]),backgroundColor:"#3B82F6",borderRadius:6}]};
+                const doOpt={responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}}}};
+                const barOpt={responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}},y:{grid:{display:false},ticks:{font:{size:10}}}}};
+                return(
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1.5fr",gap:14,marginBottom:14}}>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>📊 Status</div>
+                      <ChartCanvas type="doughnut" data={chSts} options={doOpt} height={140}/>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>⚡ Prioridade</div>
+                      <ChartCanvas type="doughnut" data={chPrio} options={doOpt} height={140}/>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:12}}>🔧 Serviços</div>
+                      {svcTop.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20}}>Sem dados</div>:<ChartCanvas type="bar" data={chSvc} options={barOpt} height={160}/>}
+                    </div>
+                  </div>
+                );
+              })()}
               <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
