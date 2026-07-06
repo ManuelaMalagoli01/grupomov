@@ -1432,18 +1432,18 @@ export default function App(){
   // Agenda Preventiva (mensal) — salva no banco (prefixo PREV__ na mesma tabela)
   const saveAgendaPrev=(key,slots)=>{ setAgendaPrev(p=>({...p,[key]:slots})); db.save("escala", "PREV__"+key, {key:"PREV__"+key, slots}); };
 
-  const updateReport=(id,changes)=>{const updated=reports.map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateReport=(id,changes)=>{const updated=(reports||[]).map(r=>r.id===id?{...r,...changes}:r);setReports(updated);db.save("relatorios",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const STS_PECA_OPTS=["Ruptura","Peça Solicitada","Peça Separada Aguardando Execução","Concluído"];
   const STS_PECA_COR={"Ruptura":{c:"#C62828",bg:"#FFF0F0"},"Peça Solicitada":{c:"#E67E00",bg:"#FFF8F0"},"Peça Separada Aguardando Execução":{c:"#1565C0",bg:"#EFF6FF"},"Concluído":{c:"#1A7A3C",bg:"#F0FFF5"}};
-  const addPecaRel=(id)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",obs:""}]});};
-  const updatePecaRel=(id,pi,changes)=>{const r=reports.find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
-  const delPecaRel=(id,pi)=>{const r=reports.find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
-  const updateEmp=(id,changes)=>{const updated=emprestimos.map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateSaida=(id,changes)=>{const updated=saidaEntrada.map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateRuptura=(id,changes)=>{const updated=rupturas.map(r=>r.id===id?{...r,...changes}:r);setRupturas(updated);db.save("rupturas_alm",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const addPecaRel=(id)=>{const r=(reports||[]).find(x=>x.id===id);updateReport(id,{pecas:[...(r.pecas||[]),{situacao:"Peça Solicitada",peca:"",cod:"",quantidade:"",obs:""}]});};
+  const updatePecaRel=(id,pi,changes)=>{const r=(reports||[]).find(x=>x.id===id);const pecas=[...(r.pecas||[])];pecas[pi]={...pecas[pi],...changes};updateReport(id,{pecas});};
+  const delPecaRel=(id,pi)=>{const r=(reports||[]).find(x=>x.id===id);updateReport(id,{pecas:(r.pecas||[]).filter((_,i)=>i!==pi)});};
+  const updateEmp=(id,changes)=>{const updated=(emprestimos||[]).map(r=>r.id===id?{...r,...changes}:r);setEmprestimos(updated);db.save("emprestimos",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateSaida=(id,changes)=>{const updated=(saidaEntrada||[]).map(r=>r.id===id?{...r,...changes}:r);setSaidaEntrada(updated);db.save("saida_entrada",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateRuptura=(id,changes)=>{const updated=(rupturas||[]).map(r=>r.id===id?{...r,...changes}:r);setRupturas(updated);db.save("rupturas_alm",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   const delRuptura=(id)=>{setRupturas(p=>p.filter(x=>x.id!==id));db.delete("rupturas_alm",id);};
   const updateMU=(id,changes)=>{const updated=(processosMU||[]).map(r=>r.id===id?{...r,...changes}:r);setProcessosMU(updated);db.save("processos_mu",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
-  const updateAF=(id,changes)=>{const updated=processosAF.map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
+  const updateAF=(id,changes)=>{const updated=(processosAF||[]).map(r=>r.id===id?{...r,...changes}:r);setProcessosAF(updated);db.save("processos_af",id,updated.find(r=>r.id===id));notify("✅ Salvo!");};
   // Requisições — salvar no banco (visível para todos)
   const updateReq=(id,changes)=>{ setRequisicoes(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("requisicoes",id,row); return np; }); };
   const addReq=()=>{ const row={id:`REQ${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataRequisicao:TODAY_STR,numRequisicao:"",nomePeca:"",codigoPeca:"",quantidade:"",atendimento:"corretivo",numRelatorio:"",patrimonio:"",tecnico:ALL_TECHS[0],situacao:"reservada",status:"reservada",dataExecucao:"",tecnicoExecucao:"",relatorioExecucao:"",concluido:"pendente",processoStatus:"em_andamento",tecnicoEntrega:"",dataEntrega:"",dataEntregaParcial:"",previsaoChegada:""}; setRequisicoes(p=>[row,...p]); db.save("requisicoes",row.id,row); notify("✅ Requisição criada e salva!"); };
@@ -1464,7 +1464,7 @@ export default function App(){
   });
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
-  const updateApon=(id,changes)=>{const updated=apontamentos.map(r=>r.id===id?{...r,...changes}:r);setApontamentos(updated);db.save("apontamentos_oficina",id,updated.find(r=>r.id===id));};
+  const updateApon=(id,changes)=>{const updated=(apontamentos||[]).map(r=>r.id===id?{...r,...changes}:r);setApontamentos(updated);db.save("apontamentos_oficina",id,updated.find(r=>r.id===id));};
   const addApon=()=>{ const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:"",arquivado:false}; setApontamentos(p=>[...p,row]); db.save("apontamentos_oficina",row.id,row); notify("✅ Linha adicionada!"); };
   const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
   const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
@@ -1473,7 +1473,7 @@ export default function App(){
 
   const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
   const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
-  const updateApon150=(id,changes)=>{const updated=apontamentos150.map(r=>r.id===id?{...r,...changes}:r);setApontamentos150(updated);db.save("apontamentos_150",id,updated.find(r=>r.id===id));};
+  const updateApon150=(id,changes)=>{const updated=(apontamentos150||[]).map(r=>r.id===id?{...r,...changes}:r);setApontamentos150(updated);db.save("apontamentos_150",id,updated.find(r=>r.id===id));};
   const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
   const abrirEditar150=(a)=>{setEditApon150(a);setApon150Form({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||OFICINA_TECHS[0]||"",servico:a.servico||SERVICOS_OFICINA[0]||"",inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"150",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon150(true);};
@@ -1495,7 +1495,7 @@ export default function App(){
   const saveUser=(u)=>{ setUsers(prev=>{ const ex=prev.find(x=>x.id===u.id); return ex?prev.map(x=>x.id===u.id?u:x):[...prev,u]; }); db.save("usuarios",u.id,u); notify("✅ Usuário salvo!"); };
   const deleteUser=(id)=>{ if(id==="manuela"){alert("Não é possível excluir a gestora principal.");return;} setUsers(prev=>prev.filter(x=>x.id!==id)); db.delete("usuarios",id); notify("Usuário removido."); };
 
-  const filteredReports=reports.filter(d=>{
+  const filteredReports=(reports||[]).filter(d=>{
     if(filterTipo!=="todos"&&d.type!==filterTipo)return false;
     if(filterTech!=="todos"&&d.tecnico!==filterTech)return false;
     if(filterStatus!=="todos"&&d.status!==filterStatus)return false;
@@ -1517,7 +1517,7 @@ export default function App(){
     return true;
   });
 
-  const empAlerta=emprestimos.filter(e=>{
+  const empAlerta=(emprestimos||[]).filter(e=>{
     if(!e.dataRetorno||e.situacao==="Atendido")return false;
     const d=diffDays(e.dataRetorno);
     return d!==null&&d<0;
@@ -1738,7 +1738,7 @@ export default function App(){
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const lista=reports.filter(r=>showArqRel?true:r.processoStatus!=="arquivado").filter(r=>{
+          const lista=(reports||[]).filter(r=>showArqRel?true:r.processoStatus!=="arquivado").filter(r=>{
             if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
             if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
             if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
@@ -1864,7 +1864,7 @@ export default function App(){
         })()}
 
         {tab==="apontamentos_oficina"&&(()=>{
-          const lista=apontamentos.filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
+          const lista=(apontamentos||[]).filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
             if(ofiNovaFrom&&(a.data||"")<ofiNovaFrom)return false;
             if(ofiNovaTo&&(a.data||"")>ofiNovaTo)return false;
             if(ofiNovaOS&&!(a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
@@ -2062,7 +2062,7 @@ export default function App(){
           const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
           const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const apMes=apontamentos.filter(a=>{
+          const apMes=(apontamentos||[]).filter(a=>{
             if(!a.data)return false;
             if(dashOfiFrom&&a.data<dashOfiFrom)return false;
             if(dashOfiTo&&a.data>dashOfiTo)return false;
@@ -2263,14 +2263,14 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
+          const list=(pendHebert||[]).filter(r=>showArqHeb||!r.arquivado);
           const fS=formServH;const sfS=setFormServH;const fM=filtroMesH;const sfM=setFiltroMesH;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const addS=()=>{if(!fS.servico)return notify("Selecione um serviço");const rec={...fS,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendHebert(p=>[rec,...p]);db.save("pendencias_hebert",[rec,...pendHebert]);reset();notify("Serviço registrado!");};
-          const updS=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
-          const arcS=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const updS=(id,patch)=>{const n=(pendHebert||[]).map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=(pendHebert||[]).filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const arcS=id=>{const n=(pendHebert||[]).map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
           const lF=fM?list.filter(r=>r.data&&r.data.startsWith(fM)):list;
           const dT=lF.length;const dP=lF.filter(r=>r.status==="pendente"||!r.status).length;const dA=lF.filter(r=>r.status==="em_andamento").length;const dC=lF.filter(r=>r.status==="concluido").length;
           const svc={};lF.forEach(r=>{const s=r.servico||"—";svc[s]=(svc[s]||0)+1;});const topS=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,6);
@@ -2496,9 +2496,9 @@ export default function App(){
                 {showArqOfi?"✓ Arquivados":"📁 Ver Arquivados"}
               </button>
               {(ofiTipo!=="todos"||ofiTech!=="todos"||ofiStatus!=="todos"||ofiRegion!=="todas"||ofiFrom||ofiTo||ofiSearch)&&<BtnG onClick={()=>{setOfiTipo("todos");setOfiTech("todos");setOfiStatus("todos");setOfiRegion("todas");setOfiFrom("");setOfiTo("");setOfiSearch("");}}>✕ Limpar</BtnG>}
-              <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").length} registro(s)</span>
+              <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{(filteredOficina||[]).filter(d=>showArqOfi||d.processoStatus!=="arquivado").length} registro(s)</span>
               <BtnImport onClick={()=>setModalImportOfi(true)}/>
-              <BtnExcel onClick={()=>exportCSV(filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado"),"oficina_grupomov",[{key:"dataReg",label:"Data"},{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data Atend."},{key:"numChamado",label:"Chamado"},{key:"acao",label:"Ação"},{key:"horaEntrada",label:"Entrada"},{key:"horaSaida",label:"Saída"},{key:"horasTrabalhadas",label:"Horas Trab."},{key:"status",label:"Status"},{key:"requisicaoPeca",label:"Requisição"},{key:"dataPeca",label:"Data Peça"},{key:"execPeca",label:"Executado"},{key:"chamadoPeca",label:"Chamado Peça"},{key:"relatorioPeca",label:"Relatório Peça"},{key:"dataRelPeca",label:"Data Rel. Peça"},{key:"processoStatus",label:"Processo"}])}/>
+              <BtnExcel onClick={()=>exportCSV((filteredOficina||[]).filter(d=>showArqOfi||d.processoStatus!=="arquivado"),"oficina_grupomov",[{key:"dataReg",label:"Data"},{key:"reportNum",label:"Nº Relatório"},{key:"type",label:"Tipo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"Patrimônio"},{key:"tecnico",label:"Técnico"},{key:"date",label:"Data Atend."},{key:"numChamado",label:"Chamado"},{key:"acao",label:"Ação"},{key:"horaEntrada",label:"Entrada"},{key:"horaSaida",label:"Saída"},{key:"horasTrabalhadas",label:"Horas Trab."},{key:"status",label:"Status"},{key:"requisicaoPeca",label:"Requisição"},{key:"dataPeca",label:"Data Peça"},{key:"execPeca",label:"Executado"},{key:"chamadoPeca",label:"Chamado Peça"},{key:"relatorioPeca",label:"Relatório Peça"},{key:"dataRelPeca",label:"Data Rel. Peça"},{key:"processoStatus",label:"Processo"}])}/>
               <BtnY onClick={()=>setModalOfi(true)}>+ Novo Relatório</BtnY>
             </div>
             {/* Tabela */}
@@ -2507,8 +2507,8 @@ export default function App(){
                 <table>
                   <thead><tr><th>Data</th><th>Nº Relatório</th><th>Tipo</th><th>Empresa</th><th>Patrimônio</th><th>Técnico</th><th>Data Atend.</th><th>Chamado</th><th>Ação</th><th>Entrada</th><th>Saída</th><th>Horas Trab.</th><th>Status</th><th>Processo</th><th>Registrado por</th><th>Ações</th></tr></thead>
                   <tbody>
-                    {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
-                    {filteredOficina.filter(d=>showArqOfi||d.processoStatus!=="arquivado").map(d=>{
+                    {(filteredOficina||[]).filter(d=>showArqOfi||d.processoStatus!=="arquivado").length===0&&<tr><td colSpan={user.canDelete?16:15} style={{textAlign:"center",color:"#CCC",padding:40}}>Nenhum registro. Clique em "+ Novo Relatório".</td></tr>}
+                    {(filteredOficina||[]).filter(d=>showArqOfi||d.processoStatus!=="arquivado").map(d=>{
                       const sc=REL_STATUS[d.status]||{color:"#888",bg:"#F5F5F5"};
                       const tc=tipoCfg(d.type);
                       const isArq=d.processoStatus==="arquivado";
@@ -2745,7 +2745,7 @@ export default function App(){
         {/* ── REQ. EMPRÉSTIMO ── */}
         {tab==="emprestimos"&&(()=>{
           const SIT={Aprovado:{c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},Atendido:{c:"#1565C0",bg:"#EFF6FF",i:"📦"},Pendente:{c:"#E67E00",bg:"#FFF8F0",i:"⏳"},"Parcialmente Atendido":{c:"#8E44AD",bg:"#F6F0FB",i:"🔀"},"Retorno Concluído":{c:"#00838F",bg:"#E0F7FA",i:"🔁"},Ruptura:{c:"#C62828",bg:"#FFF0F0",i:"🔴"}};
-          const lista=emprestimos.filter(e=>showArqEmp||e.processoStatus!=="arquivado");
+          const lista=(emprestimos||[]).filter(e=>showArqEmp||e.processoStatus!=="arquivado");
           const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
           const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
                     const applyFilter=(r,d=r.data||"")=>{
@@ -2825,7 +2825,7 @@ export default function App(){
 
         {/* ── SAÍDA/ENTRADA ── */}
         {tab==="saida_entrada"&&(()=>{
-          const lista=saidaEntrada.filter(s=>showArqSaida||s.processoStatus!=="arquivado");
+          const lista=(saidaEntrada||[]).filter(s=>showArqSaida||s.processoStatus!=="arquivado");
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
@@ -3970,42 +3970,42 @@ export default function App(){
         {tab==="dashboard_req"&&(()=>{
           const ruptAlmox=rupturas||[];
           const allReqs=[...emprestimos,...saidaEntrada];
-          const totalEmp=emprestimos.length;
-          const totalSai=saidaEntrada.length;
+          const totalEmp=(emprestimos||[]).length;
+          const totalSai=(saidaEntrada||[]).length;
           const total=allReqs.length;
           // Rupturas S/E
-          const rupturasS=saidaEntrada.filter(s=>s.statusReq==="ruptura");
+          const rupturasS=(saidaEntrada||[]).filter(s=>s.statusReq==="ruptura");
           const rupturasInfo=rupturasS.map(s=>({peca:s.peca||s.descricao||"—",empresa:s.empresa||"—",dias:s.data?diffDays(s.data):null,codigo:s.codigo||"—"}));
-          const atendidos=saidaEntrada.filter(s=>s.statusReq==="atendido").length;
-          const pendentes=emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length+saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length;
-          const concluidos=emprestimos.filter(e=>e.statusEmp==="concluido").length+saidaEntrada.filter(s=>s.statusFinal==="concluido").length;
+          const atendidos=(saidaEntrada||[]).filter(s=>s.statusReq==="atendido").length;
+          const pendentes=(emprestimos||[]).filter(e=>(e.statusEmp||"pendente")==="pendente").length+(saidaEntrada||[]).filter(s=>(s.statusFinal||"pendente")==="pendente").length;
+          const concluidos=(emprestimos||[]).filter(e=>e.statusEmp==="concluido").length+(saidaEntrada||[]).filter(s=>s.statusFinal==="concluido").length;
           // Por técnico
           const byTech={};
-          emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
-          saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          (emprestimos||[]).forEach(e=>{const t=e.requerente||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
+          (saidaEntrada||[]).forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";byTech[t]=(byTech[t]||0)+1;});
           const techSorted=Object.entries(byTech).sort((a,b)=>b[1]-a[1]).slice(0,10);
           // Peças mais solicitadas (S/E + Empréstimos)
           const pecaCount={};
-          saidaEntrada.forEach(s=>{const p=s.peca||s.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
-          emprestimos.forEach(e=>{const p=e.item||e.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
+          (saidaEntrada||[]).forEach(s=>{const p=s.peca||s.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
+          (emprestimos||[]).forEach(e=>{const p=e.item||e.descricao||"";if(p)pecaCount[p]=(pecaCount[p]||0)+1;});
           const topPecas=Object.entries(pecaCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
           // Evolução por mês (últimos 6 meses)
           const getMes=(dateStr)=>{if(!dateStr)return null;const d=new Date(dateStr);if(isNaN(d))return null;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;};
-          const mesEmp={};emprestimos.forEach(e=>{const m=getMes(e.dataEmp||e.dataSaida||e.registradoEm);if(m)mesEmp[m]=(mesEmp[m]||0)+1;});
-          const mesSai={};saidaEntrada.forEach(s=>{const m=getMes(s.dataSaida||s.data||s.registradoEm);if(m)mesSai[m]=(mesSai[m]||0)+1;});
+          const mesEmp={};(emprestimos||[]).forEach(e=>{const m=getMes(e.dataEmp||e.dataSaida||e.registradoEm);if(m)mesEmp[m]=(mesEmp[m]||0)+1;});
+          const mesSai={};(saidaEntrada||[]).forEach(s=>{const m=getMes(s.dataSaida||s.data||s.registradoEm);if(m)mesSai[m]=(mesSai[m]||0)+1;});
           const allMeses=[...new Set([...Object.keys(mesEmp),...Object.keys(mesSai)])].sort().slice(-6);
           const mesesLabel=allMeses.map(m=>{const[y,mo]=m.split("-");const nomes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];return`${nomes[parseInt(mo)-1]}/${y.slice(2)}`;});
           const chartEvolucao={labels:mesesLabel,datasets:[{label:"Empréstimo/Retorno",data:allMeses.map(m=>mesEmp[m]||0),backgroundColor:"#F5C200",borderRadius:4},{label:"Entrada/Saída",data:allMeses.map(m=>mesSai[m]||0),backgroundColor:"#1565C0",borderRadius:4}]};
           // Tipo por técnico empilhado
           const techsAtivos=techSorted.slice(0,8).map(([t])=>t);
-          const empByTech={};saidaEntrada.forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";empByTech[t]=(empByTech[t]||0)+1;});
-          const empByTechEmp={};emprestimos.forEach(e=>{const t=e.requerente||"Sem técnico";empByTechEmp[t]=(empByTechEmp[t]||0)+1;});
+          const empByTech={};(saidaEntrada||[]).forEach(s=>{const t=s.requerente||s.empresa||"Sem técnico";empByTech[t]=(empByTech[t]||0)+1;});
+          const empByTechEmp={};(emprestimos||[]).forEach(e=>{const t=e.requerente||"Sem técnico";empByTechEmp[t]=(empByTechEmp[t]||0)+1;});
           const chartTipoTech={labels:techsAtivos,datasets:[{label:"Entrada/Saída",data:techsAtivos.map(t=>empByTech[t]||0),backgroundColor:"#1565C0",borderRadius:4},{label:"Empréstimo/Retorno",data:techsAtivos.map(t=>empByTechEmp[t]||0),backgroundColor:"#F5C200",borderRadius:4}]};
           // Gráficos status
-          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[emprestimos.filter(e=>(e.statusEmp||"pendente")==="pendente").length,emprestimos.filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#C62828","#1A7A3C"],borderWidth:0}]};
-          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturasS.length,atendidos,saidaEntrada.filter(s=>(s.statusFinal||"pendente")==="pendente").length,saidaEntrada.filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
-          const pecasAplicadas=saidaEntrada.filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
-          const empPecasAplicadas=emprestimos.filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
+          const chartStatusEmpData={labels:["Pendente","Concluído"],datasets:[{data:[(emprestimos||[]).filter(e=>(e.statusEmp||"pendente")==="pendente").length,(emprestimos||[]).filter(e=>e.statusEmp==="concluido").length],backgroundColor:["#C62828","#1A7A3C"],borderWidth:0}]};
+          const chartStatusSaiData={labels:["Ruptura","Atendido","Pendente","Concluído"],datasets:[{data:[rupturasS.length,atendidos,(saidaEntrada||[]).filter(s=>(s.statusFinal||"pendente")==="pendente").length,(saidaEntrada||[]).filter(s=>s.statusFinal==="concluido").length],backgroundColor:["#C62828","#1A7A3C","#E67E00","#1565C0"],borderWidth:0}]};
+          const pecasAplicadas=(saidaEntrada||[]).filter(s=>s.relatorioAplicado).map(s=>({rel:s.relatorioAplicado,peca:s.peca||s.descricao||"—",empresa:s.empresa||"—"}));
+          const empPecasAplicadas=(emprestimos||[]).filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
           const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
           const KPIR=({label,value,color="#1A1A1A",bg="#FFF",icon,sub})=>(
             <div className="card" style={{padding:"16px 20px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
@@ -4109,12 +4109,12 @@ export default function App(){
                 </div>
               )}
               {/* Ruptura Almox no Dashboard */}
-              {ruptAlmox.filter(r=>!r.arquivado).length>0&&(
+              {(ruptAlmox||[]).filter(r=>!r.arquivado).length>0&&(
                 <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #AD1457"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({ruptAlmox.filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
+                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({(ruptAlmox||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
                   <div className="tbl-wrap"><table>
                     <thead><tr><th>Data</th><th>Peça</th><th>Cód.</th><th>Empresa</th><th>PAT</th><th>Técnico</th><th>Solicitação</th><th>SLA</th><th>Status</th></tr></thead>
-                    <tbody>{ruptAlmox.filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
+                    <tbody>{(ruptAlmox||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
                       const dias=r.status==="separado_suporte"||r.status==="liberado_almox"?null:r.data?Math.floor((Date.now()-new Date(r.data).getTime())/86400000):null;
                       const SOLS={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguard.",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
                       const STATS={aguardando:{l:"Aguardando",c:"#E67E00"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD"},separado_suporte:{l:"Separado Suporte",c:"#1565C0"},liberado_almox:{l:"Liberado",c:"#1A7A3C"}};
@@ -4773,7 +4773,7 @@ export default function App(){
 
         {/* ── APONTAMENTOS OFICINA 150 ── */}
         {tab==="apontamentos_150"&&(()=>{
-          const lista=apontamentos150.filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
+          const lista=(apontamentos150||[]).filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
             if(ofi150From&&(a.data||"")<ofi150From)return false;
             if(ofi150To&&(a.data||"")>ofi150To)return false;
             if(ofi150OS&&!(a.os||"").toLowerCase().includes(ofi150OS.toLowerCase()))return false;
@@ -4956,7 +4956,7 @@ export default function App(){
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
           const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const apMes=apontamentos150.filter(a=>{
+          const apMes=(apontamentos150||[]).filter(a=>{
             if(!a.data)return false;
             if(dashOfi150From&&a.data<dashOfi150From)return false;
             if(dashOfi150To&&a.data>dashOfi150To)return false;
@@ -5151,14 +5151,14 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
+          const list=(pendMatheus||[]).filter(r=>showArqMat||!r.arquivado);
           const fS=formServM;const sfS=setFormServM;const fM=filtroMesM;const sfM=setFiltroMesM;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
           const addS=()=>{if(!fS.servico)return notify("Selecione um serviço");const rec={...fS,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendMatheus(p=>[rec,...p]);db.save("pendencias_matheus",[rec,...pendMatheus]);reset();notify("Serviço registrado!");};
-          const updS=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
-          const arcS=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const updS=(id,patch)=>{const n=(pendMatheus||[]).map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=(pendMatheus||[]).filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const arcS=id=>{const n=(pendMatheus||[]).map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
           const lF=fM?list.filter(r=>r.data&&r.data.startsWith(fM)):list;
           const dT=lF.length;const dP=lF.filter(r=>r.status==="pendente"||!r.status).length;const dA=lF.filter(r=>r.status==="em_andamento").length;const dC=lF.filter(r=>r.status==="concluido").length;
           const svc={};lF.forEach(r=>{const s=r.servico||"—";svc[s]=(svc[s]||0)+1;});const topS=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,6);
