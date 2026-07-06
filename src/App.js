@@ -561,7 +561,7 @@ function ProcessoModal({onClose,onSave,tipo,initial}){
           <Inp label="Observações / Preenchimento livre" value={form.obs} onChange={v=>upd("obs",v)} placeholder="Anotações..."/>
           <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:8}}>
             <BtnG onClick={onClose}>Cancelar</BtnG>
-            <BtnY onClick={()=>{onSave({...form,id:`P${Date.now()}`,tipo});onClose();}} disabled={!form.empresa}>Salvar</BtnY>
+            <BtnY onClick={()=>{onSave({...form,id:form.id||`P${Date.now()}`,tipo});onClose();}} disabled={!form.empresa}>Salvar</BtnY>
           </div>
         </div>
       </div>
