@@ -4585,7 +4585,44 @@ export default function App(){
                 </div>
               ))}
             </div>
-          </div>);
+          
+            {/* ── ROW: Serviços Técnicos Externos ── */}
+            {(()=>{
+              const allSched=Object.entries(schedule).flatMap(([k,v])=>{const tn=k.split("__")[0];return(v||[]).filter(Boolean).map(s=>({...s,tecnico:tn}));});
+              const SVCS=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
+              const SCOLS=["#3B82F6","#EF4444","#F59E0B","#8B5CF6","#10B981","#06B6D4","#6366F1"];
+              const techNames=[...new Set(allSched.map(s=>s.tecnico))].sort();
+              const qtdDS={labels:techNames,datasets:SVCS.map((sv,si)=>({label:sv,data:techNames.map(t=>allSched.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOLS[si],borderRadius:4}))};
+              const hrsDS={labels:techNames,datasets:SVCS.map((sv,si)=>({label:sv,data:techNames.map(t=>allSched.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).reduce((a,s)=>a+(parseFloat(s.horas)||0),0)),backgroundColor:SCOLS[si],borderRadius:4}))};
+              const svcTotQtd=SVCS.map(sv=>allSched.filter(s=>s.servicos&&s.servicos.includes(sv)).length);
+              const svcTotHrs=SVCS.map(sv=>allSched.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a,s)=>a+(parseFloat(s.horas)||0),0));
+              const svcDS={labels:SVCS,datasets:[{label:"Qtd Atendimentos",data:svcTotQtd,backgroundColor:"#3B82F6",borderRadius:6},{label:"Horas",data:svcTotHrs,backgroundColor:"#3B82F644",borderRadius:6}]};
+              const stackOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
+              const barOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
+              return(
+                <div style={{marginTop:14}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>🔧 Serviços — Técnicos Externos</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
+                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                      {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={qtdDS} options={stackOpt} height={220}/>}
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
+                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                      {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={hrsDS} options={stackOpt} height={220}/>}
+                    </div>
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
+                    <div style={{fontSize:11,color:"#94A3B8",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+                    <ChartCanvas type="bar" data={svcDS} options={barOpt} height={200}/>
+                  </div>
+                </div>
+              );
+            })()}
+</div>);
         })()}
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
