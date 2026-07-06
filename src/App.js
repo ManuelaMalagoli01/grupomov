@@ -2981,6 +2981,40 @@ export default function App(){
                   </div>
                 );
               })()}
+              {/* ── Gráficos Serviços ── */}
+              {(()=>{
+                const allAt=Object.entries(schedule).flatMap(([k,v])=>(v||[]).map(s=>({...s,tech:k.split("__")[0],data:k.split("__")[1]})));
+                const SVCS2=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
+                const SVCS_CORES=["#3B82F6","#DC2626","#10B981","#F59E0B","#8B5CF6","#06B6D4","#6B7280"];
+                const techNames=[...new Set(allAt.map(a=>a.tech))].sort();
+                if(techNames.length===0||allAt.filter(a=>a.servicos&&a.servicos.length>0).length===0) return null;
+                const qtdData={labels:techNames,datasets:SVCS2.map((sv,si)=>({label:sv,data:techNames.map(t=>allAt.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).length),backgroundColor:SVCS_CORES[si],borderRadius:3}))};
+                const hrsData={labels:techNames,datasets:SVCS2.map((sv,si)=>({label:sv,data:techNames.map(t=>allAt.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:SVCS_CORES[si],borderRadius:3}))};
+                const svcTotQ={labels:SVCS2,datasets:[{label:"Qtd",data:SVCS2.map(sv=>allAt.filter(a=>a.servicos&&a.servicos.includes(sv)).length),backgroundColor:SVCS_CORES,borderRadius:6},{label:"Horas",data:SVCS2.map(sv=>allAt.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:SVCS_CORES.map(c=>c+"66"),borderRadius:6}]};
+                const stackOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}},title:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
+                const grpOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
+                return(
+                  <div style={{marginBottom:16}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                      <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
+                        <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                        <ChartCanvas type="bar" data={qtdData} options={stackOpt} height={200}/>
+                      </div>
+                      <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
+                        <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                        <ChartCanvas type="bar" data={hrsData} options={stackOpt} height={200}/>
+                      </div>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
+                      <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+                      <ChartCanvas type="bar" data={svcTotQ} options={grpOpt} height={180}/>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Filtros */}
               <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
