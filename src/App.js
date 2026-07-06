@@ -4409,7 +4409,7 @@ export default function App(){
 
             {/* ── ROW 1: Evolução linha + Donut status ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div className="card" style={{padding:18}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="line" data={{
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
@@ -4419,7 +4419,7 @@ export default function App(){
                   ]
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}}} height={180}/>}
               </div>
-              <div className="card" style={{padding:18}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🍕 Status dos Processos</div>
                 <ChartCanvas type="doughnut" data={{
                   labels:["Pendente","Em Andamento","Concluído"],
@@ -4434,7 +4434,7 @@ export default function App(){
 
             {/* ── ROW 2: Evolução valores + Top empresas ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div className="card" style={{padding:18}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>💵 Evolução de Valores por Mês</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
               </div>
@@ -4454,10 +4454,42 @@ export default function App(){
               </div>
             </div>
 
+            {/* ── ROW TECH: Serviços por Técnico ── */}
+            {(()=>{
+              const allAtend=Object.entries(schedule).flatMap(([k,v])=>(v||[]).map(s=>({...s,tech:k.split("__")[0],data:k.split("__")[1]})));
+              const SVC=["Mecânica","Hidráulica","Elétrica","Pequenos Reparos","Bateria","Carregador","Outros"];
+              const SVC_COLORS=["#3B82F6","#EF4444","#F59E0B","#10B981","#1E3A5F","#8B5CF6","#EC4899"];
+              const techNames=[...new Set(allAtend.map(a=>a.tech))].sort();
+              const qtdData={labels:techNames,datasets:SVC.map((sv,si)=>({label:sv,data:techNames.map(t=>allAtend.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).length),backgroundColor:SVC_COLORS[si],borderRadius:4}))};
+              const horasData={labels:techNames,datasets:SVC.map((sv,si)=>({label:sv,data:techNames.map(t=>allAtend.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:SVC_COLORS[si],borderRadius:4}))};
+              const stackOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
+              const svcTotals=SVC.map(sv=>({name:sv,qtd:allAtend.filter(a=>a.servicos&&a.servicos.includes(sv)).length,horas:allAtend.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)}));
+              const svcBarData={labels:svcTotals.map(s=>s.name),datasets:[{label:"Qtd Apontamentos",data:svcTotals.map(s=>s.qtd),backgroundColor:"#3B82F6",borderRadius:6},{label:"Horas",data:svcTotals.map(s=>s.horas),backgroundColor:"#3B82F680",borderRadius:6}]};
+              const svcBarOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"top",labels:{font:{size:11,weight:"600"},boxWidth:12}},subtitle:{display:true,text:"Barras sólidas = quantidade · barras translúcidas = horas",font:{size:10},color:"#94A3B8",padding:{bottom:8}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"}}}};
+              return(<>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
+                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                    {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={qtdData} options={stackOpts} height={220}/>}
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
+                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                    {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={horasData} options={stackOpts} height={220}/>}
+                  </div>
+                </div>
+                <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
+                  {svcTotals.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={svcBarData} options={svcBarOpts} height={200}/>}
+                </div>
+              </>);
+            })()}
+
             {/* ── ROW 3: Funil aprovação + Termômetro meta + Mapa calor ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
               {/* Funil */}
-              <div className="card" style={{padding:18}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:14}}>🔽 Funil de Aprovação</div>
                 {(()=>{
                   const funnelSteps=[
@@ -4516,7 +4548,7 @@ export default function App(){
               </div>
 
               {/* Mapa de calor por dia da semana */}
-              <div className="card" style={{padding:18}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
                 {(()=>{
                   const dias=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
