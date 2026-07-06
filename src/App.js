@@ -3019,14 +3019,17 @@ export default function App(){
                 <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
               </div>
 
-              {/* Formulário novo atendimento */}
-              {!isReadOnlyAgenda(user)&&(
-              <div className="card" style={{marginBottom:18,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-                <div style={{padding:"12px 18px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:16}}>➕</span>
-                  <div style={{fontWeight:800,fontSize:14,color:"#F5C200"}}>Novo Atendimento</div>
-                </div>
-                <div style={{padding:"14px 18px",background:"#FFFBF0",display:"flex",gap:9,flexWrap:"wrap",alignItems:"flex-end"}}>
+              {/* Novo Atendimento */}
+              {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
+                <button onClick={()=>setShowNovoAtend(true)} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)"}}>+ Novo Atendimento</button>
+              </div>}
+              {showNovoAtend&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowNovoAtend(false)}>
+                <div style={{background:"#FFF",borderRadius:16,width:680,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>➕ Novo Atendimento</div>
+                    <button onClick={()=>setShowNovoAtend(false)} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+                  </div>
+                  <div style={{padding:"22px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
@@ -3049,10 +3052,10 @@ export default function App(){
                      <label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Obs. Serviço</label>
                      <input type="text" placeholder="Ex: Troca de rodas..." value={agObsServ} onChange={e=>setAgObsServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/>
                    </div>
-                   <BtnY onClick={addAtend}>Adicionar</BtnY>
+                   <BtnY onClick={()=>{addAtend();setShowNovoAtend(false);}}>Adicionar</BtnY>
                 </div>
               </div>
-              )}
+              </div>}
 
               {/* Calendário horizontal */}
               <div style={{overflowX:"auto"}}>
@@ -4399,7 +4402,7 @@ export default function App(){
             {/* ── ROW 1: Evolução linha + Donut status ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
               <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="line" data={{
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
                   datasets:[
@@ -4409,7 +4412,7 @@ export default function App(){
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}}} height={180}/>}
               </div>
               <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🍕 Status dos Processos</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🍕 Status dos Processos</div>
                 <ChartCanvas type="doughnut" data={{
                   labels:["Pendente","Em Andamento","Concluído"],
                   datasets:[{data:[
@@ -4424,11 +4427,11 @@ export default function App(){
             {/* ── ROW 2: Evolução valores + Top empresas ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
               <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>💵 Evolução de Valores por Mês</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>💵 Evolução de Valores por Mês</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
               </div>
               <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:8}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Empresas por Valor</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🏆 Top Empresas por Valor</div>
                 {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.slice(0,8).map(([emp,val],i)=>(
                   <div key={i} style={{display:"flex",flexDirection:"column",gap:3}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -4479,7 +4482,7 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
               {/* Funil */}
               <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:14}}>🔽 Funil de Aprovação</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🔽 Funil de Aprovação</div>
                 {(()=>{
                   const funnelSteps=[
                     {l:"Em Aberto",v:[...allMU,...allAF].length,c:"#1565C0"},
@@ -4505,7 +4508,7 @@ export default function App(){
 
               {/* Termômetro de meta */}
               <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5}}>🎯 Meta de Recebimento</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B"}}>🎯 Meta de Recebimento</div>
                 {(()=>{
                   const meta=50000;
                   const recebido=valFaturado;
@@ -4538,7 +4541,7 @@ export default function App(){
 
               {/* Mapa de calor por dia da semana */}
               <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
                 {(()=>{
                   const dias=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
                   const counts=Array(7).fill(0);
