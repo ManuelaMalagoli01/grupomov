@@ -4214,60 +4214,60 @@ export default function App(){
             </div>
 
             {/* ── Filtros ── */}
-            <div className="card" style={{padding:"14px 18px",marginBottom:18,borderLeft:"4px solid #F5C200"}}>
+            <div className="card" style={{padding:"8px 12px",marginBottom:10,borderLeft:"3px solid #F5C200"}}>
               <div style={{fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:.8,marginBottom:12}}>🔍 Filtros</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Tipo</label>
-                  <select value={fTipo} onChange={e=>setFTipo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <select value={fTipo} onChange={e=>setFTipo(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                     <option value="todos">Todos</option><option value="mu">⚠️ Mau Uso</option><option value="af">💰 A Faturar</option>
                   </select>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Mês</label>
-                  <select value={fMes} onChange={e=>setFMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <select value={fMes} onChange={e=>setFMes(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                     <option value="">Todos os meses</option>
                     {MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}
                   </select>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Ano</label>
-                  <select value={fAno} onChange={e=>setFAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <select value={fAno} onChange={e=>setFAno(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                     <option value="">Todos</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}
                   </select>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Aprovação Cliente</label>
-                  <select value={fAprov} onChange={e=>setFAprov(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <select value={fAprov} onChange={e=>setFAprov(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                     <option value="todos">Todos os status</option>
                     {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                   </select>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Status Processo</label>
-                  <select value={fStatus} onChange={e=>setFStatus(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+                  <select value={fStatus} onChange={e=>setFStatus(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                     <option value="todos">Todos</option><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option>
                   </select>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>De</label>
-                  <input type="date" value={fDe} onChange={e=>setFDe(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <input type="date" value={fDe} onChange={e=>setFDe(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Até</label>
-                  <input type="date" value={fAte} onChange={e=>setFAte(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <input type="date" value={fAte} onChange={e=>setFAte(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Empresa</label>
-                  <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Patrimônio</label>
-                  <input type="text" value={fPat} onChange={e=>setFPat(e.target.value)} placeholder="PAT..." style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <input type="text" value={fPat} onChange={e=>setFPat(e.target.value)} placeholder="PAT..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
-                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Nº Mau Uso</label>
-                  <input type="text" value={fNumMU} onChange={e=>setFNumMU(e.target.value)} placeholder="Nº MU..." style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <input type="text" value={fNumMU} onChange={e=>setFNumMU(e.target.value)} placeholder="Nº MU..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
               </div>
             </div>
