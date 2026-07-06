@@ -4575,7 +4575,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"sas_grupomov",[{key:"dataSolicitacao",label:"Dt Solic."},{key:"email",label:"Email"},{key:"nfNum",label:"NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Dt Realiz."},{key:"relatorioMov",label:"Rel MOV"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
-                <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
+                <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",deslocamento:"",observacao:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
