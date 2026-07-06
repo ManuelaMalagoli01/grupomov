@@ -2248,41 +2248,96 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
-        {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="hebert_s")&&(()=>{
+                {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s")&&(()=>{
+          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const S_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
+          const S_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
+          const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
+          const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendHebert.filter(r=>showArqHeb||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          const fS=formServH;const sfS=setFormServH;const fM=filtroMesH;const sfM=setFiltroMesH;
+          const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
+          const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const addS=()=>{if(!fS.servico)return notify("Selecione um serviço");const rec={...fS,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendHebert(p=>[rec,...p]);db.save("pendencias_hebert",[rec,...pendHebert]);reset();notify("Serviço registrado!");};
+          const updS=(id,patch)=>{const n=pendHebert.map(r=>r.id===id?{...r,...patch}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=pendHebert.filter(r=>r.id!==id);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const arcS=id=>{const n=pendHebert.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendHebert(n);db.save("pendencias_hebert",n);};
+          const lF=fM?list.filter(r=>r.data&&r.data.startsWith(fM)):list;
+          const dT=lF.length;const dP=lF.filter(r=>r.status==="pendente"||!r.status).length;const dA=lF.filter(r=>r.status==="em_andamento").length;const dC=lF.filter(r=>r.status==="concluido").length;
+          const svc={};lF.forEach(r=>{const s=r.servico||"—";svc[s]=(svc[s]||0)+1;});const topS=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,6);
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Serviços Adm Oficina</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela e Hebert</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqHeb(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqHeb?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqHeb?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>hebCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 1340</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
+                <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#D97706":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Arquivados":"📦 Arquivados"}</button>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{
-                    const p=PRIO[r.prioridade||"medio"];
-                    const res=r.status==="resolvido";
-                    return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>hebCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>hebCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva a pendência..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>hebCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>hebCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>hebCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>hebCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))hebCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                <input type="month" value={fM} onChange={e=>sfM(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/>
+                {fM&&<button onClick={()=>sfM("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
+                {[{l:"Total",v:dT,c:"#1E293B",bg:"#F8FAFC"},{l:"Pendentes",v:dP,c:"#D97706",bg:"#FFFBEB"},{l:"Em Andamento",v:dA,c:"#2563EB",bg:"#EFF6FF"},{l:"Concluídos",v:dC,c:"#059669",bg:"#ECFDF5"}].map((k,ki)=>(
+                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {topS.length>0&&<div style={{background:"#FFF",borderRadius:12,padding:14,marginBottom:14,boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#334155",marginBottom:8}}>🔧 Top Serviços</div>
+                {topS.map(([s,c],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}><span style={{color:"#555"}}>{s}</span><span style={{fontWeight:800,color:"#2563EB"}}>{c}</span></div>)}
+              </div>}
+              <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                </div>
+                {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #3B82F622"}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#2563EB",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
+                    <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+                  </div>
+                  {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
+                </div>}
+                {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F59E0B22"}}>
+                  <label style={{fontSize:9,fontWeight:800,color:"#D97706",textTransform:"uppercase"}}>📝 Observação</label>
+                  <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                </div>
+                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                <button onClick={addS} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+              </div>
+              {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
+                {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
+                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{display:"flex",gap:4}}><span style={{fontSize:9,fontWeight:800,color:pr.c,background:pr.c+"15",borderRadius:8,padding:"2px 8px"}}>{pr.l}</span><span style={{fontSize:9,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"2px 8px"}}>{SM[r.status]||"⏳ Pendente"}</span></div>
+                      <div style={{display:"flex",gap:3}}><button onClick={()=>arcS(r.id)} style={{background:"#F1F5F9",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button><button onClick={()=>delS(r.id)} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#DC2626",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button></div>
+                    </div>
+                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:3}}>📅 {r.data||"—"}</div>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>{r.servico||"—"}</div>
+                    {r.descricao&&<div style={{fontSize:11,color:"#64748B",marginBottom:5}}>{r.descricao}</div>}
+                    {S_EQUIP.includes(r.servico)&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:5,fontSize:11,color:"#334155"}}><span style={{fontWeight:700}}>📦 {r.equipCateg}</span>{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
+                    {r.obsCondicional&&<div style={{background:"#FFFBEB",borderRadius:8,padding:"6px 10px",marginBottom:5,fontSize:11,color:"#92400E"}}>📝 {r.obsCondicional}</div>}
+                    {r.obs&&<div style={{fontSize:10,color:"#94A3B8",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
+                      <select value={r.prioridade||"normal"} onChange={e=>updS(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E2E8F0",borderRadius:6}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
+                      <select value={r.status||"pendente"} onChange={e=>updS(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E2E8F0",borderRadius:6}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
+                    </div>
+                  </div>
+                );})}
+              </div>)}
             </div>
           );
         })()}
-
         {/* ── PENDÊNCIAS MANUELA ── */}
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
@@ -5127,34 +5182,93 @@ export default function App(){
 
 
         {/* ── PENDÊNCIAS MATHEUS ── */}
-        {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m")&&(()=>{
+                {tab==="pendencias_matheus"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m")&&(()=>{
+          const SERVICOS=["ADM Manutenção","Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const S_EQUIP=["Comercial","Frota","Manutenção Frota","Manutenção Cliente","Manutenção Peças","Solicitação Diretoria","Retirada de Peças","Liberação Técnica"];
+          const S_OBS=["Solicitação Diretoria","Retirada de Peças","Liberação Técnica","Ajuste de Ponto","Solicitação de E-mail","Férias","Atestado","Organização Oficina","Rupturas","Outros"];
+          const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
+          const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
+          const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
           const list=pendMatheus.filter(r=>showArqMat||!r.arquivado);
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const STS={resolvido:"Resolvido",em_andamento:"Em Andamento",pendente:"Pendente"};
+          const fS=formServM;const sfS=setFormServM;const fM=filtroMesM;const sfM=setFiltroMesM;
+          const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
+          const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
+          const addS=()=>{if(!fS.servico)return notify("Selecione um serviço");const rec={...fS,id:Date.now().toString(),registradoPor:user.name,criadoEm:new Date().toISOString()};setPendMatheus(p=>[rec,...p]);db.save("pendencias_matheus",[rec,...pendMatheus]);reset();notify("Serviço registrado!");};
+          const updS=(id,patch)=>{const n=pendMatheus.map(r=>r.id===id?{...r,...patch}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const delS=id=>{if(!window.confirm("Excluir?"))return;const n=pendMatheus.filter(r=>r.id!==id);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const arcS=id=>{const n=pendMatheus.map(r=>r.id===id?{...r,arquivado:!r.arquivado}:r);setPendMatheus(n);db.save("pendencias_matheus",n);};
+          const lF=fM?list.filter(r=>r.data&&r.data.startsWith(fM)):list;
+          const dT=lF.length;const dP=lF.filter(r=>r.status==="pendente"||!r.status).length;const dA=lF.filter(r=>r.status==="em_andamento").length;const dC=lF.filter(r=>r.status==="concluido").length;
+          const svc={};lF.forEach(r=>{const s=r.servico||"—";svc[s]=(svc[s]||0)+1;});const topS=Object.entries(svc).sort((a,b)=>b[1]-a[1]).slice(0,6);
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🔧 Serviços Adm</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível para Manuela, Gustavo e Matheus</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqMat(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqMat?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqMat?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>mathCrud.add({data:TODAY_STR,descricao:"",prioridade:"medio",status:"pendente",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 150</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
+                <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#D97706":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Arquivados":"📦 Arquivados"}</button>
               </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>✕</th></tr></thead>
-                  <tbody>{list.map(r=>{const p=PRIO[r.prioridade||"medio"];const res=r.status==="resolvido";return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>mathCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><input type="text" value={r.descricao||""} onChange={e=>mathCrud.update(r.id,{descricao:e.target.value})} style={{width:200,fontSize:11,padding:"3px 6px"}} placeholder="Descreva..."/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>mathCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>mathCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":r.status==="em_andamento"?"#1565C0":"#C62828",background:res?"#F0FFF5":r.status==="em_andamento"?"#F0F4FF":"#FFF0F0"}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>mathCrud.update(r.id,{obs:e.target.value})} style={{width:220,fontSize:11,padding:"3px 6px"}} placeholder="Obs..."/></td>
-                      <td style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>mathCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))mathCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                <input type="month" value={fM} onChange={e=>sfM(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/>
+                {fM&&<button onClick={()=>sfM("")} style={{fontSize:10,padding:"5px 10px",borderRadius:8,border:"none",background:"#F0F0F0",cursor:"pointer",fontWeight:700}}>Limpar</button>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
+                {[{l:"Total",v:dT,c:"#1E293B",bg:"#F8FAFC"},{l:"Pendentes",v:dP,c:"#D97706",bg:"#FFFBEB"},{l:"Em Andamento",v:dA,c:"#2563EB",bg:"#EFF6FF"},{l:"Concluídos",v:dC,c:"#059669",bg:"#ECFDF5"}].map((k,ki)=>(
+                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {topS.length>0&&<div style={{background:"#FFF",borderRadius:12,padding:14,marginBottom:14,boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#334155",marginBottom:8}}>🔧 Top Serviços</div>
+                {topS.map(([s,c],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}><span style={{color:"#555"}}>{s}</span><span style={{fontWeight:800,color:"#2563EB"}}>{c}</span></div>)}
+              </div>}
+              <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                </div>
+                {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #3B82F622"}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#2563EB",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
+                    <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+                  </div>
+                  {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
+                </div>}
+                {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F59E0B22"}}>
+                  <label style={{fontSize:9,fontWeight:800,color:"#D97706",textTransform:"uppercase"}}>📝 Observação</label>
+                  <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                </div>
+                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                <button onClick={addS} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+              </div>
+              {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
+                {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
+                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{display:"flex",gap:4}}><span style={{fontSize:9,fontWeight:800,color:pr.c,background:pr.c+"15",borderRadius:8,padding:"2px 8px"}}>{pr.l}</span><span style={{fontSize:9,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"2px 8px"}}>{SM[r.status]||"⏳ Pendente"}</span></div>
+                      <div style={{display:"flex",gap:3}}><button onClick={()=>arcS(r.id)} style={{background:"#F1F5F9",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button><button onClick={()=>delS(r.id)} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#DC2626",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button></div>
+                    </div>
+                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:3}}>📅 {r.data||"—"}</div>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>{r.servico||"—"}</div>
+                    {r.descricao&&<div style={{fontSize:11,color:"#64748B",marginBottom:5}}>{r.descricao}</div>}
+                    {S_EQUIP.includes(r.servico)&&(r.equipCateg||r.equipDetalhe)&&<div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 10px",marginBottom:5,fontSize:11,color:"#334155"}}><span style={{fontWeight:700}}>📦 {r.equipCateg}</span>{r.equipDetalhe?` — ${r.equipDetalhe}`:""}</div>}
+                    {r.obsCondicional&&<div style={{background:"#FFFBEB",borderRadius:8,padding:"6px 10px",marginBottom:5,fontSize:11,color:"#92400E"}}>📝 {r.obsCondicional}</div>}
+                    {r.obs&&<div style={{fontSize:10,color:"#94A3B8",fontStyle:"italic",marginBottom:4}}>💬 {r.obs}</div>}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginTop:6}}>
+                      <select value={r.prioridade||"normal"} onChange={e=>updS(r.id,{prioridade:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E2E8F0",borderRadius:6}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select>
+                      <select value={r.status||"pendente"} onChange={e=>updS(r.id,{status:e.target.value})} style={{fontSize:10,padding:"4px 6px",border:"1px solid #E2E8F0",borderRadius:6}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select>
+                    </div>
+                  </div>
+                );})}
+              </div>)}
             </div>
           );
         })()}
