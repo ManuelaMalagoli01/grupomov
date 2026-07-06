@@ -1362,6 +1362,7 @@ export default function App(){
 
   const [agServicos,setAgServicos]=useState([]);
   const [agObsServ,setAgObsServ]=useState("");
+  const [showNovoAtend,setShowNovoAtend]=useState(false);
   const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
 
   // ── TÍTULO DO APP ──
