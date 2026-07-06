@@ -4633,6 +4633,7 @@ export default function App(){
                   const serv=SERV[s.servico||"outros"]||SERV.outros;
                   const ok=s.status==="concluido";
                   const pend=s.status==="pendente"||!s.status;
+                  const _gd=(()=>{if(!s.dataGarantia)return null;const _d2=new Date(s.dataGarantia+"T00:00:00"),_h2=new Date();_h2.setHours(0,0,0,0);return Math.floor((_d2-_h2)/86400000);})();const _gc=_gd!==null&&_gd>=0&&_gd<=30?"#DC2626":_gd!==null&&_gd>=0&&_gd<=180?"#D97706":null;
                   return(<div key={s.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":pend?"#C62828":serv.c}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
                     <div style={{padding:"11px 14px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -4641,6 +4642,7 @@ export default function App(){
                           <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
                         </select>
                       </div>
+                      {_gc&&<div style={{fontSize:9,fontWeight:800,color:_gc,background:_gc+"15",borderRadius:8,padding:"2px 8px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</div>}
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
@@ -4655,7 +4657,9 @@ export default function App(){
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equip." style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Data Realiz.</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {s.deslocamento&&<div style={{background:"#F8FAFC",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#64748B",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Desloc.</div><div style={{fontSize:12,fontWeight:700,color:"#334155"}}>R$ {s.deslocamento}</div></div>}
                         {s.envioFaturamento&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Envio Faturamento</div><div style={{fontSize:11,fontWeight:700,color:"#1A7A3C"}}>{s.envioFaturamento}</div></div>}
+                        {s.observacao&&<div style={{background:"#FFFBEB",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#D97706",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📝 Obs</div><div style={{fontSize:11,color:"#555"}}>{s.observacao}</div></div>}
                       </div>
                       <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{s.registradoPor||""}</div>
                     </div>
