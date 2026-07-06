@@ -975,6 +975,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       })}
     </div>
   );
+  if(user.apenasOficina150) return(
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
+        const isActive=tab===k;
+        return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.15)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:13,fontWeight:isActive?700:500,cursor:"pointer",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",textAlign:"left",transition:"all .15s"}}>{l}</button>;
+      })}
+    </div>
+  );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
