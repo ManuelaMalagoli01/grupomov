@@ -1738,7 +1738,7 @@ export default function App(){
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const lista=(reports||[]).filter(r=>showArqRel?true:r.processoStatus!=="arquivado").filter(r=>{
+          const lista=(reports||[]).filter(r=>r&&(showArqRel?true:r.processoStatus!=="arquivado")).filter(r=>{
             if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
             if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
             if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
@@ -1864,7 +1864,7 @@ export default function App(){
         })()}
 
         {tab==="apontamentos_oficina"&&(()=>{
-          const lista=(apontamentos||[]).filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
+          const lista=(apontamentos||[]).filter(a=>a&&(showArqApon||!a.arquivado)).filter(a=>{
             if(ofiNovaFrom&&(a.data||"")<ofiNovaFrom)return false;
             if(ofiNovaTo&&(a.data||"")>ofiNovaTo)return false;
             if(ofiNovaOS&&!(a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
@@ -2263,7 +2263,7 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=(pendHebert||[]).filter(r=>showArqHeb||!r.arquivado);
+          const list=(pendHebert||[]).filter(r=>r&&(showArqHeb||!r.arquivado));
           const fS=formServH;const sfS=setFormServH;const fM=filtroMesH;const sfM=setFiltroMesH;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -2377,7 +2377,7 @@ export default function App(){
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
           const PRI_PM={Urgente:{c:"#C62828",bg:"#FFF0F0"},Normal:{c:"#555",bg:"#F5F5F5"},"Médio Prazo":{c:"#1565C0",bg:"#F0F4FF"}};
-          const list=(pendManuela||[]).filter(r=>showArqPendMan||!r.arquivado);
+          const list=(pendManuela||[]).filter(r=>r&&(showArqPendMan||!r.arquivado));
           const emptyForm={tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""};
           const form=pendManForm;
           const upd=(k,v)=>setPendManForm(p=>({...p,[k]:v}));
@@ -2564,7 +2564,7 @@ export default function App(){
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosMU||[]).filter(p=>showArqMU||p.processoStatus!=="arquivado");
+          const lista=(processosMU||[]).filter(p=>p&&(showArqMU||p.processoStatus)!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -2652,7 +2652,7 @@ export default function App(){
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosAF||[]).filter(p=>showArqAF||p.processoStatus!=="arquivado");
+          const lista=(processosAF||[]).filter(p=>p&&(showArqAF||p.processoStatus)!=="arquivado");
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -2745,7 +2745,7 @@ export default function App(){
         {/* ── REQ. EMPRÉSTIMO ── */}
         {tab==="emprestimos"&&(()=>{
           const SIT={Aprovado:{c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},Atendido:{c:"#1565C0",bg:"#EFF6FF",i:"📦"},Pendente:{c:"#E67E00",bg:"#FFF8F0",i:"⏳"},"Parcialmente Atendido":{c:"#8E44AD",bg:"#F6F0FB",i:"🔀"},"Retorno Concluído":{c:"#00838F",bg:"#E0F7FA",i:"🔁"},Ruptura:{c:"#C62828",bg:"#FFF0F0",i:"🔴"}};
-          const lista=(emprestimos||[]).filter(e=>showArqEmp||e.processoStatus!=="arquivado");
+          const lista=(emprestimos||[]).filter(e=>e&&(showArqEmp||e.processoStatus)!=="arquivado");
           const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
           const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
                     const applyFilter=(r,d=r.data||"")=>{
@@ -2825,7 +2825,7 @@ export default function App(){
 
         {/* ── SAÍDA/ENTRADA ── */}
         {tab==="saida_entrada"&&(()=>{
-          const lista=(saidaEntrada||[]).filter(s=>showArqSaida||s.processoStatus!=="arquivado");
+          const lista=(saidaEntrada||[]).filter(s=>s&&(showArqSaida||s.processoStatus)!=="arquivado");
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
@@ -3296,7 +3296,7 @@ export default function App(){
 
         {/* ── UBER ── */}
         {tab==="uber"&&(()=>{
-          const lista=(uberPedidos||[]).filter(p=>showArqUber||!p.arquivado);
+          const lista=(uberPedidos||[]).filter(p=>p&&(showArqUber||!p.arquivado));
           const pend=lista.filter(p=>p.status==="pendente"||!p.status).length;
           const conc=lista.filter(p=>p.status==="concluido").length;
           const totalVal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -3372,7 +3372,7 @@ export default function App(){
         {/* ── FINANCEIRO ── */}
         {tab==="financeiro"&&(()=>{
           const SOL={combustivel:{l:"⛽ Combustível",c:"#E67E00",bg:"#FFF8F0"},alimentacao:{l:"🍽️ Alimentação",c:"#1A7A3C",bg:"#F0FFF5"},viagem:{l:"✈️ Viagem",c:"#1565C0",bg:"#EFF6FF"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
-          const lista=(financeiro||[]).filter(f=>showArqFin||!f.arquivado);
+          const lista=(financeiro||[]).filter(f=>f&&(showArqFin||!f.arquivado));
           const pend=lista.filter(f=>f.situacao==="pendente"||!f.situacao).length;
           const pago=lista.filter(f=>f.situacao==="pago").length;
           const totalVal=lista.reduce((acc,f)=>{const v=parseFloat((f.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -3463,7 +3463,7 @@ export default function App(){
         {/* ── PENDÊNCIAS FROTA ── */}
         {tab==="pendencias_frota"&&(()=>{
           const TIPO={bateria:{l:"🔋 Bateria",c:"#F5C200",bg:"#FFFBF0"},carregador:{l:"🔌 Carregador",c:"#1565C0",bg:"#EFF6FF"},estrado:{l:"🟫 Estrado",c:"#8B5E3C",bg:"#FDF5EC"},maquina:{l:"🏗️ Máquina",c:"#546E7A",bg:"#ECEFF1"}};
-          const lista=(frota||[]).filter(r=>showArqFro||!r.arquivado);
+          const lista=(frota||[]).filter(r=>r&&(showArqFro||!r.arquivado));
           const pend=lista.filter(r=>r.resolvido!=="sim").length;
           const resolvidos=lista.filter(r=>r.resolvido==="sim").length;
                     const applyFilter=(r,d=r.dataEnvio||"")=>{
@@ -3535,7 +3535,7 @@ export default function App(){
 
         {/* ── PRIORIDADES CLIENTES (somente Manuela) ── */}
         {tab==="prioridades_clientes"&&user.id==="manuela"&&(()=>{
-          const list=(prioridades||[]).filter(r=>showArqPri||!r.arquivado);
+          const list=(prioridades||[]).filter(r=>r&&(showArqPri||!r.arquivado));
           const STS={escalado_diretoria:"Escalado Diretoria",escalado_financeiro:"Escalado Financeiro",escalado_comercial:"Escalado Comercial",ag_gilberto:"Ag Sr Gilberto",manutencao:"Manutenção Resolvendo",concluido:"Concluído",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -3573,7 +3573,7 @@ export default function App(){
         {tab==="rh_fiscal"&&(()=>{
           const MOT={folga:"🏖️ Folga",ferias:"🌴 Férias",afastamento:"🏥 Afastamento",atestado:"📋 Atestado",demissao:"❌ Demissão",admissao:"✅ Admissão",outros:"📦 Outros"};
           const STS={pendente_luana:{l:"⏳ Pend. Luana",c:"#E67E00",bg:"#FFF8F0"},pendente_elci:{l:"⏳ Pend. Elci",c:"#8E44AD",bg:"#F6F0FB"},em_andamento:{l:"🔄 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"✅ Concluído",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const lista=(rhFiscal||[]).filter(r=>showArqRH||!r.arquivado);
+          const lista=(rhFiscal||[]).filter(r=>r&&(showArqRH||!r.arquivado));
           const pend=lista.filter(r=>r.status==="pendente_luana"||r.status==="pendente_elci"||!r.status).length;
           const conc=lista.filter(r=>r.status==="concluido").length;
                     const applyFilter=(r,d=r.dataEnvio||"")=>{
@@ -3647,7 +3647,7 @@ export default function App(){
 
         {/* ── PENDÊNCIAS GUSTAVO (somente Manuela) ── */}
         {tab==="pendencias_gustavo"&&user.id==="manuela"&&(()=>{
-          const list=(pendGustavo||[]).filter(r=>showArqGus||!r.arquivado);
+          const list=(pendGustavo||[]).filter(r=>r&&(showArqGus||!r.arquivado));
           const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
           const STS={resolvido:"Resolvido",diretoria:"Diretoria",em_andamento:"Em Andamento",pendente:"Pendente"};
           const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
@@ -3685,7 +3685,7 @@ export default function App(){
         {tab==="ruptura_almox"&&(()=>{
           const SOL_LABEL={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguardando",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
           const ST={aguardando:{l:"Aguardando",c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD",bg:"#F6F0FB",icon:"🏛️"},separado_suporte:{l:"Separado no Suporte",c:"#1565C0",bg:"#EFF6FF",icon:"📦"},liberado_almox:{l:"Liberado pelo Almox",c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}};
-          const lista=(rupturas||[]).filter(r=>showArqRuptura||!r.arquivado);
+          const lista=(rupturas||[]).filter(r=>r&&(showArqRuptura||!r.arquivado));
           const byStatus={aguardando:lista.filter(r=>r.status==="aguardando"||!r.status),aguard_aprov_dir:lista.filter(r=>r.status==="aguard_aprov_dir"),separado_suporte:lista.filter(r=>r.status==="separado_suporte"),liberado_almox:lista.filter(r=>r.status==="liberado_almox")};
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           const ym=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}`;
@@ -4029,7 +4029,7 @@ export default function App(){
                 <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
                 <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
                 <KPIR icon="🔴" label="Rupturas S/E" value={rupturasS.length} color="#C62828" bg="#FFF8F8"/>
-                <KPIR icon="🏭" label="Ruptura Almox" value={(ruptAlmox).filter(r=>!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
+                <KPIR icon="🏭" label="Ruptura Almox" value={(ruptAlmox).filter(r=>r&&!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
                 <KPIR icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
                 <KPIR icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
               </div>
@@ -4109,12 +4109,12 @@ export default function App(){
                 </div>
               )}
               {/* Ruptura Almox no Dashboard */}
-              {(ruptAlmox||[]).filter(r=>!r.arquivado).length>0&&(
+              {(ruptAlmox||[]).filter(r=>r&&!r.arquivado).length>0&&(
                 <div className="card" style={{padding:16,marginBottom:16,borderLeft:"4px solid #AD1457"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({(ruptAlmox||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").length})</div>
+                  <div style={{fontSize:12,fontWeight:800,color:"#AD1457",marginBottom:10}}>🏭 Ruptura Almoxarifado — Em Aberto ({(ruptAlmox||[]).filter(r=>r&&!r.arquivado&&r.status!=="liberado_almox").length})</div>
                   <div className="tbl-wrap"><table>
                     <thead><tr><th>Data</th><th>Peça</th><th>Cód.</th><th>Empresa</th><th>PAT</th><th>Técnico</th><th>Solicitação</th><th>SLA</th><th>Status</th></tr></thead>
-                    <tbody>{(ruptAlmox||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
+                    <tbody>{(ruptAlmox||[]).filter(r=>r&&!r.arquivado&&r.status!=="liberado_almox").map((r,i)=>{
                       const dias=r.status==="separado_suporte"||r.status==="liberado_almox"?null:r.data?Math.floor((Date.now()-new Date(r.data).getTime())/86400000):null;
                       const SOLS={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguard.",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
                       const STATS={aguardando:{l:"Aguardando",c:"#E67E00"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD"},separado_suporte:{l:"Separado Suporte",c:"#1565C0"},liberado_almox:{l:"Liberado",c:"#1A7A3C"}};
@@ -4479,7 +4479,7 @@ export default function App(){
         })()}
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
-          const lista=(sas||[]).filter(s=>showArqSas||s.status!=="arquivado");
+          const lista=(sas||[]).filter(s=>s&&(showArqSas||s.status!=="arquivado"));
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
           const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -4611,7 +4611,7 @@ export default function App(){
             }
           };
           const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||"",requisicao:c.requisicao||""});setModalCarros(true);};
-          const lista=(carros||[]).filter(c=>(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
+          const lista=(carros||[]).filter(c=>c&&(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
           const applyFilter=(r,d=r.data||"")=>{
             if(carSearch){const q=carSearch.toLowerCase();if(!((r.placa||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.oficina||"").toLowerCase().includes(q)||(r.requisicao||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
             if(carFrom&&d<carFrom)return false;
@@ -4773,7 +4773,7 @@ export default function App(){
 
         {/* ── APONTAMENTOS OFICINA 150 ── */}
         {tab==="apontamentos_150"&&(()=>{
-          const lista=(apontamentos150||[]).filter(a=>(showArqApon||!a.arquivado)).filter(a=>{
+          const lista=(apontamentos150||[]).filter(a=>a&&(showArqApon||!a.arquivado)).filter(a=>{
             if(ofi150From&&(a.data||"")<ofi150From)return false;
             if(ofi150To&&(a.data||"")>ofi150To)return false;
             if(ofi150OS&&!(a.os||"").toLowerCase().includes(ofi150OS.toLowerCase()))return false;
@@ -5151,7 +5151,7 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=(pendMatheus||[]).filter(r=>showArqMat||!r.arquivado);
+          const list=(pendMatheus||[]).filter(r=>r&&(showArqMat||!r.arquivado));
           const fS=formServM;const sfS=setFormServM;const fM=filtroMesM;const sfM=setFiltroMesM;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -5269,23 +5269,23 @@ export default function App(){
 
   // ── BADGES MENU LATERAL — só status pendente ──
   const menuBadges = {
-    relatorios: (reports||[]).filter(r=>!r.arquivado&&r.statusFinal==="Pendente").length,
-    mau_uso: (processosMU||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
-    a_faturar: (processosAF||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
-    dashboard_processos: (processosMU||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length+(processosAF||[]).filter(p=>!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
-    emprestimos: (emprestimos||[]).filter(e=>!e.arquivado&&(e.statusEmp==="pendente"||e.status==="pendente")).length,
-    saida_entrada: (saidaEntrada||[]).filter(s=>!s.arquivado&&(s.statusFinal==="pendente"||s.status==="pendente")).length,
-    ruptura_almox: (rupturas||[]).filter(r=>!r.arquivado&&r.status!=="liberado_almox").length,
-    dashboard_req: (requisicoes||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
+    relatorios: (reports||[]).filter(r=>r&&!r.arquivado&&r.statusFinal==="Pendente").length,
+    mau_uso: (processosMU||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    a_faturar: (processosAF||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    dashboard_processos: (processosMU||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length+(processosAF||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    emprestimos: (emprestimos||[]).filter(e=>e&&!e.arquivado&&(e.statusEmp==="pendente"||e.status==="pendente")).length,
+    saida_entrada: (saidaEntrada||[]).filter(s=>s&&!s.arquivado&&(s.statusFinal==="pendente"||s.status==="pendente")).length,
+    ruptura_almox: (rupturas||[]).filter(r=>r&&!r.arquivado&&r.status!=="liberado_almox").length,
+    dashboard_req: (requisicoes||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     sas: (sas||[]).filter(s=>s.status==="pendente").length,
-    pendencias_frota: (frota||[]).filter(f=>!f.arquivado&&f.status==="pendente").length,
-    pendencias_hebert: (pendHebert||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    pendencias_matheus: (pendMatheus||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    pendencias_gustavo: (pendGustavo||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    pendencias_manuela_tab: (pendManuela||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    prioridades_clientes: (prioridades||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    rh_fiscal: (rhFiscal||[]).filter(r=>!r.arquivado&&r.status==="pendente").length,
-    carros: (carros||[]).filter(c=>!c.arquivado&&c.status==="pendente").length,
+    pendencias_frota: (frota||[]).filter(f=>f&&!f.arquivado&&f.status==="pendente").length,
+    pendencias_hebert: (pendHebert||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    pendencias_matheus: (pendMatheus||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    pendencias_gustavo: (pendGustavo||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    pendencias_manuela_tab: (pendManuela||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    prioridades_clientes: (prioridades||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    rh_fiscal: (rhFiscal||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    carros: (carros||[]).filter(c=>c&&!c.arquivado&&c.status==="pendente").length,
     uber: (uberPedidos||[]).filter(u=>u.status==="pendente").length,
     financeiro: (financeiro||[]).filter(f=>f.situacao==="pendente"||f.status==="pendente").length,
   };
