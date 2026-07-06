@@ -2941,76 +2941,65 @@ export default function App(){
                 </div>
               </div>
 
-              {/* ── Dashboard Serviços ── */}
+              {/* ── Dashboard Serviços Técnicos ── */}
               {(()=>{
-                const allS=Object.values(schedule).flat().filter(Boolean);
+                const allAtend=Object.entries(schedule).flatMap(([k,v])=>{const tn=k.split("__")[0];return(v||[]).filter(Boolean).map(s=>({...s,tecnico:tn}));});
                 const SVCS=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
-                const svcCount={};SVCS.forEach(sv=>{svcCount[sv]=allS.filter(a=>a.servicos&&a.servicos.includes(sv)).length;});
-                const svcHoras={};SVCS.forEach(sv=>{svcHoras[sv]=allS.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((acc,a)=>acc+(parseFloat(a.horas)||0),0);});
-                const totalAtend=allS.length;
-                const totalComServ=allS.filter(a=>a.servicos&&a.servicos.length>0).length;
-                const techSvc={};allS.forEach(a=>{if(!a.servicos)return;const tk=Object.entries(schedule).find(([k,v])=>v&&v.includes(a));if(tk){const tn=tk[0].split("__")[0];if(!techSvc[tn])techSvc[tn]={};a.servicos.forEach(sv=>{techSvc[tn][sv]=(techSvc[tn][sv]||0)+1;});}});
+                const CORES=["#3B82F6","#EF4444","#F59E0B","#10B981","#06B6D4","#8B5CF6","#EC4899"];
+                const totalAt=allAtend.length;
+                const comServ=allAtend.filter(a=>a.servicos&&a.servicos.length>0).length;
+                const svcCount={};SVCS.forEach(sv=>{svcCount[sv]=allAtend.filter(a=>a.servicos&&a.servicos.includes(sv)).length;});
+                const svcHoras={};SVCS.forEach(sv=>{svcHoras[sv]=allAtend.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0);});
+                const techNames=[...new Set(allAtend.map(a=>a.tecnico))].sort();
+                const techSvcQtd=SVCS.map((sv,si)=>({label:sv,data:techNames.map(t=>allAtend.filter(a=>a.tecnico===t&&a.servicos&&a.servicos.includes(sv)).length),backgroundColor:CORES[si],borderRadius:4}));
+                const techSvcHrs=SVCS.map((sv,si)=>({label:sv,data:techNames.map(t=>allAtend.filter(a=>a.tecnico===t&&a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:CORES[si],borderRadius:4}));
+                const stackOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
+                const svcBarData={labels:SVCS,datasets:[{label:"Qtd Atendimentos",data:SVCS.map(sv=>svcCount[sv]),backgroundColor:CORES.map(c=>c),borderRadius:6},{label:"Horas",data:SVCS.map(sv=>svcHoras[sv]),backgroundColor:CORES.map(c=>c+"66"),borderRadius:6}]};
+                const svcBarOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:500}};
                 return(
-                  <div style={{marginBottom:16}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>📊 KPIs Serviços</div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
-                      <div style={{background:"linear-gradient(135deg,#F8FAFC,#E2E8F0)",borderRadius:12,padding:"12px 14px"}}>
+                  <div style={{marginBottom:18}}>
+                    <div style={{fontSize:10,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>📊 Dashboard Serviços — Técnicos Externos</div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+                      <div style={{background:"linear-gradient(135deg,#F8FAFC,#E2E8F0)",borderRadius:14,padding:"14px 16px"}}>
                         <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>Total Atendimentos</div>
-                        <div style={{fontSize:24,fontWeight:900,color:"#1E293B"}}>{totalAtend}</div>
+                        <div style={{fontSize:26,fontWeight:900,color:"#1E293B"}}>{totalAt}</div>
                       </div>
-                      <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",borderRadius:12,padding:"12px 14px"}}>
+                      <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",borderRadius:14,padding:"14px 16px"}}>
                         <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>Com Serviço</div>
-                        <div style={{fontSize:24,fontWeight:900,color:"#15803D"}}>{totalComServ}</div>
+                        <div style={{fontSize:26,fontWeight:900,color:"#15803D"}}>{comServ}</div>
                       </div>
                       {SVCS.slice(0,2).map((sv,si)=>(
-                        <div key={si} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderBottom:"3px solid #3B82F6",boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
-                          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>🔧 {sv}</div>
-                          <div style={{fontSize:20,fontWeight:900,color:"#1E293B"}}>{svcCount[sv]} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>({svcHoras[sv].toFixed(1)}h)</span></div>
+                        <div key={si} style={{background:"#FFF",borderRadius:14,padding:"14px 16px",borderBottom:`3px solid ${CORES[si]}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{sv}</div>
+                          <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>{svcCount[sv]} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>({svcHoras[sv].toFixed(1)}h)</span></div>
                         </div>
                       ))}
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:12}}>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:14}}>
                       {SVCS.slice(2).map((sv,si)=>(
-                        <div key={si} style={{background:"#FFF",borderRadius:10,padding:"10px 12px",textAlign:"center",boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                        <div key={si} style={{background:"#FFF",borderRadius:12,padding:"10px 12px",textAlign:"center",boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
                           <div style={{fontSize:8,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>{sv}</div>
                           <div style={{fontSize:18,fontWeight:900,color:"#1E293B"}}>{svcCount[sv]}</div>
                           <div style={{fontSize:10,color:"#64748B"}}>{svcHoras[sv].toFixed(1)}h</div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                );
-              })()}
-              {/* ── Gráficos Serviços ── */}
-              {(()=>{
-                const allAt=Object.entries(schedule).flatMap(([k,v])=>(v||[]).map(s=>({...s,tech:k.split("__")[0],data:k.split("__")[1]})));
-                const SVCS2=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
-                const SVCS_CORES=["#3B82F6","#DC2626","#10B981","#F59E0B","#8B5CF6","#06B6D4","#6B7280"];
-                const techNames=[...new Set(allAt.map(a=>a.tech))].sort();
-                if(techNames.length===0||allAt.filter(a=>a.servicos&&a.servicos.length>0).length===0) return null;
-                const qtdData={labels:techNames,datasets:SVCS2.map((sv,si)=>({label:sv,data:techNames.map(t=>allAt.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).length),backgroundColor:SVCS_CORES[si],borderRadius:3}))};
-                const hrsData={labels:techNames,datasets:SVCS2.map((sv,si)=>({label:sv,data:techNames.map(t=>allAt.filter(a=>a.tech===t&&a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:SVCS_CORES[si],borderRadius:3}))};
-                const svcTotQ={labels:SVCS2,datasets:[{label:"Qtd",data:SVCS2.map(sv=>allAt.filter(a=>a.servicos&&a.servicos.includes(sv)).length),backgroundColor:SVCS_CORES,borderRadius:6},{label:"Horas",data:SVCS2.map(sv=>allAt.filter(a=>a.servicos&&a.servicos.includes(sv)).reduce((ac,a)=>ac+(parseFloat(a.horas)||0),0)),backgroundColor:SVCS_CORES.map(c=>c+"66"),borderRadius:6}]};
-                const stackOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}},title:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
-                const grpOpt={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
-                return(
-                  <div style={{marginBottom:16}}>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
-                      <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                        <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
-                        <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                        <ChartCanvas type="bar" data={qtdData} options={stackOpt} height={200}/>
+                      <div style={{background:"#FFF",borderRadius:16,padding:"20px 22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
+                        <div style={{fontSize:11,color:"#94A3B8",marginBottom:14}}>Cada cor = um tipo de serviço (empilhado)</div>
+                        {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={{labels:techNames,datasets:techSvcQtd}} options={stackOpt} height={220}/>}
                       </div>
-                      <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                        <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
-                        <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                        <ChartCanvas type="bar" data={hrsData} options={stackOpt} height={200}/>
+                      <div style={{background:"#FFF",borderRadius:16,padding:"20px 22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
+                        <div style={{fontSize:11,color:"#94A3B8",marginBottom:14}}>Cada cor = um tipo de serviço (empilhado)</div>
+                        {techNames.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={{labels:techNames,datasets:techSvcHrs}} options={stackOpt} height={220}/>}
                       </div>
                     </div>
-                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
-                      <div style={{fontSize:10,color:"#94A3B8",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
-                      <ChartCanvas type="bar" data={svcTotQ} options={grpOpt} height={180}/>
+                    <div style={{background:"#FFF",borderRadius:16,padding:"20px 22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",marginBottom:14}}>
+                      <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
+                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:14}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+                      <ChartCanvas type="bar" data={svcBarData} options={svcBarOpt} height={200}/>
                     </div>
                   </div>
                 );
