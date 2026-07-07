@@ -3164,7 +3164,7 @@ export default function App(){
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
                       <ChartCanvas type="doughnut" height={230}
                         data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:2,borderColor:"#FFF",hoverOffset:6}]}}
-                        options={{cutout:"60%",maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
+                        options={{cutout:"68%",maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
                       <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:10,fontSize:13}}>
                         <span style={{color:BLU,fontWeight:700}}>{prev} prev · {pct(prev)}%</span>
                         <span style={{color:RED,fontWeight:700}}>{corr} corr · {pct(corr)}%</span>
@@ -3180,7 +3180,7 @@ export default function App(){
                       <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
-                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"16px 20px"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico</div>
@@ -3357,13 +3357,13 @@ export default function App(){
                     </div>
                     <div style={{padding:"10px 16px",display:"flex",gap:16}}>
                       <div style={{flex:1,textAlign:"center",padding:"8px 0",background:"#F0F4FF",borderRadius:8}}>
-                        <div style={{fontSize:20,fontWeight:700,color:"#1565C0"}}>{prevs}</div>
-                        <div style={{fontSize:9,color:"#1565C0",fontWeight:600,textTransform:"uppercase"}}>Prev.</div>
+                        <div style={{fontSize:20,fontWeight:700,color:"#3B82F6"}}>{prevs}</div>
+                        <div style={{fontSize:9,color:"#3B82F6",fontWeight:600,textTransform:"uppercase"}}>Prev.</div>
                       </div>
                       <div style={{width:8}}/>
                       <div style={{flex:1,textAlign:"center",padding:"8px 0",background:"#FFF0F0",borderRadius:8}}>
-                        <div style={{fontSize:20,fontWeight:700,color:"#C62828"}}>{corrs}</div>
-                        <div style={{fontSize:9,color:"#C62828",fontWeight:600,textTransform:"uppercase"}}>Corret.</div>
+                        <div style={{fontSize:20,fontWeight:700,color:"#F43F5E"}}>{corrs}</div>
+                        <div style={{fontSize:9,color:"#F43F5E",fontWeight:600,textTransform:"uppercase"}}>Corret.</div>
                       </div>
                     </div>
                     {techReps.length>0&&<div style={{padding:"0 16px 12px"}}>
