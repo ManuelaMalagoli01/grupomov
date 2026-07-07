@@ -1770,7 +1770,7 @@ export default function App(){
                     setPdfLoading(true);
                     try{
                       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                      const resp=await fetch("/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                      const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
                       const respText=await resp.text();
                       if(!resp.ok){let m="Erro API ("+resp.status+")";try{const j=JSON.parse(respText);m=j.error||m;}catch(e){}throw new Error(m);}
                       let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
