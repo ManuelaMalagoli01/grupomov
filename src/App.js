@@ -3236,7 +3236,7 @@ export default function App(){
               return(<>
                 <div style={{marginTop:4,marginBottom:16}}>
                   <div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3,marginBottom:16}}>🔧 Serviços Técnicos</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:20}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
                     <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"16px",gridColumn:"span 1"}}>
                       <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Com Serviço</div>
                       <div style={{fontSize:28,fontWeight:900,color:"#F5C200"}}>{comServ}</div>
@@ -3252,12 +3252,12 @@ export default function App(){
                     <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
                       <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
                       <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
-                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados de serviço</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={260}/>}
+                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados de serviço</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={280}/>}
                     </div>
                     <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
                       <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
                       <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
-                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={260}/>}
+                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={280}/>}
                     </div>
                   </div>
                   <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)",marginBottom:20}}>
@@ -4113,7 +4113,7 @@ export default function App(){
               </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:20}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 <KPIR icon="📦" label="Total" value={total} color="#1A1A1A"/>
                 <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
                 <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
