@@ -3173,19 +3173,19 @@ export default function App(){
                     <div className="card" style={{padding:"16px 20px"}}>
                       <div style={chartTitle}>Por região</div>
                       <ChartCanvas type="bar" height={230}
-                        data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:4},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:4}]}}
+                        data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:8},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:8}]}}
                         options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
                     </div>
                     <div className="card" style={{padding:"16px 20px"}}>
                       <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
-                        data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:4}]}}
+                        data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:8}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"16px 20px"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
-                        data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:4}]}}
+                        data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:8}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                   </div>
@@ -3199,7 +3199,7 @@ export default function App(){
                         label:tipo==="preventivo"?"Preventiva":tipo==="corretivo"?"Corretiva":"Outro",
                         data:techsWith.map(t=>dashReports.filter(r=>r.tecnico===t&&r.type===tipo).length),
                         backgroundColor:TIPO_COLORS[tipo]||"#888",
-                        borderRadius:4,borderSkipped:false,
+                        borderRadius:8,borderSkipped:false,
                       }))
                     };
                     return(
