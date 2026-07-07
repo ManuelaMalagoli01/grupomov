@@ -3211,10 +3211,6 @@ export default function App(){
                       </div>
                     );
                   })()}
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
-                </>
-              );
-            })()}
 
             {/* ── Serviços por Técnico ── */}
             {(()=>{
@@ -3283,6 +3279,12 @@ export default function App(){
               </div>);
             })()}
 
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
+                </>
+              );
+            })()}
+
+            
 
             {/* Stats gerais */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
