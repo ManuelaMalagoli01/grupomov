@@ -2326,32 +2326,40 @@ export default function App(){
                   </div>
                 );
               })()}
-              <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
-                </div>
-                {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #3B82F622"}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#2563EB",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
-                    <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+              <button onClick={()=>sfS(p=>({...p,data:TODAY_STR}))} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)",marginBottom:14}}>+ Novo Serviço</button>
+              {fS.data&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""})}>
+                <div style={{background:"#FFF",borderRadius:16,width:600,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontWeight:800,fontSize:16,color:"#F5C200"}}>➕ Novo Serviço</div>
+                    <button onClick={()=>sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""})} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
                   </div>
-                  {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
-                </div>}
-                {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F59E0B22"}}>
-                  <label style={{fontSize:9,fontWeight:800,color:"#D97706",textTransform:"uppercase"}}>📝 Observação</label>
-                  <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
-                </div>}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                  <div style={{padding:22,display:"flex",flexDirection:"column",gap:12}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10}}>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                    </div>
+                    {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,border:"1px solid #3B82F622"}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#2563EB",marginBottom:8}}>📦 Detalhes</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                        <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
+                        <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+                      </div>
+                      {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
+                    </div>}
+                    {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,border:"1px solid #F59E0B22"}}>
+                      <label style={{fontSize:10,fontWeight:800,color:"#D97706"}}>📝 Observação</label>
+                      <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                    </div>}
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10}}>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                    </div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                    <button onClick={()=>{addS();sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});}} style={{width:"100%",padding:"12px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:14,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+                  </div>
                 </div>
-                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
-                <button onClick={addS} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
-              </div>
+              </div>}
               {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
                 {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
@@ -5304,32 +5312,40 @@ export default function App(){
                   </div>
                 );
               })()}
-              <div style={{background:"#FFF",borderRadius:14,padding:16,marginBottom:16,border:"2px solid #F5C200",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:12}}>➕ Novo Serviço</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
-                </div>
-                {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #3B82F622"}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#2563EB",textTransform:"uppercase",marginBottom:8}}>📦 Detalhes</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
-                    <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+              <button onClick={()=>sfS(p=>({...p,data:TODAY_STR}))} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)",marginBottom:14}}>+ Novo Serviço</button>
+              {fS.data&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""})}>
+                <div style={{background:"#FFF",borderRadius:16,width:600,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontWeight:800,fontSize:16,color:"#F5C200"}}>➕ Novo Serviço</div>
+                    <button onClick={()=>sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""})} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
                   </div>
-                  {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
-                </div>}
-                {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,marginBottom:10,border:"1px solid #F59E0B22"}}>
-                  <label style={{fontSize:9,fontWeight:800,color:"#D97706",textTransform:"uppercase"}}>📝 Observação</label>
-                  <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
-                </div>}
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10,marginBottom:10}}>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
-                  <div><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"7px 10px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                  <div style={{padding:22,display:"flex",flexDirection:"column",gap:12}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10}}>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📅 Data</label><input type="date" value={fS.data} onChange={e=>sfS(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>🔧 Serviço</label><select value={fS.servico} onChange={e=>sfS(p=>({...p,servico:e.target.value,equipCateg:"",equipDetalhe:"",obsCondicional:""}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="">Selecione...</option>{SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                    </div>
+                    {shEq&&<div style={{background:"#EFF6FF",borderRadius:10,padding:12,border:"1px solid #3B82F622"}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#2563EB",marginBottom:8}}>📦 Detalhes</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                        <select value={fS.equipCateg} onChange={e=>sfS(p=>({...p,equipCateg:e.target.value}))} style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}><option value="">Categoria...</option>{EQ_OPT.map(o=><option key={o}>{o}</option>)}</select>
+                        <input type="text" value={fS.equipDetalhe} onChange={e=>sfS(p=>({...p,equipDetalhe:e.target.value}))} placeholder="Nº, Nome..." style={{fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7}}/>
+                      </div>
+                      {fS.equipCateg==="Outros"&&<textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Observação..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #D0D5DD",borderRadius:7,marginTop:8,boxSizing:"border-box",resize:"vertical"}}/>}
+                    </div>}
+                    {shOb&&<div style={{background:"#FFFBEB",borderRadius:10,padding:12,border:"1px solid #F59E0B22"}}>
+                      <label style={{fontSize:10,fontWeight:800,color:"#D97706"}}>📝 Observação</label>
+                      <textarea value={fS.obsCondicional} onChange={e=>sfS(p=>({...p,obsCondicional:e.target.value}))} rows={2} placeholder="Descreva..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1px solid #F59E0B22",borderRadius:7,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/>
+                    </div>}
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:10}}>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📝 Descrição</label><input type="text" value={fS.descricao} onChange={e=>sfS(p=>({...p,descricao:e.target.value}))} placeholder="Descrição..." style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box"}}/></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>⚡ Prioridade</label><select value={fS.prioridade} onChange={e=>sfS(p=>({...p,prioridade:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="normal">🟢 Normal</option><option value="medio">🟡 Médio</option><option value="urgente">🔴 Urgente</option></select></div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>📌 Status</label><select value={fS.status} onChange={e=>sfS(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4}}><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option></select></div>
+                    </div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:"#64748B"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E2E8F0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
+                    <button onClick={()=>{addS();sfS({data:"",servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});}} style={{width:"100%",padding:"12px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:14,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
+                  </div>
                 </div>
-                <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>💬 Observações</label><textarea value={fS.obs} onChange={e=>sfS(p=>({...p,obs:e.target.value}))} rows={2} placeholder="Obs..." style={{width:"100%",fontSize:11,padding:"6px 8px",border:"1.5px solid #E0E0E0",borderRadius:8,marginTop:4,boxSizing:"border-box",resize:"vertical"}}/></div>
-                <button onClick={addS} style={{width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Registrar Serviço</button>
-              </div>
+              </div>}
               {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
                 {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
