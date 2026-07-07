@@ -3312,54 +3312,67 @@ export default function App(){
             {(()=>{
               const allAt=Object.entries(schedule).flatMap(([k,v])=>(v||[]).map(s=>({...s,tech:k.split("__")[0]})));
               const SVC=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
-              const SCOL=["#3B82F6","#EF4444","#F59E0B","#10B981","#1E3A5F","#8B5CF6","#EC4899"];
+              const SCOL=["#3B82F6","#EF4444","#F59E0B","#10B981","#0EA5E9","#8B5CF6","#EC4899"];
               const tN=[...new Set(allAt.map(a=>a.tech))].sort();
               const comServ=allAt.filter(a=>a.servicos&&a.servicos.length>0).length;
-              const qDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si],borderRadius:4}))};
-              const hDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).reduce((a,s)=>a+(parseFloat(s.horas)||0),0)),backgroundColor:SCOL[si],borderRadius:4}))};
+              const totalH=allAt.reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0);
               const sTQ=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).length);
-              const sTH=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a,s)=>a+(parseFloat(s.horas)||0),0));
-              const sDS2={labels:SVC,datasets:[{label:"Qtd",data:sTQ,backgroundColor:"#3B82F6",borderRadius:6},{label:"Horas",data:sTH,backgroundColor:"#3B82F644",borderRadius:6}]};
-              const stOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
-              const bOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:12,padding:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
+              const sTH=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0));
+              const qDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si],borderRadius:6}))};
+              const hDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0)),backgroundColor:SCOL[si],borderRadius:6}))};
+              const sDS2={labels:SVC,datasets:[{label:"Qtd Atendimentos",data:sTQ,backgroundColor:"#3B82F6",borderRadius:8},{label:"Horas",data:sTH,backgroundColor:"rgba(59,130,246,0.25)",borderRadius:8}]};
+              const stOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:14,padding:14,usePointStyle:true}},title:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11,weight:"500"}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"rgba(0,0,0,.05)"}}}};
+              const bOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:14,padding:14,usePointStyle:true}},title:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11,weight:"500"}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"rgba(0,0,0,.05)"}}}};
               const pSvc={};allAt.forEach(a=>{if(!a.patrimonio||!a.servicos)return;const p2=a.patrimonio;if(!pSvc[p2])pSvc[p2]={total:0,horas:0,svcs:{},obs:[]};pSvc[p2].total++;pSvc[p2].horas+=(parseFloat(a.horas)||0);a.servicos.forEach(sv=>{pSvc[p2].svcs[sv]=(pSvc[p2].svcs[sv]||0)+1;});if(a.obsServico)pSvc[p2].obs.push(a.obsServico);});
               const pList=Object.entries(pSvc).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
               return(<>
-                <div style={{fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:8,marginTop:16}}>🔧 Serviços Técnicos</div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
-                  <div style={{background:"linear-gradient(135deg,#F0FDF4,#DCFCE7)",borderRadius:12,padding:"12px 14px"}}>
-                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>Com Serviço</div>
-                    <div style={{fontSize:24,fontWeight:900,color:"#059669"}}>{comServ}</div>
-                  </div>
-                  {SVC.slice(0,2).map((sv,si)=><div key={si} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderBottom:`3px solid ${SCOL[si]}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
-                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{sv}</div>
-                    <div style={{fontSize:20,fontWeight:900,color:"#1E293B"}}>{sTQ[si]} <span style={{fontSize:11,color:"#94A3B8"}}>({sTH[si].toFixed(1)}h)</span></div>
-                  </div>)}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
-                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🔧 Serviços por Técnico</div>
-                    {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={220}/>}
-                  </div>
-                  <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>⏱ Horas por Serviço/Técnico</div>
-                    {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={220}/>}
-                  </div>
-                </div>
-                <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
-                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>📊 Serviços — Qtd e Horas</div>
-                  <ChartCanvas type="bar" data={sDS2} options={bOp} height={200}/>
-                </div>
-                {pList.length>0&&<div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)",marginBottom:14}}>
-                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏗️ Serviços por Patrimônio</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
-                    {pList.map(([pat,d],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:10,padding:"12px 14px",borderLeft:"4px solid #3B82F6"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:13,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span><span style={{fontSize:11,fontWeight:700,color:"#3B82F6"}}>{d.total} · {d.horas.toFixed(1)}h</span></div>
-                      <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{Object.entries(d.svcs).map(([sv,c],si)=><span key={si} style={{fontSize:9,background:"#EFF6FF",color:"#2563EB",borderRadius:8,padding:"2px 6px",fontWeight:600}}>{sv}:{c}</span>)}</div>
-                      {d.obs.length>0&&<div style={{fontSize:10,color:"#64748B",fontStyle:"italic",marginTop:4}}>{d.obs.slice(0,2).join(" · ")}</div>}
+                <div style={{marginTop:24,marginBottom:20,borderTop:"2px solid #E2E8F0",paddingTop:20}}>
+                  <div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3,marginBottom:16}}>🔧 Serviços Técnicos</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:20}}>
+                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"16px",gridColumn:"span 1"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Com Serviço</div>
+                      <div style={{fontSize:28,fontWeight:900,color:"#F5C200"}}>{comServ}</div>
+                      <div style={{fontSize:10,color:"#94A3B8",marginTop:4}}>{totalH.toFixed(0)}h total</div>
+                    </div>
+                    {SVC.map((sv,si)=><div key={si} style={{background:"#FFF",borderRadius:12,padding:"14px",borderTop:`4px solid ${SCOL[si]}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>{sv}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>{sTQ[si]}</div>
+                      <div style={{fontSize:10,color:"#64748B",marginTop:2}}>{sTH[si].toFixed(1)}h</div>
                     </div>)}
                   </div>
-                </div>}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                    <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
+                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
+                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados de serviço</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={260}/>}
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
+                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
+                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={260}/>}
+                    </div>
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)",marginBottom:20}}>
+                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
+                    <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+                    <ChartCanvas type="bar" data={sDS2} options={bOp} height={240}/>
+                  </div>
+                  {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)",marginBottom:20}}>
+                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>🏗️ Serviços por Patrimônio</div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+                      {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"14px 16px",borderLeft:`5px solid ${SCOL[pi%7]}`}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                          <span style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:"#3B82F6"}}>{d2.total} atend · {d2.horas.toFixed(1)}h</span>
+                        </div>
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
+                          {Object.entries(d2.svcs).map(([sv,c2],si)=><span key={si} style={{fontSize:10,background:"#EFF6FF",color:"#2563EB",borderRadius:10,padding:"3px 8px",fontWeight:700}}>{sv}: {c2}</span>)}
+                        </div>
+                        {d2.obs.length>0&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic"}}>{d2.obs.slice(0,2).join(" · ")}</div>}
+                      </div>)}
+                    </div>
+                  </div>}
+                </div>
               </>);
             })()}
 </div>
