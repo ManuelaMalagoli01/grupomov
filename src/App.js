@@ -3129,7 +3129,7 @@ export default function App(){
         {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{fontWeight:800,fontSize:22,marginBottom:20}}>📊 Dashboard de Atendimentos</div>
+            <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,marginBottom:24,color:"#1E293B"}}>📊 Dashboard de Atendimentos</div>
 
             {/* ── FILTRO + GRÁFICOS ── */}
             {(()=>{
@@ -3279,7 +3279,7 @@ export default function App(){
               </div>);
             })()}
 
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
+                  <div style={{fontSize:14,fontWeight:800,color:"#1E293B",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
                 </>
               );
             })()}
@@ -3294,9 +3294,9 @@ export default function App(){
                 {l:"Corretivos",v:agendaAtendimentos.filter(r=>r.type==="corretivo").length,c:"#C62828"},
                 {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
               ].map((s,i)=>(
-                <div key={i} className="card" style={{padding:"16px 20px",borderTop:`3px solid ${s.c}`}}>
+                <div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 22px",borderLeft:`4px solid ${s.c}`,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
                   <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
-                  <div style={{fontSize:34,fontWeight:700,color:s.c,lineHeight:1}}>{s.v}</div>
+                  <div style={{fontSize:36,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
                 </div>
               ))}
             </div>
@@ -3309,7 +3309,7 @@ export default function App(){
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
               const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
               return(
-                <div className="card" style={{padding:"16px 20px",marginBottom:20,display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
+                <div style={{background:"#FFF",borderRadius:16,padding:"20px 24px",marginBottom:20,boxShadow:"0 4px 20px rgba(0,0,0,.06)",display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
                   <div style={{fontSize:11,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>⏱ Resumo do mês atual</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
                     <div style={{fontSize:38,fontWeight:900,color:"#1A1A1A",lineHeight:1}}>{fmtMin(totalMin)}</div>
