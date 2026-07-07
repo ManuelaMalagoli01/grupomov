@@ -3228,60 +3228,59 @@ export default function App(){
               const sTH=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0));
               const qDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si],borderRadius:6}))};
               const hDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0)),backgroundColor:SCOL[si],borderRadius:6}))};
-              const sDS2={labels:SVC,datasets:[{label:"Qtd Atendimentos",data:sTQ,backgroundColor:"#3B82F6",borderRadius:8},{label:"Horas",data:sTH,backgroundColor:"rgba(59,130,246,0.25)",borderRadius:8}]};
-              const stOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:14,padding:14,usePointStyle:true}},title:{display:false}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11,weight:"500"}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"rgba(0,0,0,.05)"}}}};
-              const bOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:14,padding:14,usePointStyle:true}},title:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11,weight:"500"}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},grid:{color:"rgba(0,0,0,.05)"}}}};
+              const sDS2={labels:SVC.map(s=>s.length>10?s.slice(0,10)+"…":s),datasets:[{label:"Qtd Atendimentos",data:sTQ,backgroundColor:"#3B82F6",borderRadius:8},{label:"Horas",data:sTH,backgroundColor:"rgba(59,130,246,0.2)",borderRadius:8}]};
+              const stOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
+              const bOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
               const pSvc={};allAt.forEach(a=>{if(!a.patrimonio||!a.servicos)return;const p2=a.patrimonio;if(!pSvc[p2])pSvc[p2]={total:0,horas:0,svcs:{},obs:[]};pSvc[p2].total++;pSvc[p2].horas+=(parseFloat(a.horas)||0);a.servicos.forEach(sv=>{pSvc[p2].svcs[sv]=(pSvc[p2].svcs[sv]||0)+1;});if(a.obsServico)pSvc[p2].obs.push(a.obsServico);});
               const pList=Object.entries(pSvc).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
-              return(<>
-                <div style={{marginTop:4,marginBottom:16}}>
-                  <div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3,marginBottom:16}}>🔧 Serviços Técnicos</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"16px",gridColumn:"span 1"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Com Serviço</div>
-                      <div style={{fontSize:28,fontWeight:900,color:"#F5C200"}}>{comServ}</div>
-                      <div style={{fontSize:10,color:"#94A3B8",marginTop:4}}>{totalH.toFixed(0)}h total</div>
-                    </div>
-                    {SVC.map((sv,si)=><div key={si} style={{background:"#FFF",borderRadius:12,padding:"14px",borderTop:`4px solid ${SCOL[si]}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>{sv}</div>
-                      <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>{sTQ[si]}</div>
-                      <div style={{fontSize:10,color:"#64748B",marginTop:2}}>{sTH[si].toFixed(1)}h</div>
+              return(<div style={{marginTop:20}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><div style={{width:4,height:24,background:"#3B82F6",borderRadius:2}}/><div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3}}>Serviços Técnicos</div></div>
+                <div style={{display:"grid",gridTemplateColumns:"2fr repeat(3,1fr)",gap:12,marginBottom:20}}>
+                  <div style={{background:"linear-gradient(135deg,#1E293B,#0F172A)",borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                    <div style={{fontSize:11,fontWeight:600,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Com Serviço Registrado</div>
+                    <div style={{display:"flex",alignItems:"baseline",gap:8}}><span style={{fontSize:40,fontWeight:900,color:"#F5C200"}}>{comServ}</span><span style={{fontSize:14,color:"#94A3B8"}}>de {allAt.length}</span></div>
+                    <div style={{fontSize:12,color:"#64748B",marginTop:6}}>{totalH.toFixed(0)}h trabalhadas</div>
+                  </div>
+                  {[[SVC[0],sTQ[0],sTH[0],SCOL[0]],[SVC[1],sTQ[1],sTH[1],SCOL[1]],[SVC[2],sTQ[2],sTH[2],SCOL[2]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 20px",borderLeft:`4px solid ${c}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>{n}</div>
+                    <div style={{fontSize:30,fontWeight:900,color:"#1E293B"}}>{q}</div>
+                    <div style={{fontSize:11,color:"#64748B",marginTop:4}}>{h.toFixed(1)}h</div>
+                  </div>)}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+                  {[[SVC[3],sTQ[3],sTH[3],SCOL[3]],[SVC[4],sTQ[4],sTH[4],SCOL[4]],[SVC[5],sTQ[5],sTH[5],SCOL[5]],[SVC[6],sTQ[6],sTH[6],SCOL[6]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:12,padding:"14px 16px",borderLeft:`4px solid ${c}`,boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
+                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>{n}</div>
+                    <div style={{fontSize:24,fontWeight:900,color:"#1E293B"}}>{q} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>{h.toFixed(1)}h</span></div>
+                  </div>)}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                  <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Qtd de Serviços por Técnico</div>
+                    {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={280}/>}
+                  </div>
+                  <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Horas por Serviço por Técnico</div>
+                    {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={280}/>}
+                  </div>
+                </div>
+                <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)",marginBottom:20}}>
+                  <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços Realizados — Quantidade e Horas</div>
+                  <ChartCanvas type="bar" data={sDS2} options={bOp} height={260}/>
+                </div>
+                {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                  <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços por Patrimônio</div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+                    {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"16px",borderLeft:`4px solid ${SCOL[pi%7]}`}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                        <span style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:"#3B82F6"}}>{d2.total} atend · {d2.horas.toFixed(1)}h</span>
+                      </div>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{Object.entries(d2.svcs).map(([sv,c2],si)=><span key={si} style={{fontSize:10,background:"#EFF6FF",color:"#2563EB",borderRadius:10,padding:"3px 8px",fontWeight:700}}>{sv}: {c2}</span>)}</div>
+                      {d2.obs.length>0&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",marginTop:6}}>{d2.obs.slice(0,2).join(" · ")}</div>}
                     </div>)}
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-                    <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
-                      <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>🔧 Qtd de Serviços por Técnico</div>
-                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
-                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados de serviço</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={280}/>}
-                    </div>
-                    <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)"}}>
-                      <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>⏱ Horas por Serviço por Técnico</div>
-                      <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Cada cor = um tipo de serviço (empilhado)</div>
-                      {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40,fontSize:13}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={280}/>}
-                    </div>
-                  </div>
-                  <div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)",marginBottom:20}}>
-                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:4}}>📊 Serviços Realizados — Qtd e Horas</div>
-                    <div style={{fontSize:11,color:"#94A3B8",marginBottom:16}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
-                    <ChartCanvas type="bar" data={sDS2} options={bOp} height={240}/>
-                  </div>
-                  {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px",boxShadow:"0 4px 16px rgba(0,0,0,.06)",marginBottom:20}}>
-                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>🏗️ Serviços por Patrimônio</div>
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
-                      {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"14px 16px",borderLeft:`5px solid ${SCOL[pi%7]}`}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                          <span style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span>
-                          <span style={{fontSize:12,fontWeight:700,color:"#3B82F6"}}>{d2.total} atend · {d2.horas.toFixed(1)}h</span>
-                        </div>
-                        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
-                          {Object.entries(d2.svcs).map(([sv,c2],si)=><span key={si} style={{fontSize:10,background:"#EFF6FF",color:"#2563EB",borderRadius:10,padding:"3px 8px",fontWeight:700}}>{sv}: {c2}</span>)}
-                        </div>
-                        {d2.obs.length>0&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic"}}>{d2.obs.slice(0,2).join(" · ")}</div>}
-                      </div>)}
-                    </div>
-                  </div>}
-                </div>
-              </>);
+                </div>}
+              </div>);
             })()}
 
 
