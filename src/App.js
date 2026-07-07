@@ -3133,7 +3133,7 @@ export default function App(){
 
             {/* ── FILTRO + GRÁFICOS ── */}
             {(()=>{
-              const chartTitle={fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12};
+              const chartTitle={fontSize:11,fontWeight:700,color:"#888",marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.date||d.date<dashFrom))return false; if(dashTo&&(!d.date||d.date>dashTo))return false; return true; };
               const dashReports=agendaAtendimentos.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d));
               const prev=dashReports.filter(r=>r.type==="preventivo").length;
@@ -3151,7 +3151,7 @@ export default function App(){
               return(
                 <>
                   <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
-                    <span style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1}}>Filtro</span>
+                    <span style={{fontSize:11,fontWeight:700,color:"#888",}}>Filtro</span>
                     <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
                     <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
@@ -3204,7 +3204,7 @@ export default function App(){
                     };
                     return(
                       <div className="card" style={{padding:20,marginBottom:16}}>
-                        <div style={{fontSize:11,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Tipo de Serviço por Técnico</div>
+                        <div style={{fontSize:11,fontWeight:700,color:"#888",marginBottom:12}}>Tipo de Serviço por Técnico</div>
                         <ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                           data={chartServTechData}
                           options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,beginAtZero:true,ticks:{precision:0}},y:{stacked:true,grid:{display:false}}}}}/>
@@ -3233,19 +3233,19 @@ export default function App(){
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><div style={{width:4,height:24,background:"#3B82F6",borderRadius:2}}/><div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3}}>Serviços Técnicos</div></div>
                 <div style={{display:"grid",gridTemplateColumns:"2fr repeat(3,1fr)",gap:12,marginBottom:20}}>
                   <div style={{background:"linear-gradient(135deg,#1E293B,#0F172A)",borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-                    <div style={{fontSize:11,fontWeight:600,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Com Serviço Registrado</div>
+                    <div style={{fontSize:11,fontWeight:600,color:"#94A3B8",marginBottom:8}}>Com Serviço Registrado</div>
                     <div style={{display:"flex",alignItems:"baseline",gap:8}}><span style={{fontSize:40,fontWeight:900,color:"#F5C200"}}>{comServ}</span><span style={{fontSize:14,color:"#94A3B8"}}>de {allAt.length}</span></div>
                     <div style={{fontSize:12,color:"#64748B",marginTop:6}}>{totalH.toFixed(0)}h trabalhadas</div>
                   </div>
                   {[[SVC[0],sTQ[0],sTH[0],SCOL[0]],[SVC[1],sTQ[1],sTH[1],SCOL[1]],[SVC[2],sTQ[2],sTH[2],SCOL[2]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 20px",borderLeft:`4px solid ${c}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>{n}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:8}}>{n}</div>
                     <div style={{fontSize:30,fontWeight:900,color:"#1E293B"}}>{q}</div>
                     <div style={{fontSize:11,color:"#64748B",marginTop:4}}>{h.toFixed(1)}h</div>
                   </div>)}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
                   {[[SVC[3],sTQ[3],sTH[3],SCOL[3]],[SVC[4],sTQ[4],sTH[4],SCOL[4]],[SVC[5],sTQ[5],sTH[5],SCOL[5]],[SVC[6],sTQ[6],sTH[6],SCOL[6]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:12,padding:"14px 16px",borderLeft:`4px solid ${c}`,boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>{n}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>{n}</div>
                     <div style={{fontSize:24,fontWeight:900,color:"#1E293B"}}>{q} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>{h.toFixed(1)}h</span></div>
                   </div>)}
                 </div>
@@ -3295,7 +3295,7 @@ export default function App(){
                 {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
               ].map((s,i)=>(
                 <div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 22px",borderLeft:`4px solid ${s.c}`,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
-                  <div style={{fontSize:10,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.l}</div>
+                  <div style={{fontSize:10,color:"#AAA",fontWeight:700,marginBottom:8}}>{s.l}</div>
                   <div style={{fontSize:36,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
                 </div>
               ))}
@@ -3310,7 +3310,7 @@ export default function App(){
               const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
               return(
                 <div style={{background:"#FFF",borderRadius:16,padding:"20px 24px",marginBottom:20,boxShadow:"0 4px 20px rgba(0,0,0,.06)",display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
-                  <div style={{fontSize:11,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>⏱ Resumo do mês atual</div>
+                  <div style={{fontSize:11,color:"#AAA",fontWeight:700,}}>⏱ Resumo do mês atual</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
                     <div style={{fontSize:38,fontWeight:900,color:"#1A1A1A",lineHeight:1}}>{fmtMin(totalMin)}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>horas trabalhadas</div>
@@ -3358,12 +3358,12 @@ export default function App(){
                     <div style={{padding:"10px 16px",display:"flex",gap:16}}>
                       <div style={{flex:1,textAlign:"center",padding:"8px 0",background:"#F0F4FF",borderRadius:8}}>
                         <div style={{fontSize:20,fontWeight:700,color:"#3B82F6"}}>{prevs}</div>
-                        <div style={{fontSize:9,color:"#3B82F6",fontWeight:600,textTransform:"uppercase"}}>Prev.</div>
+                        <div style={{fontSize:9,color:"#3B82F6",fontWeight:600,}}>Prev.</div>
                       </div>
                       <div style={{width:8}}/>
                       <div style={{flex:1,textAlign:"center",padding:"8px 0",background:"#FFF0F0",borderRadius:8}}>
                         <div style={{fontSize:20,fontWeight:700,color:"#F43F5E"}}>{corrs}</div>
-                        <div style={{fontSize:9,color:"#F43F5E",fontWeight:600,textTransform:"uppercase"}}>Corret.</div>
+                        <div style={{fontSize:9,color:"#F43F5E",fontWeight:600,}}>Corret.</div>
                       </div>
                     </div>
                     {techReps.length>0&&<div style={{padding:"0 16px 12px"}}>
