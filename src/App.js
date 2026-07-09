@@ -1365,8 +1365,8 @@ export default function App(){
   const [showNovoAtend,setShowNovoAtend]=useState(false);
 
   const [modalImportSas,setModalImportSas]=useState(false);
-  const [modalImportMU,setModalImportMU2]=useState(false);
-  const [modalImportAF,setModalImportAF2]=useState(false);
+  const [modalImportMU2,setModalImportMU2]=useState(false);
+  const [modalImportAF2,setModalImportAF2]=useState(false);
   const [modalImportRel,setModalImportRel]=useState(false);
   const [modalImportPH,setModalImportPH]=useState(false);
   const [modalImportPM,setModalImportPM]=useState(false);  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
