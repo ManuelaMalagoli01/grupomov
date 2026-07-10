@@ -1437,6 +1437,7 @@ export default function App(){
   const [showFiltrosDP,setShowFiltrosDP]=useState(false);
   const [modalImportApon,setModalImportApon]=useState(false);
   const [modalImportApon150,setModalImportApon150]=useState(false);
+  const [modalImportAgenda,setModalImportAgenda]=useState(false);
 
   // ── TÍTULO DO APP ──
   useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
@@ -1801,6 +1802,17 @@ export default function App(){
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportApon&&<ImportAponModal label="Apontamentos 1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportAgenda&&<ImportAponModal label="Agenda Técnicos" onClose={()=>setModalImportAgenda(false)} onImport={novos=>{
+          novos.forEach(d=>{
+            const tech=d.tecnico||"Sem Técnico";
+            const dt=d.data||TODAY_STR;
+            const key=`${tech}__${dt}`;
+            const slot={client:d.os||d.patrimonio||"",cidade:"",patrimonio:d.patrimonio||"",horimetro:"",horaEntrada:d.inicio||"",horaSaida:d.termino||"",relatorio:d.os||"",obs:d.obs||"",servico:d.servico||"corretiva",status:"agendada",servicos:d.servico?[d.servico]:[],obsServico:d.obs||""};
+            saveSched(key,[...(schedule[key]||[]),slot]);
+          });
+          setModalImportAgenda(false);
+          notify(`✅ ${novos.length} atendimento(s) importado(s)!`);
+        }}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
@@ -3054,6 +3066,8 @@ export default function App(){
               {/* Novo Atendimento */}
               {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
                 <button onClick={()=>setShowNovoAtend(true)} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)"}}>+ Novo Atendimento</button>
+                <BtnImport onClick={()=>setModalImportAgenda(true)}/>
+                <BtnExcel onClick={()=>{const allAtend=Object.entries(schedule).flatMap(([k,v])=>{const[tech,dt]=k.split("__");return(v||[]).map(s=>({tecnico:tech,data:dt,cliente:s.client,cidade:s.cidade,patrimonio:s.patrimonio,horimetro:s.horimetro,entrada:s.horaEntrada,saida:s.horaSaida,horas:s.horasTrabalhadas||"",relatorio:s.relatorio,obs:s.obs,status:s.status,servicos:(s.servicos||[]).join(", "),obsServico:s.obsServico}));});exportCSV(allAtend,"agenda_tecnicos",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"entrada",label:"Entrada"},{key:"saida",label:"Saída"},{key:"horas",label:"Horas"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"},{key:"status",label:"Status"},{key:"servicos",label:"Serviços"},{key:"obsServico",label:"Obs Serviço"}]);}}/>
               </div>}
               {showNovoAtend&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowNovoAtend(false)}>
                 <div style={{background:"#FFF",borderRadius:16,width:680,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
