@@ -688,6 +688,70 @@ const BtnImport = ({onClick}) => (
   </button>
 );
 
+function ImportAponModal({onClose,onImport,label}){
+  const [rows,setRows]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const fileRef=useRef();
+  const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const onFile=async(f)=>{
+    if(!f)return;setErr("");setLoading(true);setRows(null);
+    try{
+      if(/\.csv$/i.test(f.name)){
+        const txt=await f.text();const sep=txt.indexOf(";")>-1?";":","
+        const lines=txt.replace(/\uFEFF/,"").split(/\r?\n/).filter(l=>l.trim());
+        const head=lines[0].split(sep).map(h=>h.replace(/^"|"$/g,"").trim());
+        const data=lines.slice(1).map(l=>{const cells=l.split(sep).map(c=>c.replace(/^"|"$/g,"").trim());const o={};head.forEach((h,i)=>o[h]=cells[i]||"");return o;});
+        if(!data.length)setErr("Vazia.");else setRows(data);
+      }else{
+        const XLSX=await loadXLSX();const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        if(!data.length)setErr("Vazia.");else setRows(data);
+      }
+    }catch(e){setErr("Erro ao ler arquivo.");}
+    setLoading(false);
+  };
+  const doImport=()=>{
+    const mapped=rows.map(o=>({
+      id:"AX"+Date.now()+Math.random().toString(36).slice(2,6),
+      data:String(pick("data")(o)||pick("date")(o)||""),
+      os:String(pick("os")(o)||pick("ordem")(o)||""),
+      patrimonio:String(pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
+      tecnico:String(pick("tecnico")(o)||pick("técnico")(o)||""),
+      servico:String(pick("servico")(o)||pick("serviço")(o)||pick("tipo")(o)||""),
+      inicio:String(pick("inicio")(o)||pick("início")(o)||pick("entrada")(o)||""),
+      termino:String(pick("termino")(o)||pick("término")(o)||pick("saida")(o)||pick("saída")(o)||""),
+      total:String(pick("total")(o)||pick("horas")(o)||""),
+      obs:String(pick("obs")(o)||pick("observ")(o)||""),
+    }));
+    onImport(mapped);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#FFF",borderRadius:16,width:550,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>📥 Importar {label||"Apontamentos"}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:22}}>
+          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Data, OS, Patrimônio, Técnico, Serviço, Início, Término, Total, Obs</b></div>
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{marginBottom:12}}/>
+          {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo...</div>}
+          {err&&<div style={{color:"#DC2626",fontSize:12}}>{err}</div>}
+          {rows&&<div>
+            <div style={{fontSize:12,fontWeight:700,color:"#1E293B",marginBottom:8}}>{rows.length} linha(s) encontrada(s)</div>
+            <div style={{maxHeight:200,overflowY:"auto",fontSize:10,border:"1px solid #E2E8F0",borderRadius:8,padding:8}}>
+              {rows.slice(0,5).map((r,i)=><div key={i} style={{marginBottom:4,color:"#64748B"}}>{JSON.stringify(r).slice(0,120)}...</div>)}
+              {rows.length>5&&<div style={{color:"#94A3B8"}}>... e mais {rows.length-5}</div>}
+            </div>
+            <button onClick={doImport} style={{marginTop:12,width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Importar {rows.length} linha(s)</button>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Barra de exportação reutilizável
 const ExportBar = ({data, filename, cols, onImport}) => {
   const [loading, setLoading] = useState(false);
@@ -1735,8 +1799,8 @@ export default function App(){
         {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("reports",d.id,d));setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_hebert",d.id,d));setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
-        {modalImportApon&&<ImportExcelModal onClose={()=>setModalImportApon(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AO"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setApontamentos(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${stamp.length} apontamento(s) importado(s)!`);}}/>}
-        {modalImportApon150&&<ImportExcelModal onClose={()=>setModalImportApon150(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"A5"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setApontamentos150(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${stamp.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportApon&&<ImportAponModal label="Apontamentos 1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
