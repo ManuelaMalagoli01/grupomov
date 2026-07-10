@@ -1866,14 +1866,14 @@ export default function App(){
                       const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
                       const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
                       const respText=await resp.text();
-                      if(!resp.ok){let m="Erro API ("+resp.status+")";try{const j=JSON.parse(respText);m=j.error||m;}catch(e){}throw new Error(m);}
+                      if(!resp.ok){let m="Erro API ("+resp.status+"): "+respText.slice(0,200);try{const j=JSON.parse(respText);m=j.error||j.message||m;}catch(e){}throw new Error(m);}
                       let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
                       const txt=data.content?.[0]?.text||"{}";
                       const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
                       const pecasAPI=(parsed.pecasUsadas||[]).map(p=>({situacao:"Peça Solicitada",peca:p.peca||"",cod:p.cod||"",quantidade:p.quantidade||"1",obs:""}));
                       const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:pecasAPI,processoStatus:"em_andamento",reportNum:parsed.reportNum||""};
                       setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Relatório criado via PDF!");
-                    }catch(err){alert("Erro ao processar PDF: "+err.message);}
+                    }catch(err){alert("Erro ao processar PDF: "+(err?.message||JSON.stringify(err)));}
                     setPdfLoading(false);e.target.value="";
                   }}/>
                 </label>
