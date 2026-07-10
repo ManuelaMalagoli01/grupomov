@@ -3684,82 +3684,7 @@ export default function App(){
         })()}
 
         {/* ── RH-FISCAL (somente Manuela) ── */}
-        {tab==="rh_fiscal"&&(()=>{
-          const MOT={folga:"🏖️ Folga",ferias:"🌴 Férias",afastamento:"🏥 Afastamento",atestado:"📋 Atestado",demissao:"❌ Demissão",admissao:"✅ Admissão",outros:"📦 Outros"};
-          const STS={pendente_luana:{l:"⏳ Pend. Luana",c:"#E67E00",bg:"#FFF8F0"},pendente_elci:{l:"⏳ Pend. Elci",c:"#8E44AD",bg:"#F6F0FB"},em_andamento:{l:"🔄 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"✅ Concluído",c:"#1A7A3C",bg:"#F0FFF5"}};
-          const lista=(rhFiscal||[]).filter(r=>r&&(showArqRH||!r.arquivado));
-          const pend=lista.filter(r=>r.status==="pendente_luana"||r.status==="pendente_elci"||!r.status).length;
-          const conc=lista.filter(r=>r.status==="concluido").length;
-                    const applyFilter=(r,d=r.dataEnvio||"")=>{
-            if(rhSearch){const q=rhSearch.toLowerCase();if(!((r.funcionario||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
-            if(rhFrom&&d<rhFrom)return false;
-            if(rhTo&&d>rhTo)return false;
-            if(rhMes&&!d.slice(5,7).startsWith(rhMes))return false;
-            if(rhAno&&!d.startsWith(rhAno))return false;
-            return true;
-          };
-          const listaFil=lista.filter(applyFilter);
-          return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🧾 RH-Fiscal</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqRH(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRH?"#1A1A1A":"#FFF",color:showArqRH?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRH?"Ocultar":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"rh_fiscal",[{key:"dataEnvio",label:"Data"},{key:"responsavel",label:"Responsável"},{key:"motivo",label:"Motivo"},{key:"funcionario",label:"Funcionário"},{key:"status",label:"Status"},{key:"obs",label:"Obs"}])}/>
-                <BtnY onClick={()=>rhCrud.add({dataEnvio:TODAY_STR,responsavel:"Luana",motivo:"folga",funcionario:"",status:"pendente_luana",obs:""})}>+ Novo Item</BtnY>
-              </div>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                </div>
-              ))}
-            </div>
-                        <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={rhSearch} onChange={e=>setRhSearch(e.target.value)} placeholder="Buscar funcionário, responsável, obs..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={rhFrom} onChange={e=>setRhFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={rhTo} onChange={e=>setRhTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={rhMes} onChange={e=>setRhMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={rhAno} onChange={e=>setRhAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(rhSearch||rhFrom||rhTo||rhMes||rhAno)&&<button onClick={()=>{setRhSearch('');setRhFrom('');setRhTo('');setRhMes('');setRhAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600}}>Nenhum item</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {listaFil.map(r=>{
-                  const st=STS[r.status||"pendente_luana"]||STS.pendente_luana;
-                  const mot=MOT[r.motivo||"outros"]||"📦";
-                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <select value={r.status||"pendente_luana"} onChange={e=>rhCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:st.c,background:"#FFF",cursor:"pointer"}}>
-                        {Object.entries(STS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
-                      </select>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{const cp={...r,id:`RH${Date.now()}`,arquivado:false};rhCrud.del(r.id);rhCrud.add(cp);notify("✏️ Aberto para edição");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>rhCrud.update(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))rhCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
-                      </div>
-                    </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.funcionario||<span style={{color:"#CCC"}}>Funcionário</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · {r.responsavel||"—"}</div></div>
-                        <span style={{fontSize:12,background:"#F5F5F5",borderRadius:8,padding:"4px 10px",fontWeight:600}}>{mot}</span>
-                      </div>
-                      <select value={r.motivo||"outros"} onChange={e=>rhCrud.update(r.id,{motivo:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:"1px solid #E0E0E0",fontWeight:600,cursor:"pointer"}}>
-                        {Object.entries(MOT).map(([v,l])=><option key={v} value={v}>{l}</option>)}
-                      </select>
-                      {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
-                      <textarea value={r.obs||""} onChange={e=>rhCrud.update(r.id,{obs:e.target.value})} placeholder="Observações..." rows={2} style={{fontSize:11,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",resize:"none",fontFamily:"inherit",background:"#FAFAFA"}}/>
-                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{r.registradoPor||""}</div>
-                    </div>
-                  </div>);
-                })}
-              </div>
-            )}
-          </div>);
-        })()}
-
-        {/* ── PENDÊNCIAS GUSTAVO (somente Manuela) ── */}
+        
         {tab==="pendencias_gustavo"&&user.id==="manuela"&&(()=>{
           const list=(pendGustavo||[]).filter(r=>r&&(showArqGus||!r.arquivado));
           const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
@@ -5411,7 +5336,7 @@ export default function App(){
     pendencias_gustavo: (pendGustavo||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     pendencias_manuela_tab: (pendManuela||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     prioridades_clientes: (prioridades||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
-    rh_fiscal: (rhFiscal||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
+    // rh_removed: (rhFiscal||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     carros: (carros||[]).filter(c=>c&&!c.arquivado&&c.status==="pendente").length,
     uber: (uberPedidos||[]).filter(u=>u.status==="pendente").length,
     financeiro: (financeiro||[]).filter(f=>f.situacao==="pendente"||f.status==="pendente").length,
