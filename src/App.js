@@ -3119,7 +3119,7 @@ export default function App(){
           const dias=Array.from({length:diasNoMes},(_,i)=>i+1);
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
           const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
-          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i);}).filter(Boolean)));
+          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i).trim();}).filter(Boolean)));
           const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
