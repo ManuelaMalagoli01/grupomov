@@ -1023,7 +1023,7 @@ function AppTopBar({user, setUser, setModalUsers}){
   return(
     <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <div style={{background:"#1A1A1A",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center"}}><img src={LOGO_MOV} alt="Grupo MOV" style={{height:26,width:"auto",display:"block",filter:"brightness(0) invert(1)"}}/></div>
+        <img src={LOGO_MOV} alt="Grupo MOV" style={{height:32,width:"auto",display:"block"}}/>
         <div>
           <div style={{fontSize:13,fontWeight:800,color:"#FFF"}}>Grupo MOV</div>
           <div style={{fontSize:9,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>Gestão de Manutenção</div>
@@ -2791,7 +2791,7 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
@@ -2811,8 +2811,8 @@ export default function App(){
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
                     <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                      <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
                         {slaD!==null&&<span style={{fontSize:9,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
                       </div>
                       <div style={{display:"flex",gap:3}}>
@@ -2826,16 +2826,16 @@ export default function App(){
                         <div><div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.date||"—"} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
                         <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Nº Mau Uso</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F0FFF5",borderRadius:8,padding:"5px 8px",border:"1.5px solid #C8E8D0"}}><div style={{color:"#1A7A3C",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💰 Valor (R$)</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:11,fontWeight:800,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F0FFF5",borderRadius:8,padding:"5px 8px",border:"1.5px solid #C8E8D0"}}><div style={{color:"#1A7A3C",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💰 Valor (R$)</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:10,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
                       {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
                       <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
-                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Status Aprovação Cliente</div>
+                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>Status Aprovação Cliente</div>
                         <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,padding:"5px 8px",borderRadius:10,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
                           {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                         </select>
