@@ -1023,7 +1023,7 @@ function AppTopBar({user, setUser, setModalUsers}){
   return(
     <div style={{background:"#111827",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <div style={{background:"#FFF",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center"}}><img src={LOGO_MOV} alt="Grupo MOV" style={{height:26,width:"auto",display:"block"}}/></div>
+        <div style={{background:"#1A1A1A",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center"}}><img src={LOGO_MOV} alt="Grupo MOV" style={{height:26,width:"auto",display:"block"}}/></div>
         <div>
           <div style={{fontSize:13,fontWeight:800,color:"#FFF"}}>Grupo MOV</div>
           <div style={{fontSize:9,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>Gestão de Manutenção</div>
