@@ -287,7 +287,7 @@ function LoginScreen({onLogin, users=USERS}){
 
         <div style={{textAlign:"center",marginBottom:36}}>
           <div style={{width:84,height:84,borderRadius:20,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
-            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto"}}/>
+            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto",filter:"brightness(0)"}}/>
           </div>
           <div style={{fontSize:24,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
           <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
