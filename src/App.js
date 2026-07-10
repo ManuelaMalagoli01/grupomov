@@ -754,6 +754,78 @@ function ImportAponModal({onClose,onImport,label}){
   );
 }
 
+function ImportAgendaModal({onClose,onImport}){
+  const [rows,setRows]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const onFile=async(f)=>{
+    if(!f)return;setErr("");setLoading(true);setRows(null);
+    try{
+      if(/\.csv$/i.test(f.name)){
+        const txt=await f.text();const sep=txt.indexOf(";")>-1?";":","
+        const lines=txt.replace(/\uFEFF/,"").split(/\r?\n/).filter(l=>l.trim());
+        const head=lines[0].split(sep).map(h=>h.replace(/^"|"$/g,"").trim());
+        const data=lines.slice(1).map(l=>{const cells=l.split(sep).map(c=>c.replace(/^"|"$/g,"").trim());const o={};head.forEach((h,i)=>o[h]=cells[i]||"");return o;});
+        if(!data.length)setErr("Vazia.");else setRows(data);
+      }else{
+        const XLSX=await loadXLSX();const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        if(!data.length)setErr("Vazia.");else setRows(data);
+      }
+    }catch(e){setErr("Erro ao ler arquivo.");}
+    setLoading(false);
+  };
+  const doImport=()=>{
+    const mapped=rows.map(o=>({
+      tecnico:String(pick("tecnico")(o)||pick("técnico")(o)||""),
+      data:String(pick("data")(o)||pick("date")(o)||""),
+      client:String(pick("cliente")(o)||pick("empresa")(o)||pick("client")(o)||""),
+      cidade:String(pick("cidade")(o)||pick("city")(o)||""),
+      patrimonio:String(pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
+      horimetro:String(pick("horímetro")(o)||pick("horimetro")(o)||""),
+      horaEntrada:String(pick("entrada")(o)||pick("início")(o)||pick("inicio")(o)||""),
+      horaSaida:String(pick("saída")(o)||pick("saida")(o)||pick("término")(o)||pick("termino")(o)||""),
+      horasTrabalhadas:String(pick("horas")(o)||pick("total")(o)||""),
+      relatorio:String(pick("relatório")(o)||pick("relatorio")(o)||pick("nº relatório")(o)||pick("os")(o)||""),
+      obs:String(pick("obs")(o)||pick("observ")(o)||""),
+      servico:String(pick("tipo")(o)||pick("serviço")(o)||pick("servico")(o)||"corretiva"),
+      type:String(pick("tipo")(o)||pick("type")(o)||"corretivo"),
+      status:String(pick("status")(o)||"agendada"),
+      servicos:(pick("serviços")(o)||pick("servicos")(o)||"").split(",").map(s=>s.trim()).filter(Boolean),
+      obsServico:String(pick("obs serviço")(o)||pick("obs servico")(o)||""),
+    }));
+    onImport(mapped);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+      <div style={{background:"#FFF",borderRadius:16,width:600,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>📥 Importar Agenda</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:22}}>
+          <div style={{fontSize:11,color:"#64748B",marginBottom:6}}>Colunas aceitas:</div>
+          <div style={{fontSize:10,color:"#94A3B8",marginBottom:12,lineHeight:1.6}}>
+            <b>Técnico</b>, <b>Data</b>, <b>Cliente/Empresa</b>, <b>Cidade</b>, <b>Patrimônio/PAT</b>, <b>Horímetro</b>, <b>Entrada/Início</b>, <b>Saída/Término</b>, <b>Horas/Total</b>, <b>Relatório/OS</b>, <b>Obs</b>, <b>Tipo</b>, <b>Status</b>, <b>Serviços</b>, <b>Obs Serviço</b>
+          </div>
+          <input type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{marginBottom:12}}/>
+          {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo...</div>}
+          {err&&<div style={{color:"#DC2626",fontSize:12}}>{err}</div>}
+          {rows&&<div>
+            <div style={{fontSize:12,fontWeight:700,color:"#1E293B",marginBottom:8}}>{rows.length} linha(s)</div>
+            <div style={{maxHeight:180,overflowY:"auto",fontSize:10,border:"1px solid #E2E8F0",borderRadius:8,padding:8}}>
+              {rows.slice(0,5).map((r,i)=><div key={i} style={{marginBottom:4,color:"#64748B"}}>{JSON.stringify(r).slice(0,120)}...</div>)}
+              {rows.length>5&&<div style={{color:"#94A3B8"}}>... +{rows.length-5}</div>}
+            </div>
+            <button onClick={doImport} style={{marginTop:12,width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Importar {rows.length} atendimento(s)</button>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Barra de exportação reutilizável
 const ExportBar = ({data, filename, cols, onImport}) => {
   const [loading, setLoading] = useState(false);
@@ -1804,12 +1876,12 @@ export default function App(){
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportApon&&<ImportAponModal label="Apontamentos 1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
-        {modalImportAgenda&&<ImportAponModal label="Agenda Técnicos" onClose={()=>setModalImportAgenda(false)} onImport={novos=>{
+        {modalImportAgenda&&<ImportAgendaModal onClose={()=>setModalImportAgenda(false)} onImport={novos=>{
           novos.forEach(d=>{
             const tech=d.tecnico||"Sem Técnico";
             const dt=d.data||TODAY_STR;
             const key=`${tech}__${dt}`;
-            const slot={client:d.os||d.patrimonio||"",cidade:"",patrimonio:d.patrimonio||"",horimetro:"",horaEntrada:d.inicio||"",horaSaida:d.termino||"",relatorio:d.os||"",obs:d.obs||"",servico:d.servico||"corretiva",status:"agendada",servicos:d.servico?[d.servico]:[],obsServico:d.obs||""};
+            const slot={client:d.client||"",cidade:d.cidade||"",patrimonio:d.patrimonio||"",horimetro:d.horimetro||"",horaEntrada:d.horaEntrada||"",horaSaida:d.horaSaida||"",horasTrabalhadas:d.horasTrabalhadas||"",relatorio:d.relatorio||"",obs:d.obs||"",servico:d.servico||d.type||"corretiva",type:d.type||d.servico||"corretivo",status:d.status||"agendada",servicos:d.servicos||[],obsServico:d.obsServico||""};
             saveSched(key,[...(schedule[key]||[]),slot]);
           });
           setModalImportAgenda(false);
@@ -3088,6 +3160,28 @@ export default function App(){
               {/* Novo Atendimento */}
               {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
                 <button onClick={()=>setShowNovoAtend(true)} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)"}}>+ Novo Atendimento</button>
+                <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
+                  📄 Ler PDF
+                  <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
+                    const file=e.target.files[0];if(!file)return;
+                    try{
+                      const b64=await new Promise((res,rej)=>{const r2=new FileReader();r2.onload=()=>res(r2.result.split(",")[1]);r2.onerror=rej;r2.readAsDataURL(file);});
+                      const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                      const respText=await resp.text();
+                      if(!resp.ok)throw new Error(respText.slice(0,200));
+                      let data2;try{data2=JSON.parse(respText);}catch(ex){throw new Error("Resposta inválida");}
+                      const txt2=data2.content?.[0]?.text||"{}";
+                      const parsed2=JSON.parse(txt2.replace(/```json|```/g,"").trim());
+                      const tech2=parsed2.tecnico||"Sem Técnico";
+                      const dt2=parsed2.data||TODAY_STR;
+                      const key2=`${tech2}__${dt2}`;
+                      const slot2={client:parsed2.cliente||parsed2.empresa||"",cidade:parsed2.cidade||"",patrimonio:parsed2.patrimonio||"",horimetro:parsed2.horimetro||"",horaEntrada:parsed2.inicio||parsed2.entrada||"",horaSaida:parsed2.saida||parsed2.termino||"",relatorio:parsed2.relatorio||parsed2.os||"",obs:parsed2.obs||"",servico:parsed2.tipo||"corretiva",type:parsed2.tipo||"corretivo",status:"agendada",servicos:parsed2.servicos||[],obsServico:parsed2.obsServico||""};
+                      saveSched(key2,[...(schedule[key2]||[]),slot2]);
+                      notify("✅ Atendimento criado via PDF!");
+                    }catch(err2){alert("Erro PDF: "+(err2?.message||JSON.stringify(err2)));}
+                    e.target.value="";
+                  }}/>
+                </label>
                 <BtnImport onClick={()=>setModalImportAgenda(true)}/>
                 <BtnExcel onClick={()=>{const allAtend=Object.entries(schedule).flatMap(([k,v])=>{const[tech,dt]=k.split("__");return(v||[]).map(s=>({tecnico:tech,data:dt,cliente:s.client,cidade:s.cidade,patrimonio:s.patrimonio,horimetro:s.horimetro,entrada:s.horaEntrada,saida:s.horaSaida,horas:s.horasTrabalhadas||"",relatorio:s.relatorio,obs:s.obs,status:s.status,servicos:(s.servicos||[]).join(", "),obsServico:s.obsServico}));});exportCSV(allAtend,"agenda_tecnicos",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"entrada",label:"Entrada"},{key:"saida",label:"Saída"},{key:"horas",label:"Horas"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"},{key:"status",label:"Status"},{key:"servicos",label:"Serviços"},{key:"obsServico",label:"Obs Serviço"}]);}}/>
               </div>}
