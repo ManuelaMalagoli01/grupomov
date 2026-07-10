@@ -461,11 +461,13 @@ function ImportExcelModal({onClose,onImport}){
         patrimonio:String(pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
         tecnico:String(pick("Técnico")(o)||pick("Tecnico")(o)||""),
         date:String(pick("Data Atend.")(o)||pick("Data Atendimento")(o)||""),
-        numChamado:String(pick("Chamado")(o)||""),
+        dataAtendimento:String(pick("Data Atend.")(o)||pick("Data Atendimento")(o)||""),
+        atendimento:mapTipo(pick("Tipo")(o)),
+        numChamado:String(pick("Chamado")(o)||""),chamado:String(pick("Chamado")(o)||""),
         acao:String(pick("Ação")(o)||pick("Acao")(o)||""),
         horasTrabalhadas:String(pick("Horas Trab.")(o)||pick("Horas")(o)||""),
         status:REL_STATUS_KEYS.includes(st)?st:"",
-        processoStatus:"em_andamento",
+        processoStatus:"em_andamento",statusFinal:String(pick("Status")(o)||pick("Status Final")(o)||"Pendente"),
       };
     });
     onImport(novos);
@@ -1871,7 +1873,7 @@ export default function App(){
                       const txt=data.content?.[0]?.text||"{}";
                       const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
                       const pecasAPI=(parsed.pecasUsadas||[]).map(p=>({situacao:"Peça Solicitada",peca:p.peca||"",cod:p.cod||"",quantidade:p.quantidade||"1",obs:""}));
-                      const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:pecasAPI,processoStatus:"em_andamento",reportNum:parsed.reportNum||""};
+                      const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:pecasAPI,processoStatus:"em_andamento",reportNum:parsed.reportNum||"",dataAtendimento:parsed.dataAtendimento||parsed.date||"",atendimento:parsed.type||parsed.atendimento||"corretivo",statusFinal:parsed.statusFinal||parsed.status||"Pendente",chamado:parsed.numChamado||parsed.chamado||""};
                       setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Relatório criado via PDF!");
                     }catch(err){alert("Erro ao processar PDF: "+(err?.message||JSON.stringify(err)));}
                     setPdfLoading(false);e.target.value="";
