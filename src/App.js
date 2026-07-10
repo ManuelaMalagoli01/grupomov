@@ -1370,6 +1370,7 @@ export default function App(){
   const [modalImportRel,setModalImportRel]=useState(false);
   const [modalImportPH,setModalImportPH]=useState(false);
   const [modalImportPM,setModalImportPM]=useState(false);  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
+  const [showFiltrosDP,setShowFiltrosDP]=useState(false);
 
   // ── TÍTULO DO APP ──
   useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
@@ -4253,8 +4254,13 @@ export default function App(){
             </div>
 
             {/* ── Filtros ── */}
-            <div className="card" style={{padding:"8px 12px",marginBottom:10,borderLeft:"3px solid #F5C200"}}>
-              <div style={{fontSize:10,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:.8,marginBottom:12}}>🔍 Filtros</div>
+            <button onClick={()=>setShowFiltrosDP(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDP?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:10,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:12}}>🔍</span>
+              <span style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              <span style={{fontSize:9,color:"#94A3B8",marginLeft:4}}>{showFiltrosDP?"▲":"▼"}</span>
+            </button>
+            {showFiltrosDP&&<div style={{background:"#FFF",borderRadius:12,padding:"10px 14px",marginBottom:10,border:"1.5px solid #E2E8F0",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+              <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",marginBottom:12}}>🔍 Filtros</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
                 <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Tipo</label>
@@ -4309,7 +4315,7 @@ export default function App(){
                   <input type="text" value={fNumMU} onChange={e=>setFNumMU(e.target.value)} placeholder="Nº MU..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
