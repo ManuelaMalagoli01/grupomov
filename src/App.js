@@ -282,7 +282,7 @@ function LoginScreen({onLogin, users=USERS}){
         @keyframes glow{0%,100%{box-shadow:0 8px 32px rgba(245,194,0,.25)}50%{box-shadow:0 8px 48px rgba(245,194,0,.4)}}
       `}</style>
 
-      <div style={{background:"rgba(255,255,255,.97)",backdropFilter:"blur(20px)",borderRadius:24,padding:48,width:"100%",maxWidth:430,boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)",position:"relative",overflow:"hidden",animation:"slideUp .5s ease"}}>
+      <div style={{background:"rgba(255,255,255,.98)",backdropFilter:"blur(24px)",borderRadius:20,padding:44,border:"1px solid rgba(255,255,255,.3)",width:"100%",maxWidth:430,boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)",position:"relative",overflow:"hidden",animation:"slideUp .5s ease"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,height:5,background:"linear-gradient(90deg,#F5C200,#FFE066,#F5C200)"}}/>
 
         <div style={{textAlign:"center",marginBottom:36}}>
@@ -1021,7 +1021,7 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 
 function AppTopBar({user, setUser, setModalUsers}){
   return(
-    <div style={{background:"#111827",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
+    <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <div style={{background:"#1A1A1A",borderRadius:8,padding:"4px 8px",display:"flex",alignItems:"center"}}><img src={LOGO_MOV} alt="Grupo MOV" style={{height:26,width:"auto",display:"block"}}/></div>
         <div>
@@ -1034,7 +1034,7 @@ function AppTopBar({user, setUser, setModalUsers}){
           <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
           <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
         </div>
-        {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
+        {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
         <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer"}}>Sair</button>
       </div>
     </div>
@@ -1069,7 +1069,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   };
 
   if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_processos" l="📊 Dash Processos"/>
@@ -1077,12 +1077,12 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.acessoSas&&!user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="sas" l="📄 SAS"/>
     </div>
   );
   if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_processos" l="📊 Dash Processos"/>
@@ -1090,7 +1090,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.apenasAgenda) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_prev","🗓 Agenda"],["dashboard","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1098,7 +1098,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.apenasAgenda150) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1106,7 +1106,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.apenasOficina) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi","🗓 Agenda"],["apontamentos_oficina","📝 Apontamentos"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_ofi","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1114,7 +1114,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.apenasOficina150) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.15)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:13,fontWeight:isActive?700:500,cursor:"pointer",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",textAlign:"left",transition:"all .15s"}}>{l}</button>;
@@ -1122,7 +1122,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </div>
   );
   if(user.apenasOfi150) return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1146,7 +1146,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   };
 
   return(
-    <div style={{position:"fixed",left:0,top:56,width:220,background:"#1E293B",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {/* TÉCNICOS EXTERNOS - ACORDEÃO */}
       <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.12)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
         <span>👷 Técnicos Externos</span>
@@ -2135,7 +2135,7 @@ export default function App(){
                   </tbody>
                   <tfoot><tr style={{background:"#1A1A1A"}}>
                     <td colSpan={7} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
-                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
+                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
                     <td colSpan={3}/>
                   </tr></tfoot>
                 </table></div></div>
@@ -5121,7 +5121,7 @@ export default function App(){
                   </tbody>
                   <tfoot><tr style={{background:"#1A1A1A"}}>
                     <td colSpan={7} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
-                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.15)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
+                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
                     <td colSpan={3}/>
                   </tr></tfoot>
                 </table></div></div>
@@ -5568,7 +5568,7 @@ export default function App(){
     financeiro: (financeiro||[]).filter(f=>f.situacao==="pendente"||f.status==="pendente").length,
   };
   return(
-    <div style={{minHeight:"100vh",background:"#F0F2F5",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#F1F5F9",color:"#1A1A1A",fontFamily:"-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif"}}>
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
       <AppTopBar user={user} setUser={setUser} setModalUsers={setModalUsers}/>
