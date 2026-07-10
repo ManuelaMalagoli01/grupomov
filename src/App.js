@@ -1984,6 +1984,26 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
+                  <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
+                    📄 Ler PDF
+                    <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
+                      const file=e.target.files[0];if(!file)return;
+                      try{
+                        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                        const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                        const respText=await resp.text();
+                        if(!resp.ok)throw new Error(respText.slice(0,200));
+                        let data;try{data=JSON.parse(respText);}catch(ex){throw new Error("Resposta inválida");}
+                        const txt=data.content?.[0]?.text||"{}";
+                        const clean=txt.replace(/```json|```/g,"").trim();
+                        const parsed=JSON.parse(clean);
+                        const row={id:"AP"+Date.now(),data:parsed.data||"",os:parsed.os||parsed.numero||"",patrimonio:parsed.patrimonio||"",tecnico:parsed.tecnico||"",servico:parsed.servico||parsed.tipo||"",inicio:parsed.inicio||"",termino:parsed.termino||parsed.fim||"",total:parsed.total||parsed.horas||"",obs:parsed.obs||parsed.observacao||"",registradoPor:user.name};
+                        setApontamentos(p=>[row,...(p||[])]);db.save("apontamentos_oficina",row.id,row);
+                        notify("✅ Apontamento criado via PDF!");
+                      }catch(err){alert("Erro PDF: "+(err?.message||JSON.stringify(err)));}
+                      e.target.value="";
+                    }}/>
+                  </label>
                   <BtnImport onClick={()=>setModalImportApon(true)}/>
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
@@ -4928,6 +4948,26 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
+                  <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
+                    📄 Ler PDF
+                    <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
+                      const file=e.target.files[0];if(!file)return;
+                      try{
+                        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+                        const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+                        const respText=await resp.text();
+                        if(!resp.ok)throw new Error(respText.slice(0,200));
+                        let data;try{data=JSON.parse(respText);}catch(ex){throw new Error("Resposta inválida");}
+                        const txt=data.content?.[0]?.text||"{}";
+                        const clean=txt.replace(/```json|```/g,"").trim();
+                        const parsed=JSON.parse(clean);
+                        const row={id:"AP"+Date.now(),data:parsed.data||"",os:parsed.os||parsed.numero||"",patrimonio:parsed.patrimonio||"",tecnico:parsed.tecnico||"",servico:parsed.servico||parsed.tipo||"",inicio:parsed.inicio||"",termino:parsed.termino||parsed.fim||"",total:parsed.total||parsed.horas||"",obs:parsed.obs||parsed.observacao||"",registradoPor:user.name};
+                        setApontamentos150(p=>[row,...(p||[])]);db.save("apontamentos_150",row.id,row);
+                        notify("✅ Apontamento criado via PDF!");
+                      }catch(err){alert("Erro PDF: "+(err?.message||JSON.stringify(err)));}
+                      e.target.value="";
+                    }}/>
+                  </label>
                   <BtnImport onClick={()=>setModalImportApon150(true)}/>
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
