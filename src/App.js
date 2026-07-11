@@ -2055,6 +2055,12 @@ export default function App(){
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
           const inserir=()=>{
             const total=calcHoras(aponNovaInicio,aponNovaTermino);
+            if(editingAponId){
+              const changes={data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,obs:aponNovaObs};
+              updateApon(editingAponId,changes);setEditingAponId(null);notify("✅ Apontamento atualizado!");
+              setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ(SERVICOS_OFICINA[0]);setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");
+              return;
+            }
             const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,oficina:"1340",obs:aponNovaObs,arquivado:false};
             setApontamentos(p=>[...p,row]);db.save("apontamentos_oficina",row.id,row);
             setAponNovaOS("");setAponNovaPat("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");
