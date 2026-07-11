@@ -2115,7 +2115,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead><tr style={{background:"#1A1A1A"}}>
-                    {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Reg. por",""].map((h,i)=>(
+                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
@@ -2126,6 +2126,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
                         <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:11,color:"#555"}}>{a.modelo||"—"}</td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
                         <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
@@ -5101,7 +5102,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead><tr style={{background:"#1A1A1A"}}>
-                    {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Reg. por",""].map((h,i)=>(
+                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
@@ -5112,6 +5113,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
                         <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
+                        <td style={{padding:"10px 12px",fontSize:11,color:"#555"}}>{a.modelo||"—"}</td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
                         <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
