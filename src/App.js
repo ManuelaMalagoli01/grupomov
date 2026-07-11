@@ -1199,7 +1199,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       <Btn k="financeiro" l="💰 Financeiro"/>
       <Btn k="pendencias_frota" l="🚜 Pendências Frota"/>
       {canSee("somanuela")&&<Btn k="prioridades_clientes" l="⭐ Prioridades Clientes"/>}
-      {canSee("somanuela")&&<Btn k="rh_fiscal" l="🧾 RH-Fiscal"/>}
       {canSee("sogusnao")&&<Btn k="pendencias_gustavo" l="📌 Pendências Gustavo"/>}
       {canSee("somanuela")&&<Btn k="pendencias_manuela_tab" l="📋 Pendências Manuela"/>}
     </div>
