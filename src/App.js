@@ -77,7 +77,7 @@ const REGIONS = {
 const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
 const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
 const NAO_PREVENTIVA = ["Anderson","Dilson"];
-const OFICINA_TECHS = ["João Silva","André Silva","Lúcio Silva","Júnior Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira"];
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
