@@ -96,6 +96,7 @@ const APROV_STATUS={
   em_negociacao:{l:"🤝 Em Negociação",c:"#1565C0",bg:"#EFF6FF"},
   aprovado_cliente:{l:"✅ Aprovado pelo Cliente",c:"#1A7A3C",bg:"#F0FFF5"},
   negado_cliente:{l:"❌ Negado pelo Cliente",c:"#C62828",bg:"#FFF0F0"},
+  aguardando_faturamento:{l:"🧾 Aguardando Faturamento",c:"#0D9488",bg:"#F0FDFA"},
   cobrado_faturado:{l:"💰 Cobrado / Faturado",c:"#6A1B9A",bg:"#F3E5F5"},
   encerrado_sem_cobranca:{l:"🔒 Encerrado s/ Cobrança",c:"#546E7A",bg:"#ECEFF1"},
 };
@@ -4465,6 +4466,7 @@ export default function App(){
           const valAF=allAF.reduce((acc,p)=>acc+parseVal(p.valor),0);
           const valTotal=valMU+valAF;
           const valAprov=[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const valAguardFat=[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_faturamento").reduce((acc,p)=>acc+parseVal(p.valor),0);
           const valFaturado=[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").reduce((acc,p)=>acc+parseVal(p.valor),0);
           const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           // Counts por aprovCliente
@@ -4558,7 +4560,7 @@ export default function App(){
             </div>}
 
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
               <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A1A1A"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Total Processos</div>
                 <div style={{fontSize:32,fontWeight:900,color:"#1A1A1A"}}>{allMU.length+allAF.length}</div>
@@ -4573,6 +4575,11 @@ export default function App(){
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado pelo Cliente</div>
                 <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{fmtR(valAprov)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length} processo(s)</div>
+              </div>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #0D9488",background:"#F0FDFA"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>🧾 Aguardando Faturamento</div>
+                <div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{fmtR(valAguardFat)}</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_faturamento").length} processo(s)</div>
               </div>
               <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Cobrado / Faturado</div>
