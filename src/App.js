@@ -901,7 +901,7 @@ function ImportAponModal({onClose,onImport,label}){
       termino:terminoT,
       total:toTime(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
       obs:String(pick("obsevação")(o)||pick("observação")(o)||pick("obs")(o)||pick("observ")(o)||""),
-    };});
+    };}).filter(r=>r.tecnico||r.os||r.patrimonio); // ignora linhas totalmente vazias (ex: linhas de fórmula/template no final da planilha)
     onImport(mapped);
   };
   return(
