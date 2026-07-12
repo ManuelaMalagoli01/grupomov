@@ -1052,12 +1052,26 @@ function AppTopBar({user, setUser, setModalUsers}){
 
 function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   const bdg=(k)=>badges[k]||0;
-  const [oficinasOpen, setOficinasOpen] = useState(
-    ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab)
-  );
-  const [tecExtOpen,setTecExtOpen]=useState(false);
-  const oficinasAtiva = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"].includes(tab);
-  const tecExtAtiva = ["agenda_prev","dashboard","relatorios"].includes(tab);
+  const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
+  const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
+  const SERVICOS_TABS = ["mau_uso","a_faturar","dashboard_processos","sas"];
+  const ADMIN_TABS = ["uber","financeiro"];
+  const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota"];
+
+  const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
+  const [oficinasOpen, setOficinasOpen] = useState(OFICINAS_TABS.includes(tab));
+  const [tecExtOpen,setTecExtOpen]=useState(TECEXT_TABS.includes(tab));
+  const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
+  const [adminOpen,setAdminOpen]=useState(ADMIN_TABS.includes(tab));
+  const [almoxOpen,setAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
+
+  const areaTecAtiva = AREA_TEC_TABS.includes(tab);
+  const oficinasAtiva = OFICINAS_TABS.includes(tab);
+  const tecExtAtiva = TECEXT_TABS.includes(tab);
+  const servicosAtiva = SERVICOS_TABS.includes(tab);
+  const adminAtiva = ADMIN_TABS.includes(tab);
+  const almoxAtiva = ALMOX_TABS.includes(tab);
 
   const canSee=(tipo)=>{
     if(tipo==="comercial") return user.acessoComercial||user.id==="manuela"||user.id==="gustavo";
@@ -1066,9 +1080,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     if(user.apenasOficina) return ["agenda_ofi","dashboard_ofi","hebert"].includes(tipo);
     if(user.apenasOfi150) return ["agenda_ofi_150","dashboard_ofi_150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
-    if(tipo==="sogusnao") return user.id!=="gustavo";
     if(tipo==="ruptura_almox") return ["manuela","gustavo","renato"].includes(user.id);
-    if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_gustavo","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
+    if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
     if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
     if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
@@ -1146,68 +1159,96 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700,minWidth:18,textAlign:"center"}}>{count}</span>}
     </button>);
   };
-  const SubBtn=({k,l})=>{
+  const SubBtn=({k,l,badge})=>{
     const isActive=tab===k;
-    const count=bdg(k);
+    const count=badge!==undefined?badge:bdg(k);
     return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"rgba(245,194,0,.08)":"transparent",color:isActive?"#F5C200":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
       {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
     </button>);
   };
+  const GroupHeader=({label,icon,open,setOpen,ativa,badgeCount})=>(
+    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:ativa?"rgba(245,194,0,.12)":"transparent",color:ativa?"#F5C200":"#94A3B8",fontSize:12,fontWeight:ativa?700:600,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+      <span>{icon} {label}</span>
+      <div style={{display:"flex",alignItems:"center",gap:5}}>
+        {badgeCount>0&&!open&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{badgeCount}</span>}
+        <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:open?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+      </div>
+    </button>
+  );
 
   return(
     <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {/* TÉCNICOS EXTERNOS - ACORDEÃO */}
-      <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.12)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-        <span>👷 Técnicos Externos</span>
-        <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:tecExtOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
-      </button>
-      {tecExtOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-        <SubBtn k="agenda_prev" l="🗓 Agenda"/>
-        <SubBtn k="dashboard" l="📊 Dashboard"/>
-        <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
+      {/* ÁREA TÉCNICA - ACORDEÃO (Oficinas + Técnicos Externos + Pendências Frota) */}
+      <GroupHeader label="Área Técnica" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")}/>
+      {areaTecOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        {/* TÉCNICOS EXTERNOS - SUB-ACORDEÃO */}
+        <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 16px 8px 22px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.10)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:11,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+          <span>👷 Técnicos Externos</span>
+          <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:tecExtOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+        </button>
+        {tecExtOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
+          <SubBtn k="agenda_prev" l="🗓 Agenda"/>
+          <SubBtn k="dashboard" l="📊 Dashboard"/>
+          <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
+        </div>}
+
+        {/* OFICINAS - SUB-ACORDEÃO */}
+        {canSee("oficinas")&&<>
+          <button onClick={()=>setOficinasOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 16px 8px 22px",border:"none",background:oficinasAtiva?"rgba(245,194,0,.10)":"transparent",color:oficinasAtiva?"#F5C200":"#94A3B8",fontSize:11,fontWeight:oficinasAtiva?700:500,cursor:"pointer",borderLeft:oficinasAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+            <span>🏭 Oficinas</span>
+            <div style={{display:"flex",alignItems:"center",gap:5}}>
+              {(bdg("pendencias_hebert")+bdg("pendencias_matheus"))>0&&!oficinasOpen&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{bdg("pendencias_hebert")+bdg("pendencias_matheus")}</span>}
+              <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+            </div>
+          </button>
+          {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
+            {canSee("oficina")&&<>
+              <div style={{padding:"5px 16px 2px 22px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
+              <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
+              <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
+              <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
+              {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
+            </>}
+            {canSee("ofi150")&&<>
+              <div style={{padding:"5px 16px 2px 22px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
+              <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
+              <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
+              <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
+              {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
+            </>}
+          </div>}
+        </>}
+
+        <SubBtn k="pendencias_frota" l="🚜 Pendências Frota"/>
       </div>}
 
-      {/* OFICINAS - ACORDEÃO */}
-      {canSee("oficinas")&&<>
-        <button onClick={()=>setOficinasOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:oficinasAtiva?"rgba(245,194,0,.12)":"transparent",color:oficinasAtiva?"#F5C200":"#94A3B8",fontSize:12,fontWeight:oficinasAtiva?700:500,cursor:"pointer",borderLeft:oficinasAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-          <span>🏭 Oficinas</span>
-          <div style={{display:"flex",alignItems:"center",gap:5}}>
-            {(bdg("pendencias_hebert")+bdg("pendencias_matheus"))>0&&!oficinasOpen&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{bdg("pendencias_hebert")+bdg("pendencias_matheus")}</span>}
-            <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
-          </div>
-        </button>
-        {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-          {canSee("oficina")&&<>
-            <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
-            <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
-            <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
-            <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
-            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
-          </>}
-          {canSee("ofi150")&&<>
-            <div style={{padding:"5px 16px 2px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
-            <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
-            <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
-            <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
-          </>}
-        </div>}
-      </>}
+      {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos, SAS) */}
+      <GroupHeader label="Serviços" icon="🧾" open={servicosOpen} setOpen={setServicosOpen} ativa={servicosAtiva} badgeCount={bdg("sas")}/>
+      {servicosOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
+        <SubBtn k="a_faturar" l="💰 A Faturar"/>
+        <SubBtn k="dashboard_processos" l="📊 Dash Processos"/>
+        {!user?.semSas&&<SubBtn k="sas" l="📄 SAS"/>}
+      </div>}
 
-      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
-      <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
-      <Btn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
-      <Btn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
-      {canSee("ruptura_almox")&&<Btn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
-      <Btn k="dashboard_req" l="📊 Dash Requisições"/>
-      {!user?.semSas&&<Btn k="sas" l="📄 SAS"/>}
+      {/* ADMINISTRATIVO - ACORDEÃO (Uber, Financeiro) */}
+      <GroupHeader label="Administrativo" icon="🗂️" open={adminOpen} setOpen={setAdminOpen} ativa={adminAtiva} badgeCount={0}/>
+      {adminOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        <SubBtn k="uber" l="🚗 Uber"/>
+        <SubBtn k="financeiro" l="💰 Financeiro"/>
+      </div>}
+
+      {/* ALMOXARIFADO - ACORDEÃO (Empréstimo, Entrada/Saída, Ruptura, Dash Requisições) */}
+      <GroupHeader label="Almoxarifado" icon="📦" open={almoxOpen} setOpen={setAlmoxOpen} ativa={almoxAtiva} badgeCount={empAlerta}/>
+      {almoxOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
+        <SubBtn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
+        {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
+        <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
+      </div>}
+
       <Btn k="carros" l="🚙 Carros"/>
-      <Btn k="uber" l="🚗 Uber"/>
-      <Btn k="financeiro" l="💰 Financeiro"/>
-      <Btn k="pendencias_frota" l="🚜 Pendências Frota"/>
       {canSee("somanuela")&&<Btn k="prioridades_clientes" l="⭐ Prioridades Clientes"/>}
-      {canSee("sogusnao")&&<Btn k="pendencias_gustavo" l="📌 Pendências Gustavo"/>}
       {canSee("somanuela")&&<Btn k="pendencias_manuela_tab" l="📋 Pendências Manuela"/>}
     </div>
   );
@@ -1319,7 +1360,6 @@ export default function App(){
   const [frota,setFrota]=useState([]);
   const [prioridades,setPrioridades]=useState([]);
   const [rhFiscal,setRhFiscal]=useState([]);
-  const [pendGustavo,setPendGustavo]=useState([]);
   const [oficina,setOficina]=useState([]);
   const [carros,setCarros]=useState([]);
   const [carForm,setCarForm]=useState({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:"",responsavel:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",kmUltimaRevisao:"",valorUltimaRevisao:"",kmAtual:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});
@@ -1351,7 +1391,6 @@ export default function App(){
   const [showArqFro,setShowArqFro]=useState(false);
   const [showArqPri,setShowArqPri]=useState(false);
   const [showArqRh,setShowArqRh]=useState(false);
-  const [showArqGus,setShowArqGus]=useState(false);
   const [dashReqTab,setDashReqTab]=useState("visao_geral");
   const [schedOfiDate,setSchedOfiDate]=useState(TODAY_STR);
   const [agendaOfi,setAgendaOfi]=useState({});
@@ -1535,11 +1574,11 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, guss, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
-        safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("pendencias_gustavo"), safeGet("oficina"),
+        safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("oficina"),
         safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm")
       ]);
       if(rels.length>0) setReports(rels);
@@ -1553,7 +1592,6 @@ export default function App(){
       if(fros.length>0) setFrota(fros);
       if(pris.length>0) setPrioridades(pris);
       if(rhs.length>0) setRhFiscal(rhs);
-      if(guss.length>0) setPendGustavo(guss);
       if(ofis.length>0) setOficina(ofis);
       if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi(ao); }
       if(hebRows.length>0) setPendHebert(hebRows);
@@ -1640,7 +1678,6 @@ export default function App(){
   const froCrud=mkCrud("pendencias_frota",setFrota);
   const priCrud=mkCrud("prioridades_clientes",setPrioridades);
   const rhCrud=mkCrud("rh_fiscal",setRhFiscal);
-  const gusCrud=mkCrud("pendencias_gustavo",setPendGustavo);
   const updateCarro=(id,changes)=>{ setCarros(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("carros",id,row); return np; }); };
   const addCarro=()=>{ const row={id:`CAR${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,placa:PLACAS_CARROS[0],tecnico:ALL_TECHS[0],manutencao:"",valor:"",aprovadoGustavo:"nao",dataExecucao:"",oficina:"",obs:"",arquivado:false}; setCarros(p=>[row,...p]); db.save("carros",row.id,row); };
   const delCarro=(id)=>{ setCarros(p=>p.filter(x=>x.id!==id)); db.delete("carros",id); };
@@ -3894,43 +3931,6 @@ export default function App(){
           );
         })()}
 
-        {/* ── RH-FISCAL (somente Manuela) ── */}
-        
-        {tab==="pendencias_gustavo"&&user.id==="manuela"&&(()=>{
-          const list=(pendGustavo||[]).filter(r=>r&&(showArqGus||!r.arquivado));
-          const SOL={cliente:"Cliente",frota:"Frota",oficina:"Oficina",tecnicos:"Técnicos"};
-          const STS={resolvido:"Resolvido",diretoria:"Diretoria",em_andamento:"Em Andamento",pendente:"Pendente"};
-          const PRIO={urgente:{l:"🔴 Urgente",c:"#C62828",bg:"#FFF0F0"},medio:{l:"🟡 Médio",c:"#E67E00",bg:"#FFF8F0"},aguardar:{l:"🟢 Aguardar",c:"#1A7A3C",bg:"#F0FFF5"}};
-          return(
-            <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📌 Pendências Gustavo</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqGus(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqGus?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqGus?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <BtnY onClick={()=>gusCrud.add({data:TODAY_STR,solicitacao:"cliente",empresa:"",demanda:"email",status:"pendente",prioridade:"medio",obs:""})}>+ Nova Pendência</BtnY>
-                </div>
-              </div>
-              {list.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>Nenhuma pendência.</div>):(
-                <div className="card" style={{overflow:"hidden"}}><div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Prioridade</th><th>Solicitação</th><th>Empresa</th><th>Demanda</th><th>Status</th><th>Observações</th><th>Registrado por</th><th>Ações</th></tr></thead>
-                  <tbody>{list.map(r=>{const res=r.status==="resolvido";const pend=r.status==="pendente";const p=PRIO[r.prioridade||"medio"];return(
-                    <tr key={r.id} style={{opacity:r.arquivado?.5:1}}>
-                      <td><input type="date" value={r.data||""} onChange={e=>gusCrud.update(r.id,{data:e.target.value})} style={{width:140,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><select value={r.prioridade||"medio"} onChange={e=>gusCrud.update(r.id,{prioridade:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:p.c,background:p.bg}}>{Object.entries(PRIO).map(([v,x])=><option key={v} value={v}>{x.l}</option>)}</select></td>
-                      <td><select value={r.solicitacao||"cliente"} onChange={e=>gusCrud.update(r.id,{solicitacao:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:600}}>{Object.entries(SOL).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.empresa||""} onChange={e=>gusCrud.update(r.id,{empresa:e.target.value})} style={{width:150,fontSize:11,padding:"3px 6px"}}/></td>
-                      <td><select value={r.demanda||"email"} onChange={e=>gusCrud.update(r.id,{demanda:e.target.value})} style={{fontSize:11,padding:"3px 6px"}}><option value="email">📧 Email</option><option value="whatsapp">💬 WhatsApp</option></select></td>
-                      <td><select value={r.status||"pendente"} onChange={e=>gusCrud.update(r.id,{status:e.target.value})} style={{fontSize:11,padding:"3px 6px",fontWeight:700,borderRadius:5,border:"none",color:res?"#1A7A3C":pend?"#C62828":"#1565C0",background:res?"#F0FFF5":pend?"#FFF0F0":"#F0F4FF",minWidth:130}}>{Object.entries(STS).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></td>
-                      <td><input type="text" value={r.obs||""} onChange={e=>gusCrud.update(r.id,{obs:e.target.value})} style={{width:240,fontSize:11,padding:"3px 6px"}} placeholder="Observações..."/></td>
-                      <td style={{fontSize:10,color:"#888",lineHeight:1.3,whiteSpace:"nowrap"}}>{r.registradoPor||"—"}<br/><span style={{color:"#BBB"}}>{fmtDateTime(r.registradoEm)}</span></td>
-                      <td style={{whiteSpace:"nowrap"}}><button onClick={()=>gusCrud.update(r.id,{arquivado:!r.arquivado})} title="Arquivar" style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:11,marginRight:3}}>🗄️</button><button onClick={()=>{if(window.confirm("Excluir?"))gusCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button></td>
-                    </tr>);})}</tbody>
-                </table></div></div>
-              )}
-            </div>
-          );
-        })()}
-
       {/* ── RUPTURA ALMOXARIFADO ── */}
         {tab==="ruptura_almox"&&(()=>{
           const SOL_LABEL={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguardando",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
@@ -5623,7 +5623,6 @@ export default function App(){
     pendencias_frota: (frota||[]).filter(f=>f&&!f.arquivado&&f.status==="pendente").length,
     pendencias_hebert: (pendHebert||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     pendencias_matheus: (pendMatheus||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
-    pendencias_gustavo: (pendGustavo||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     pendencias_manuela_tab: (pendManuela||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     prioridades_clientes: (prioridades||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
     // rh_removed: (rhFiscal||[]).filter(r=>r&&!r.arquivado&&r.status==="pendente").length,
