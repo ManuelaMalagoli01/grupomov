@@ -309,9 +309,9 @@ function LoginScreen({onLogin, users=USERS}){
           </div>
         </div>
 
-        {err&&<div style={{background:"#FFF0F0",border:"1.5px solid #FFCDD2",borderRadius:10,padding:"11px 14px",fontSize:12,color:"#C62828",marginBottom:18,fontWeight:700,display:"flex",alignItems:"center",gap:6,animation:"slideUp .3s ease"}}><span>⚠️</span>{err}</div>}
+        {err&&<div style={{background:"#FFF0F0",border:"1.5px solid #FFCDD2",borderRadius:10,padding:"7px 10px",fontSize:12,color:"#C62828",marginBottom:18,fontWeight:700,display:"flex",alignItems:"center",gap:6,animation:"slideUp .3s ease"}}><span>⚠️</span>{err}</div>}
 
-        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"15px",borderRadius:12,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C200,#E0AD00)",color:"#1A1A1A",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .25s",boxShadow:loading?"none":"0 6px 20px rgba(245,194,0,.45)",letterSpacing:.3}}
+        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"15px",borderRadius:12,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C200,#E0AD00)",color:"#1A1A1A",fontSize:13,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .25s",boxShadow:loading?"none":"0 6px 20px rgba(245,194,0,.45)",letterSpacing:.3}}
           onMouseEnter={e=>{if(!loading){e.target.style.transform="translateY(-2px)";e.target.style.boxShadow="0 8px 26px rgba(245,194,0,.55)";}}}
           onMouseLeave={e=>{e.target.style.transform="translateY(0)";e.target.style.boxShadow=loading?"none":"0 6px 20px rgba(245,194,0,.45)";}}>
           {loading?"⏳ Entrando...":"Entrar →"}
@@ -1741,7 +1741,7 @@ export default function App(){
   @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
   .card{
-    background:#FFFFFF;border-radius:14px;
+    background:#FFFFFF;border-radius:10px;
     box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
     border:1px solid rgba(0,0,0,.06);
     transition:box-shadow .2s ease;
@@ -2005,12 +2005,12 @@ export default function App(){
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:totalPend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#E67E00",bg:"#FFF8F0",i:"🔧"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
             {/* Filtros */}
-            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+            <div className="card" style={{padding:"6px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
               <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",minWidth:140}}/>
               <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",width:100}}/>
@@ -2028,7 +2028,7 @@ export default function App(){
                   const pecas=r.pecas||[];
                   const borderC=isConc?"#1A7A3C":isCorr?"#C62828":"#1565C0";
                   return(<div key={r.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:isConc?"#F0FFF5":isCorr?"#FFF0F0":"#EFF6FF",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:isConc?"#F0FFF5":isCorr?"#FFF0F0":"#EFF6FF",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <span style={{fontSize:11,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"2px 10px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
                         <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:isConc?"#1A7A3C":"#C62828",background:isConc?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option>Pendente Peças</option><option>Concluído</option></select>
@@ -2040,9 +2040,9 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
                         {r.reportNum&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px"}}>#{r.reportNum}</span>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
@@ -2105,7 +2105,7 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{padding:"7px 10px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
@@ -2133,7 +2133,7 @@ export default function App(){
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 </div>
               </div>
-              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+              <div style={{padding:"7px 10px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
@@ -2253,7 +2253,7 @@ export default function App(){
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
                     <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                      <div style={{padding:"8px 10px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfiMonth]}</div>
                       </div>
@@ -2395,7 +2395,7 @@ export default function App(){
               {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C",bg:"#F0FFF5"},
               {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00",bg:"#FFFBF0"},
             ].map((s,i)=>(
-              <div key={i} className="card" style={{padding:"18px 20px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
+              <div key={i} className="card" style={{padding:"8px 12px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
                 <div style={{fontSize:11,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.icon} {s.l}</div>
                 <div style={{fontSize:32,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
               </div>
@@ -2527,7 +2527,7 @@ export default function App(){
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
                 {[{l:"Total",v:dT,c:"#1E293B",bg:"#F8FAFC"},{l:"Pendentes",v:dP,c:"#D97706",bg:"#FFFBEB"},{l:"Em Andamento",v:dA,c:"#2563EB",bg:"#EFF6FF"},{l:"Concluídos",v:dC,c:"#059669",bg:"#ECFDF5"}].map((k,ki)=>(
-                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"8px 10px",borderLeft:`4px solid ${k.c}`}}>
                     <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{k.l}</div>
                     <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
                   </div>
@@ -2601,7 +2601,7 @@ export default function App(){
               {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
                 {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
-                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
+                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"8px 10px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                       <div style={{display:"flex",gap:4}}><span style={{fontSize:9,fontWeight:800,color:pr.c,background:pr.c+"15",borderRadius:8,padding:"2px 8px"}}>{pr.l}</span><span style={{fontSize:9,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"2px 8px"}}>{SM[r.status]||"⏳ Pendente"}</span></div>
                       <div style={{display:"flex",gap:3}}><button onClick={()=>arcS(r.id)} style={{background:"#F1F5F9",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button><button onClick={()=>delS(r.id)} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#DC2626",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button></div>
@@ -2838,7 +2838,7 @@ export default function App(){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
@@ -2858,7 +2858,7 @@ export default function App(){
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
-                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:3,alignItems:"center"}}>
                         <span style={{fontSize:8,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
                         {slaD!==null&&<span style={{fontSize:8,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
@@ -2931,7 +2931,7 @@ export default function App(){
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Aprovados",v:aprov,c:"#6A1B9A",bg:"#F3E5F5",i:"👍"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
@@ -2953,7 +2953,7 @@ export default function App(){
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
-                    <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:3,alignItems:"center"}}>
                         <span style={{fontSize:8,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
                         {slaD!==null&&<span style={{fontSize:8,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
@@ -3019,7 +3019,7 @@ export default function App(){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Atraso",v:atrasados,c:"#C62828",bg:"#FFF0F0",i:"⚠️"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
@@ -3040,7 +3040,7 @@ export default function App(){
                   const sla=e.dataRetorno?diffDays(e.dataRetorno):null;
                   const atrasado=sla!==null&&sla<0;
                   return(<div key={e.id} className="card" style={{borderTop:`4px solid ${sc.c}`,padding:0,overflow:"hidden",opacity:e.processoStatus==="arquivado"?0.55:1,outline:atrasado?"2px solid #C62828":"none"}}>
-                    <div style={{padding:"11px 14px",background:sc.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:sc.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <span style={{fontSize:11,fontWeight:800,color:sc.c,background:"#FFF",border:`1px solid ${sc.c}33`,borderRadius:20,padding:"2px 10px"}}>{sc.i} {e.situacao||"Pendente"}</span>
                         {atrasado&&<span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFF0F0",borderRadius:20,padding:"2px 8px"}}>⚠️ {Math.abs(sla)}d</span>}
@@ -3051,9 +3051,9 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setEmprestimos(p=>p.filter(x=>x.id!==e.id));db.delete("emprestimos",e.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{e.item||e.descricao||<span style={{color:"#CCC"}}>Sem item</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {e.data||"—"} · <b>{e.requerente||"—"}</b></div></div>
+                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{e.item||e.descricao||<span style={{color:"#CCC"}}>Sem item</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {e.data||"—"} · <b>{e.requerente||"—"}</b></div></div>
                         {e.req&&<span style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"3px 8px"}}>{e.req}</span>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
@@ -3100,7 +3100,7 @@ export default function App(){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Rupturas",v:rupturas,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Atendidos",v:atendidos,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
@@ -3122,7 +3122,7 @@ export default function App(){
                   const slaRuptura=isRuptura&&s.data?diffDays(s.data):null;
                   const borderC=isRuptura?"#C62828":isAtendido?"#1A7A3C":"#E0E0E0";
                   return(<div key={s.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:s.processoStatus==="arquivado"?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:isRuptura?"#FFF0F0":isAtendido?"#F0FFF5":"#F8F9FA",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:isRuptura?"#FFF0F0":isAtendido?"#F0FFF5":"#F8F9FA",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:isRuptura?"#C62828":isAtendido?"#1A7A3C":"#888",background:isRuptura?"#FFE0E0":isAtendido?"#DCFFE4":"#F0F0F0",cursor:"pointer"}}>
                           <option value="">— Status —</option><option value="atendido">✅ Atendido</option><option value="ruptura">🔴 Ruptura</option>
@@ -3135,7 +3135,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(s.data)} · {s.empresa||"—"}</div></div>
                         {s.req&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{s.req}</span>}
@@ -3191,7 +3191,7 @@ export default function App(){
               </div>
 
               {/* Filtros */}
-              <div className="card" style={{padding:"12px 16px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div className="card" style={{padding:"6px 10px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
                   <option value="todas">🌐 Todas Regiões</option>
                   <option value="metropolitana">Metropolitana</option>
@@ -3272,7 +3272,7 @@ export default function App(){
                 <table style={{borderCollapse:"collapse",width:"100%"}}>
                   <thead>
                     <tr style={{background:"#1A1A1A",position:"sticky",top:0,zIndex:3}}>
-                      <th style={{padding:"12px 16px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
+                      <th style={{padding:"6px 10px",color:"#F5C200",fontWeight:800,textAlign:"left",position:"sticky",left:0,background:"#1A1A1A",zIndex:4,minWidth:170,whiteSpace:"nowrap",fontSize:13,borderBottom:"3px solid #F5C200"}}>👷 Técnico</th>
                       {dias.map(d=>{
                         const dt=`${ym}-${String(d).padStart(2,"0")}`;
                         const dow=getDOW(dt);
@@ -3294,7 +3294,7 @@ export default function App(){
                       const totalConc=dias.reduce((acc,d)=>{const dt=`${ym}-${String(d).padStart(2,"0")}`;const key=`${tech}__${dt}`;return acc+(schedule[key]||[]).filter(s=>(s.status==="preventiva_concluida"||s.status==="corretiva_concluida")&&matchTipo(s)).length;},0);
                       return(
                         <tr key={tech} style={{background:ti%2===0?"#FAFAFA":"#FFF",verticalAlign:"top"}}>
-                          <td style={{padding:"12px 16px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
+                          <td style={{padding:"6px 10px",position:"sticky",left:0,background:ti%2===0?"#FAFAFA":"#FFF",zIndex:1,borderBottom:"1px solid #EEE",borderRight:`3px solid ${color}`}}>
                             <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}>
                               <span style={{width:11,height:11,borderRadius:"50%",background:color,display:"inline-block",flexShrink:0,boxShadow:`0 0 0 3px ${color}22`}}/>
                               <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
@@ -3432,7 +3432,7 @@ export default function App(){
                     <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} atendimento(s) no filtro</span>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
                       <ChartCanvas type="doughnut" height={230}
                         data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:2,borderColor:"#FFF",hoverOffset:6}]}}
@@ -3442,19 +3442,19 @@ export default function App(){
                         <span style={{color:RED,fontWeight:700}}>{corr} corr · {pct(corr)}%</span>
                       </div>
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Por região</div>
                       <ChartCanvas type="bar" height={230}
                         data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:8},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:8}]}}
                         options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:8}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
-                    <div className="card" style={{padding:"16px 20px"}}>
+                    <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:8}]}}
@@ -3509,34 +3509,34 @@ export default function App(){
                     <div style={{display:"flex",alignItems:"baseline",gap:8}}><span style={{fontSize:40,fontWeight:900,color:"#F5C200"}}>{comServ}</span><span style={{fontSize:14,color:"#94A3B8"}}>de {allAt.length}</span></div>
                     <div style={{fontSize:12,color:"#64748B",marginTop:6}}>{totalH.toFixed(0)}h trabalhadas</div>
                   </div>
-                  {[[SVC[0],sTQ[0],sTH[0],SCOL[0]],[SVC[1],sTQ[1],sTH[1],SCOL[1]],[SVC[2],sTQ[2],sTH[2],SCOL[2]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 20px",borderLeft:`4px solid ${c}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                  {[[SVC[0],sTQ[0],sTH[0],SCOL[0]],[SVC[1],sTQ[1],sTH[1],SCOL[1]],[SVC[2],sTQ[2],sTH[2],SCOL[2]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:14,padding:"8px 12px",borderLeft:`4px solid ${c}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
                     <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:8}}>{n}</div>
-                    <div style={{fontSize:30,fontWeight:900,color:"#1E293B"}}>{q}</div>
+                    <div style={{fontSize:19,fontWeight:800,color:"#1E293B"}}>{q}</div>
                     <div style={{fontSize:11,color:"#64748B",marginTop:4}}>{h.toFixed(1)}h</div>
                   </div>)}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
                   {[[SVC[3],sTQ[3],sTH[3],SCOL[3]],[SVC[4],sTQ[4],sTH[4],SCOL[4]],[SVC[5],sTQ[5],sTH[5],SCOL[5]],[SVC[6],sTQ[6],sTH[6],SCOL[6]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:12,padding:"14px 16px",borderLeft:`4px solid ${c}`,boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
                     <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>{n}</div>
-                    <div style={{fontSize:24,fontWeight:900,color:"#1E293B"}}>{q} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>{h.toFixed(1)}h</span></div>
+                    <div style={{fontSize:16,fontWeight:800,color:"#1E293B"}}>{q} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>{h.toFixed(1)}h</span></div>
                   </div>)}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
                   <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Qtd de Serviços por Técnico</div>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Qtd de Serviços por Técnico</div>
                     {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={qDS} options={stOp} height={280}/>}
                   </div>
                   <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-                    <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Horas por Serviço por Técnico</div>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Horas por Serviço por Técnico</div>
                     {tN.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={hDS} options={stOp} height={280}/>}
                   </div>
                 </div>
                 <div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)",marginBottom:20}}>
-                  <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços Realizados — Quantidade e Horas</div>
+                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços Realizados — Quantidade e Horas</div>
                   <ChartCanvas type="bar" data={sDS2} options={bOp} height={260}/>
                 </div>
                 {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-                  <div style={{fontSize:15,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços por Patrimônio</div>
+                  <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços por Patrimônio</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
                     {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"16px",borderLeft:`4px solid ${SCOL[pi%7]}`}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
@@ -3616,7 +3616,7 @@ export default function App(){
                 const color=techColor(tech);
                 return(
                   <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                    <div style={{padding:"12px 16px",borderBottom:"1px solid #F4F4F4",display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{padding:"6px 10px",borderBottom:"1px solid #F4F4F4",display:"flex",alignItems:"center",gap:10}}>
                       <div style={{width:32,height:32,borderRadius:"50%",background:color+"18",border:`2px solid ${color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color,flexShrink:0}}>{tech.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:700,fontSize:13}}>{tech}</div>
@@ -3701,7 +3701,7 @@ export default function App(){
                 {listaFil.map(p=>{
                   const ok=p.status==="concluido";
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":"#E67E00"}`,padding:0,overflow:"hidden",opacity:p.arquivado?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":"#FFF8F0",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:ok?"#F0FFF5":"#FFF8F0",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <select value={p.status||"pendente"} onChange={e=>updateUber(p.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#E67E00",background:"#FFF",cursor:"pointer"}}>
                         <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="cancelado">❌ Cancelado</option>
                       </select>
@@ -3711,7 +3711,7 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                         <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.data||"—"} · <b>{p.empresa||"—"}</b></div></div>
                         <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
@@ -3761,7 +3761,7 @@ export default function App(){
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Pagos",v:pago,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Sem Acerto",v:semAcerto,c:"#E67E00",bg:"#FFF8F0",i:"⚠️"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
@@ -3782,7 +3782,7 @@ export default function App(){
                   const sol=SOL[f.solicitacao||"outros"]||SOL.outros;
                   const pago=f.situacao==="pago";
                   return(<div key={f.id} className="card" style={{borderTop:`4px solid ${sol.c}`,padding:0,overflow:"hidden",opacity:f.arquivado?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:sol.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:sol.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <span style={{fontSize:11,fontWeight:800,color:sol.c,background:"#FFF",border:`1px solid ${sol.c}33`,borderRadius:20,padding:"2px 10px"}}>{sol.l}</span>
                         <select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:pago?"#1A7A3C":"#C62828",background:pago?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select>
@@ -3793,9 +3793,9 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#888"}}>📅 {f.data||"—"} · Ticket: <b style={{color:"#1565C0"}}>{f.ticket||"—"}</b></div></div>
+                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#888"}}>📅 {f.data||"—"} · Ticket: <b style={{color:"#1565C0"}}>{f.ticket||"—"}</b></div></div>
                         <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{f.valor?`R$ ${f.valor}`:"R$ —"}</div>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
@@ -3848,7 +3848,7 @@ export default function App(){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Resolvidos",v:resolvidos,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
@@ -3868,7 +3868,7 @@ export default function App(){
                   const tp=TIPO[r.patTipo||"bateria"]||TIPO.bateria;
                   const ok=r.resolvido==="sim";
                   return(<div key={r.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":tp.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":tp.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:ok?"#F0FFF5":tp.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <span style={{fontSize:11,fontWeight:800,color:ok?"#1A7A3C":tp.c,background:"#FFF",border:`1px solid ${ok?"#1A7A3C":tp.c}33`,borderRadius:20,padding:"2px 10px"}}>{tp.l}</span>
                         <select value={r.resolvido||"nao"} onChange={e=>froCrud.update(r.id,{resolvido:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#C62828",background:ok?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="sim">✅ Resolvido</option><option value="nao">⏳ Pendente</option></select>
@@ -3879,8 +3879,8 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))froCrud.del(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
-                      <div><div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · <b>{r.tecnico||"—"}</b></div></div>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
+                      <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataEnvio||"—"} · <b>{r.tecnico||"—"}</b></div></div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Novo PAT</div><input type="text" value={r.pat||""} onChange={e=>froCrud.update(r.id,{pat:e.target.value})} placeholder="PAT" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório · NF</div><input type="text" value={r.rel||""} onChange={e=>froCrud.update(r.id,{rel:e.target.value})} placeholder="REL-001" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
@@ -4094,7 +4094,7 @@ export default function App(){
             </div>
 
             {/* ── Filtros de busca ── */}
-            <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+            <div className="card" style={{padding:"6px 10px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
               <div style={{position:"relative",flex:1,minWidth:200}}>
                 <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:14}}>🔍</span>
                 <input type="text" value={rupSearch} onChange={e=>setRupSearch(e.target.value)} placeholder="Buscar por requisição, peça, OS/REL, empresa, PAT..." style={{width:"100%",padding:"9px 12px 9px 32px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/>
@@ -4130,7 +4130,7 @@ export default function App(){
                     return(
                       <div key={r.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1,transition:"box-shadow .2s"}}>
                         {/* Card header */}
-                        <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{padding:"7px 10px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                           <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
                             <span style={{fontSize:11,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px",whiteSpace:"nowrap"}}>{st.icon} {st.l}</span>
                             {d!==null&&<span style={{fontSize:10,fontWeight:700,color:slaC,background:slaC+"18",borderRadius:20,padding:"2px 8px"}}>{d}d</span>}
@@ -4142,10 +4142,10 @@ export default function App(){
                           </div>
                         </div>
                         {/* Card body */}
-                        <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
+                        <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                             <div style={{flex:1}}>
-                              <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A",lineHeight:1.2,marginBottom:3}}>{r.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div>
+                              <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",lineHeight:1.2,marginBottom:3}}>{r.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div>
                               <div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(r.data)} · {SOL_LABEL[r.solicitacao]||"—"}</div>
                             </div>
                             {r.codigo&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px",whiteSpace:"nowrap"}}>{r.codigo}</span>}
@@ -4258,9 +4258,9 @@ export default function App(){
           const empPecasAplicadas=(emprestimos||[]).filter(e=>e.relatorioAplicado).map(e=>({rel:e.relatorioAplicado,peca:e.descricao||"—",empresa:e.requerente||"—"}));
           const todasPecasAplicadas=[...pecasAplicadas,...empPecasAplicadas];
           const KPIR=({label,value,color="#1A1A1A",bg="#FFF",icon,sub})=>(
-            <div className="card" style={{padding:"16px 20px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
+            <div className="card" style={{padding:"8px 12px",background:bg,borderTop:`3px solid ${color}`,display:"flex",flexDirection:"column",gap:3}}>
               <div style={{fontSize:9,color:"#AAA",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{icon} {label}</div>
-              <div style={{fontSize:30,fontWeight:900,color,lineHeight:1}}>{value}</div>
+              <div style={{fontSize:19,fontWeight:800,color,lineHeight:1}}>{value}</div>
               {sub&&<div style={{fontSize:10,color:"#AAA"}}>{sub}</div>}
             </div>
           );
@@ -4529,22 +4529,22 @@ export default function App(){
 
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #1A1A1A"}}>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A1A1A"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Total Processos</div>
                 <div style={{fontSize:32,fontWeight:900,color:"#1A1A1A"}}>{allMU.length+allAF.length}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {allMU.length} · AF: {allAF.length}</div>
               </div>
-              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #E67E00",background:"#FFF8F0"}}>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #E67E00",background:"#FFF8F0"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valor Total</div>
                 <div style={{fontSize:18,fontWeight:900,color:"#E67E00"}}>{fmtR(valTotal)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {fmtR(valMU)} · AF: {fmtR(valAF)}</div>
               </div>
-              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #1A7A3C",background:"#F0FFF5"}}>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A7A3C",background:"#F0FFF5"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado pelo Cliente</div>
                 <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{fmtR(valAprov)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length} processo(s)</div>
               </div>
-              <div className="card" style={{padding:"18px 20px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Cobrado / Faturado</div>
                 <div style={{fontSize:18,fontWeight:900,color:"#6A1B9A"}}>{fmtR(valFaturado)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").length} processo(s)</div>
@@ -4557,12 +4557,12 @@ export default function App(){
                 <span style={{fontSize:18}}>🤝</span>
                 <div><div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>Painel de Aprovação pelo Cliente</div><div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>Situação de cada processo junto ao cliente</div></div>
               </div>
-              <div style={{padding:"16px 20px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              <div style={{padding:"8px 12px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
                 {aprovCounts.map((a,i)=>(
                   <div key={i} style={{background:a.bg,borderRadius:12,padding:"14px 16px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
                     onClick={()=>setFAprov(fAprov===Object.keys(APROV_STATUS)[i]?"todos":Object.keys(APROV_STATUS)[i])}>
                     <div style={{fontSize:11,fontWeight:800,color:a.c}}>{a.label}</div>
-                    <div style={{fontSize:26,fontWeight:900,color:a.c,lineHeight:1}}>{a.total}</div>
+                    <div style={{fontSize:17,fontWeight:800,color:a.c,lineHeight:1}}>{a.total}</div>
                     <div style={{fontSize:13,fontWeight:700,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
                     <div style={{background:"rgba(0,0,0,.08)",borderRadius:4,height:5}}>
                       <div style={{background:a.c,height:5,borderRadius:4,width:`${valTotal>0?Math.min(100,(a.valor/valTotal)*100):0}%`,transition:"width .5s"}}/>
@@ -4575,7 +4575,7 @@ export default function App(){
 
             {/* ── ROW 1: Evolução linha + Donut status ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="line" data={{
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
@@ -4585,7 +4585,7 @@ export default function App(){
                   ]
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}}} height={180}/>}
               </div>
-              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🍕 Status dos Processos</div>
                 <ChartCanvas type="doughnut" data={{
                   labels:["Pendente","Em Andamento","Concluído"],
@@ -4600,7 +4600,7 @@ export default function App(){
 
             {/* ── ROW 2: Evolução valores + Top empresas ── */}
             <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>💵 Evolução de Valores por Mês</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
               </div>
@@ -4624,7 +4624,7 @@ export default function App(){
             {/* ── ROW 3: Funil aprovação + Termômetro meta + Mapa calor ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
               {/* Funil */}
-              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🔽 Funil de Aprovação</div>
                 {(()=>{
                   const funnelSteps=[
@@ -4660,7 +4660,7 @@ export default function App(){
                   return(<>
                     <div style={{textAlign:"center"}}>
                       <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Faturado vs Meta</div>
-                      <div style={{fontSize:28,fontWeight:900,color:cor}}>{pct.toFixed(0)}%</div>
+                      <div style={{fontSize:18,fontWeight:800,color:cor}}>{pct.toFixed(0)}%</div>
                       <div style={{fontSize:12,color:"#888"}}>{fmtR(recebido)} de {fmtR(meta)}</div>
                     </div>
                     {/* Gauge visual */}
@@ -4683,7 +4683,7 @@ export default function App(){
               </div>
 
               {/* Mapa de calor por dia da semana */}
-              <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
                 <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
                 {(()=>{
                   const dias=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
@@ -4711,11 +4711,11 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               {[[allMU,"⚠️ Mau Uso","#C62828"],[allAF,"💰 A Faturar","#1565C0"]].map(([list,titulo,cor],ti)=>(
                 <div key={ti} className="card" style={{padding:0,overflow:"hidden"}}>
-                  <div style={{padding:"12px 16px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{padding:"6px 10px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{fontWeight:800,fontSize:14,color:"#FFF"}}>{titulo}</div>
                     <div style={{fontWeight:900,fontSize:16,color:"#FFF"}}>{fmtR(list.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
                   </div>
-                  <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{padding:"6px 10px",display:"flex",flexDirection:"column",gap:6}}>
                     {Object.entries(APROV_STATUS).map(([k,s])=>{
                       const items=list.filter(p=>(p.aprovCliente||"aguardando_retorno")===k);
                       if(items.length===0)return null;
@@ -4749,16 +4749,16 @@ export default function App(){
                 <div style={{marginTop:16}}>
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"18px 20px"}}>
+                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"8px 12px"}}>
                       <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Total Mau Uso</div>
                       <div style={{fontSize:32,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
                     </div>
-                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:14,padding:"18px 20px"}}>
+                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:14,padding:"8px 12px"}}>
                       <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Enviados na Semana</div>
                       <div style={{fontSize:32,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
                       <div style={{fontSize:10,color:"#64748B",marginTop:4}}>últimos 7 dias</div>
                     </div>
-                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
                       <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Valor Total</div>
                       <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>R$ {muAll.reduce((a,p)=>a+(parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0),0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
                     </div>
@@ -4869,7 +4869,7 @@ export default function App(){
                   const pend=s.status==="pendente"||!s.status;
                   const _gd=(()=>{if(!s.dataGarantia)return null;const _d2=new Date(s.dataGarantia+"T00:00:00"),_h2=new Date();_h2.setHours(0,0,0,0);return Math.floor((_d2-_h2)/86400000);})();const _gc=_gd!==null&&_gd>=0&&_gd<=30?"#DC2626":_gd!==null&&_gd>=0&&_gd<=180?"#D97706":null;
                   return(<div key={s.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":pend?"#C62828":serv.c}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
-                    <div style={{padding:"11px 14px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <span style={{fontSize:11,fontWeight:800,color:serv.c,background:"#FFF",border:`1px solid ${serv.c}33`,borderRadius:20,padding:"2px 10px"}}>{serv.l}</span>
                         <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":pend?"#C62828":"#555",background:ok?"#DCFFE4":pend?"#FFE0E0":"#F0F0F0",cursor:"pointer"}}>
@@ -4941,7 +4941,7 @@ export default function App(){
               {modalCarros&&(
                 <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}}>
                   <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
-                    <div style={{padding:"16px 20px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
+                    <div style={{padding:"8px 12px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
                       <div style={{fontWeight:800,fontSize:16,color:"#1A1A1A"}}>{editCarro?"✏️ Editar Registro":"➕ Novo Registro — Carros"}</div>
                       <button onClick={()=>{setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
                     </div>
@@ -5103,7 +5103,7 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"14px 18px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{padding:"7px 10px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
@@ -5131,7 +5131,7 @@ export default function App(){
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 </div>
               </div>
-              <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+              <div style={{padding:"7px 10px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={apon150NovaData} onChange={e=>setApon150NovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={apon150NovaOS} onChange={e=>setApon150NovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={apon150NovaPat} onChange={e=>setApon150NovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
@@ -5248,7 +5248,7 @@ export default function App(){
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
                     <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                      <div style={{padding:"12px 14px",borderBottom:"1px solid #F4F4F4"}}>
+                      <div style={{padding:"8px 10px",borderBottom:"1px solid #F4F4F4"}}>
                         <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
                         <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfi150Month]}</div>
                       </div>
@@ -5374,7 +5374,7 @@ export default function App(){
               {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C",bg:"#F0FFF5"},
               {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00",bg:"#FFFBF0"},
             ].map((s,i)=>(
-              <div key={i} className="card" style={{padding:"18px 20px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
+              <div key={i} className="card" style={{padding:"8px 12px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
                 <div style={{fontSize:11,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.icon} {s.l}</div>
                 <div style={{fontSize:32,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
               </div>
@@ -5508,7 +5508,7 @@ export default function App(){
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:12}}>
                 {[{l:"Total",v:dT,c:"#1E293B",bg:"#F8FAFC"},{l:"Pendentes",v:dP,c:"#D97706",bg:"#FFFBEB"},{l:"Em Andamento",v:dA,c:"#2563EB",bg:"#EFF6FF"},{l:"Concluídos",v:dC,c:"#059669",bg:"#ECFDF5"}].map((k,ki)=>(
-                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div key={ki} style={{background:k.bg,borderRadius:12,padding:"8px 10px",borderLeft:`4px solid ${k.c}`}}>
                     <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4}}>{k.l}</div>
                     <div style={{fontSize:22,fontWeight:900,color:k.c}}>{k.v}</div>
                   </div>
@@ -5582,7 +5582,7 @@ export default function App(){
               {lF.length===0?<div style={{background:"#FFF",borderRadius:12,padding:40,textAlign:"center",color:"#CBD5E1"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:14,fontWeight:600}}>Nenhum serviço</div></div>:(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320,1fr))",gap:10}}>
                 {lF.map((r,ri)=>{const pr=PM[r.prioridade]||PM.normal;return(
-                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
+                  <div key={r.id||ri} style={{background:"#FFF",borderRadius:12,padding:"8px 10px",borderLeft:`4px solid ${pr.c}`,boxShadow:"0 1px 4px rgba(0,0,0,.05)",opacity:r.arquivado?.5:1}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                       <div style={{display:"flex",gap:4}}><span style={{fontSize:9,fontWeight:800,color:pr.c,background:pr.c+"15",borderRadius:8,padding:"2px 8px"}}>{pr.l}</span><span style={{fontSize:9,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"2px 8px"}}>{SM[r.status]||"⏳ Pendente"}</span></div>
                       <div style={{display:"flex",gap:3}}><button onClick={()=>arcS(r.id)} style={{background:"#F1F5F9",border:"none",borderRadius:6,fontSize:11,cursor:"pointer",padding:"3px 6px"}}>{r.arquivado?"📤":"📦"}</button><button onClick={()=>delS(r.id)} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#DC2626",fontSize:10,fontWeight:700,cursor:"pointer",padding:"3px 6px"}}>✕</button></div>
