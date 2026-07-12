@@ -1340,6 +1340,8 @@ export default function App(){
   const [dashProcFStatus,setDashProcFStatus]=useState("todos");
   const [dashProcFAprov,setDashProcFAprov]=useState("todos");
   const [dashProcFTipo,setDashProcFTipo]=useState("todos");
+  const [muEnvioDe,setMuEnvioDe]=useState("");
+  const [muEnvioAte,setMuEnvioAte]=useState("");
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
@@ -4760,15 +4762,23 @@ export default function App(){
               ))}
             </div>
 
-            {/* ── Mau Uso por Empresa (semana) ── */}
+            {/* ── Mau Uso por Empresa ── */}
             {(()=>{
               const muAll=allMU;
               const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
-              const muSemana=muAll.filter(p=>{const d0=p.dataEnvio||p.date;if(!d0)return false;const d=new Date(d0);return !isNaN(d)&&d>=semanaAtras;}).sort((a,b)=>(b.dataEnvio||b.date||"").localeCompare(a.dataEnvio||a.date||""));
+              const temFiltroEnvio=muEnvioDe||muEnvioAte;
+              const muSemana=muAll.filter(p=>{
+                const d0=p.dataEnvio||p.date;if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;
+                if(temFiltroEnvio){
+                  if(muEnvioDe&&d0<muEnvioDe)return false;
+                  if(muEnvioAte&&d0>muEnvioAte)return false;
+                  return true;
+                }
+                return d>=semanaAtras;
+              }).sort((a,b)=>(b.dataEnvio||b.date||"").localeCompare(a.dataEnvio||a.date||""));
+              const valorSemana=muSemana.reduce((a,p)=>a+parseVal(p.valor),0);
               const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");});
               const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
-              const empChart={labels:empList.map(([e])=>e.length>18?e.slice(0,18)+"…":e),datasets:[{label:"Qtd Mau Uso",data:empList.map(([,d])=>d.qtd),backgroundColor:"#F43F5E",borderRadius:8},{label:"Valor (R$ mil)",data:empList.map(([,d])=>Math.round(d.valor/1000)),backgroundColor:"rgba(244,63,94,0.25)",borderRadius:8}]};
-              const empOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
               return(
                 <div style={{marginTop:16}}>
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
@@ -4778,50 +4788,52 @@ export default function App(){
                       <div style={{fontSize:19,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
                     </div>
                     <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:12,padding:"8px 12px"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Enviados p/ Aprovação na Semana</div>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Enviados p/ Aprovação {temFiltroEnvio?"(período)":"na Semana"}</div>
                       <div style={{fontSize:19,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
-                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>últimos 7 dias · por data de envio</div>
+                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>{temFiltroEnvio?"filtro de data ativo":"últimos 7 dias"} · por data de envio</div>
                     </div>
                     <div style={{background:"#FFF",borderRadius:12,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
                       <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Valor Total</div>
                       <div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>{fmtR(muAll.reduce((a,p)=>a+parseVal(p.valor),0))}</div>
                     </div>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr",gap:14,marginBottom:14}}>
-                    <div className="card" style={{padding:12}}>
-                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>📊 Empresa × Qtd × Valor</div>
-                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={empChart} options={empOpts} height={240}/>}
-                    </div>
-                    <div className="card" style={{padding:12}}>
-                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>🏢 Detalhamento por Empresa</div>
-                      <div style={{maxHeight:280,overflowY:"auto"}}>
-                        {empList.map(([emp,d],i)=>(
-                          <div key={i} style={{padding:"7px 8px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                            <div>
-                              <div style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>{emp}</div>
-                              <div style={{fontSize:9,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
-                            </div>
-                            <div style={{fontSize:11,fontWeight:800,color:"#F43F5E"}}>{fmtR(d.valor)}</div>
+                  <div className="card" style={{padding:12,marginBottom:14}}>
+                    <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>🏢 Detalhamento por Empresa</div>
+                    <div style={{maxHeight:280,overflowY:"auto"}}>
+                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20,fontSize:11}}>Sem dados</div>:empList.map(([emp,d],i)=>(
+                        <div key={i} style={{padding:"7px 8px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div>
+                            <div style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>{emp}</div>
+                            <div style={{fontSize:9,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
                           </div>
-                        ))}
-                      </div>
+                          <div style={{fontSize:11,fontWeight:800,color:"#F43F5E"}}>{fmtR(d.valor)}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  {/* Enviados para aprovação na semana: empresa + nº MU + data de envio */}
+                  {/* Enviados para aprovação: empresa + nº MU + data de envio + valor + status — filtro por data, tudo editável */}
                   <div className="card" style={{padding:0,overflow:"hidden"}}>
-                    <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso Enviados p/ Aprovação — Últimos 7 dias</div>
-                      <div style={{fontSize:11,fontWeight:700,color:"#F43F5E",background:"#FFF",borderRadius:20,padding:"2px 10px"}}>{muSemana.length}</div>
+                    <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso Enviados p/ Aprovação</div>
+                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:9,color:"#94A3B8"}}>🗓</span>
+                        <input type="date" value={muEnvioDe} onChange={e=>setMuEnvioDe(e.target.value)} style={{fontSize:10,padding:"3px 6px",borderRadius:6,border:"1px solid #334155",background:"#0F172A",color:"#FFF"}}/>
+                        <span style={{fontSize:9,color:"#94A3B8"}}>até</span>
+                        <input type="date" value={muEnvioAte} onChange={e=>setMuEnvioAte(e.target.value)} style={{fontSize:10,padding:"3px 6px",borderRadius:6,border:"1px solid #334155",background:"#0F172A",color:"#FFF"}}/>
+                        {temFiltroEnvio&&<button onClick={()=>{setMuEnvioDe("");setMuEnvioAte("");}} style={{fontSize:9,padding:"3px 8px",borderRadius:20,background:"#F43F5E",color:"#FFF",border:"none",cursor:"pointer",fontWeight:700}}>✕</button>}
+                        <div style={{fontSize:11,fontWeight:700,color:"#F43F5E",background:"#FFF",borderRadius:20,padding:"2px 10px"}}>{muSemana.length} · {fmtR(valorSemana)}</div>
+                      </div>
                     </div>
-                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum envio nos últimos 7 dias</div>):(
+                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum envio no período</div>):(
                       <div className="tbl-wrap"><table>
-                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Status Aprovação</th></tr></thead>
+                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Valor</th><th>Status Aprovação</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
-                            <td style={{fontSize:11,fontWeight:700}}>{p.empresa||"—"}</td>
-                            <td style={{fontSize:11}}>{p.numMauUso||"—"}</td>
-                            <td style={{fontSize:11}}>{fmtDataBR(p.dataEnvio||p.date)}</td>
-                            <td><span style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>{as?.l||"—"}</span></td>
+                            <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><input type="text" defaultValue={p.numMauUso||""} onBlur={e=>updateMU(p.id,{numMauUso:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><input type="date" defaultValue={p.dataEnvio||p.date||""} onBlur={e=>updateMU(p.id,{dataEnvio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
+                            <td><input type="text" defaultValue={p.valor||""} onBlur={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px",border:"none",cursor:"pointer"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
                         );})}</tbody>
                       </table></div>
