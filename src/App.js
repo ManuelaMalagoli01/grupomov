@@ -2802,7 +2802,7 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"18px 20px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
@@ -2822,31 +2822,31 @@ export default function App(){
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
                     <div style={{padding:"11px 14px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                        <span style={{fontSize:10,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
+                      <div style={{display:"flex",gap:3,alignItems:"center"}}>
+                        <span style={{fontSize:9,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
                         {slaD!==null&&<span style={{fontSize:9,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
                       </div>
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>{setEditMU(p);setModalMU(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:9,fontWeight:600}}>✕</button>
                       </div>
                     </div>
                     <div style={{padding:"5px 8px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
-                        <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                        <div><div style={{fontSize:10,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
+                        <span style={{fontSize:9,fontWeight:600,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Nº Mau Uso</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F0FFF5",borderRadius:8,padding:"5px 8px",border:"1.5px solid #C8E8D0"}}><div style={{color:"#1A7A3C",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>💰 Valor (R$)</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:10,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nº Mau Uso</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F0FFF5",borderRadius:8,padding:"5px 8px",border:"1.5px solid #C8E8D0"}}><div style={{color:"#1A7A3C",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>💰 Valor (R$)</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:9,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
                       {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
                       <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
-                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:3}}>Status Aprovação Cliente</div>
+                        <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:2}}>Status Aprovação Cliente</div>
                         <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,padding:"5px 8px",borderRadius:10,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
                           {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                         </select>
@@ -2924,13 +2924,13 @@ export default function App(){
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>{setEditAF(p);setModalAF(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:9,fontWeight:600}}>✕</button>
                       </div>
                     </div>
                     <div style={{padding:"5px 8px",display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
-                        <span style={{fontSize:11,fontWeight:700,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                        <div><div style={{fontSize:10,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
+                        <span style={{fontSize:9,fontWeight:600,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:12,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                         <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
@@ -4735,6 +4735,58 @@ export default function App(){
 
 </div>);
         })()}
+
+            {/* ── ROW: Empresa × Mau Uso × Valor ── */}
+            {(()=>{
+              const muAll=(processosMU||[]).filter(p=>p&&p.processoStatus!=="arquivado");
+              const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
+              const muSemana=muAll.filter(p=>{if(!p.date&&!p.dataAbertura)return false;const d=new Date(p.date||p.dataAbertura);return d>=semanaAtras;});
+              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=(parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0);empData[emp].mus.push(p.muNumero||p.numMauUso||"—");});
+              const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
+              const empChart={labels:empList.map(([e])=>e.length>18?e.slice(0,18)+"…":e),datasets:[{label:"Qtd Mau Uso",data:empList.map(([,d])=>d.qtd),backgroundColor:"#F43F5E",borderRadius:8},{label:"Valor (R$ mil)",data:empList.map(([,d])=>Math.round(d.valor/1000)),backgroundColor:"rgba(244,63,94,0.25)",borderRadius:8}]};
+              const empOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
+              return(
+                <div style={{marginTop:16}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
+                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"18px 20px"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Total Mau Uso</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:14,padding:"18px 20px"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Enviados na Semana</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
+                      <div style={{fontSize:10,color:"#64748B",marginTop:4}}>últimos 7 dias</div>
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:14,padding:"18px 20px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Valor Total</div>
+                      <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>R$ {muAll.reduce((a,p)=>a+(parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0),0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                    </div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr",gap:16,marginBottom:16}}>
+                    <div style={{background:"#FFF",borderRadius:16,padding:"22px 24px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:14}}>📊 Empresa × Qtd × Valor</div>
+                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={empChart} options={empOpts} height={260}/>}
+                    </div>
+                    <div style={{background:"#FFF",borderRadius:16,padding:"22px 24px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                      <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏢 Detalhamento por Empresa</div>
+                      <div style={{maxHeight:300,overflowY:"auto"}}>
+                        {empList.map(([emp,d],i)=>(
+                          <div key={i} style={{padding:"10px 12px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            <div>
+                              <div style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>{emp}</div>
+                              <div style={{fontSize:10,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
+                            </div>
+                            <div style={{fontSize:13,fontWeight:800,color:"#F43F5E"}}>R$ {d.valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+}
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
           const lista=(sas||[]).filter(s=>s&&(showArqSas||s.status!=="arquivado"));
