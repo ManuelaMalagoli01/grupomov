@@ -3370,8 +3370,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus)}]);
-            setAgEmpresa("");setAgCidade("");setAgPat("");setAgObs("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada||"",horaSaida:agSaida||"",horasTrabalhadas:calcHoras(agEntrada,agSaida)||""}]);
+            setAgEmpresa("");setAgCidade("");setAgPat("");setAgObs("");setAgEntrada("");setAgSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -3440,6 +3440,9 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={agEntrada||""} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida||""} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
+                  {(agEntrada&&agSaida)&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Total</label><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"1.5px solid #FFE8A0",borderRadius:8,padding:"7px 10px"}}>{calcHoras(agEntrada,agSaida)}</span></div>}
                   <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:180}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
                    <BtnY onClick={()=>{addAtend();setShowNovoAtend(false);}}>Adicionar</BtnY>
                 </div>
@@ -3504,6 +3507,7 @@ export default function App(){
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#666",fontSize:8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.patrimonio?`🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
+                                    {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>⏱ {it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"} {(it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida))&&`· Total: ${it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida)}`}</div>}
                                   </div>
                                 );
                               })}
@@ -3565,6 +3569,12 @@ export default function App(){
                                 {s.cidade&&<span style={{fontSize:9,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
                               </div>
                               <input type="text" defaultValue={s.obs||""} onBlur={e=>updateSlot({obs:e.target.value})} placeholder="📝 Observações..." disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:11,padding:"5px 8px",border:"1px solid #FFE8A0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}/>
+                              <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:5}}>
+                                <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value,horasTrabalhadas:calcHoras(e.target.value,s.horaSaida)})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
+                                <span style={{fontSize:11,color:"#AAA"}}>→</span>
+                                <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value,horasTrabalhadas:calcHoras(s.horaEntrada,e.target.value)})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
+                                {(s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida))&&<span style={{fontSize:10,fontWeight:800,color:"#1A7A3C",background:"#F0FFF5",padding:"4px 7px",borderRadius:8,whiteSpace:"nowrap",border:"1px solid #C8E8D0"}}>Total: {s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida)}</span>}
+                              </div>
                               <input type="date" defaultValue={dt} onBlur={e=>{
                                 if(isReadOnlyAgenda(user))return;
                                 if(e.target.value&&e.target.value!==dt){
