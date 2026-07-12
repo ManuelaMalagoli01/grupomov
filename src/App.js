@@ -1849,7 +1849,15 @@ export default function App(){
   });
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
-  const updateApon=(id,changes)=>{const updated=(apontamentos||[]).map(r=>r.id===id?{...r,...changes}:r);setApontamentos(updated);db.save("apontamentos_oficina",id,updated.find(r=>r.id===id));};
+  const updateApon=(id,changes)=>{
+    let saved=null;
+    setApontamentos(prev=>{
+      const updated=(prev||[]).map(r=>r.id===id?{...r,...changes}:r);
+      saved=updated.find(r=>r.id===id);
+      return updated;
+    });
+    if(saved)db.save("apontamentos_oficina",id,saved);
+  };
   const addApon=()=>{ const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:"",inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:"",arquivado:false}; setApontamentos(p=>[...p,row]); db.save("apontamentos_oficina",row.id,row); notify("✅ Linha adicionada!"); };
   const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
   const updateSas=(id,changes)=>{ setSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas",id,row); return np; }); };
