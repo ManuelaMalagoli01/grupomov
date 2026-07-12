@@ -1595,6 +1595,7 @@ export default function App(){
   const [apon150NovaTermino,setApon150NovaTermino]=useState("");
   const [apon150NovaRel,setApon150NovaRel]=useState("");
   const [apon150NovaObs,setApon150NovaObs]=useState("");
+  const [editingApon150Id,setEditingApon150Id]=useState(null);
   const [modalApon150,setModalApon150]=useState(false);
   const [editApon150,setEditApon150]=useState(null);
   const [apon150Form,setApon150Form]=useState({data:TODAY_STR,os:"",patrimonio:"",tecnico:"",servico:"",inicio:"",termino:"",total:"",oficina:"150",relatorio:"",obs:""});
@@ -2297,7 +2298,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead><tr style={{background:"#1A1A1A"}}>
-                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs",""].map((h,i)=>(
+                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
@@ -5629,6 +5630,16 @@ export default function App(){
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
           const inserir=()=>{
             const total=calcHoras(apon150NovaInicio,apon150NovaTermino);
+            if(editingApon150Id){
+              const changes={data:apon150NovaData,os:apon150NovaOS,patrimonio:apon150NovaPat,tecnico:apon150NovaTech,servico:apon150NovaServ,inicio:apon150NovaInicio,termino:apon150NovaTermino,total,obs:apon150NovaObs};
+              updateApon150(editingApon150Id,changes);setEditingApon150Id(null);notify("✅ Apontamento atualizado!");
+              if(ofi150Serv!=="todos")setOfi150Serv("todos");
+              if(ofi150Tech!=="todos"&&changes.tecnico!==ofi150Tech)setOfi150Tech("todos");
+              if(ofi150From&&changes.data<ofi150From)setOfi150From("");
+              if(ofi150To&&changes.data>ofi150To)setOfi150To("");
+              setApon150NovaData(TODAY_STR);setApon150NovaOS("");setApon150NovaPat("");setApon150NovaTech(OFICINA_150_TECHS[0]);setApon150NovaServ("");setApon150NovaInicio("");setApon150NovaTermino("");setApon150NovaObs("");
+              return;
+            }
             const row={id:`AP150${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:apon150NovaData,os:apon150NovaOS,patrimonio:apon150NovaPat,tecnico:apon150NovaTech,servico:apon150NovaServ,inicio:apon150NovaInicio,termino:apon150NovaTermino,total,oficina:"150",obs:apon150NovaObs,arquivado:false};
             setApontamentos150(p=>[...p,row]);db.save("apontamentos_150",row.id,row);
             setApon150NovaOS("");setApon150NovaPat("");setApon150NovaInicio("");setApon150NovaTermino("");setApon150NovaObs("");
@@ -5689,7 +5700,7 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead><tr style={{background:"#1A1A1A"}}>
-                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs",""].map((h,i)=>(
+                    {["Data","OS","PAT","Modelo","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
@@ -5709,9 +5720,9 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>{setApon150NovaData(a.data||TODAY_STR);setApon150NovaOS(a.os||"");setApon150NovaPat(a.patrimonio||"");setApon150NovaTech(a.tecnico||OFICINA_150_TECHS[0]);setApon150NovaServ(a.servico||SERVICOS_OFICINA[0]);setApon150NovaInicio(a.inicio||"");setApon150NovaTermino(a.termino||"");setApon150NovaObs(a.obs||"");delApon150(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 7px",fontSize:13}}>✏️</button>
-                          <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir?"))delApon150(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                          <button onClick={()=>{setApon150NovaData(a.data||TODAY_STR);setApon150NovaOS(a.os||"");setApon150NovaPat(a.patrimonio||"");setApon150NovaTech(a.tecnico||OFICINA_150_TECHS[0]);setApon150NovaServ(a.servico||"");setApon150NovaInicio(a.inicio||"");setApon150NovaTermino(a.termino||"");setApon150NovaObs(a.obs||"");setEditingApon150Id(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar (carrega no formulário acima)" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:13}}>✏️ Editar</button>
+                          <button onClick={()=>updateApon150(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm(`Excluir permanentemente o apontamento da OS ${a.os||"—"} (${fmtDataBR(a.data)})? Essa ação não pode ser desfeita.`))delApon150(a.id);}} title="Excluir permanentemente" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
                         </div></td>
                       </tr>);
                     })}
