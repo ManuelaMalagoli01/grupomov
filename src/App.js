@@ -1959,7 +1959,7 @@ export default function App(){
                     setPdfLoading(false);e.target.value="";
                   }}/>
                 </label>
-                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
               </div>
             </div>
@@ -2093,7 +2093,7 @@ export default function App(){
                     }}/>
                   </label>
                   <BtnImport onClick={()=>setModalImportApon(true)}/>
-                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
+                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 </div>
               </div>
               <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
@@ -2799,7 +2799,7 @@ export default function App(){
               <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportMU2(true)}/>
                 <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"Ocultar":"Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
@@ -2890,7 +2890,7 @@ export default function App(){
               <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportAF2(true)}/>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"Ocultar":"Ver Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
@@ -3061,7 +3061,7 @@ export default function App(){
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"Ocultar":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Novo Registro</BtnY>
               </div>
             </div>
@@ -4069,7 +4069,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"Ocultar":"Ver Arquivados"}</button>
                 <button onClick={()=>setViewMode(v=>v==="cards"?"calendario":"cards")} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontWeight:600}}>{viewMode==="cards"?"📅 Calendário":"🃏 Cards"}</button>
-                <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"}]}/>
+                <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
                 <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
               </div>
             </div>
@@ -4965,7 +4965,7 @@ export default function App(){
                     {PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}
                   </select>
                   <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
-                  <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"}]}/>
+                  <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
                   <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
                 </div>
               </div>
@@ -5080,7 +5080,7 @@ export default function App(){
                     }}/>
                   </label>
                   <BtnImport onClick={()=>setModalImportApon150(true)}/>
-                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
+                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_150",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 </div>
               </div>
               <div style={{padding:"14px 18px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
