@@ -1866,7 +1866,15 @@ export default function App(){
 
   const mathCrud=mkCrud("pendencias_matheus",setPendMatheus);
   const saveAgendaOfi150=(key,slots)=>{ setAgendaOfi150(p=>({...p,[key]:slots})); db.save("agenda_ofi_150",key,{key,slots}); };
-  const updateApon150=(id,changes)=>{const updated=(apontamentos150||[]).map(r=>r.id===id?{...r,...changes}:r);setApontamentos150(updated);db.save("apontamentos_150",id,updated.find(r=>r.id===id));};
+  const updateApon150=(id,changes)=>{
+    let saved=null;
+    setApontamentos150(prev=>{
+      const updated=(prev||[]).map(r=>r.id===id?{...r,...changes}:r);
+      saved=updated.find(r=>r.id===id);
+      return updated;
+    });
+    if(saved)db.save("apontamentos_150",id,saved);
+  };
   const addApon150=()=>{ const row={id:`AP150${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:"Matheus",servico:SERVICOS_OFICINA[0],inicio:"",termino:"",total:"",oficina:"150",obs:"",relatorio:""}; setApontamentos150(p=>[row,...p]); db.save("apontamentos_150",row.id,row); notify("✅ Apontamento criado!"); };
   const delApon150=(id)=>{ setApontamentos150(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_150",id); };
   const abrirEditar150=(a)=>{setEditApon150(a);setApon150Form({data:a.data||TODAY_STR,os:a.os||"",patrimonio:a.patrimonio||"",tecnico:a.tecnico||OFICINA_TECHS[0]||"",servico:a.servico||SERVICOS_OFICINA[0]||"",inicio:a.inicio||"",termino:a.termino||"",total:a.total||"",oficina:a.oficina||"150",relatorio:a.relatorio||"",obs:a.obs||""});setModalApon150(true);};
@@ -2359,7 +2367,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#555"}}>{a.modelo||"—"}</td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                        <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
+                        <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={e=>updateApon(a.id,{servico:e.target.value})} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
                         <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
@@ -5774,7 +5782,7 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#555"}}>{a.modelo||"—"}</td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                        <td style={{padding:"10px 12px"}}><span style={{fontSize:11,fontWeight:700,color:cor,background:cor+"18",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{a.servico||"—"}</span></td>
+                        <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={e=>updateApon150(a.id,{servico:e.target.value})} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
                         <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
