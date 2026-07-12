@@ -2372,11 +2372,7 @@ export default function App(){
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período selecionado</div>
               <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
             </div>
-            <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              <ChartCanvas type="bar" data={chartApon} options={chartOpts("Apontamentos")} height={220}/>
-            </div>
+
           </div>
           {servAtivos.length>0&&<>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
