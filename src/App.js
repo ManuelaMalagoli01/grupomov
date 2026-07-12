@@ -1610,6 +1610,8 @@ export default function App(){
   const [ofiNovaTo,setOfiNovaTo]=useState("");
   const [apontamentos,setApontamentos]=useState([]);
   const [showArqApon,setShowArqApon]=useState(false);
+  const [showFiltrosApon,setShowFiltrosApon]=useState(false);
+  const [showFiltrosApon150,setShowFiltrosApon150]=useState(false);
   const [aponNovaData,setAponNovaData]=useState(TODAY_STR);
   const [aponNovaOS,setAponNovaOS]=useState("");
   const [aponNovaPat,setAponNovaPat]=useState("");
@@ -2341,14 +2343,20 @@ export default function App(){
                 <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Obs</label><input type="text" value={aponNovaObs} onChange={e=>setAponNovaObs(e.target.value)} placeholder="Observação..." style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
                 <BtnY onClick={inserir}>Salvar</BtnY>
               </div>
-              <div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <button onClick={()=>setShowFiltrosApon(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosApon?"#FFF":"#F8FAFC",cursor:"pointer",margin:"10px 18px",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosApon?"▲":"▼"}</span>
+              </button>
+              {showFiltrosApon&&<div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
                 <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofiNovaFrom} onChange={e=>setOfiNovaFrom(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofiNovaTo} onChange={e=>setOfiNovaTo(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
                 <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                 <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                 {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-              </div>
+              </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Preencha o formulário acima e clique em Salvar</div>):(
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
@@ -5756,14 +5764,20 @@ export default function App(){
                 <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:120}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Obs</label><input type="text" value={apon150NovaObs} onChange={e=>setApon150NovaObs(e.target.value)} placeholder="Observação..." style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
                 <BtnY onClick={inserir}>Salvar</BtnY>
               </div>
-              <div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <button onClick={()=>setShowFiltrosApon150(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosApon150?"#FFF":"#F8FAFC",cursor:"pointer",margin:"10px 18px",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {(ofi150From||ofi150To||ofi150OS||ofi150Tech!=="todos"||ofi150Serv!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosApon150?"▲":"▼"}</span>
+              </button>
+              {showFiltrosApon150&&<div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofi150OS} onChange={e=>setOfi150OS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
                 <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofi150From} onChange={e=>setOfi150From(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
                 <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofi150To} onChange={e=>setOfi150To(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
                 <select value={ofi150Tech} onChange={e=>setOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                 <select value={ofi150Serv} onChange={e=>setOfi150Serv(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                 {(ofi150From||ofi150To||ofi150OS||ofi150Tech!=="todos"||ofi150Serv!=="todos")&&<button onClick={()=>{setOfi150From("");setOfi150To("");setOfi150OS("");setOfi150Tech("todos");setOfi150Serv("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-              </div>
+              </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Preencha o formulário acima e clique em Salvar</div>):(
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
