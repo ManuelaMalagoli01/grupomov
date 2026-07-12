@@ -3479,15 +3479,15 @@ export default function App(){
                   return(
                     <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
                       {cells.map((dn,i)=>{
-                        if(!dn)return<div key={i} style={{minHeight:340,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
+                        if(!dn)return<div key={i} style={{minHeight:410,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
                         const items=porDia[dn]||[];
-                        const shown=items.slice(0,8);
+                        const shown=items.slice(0,10);
                         const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:340,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
+                          <div key={i} style={{minHeight:410,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                               <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888"}}>{isToday?"📍 ":""}{dn}</div>
                               {ocupado&&<span style={{fontSize:8,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:8,padding:"1px 6px"}}>OCUPADO</span>}
