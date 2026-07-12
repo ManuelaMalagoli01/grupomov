@@ -66,6 +66,8 @@ const USERS = [
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
+const CIDADES_TECNICOS = ["BH","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba"];
+const SERVICOS_RELATORIO = [...SERVICOS_OFICINA,"Serviços Preventivos","Outros"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
   metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
@@ -505,6 +507,113 @@ function ImportExcelModal({onClose,onImport}){
           <div style={{display:"flex",gap:12,justifyContent:"flex-end",marginTop:20}}>
             <BtnG onClick={onClose}>Cancelar</BtnG>
             <BtnY onClick={confirmar} disabled={!rows}>Importar {rows?`(${rows.length})`:""}</BtnY>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MODAL RELATÓRIO (Conferência de Relatórios — Técnicos Externos) ─────────
+function RelatorioModal({initial,onClose,onSave}){
+  const EMPTY={data:TODAY_STR,tecnico:ALL_TECHS[0],atendimento:"preventivo",cliente:"",cidade:"",patrimonio:"",relatorio:"",chamado:"",horaInicio:"",horaFim:"",servicos:[],status:"agendada",requisicao:"",relatorioConclusao:"",obs:""};
+  const [mode,setMode]=useState("manual");
+  const [pdfLoading,setPdfLoading]=useState(false);
+  const [pdfErr,setPdfErr]=useState("");
+  const [form,setForm]=useState(initial?{...EMPTY,...initial}:EMPTY);
+  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const toggleServico=(sv)=>setForm(p=>{const a=p.servicos||[];return{...p,servicos:a.includes(sv)?a.filter(x=>x!==sv):[...a,sv]};});
+  const horas=calcHoras(form.horaInicio,form.horaFim);
+  const isPendencia=(form.status||"").includes("pendente_pecas");
+  const onPdf=async(file)=>{
+    if(!file)return;setPdfLoading(true);setPdfErr("");
+    try{
+      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
+      const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
+      const respText=await resp.text();
+      if(!resp.ok){let m="Erro API ("+resp.status+"): "+respText.slice(0,200);try{const j=JSON.parse(respText);m=j.error||j.message||m;}catch(e){}throw new Error(m);}
+      let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,120));}
+      const txt=data.content?.[0]?.text||"{}";
+      const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setForm(p=>({...p,
+        data:parsed.data||parsed.dataAtendimento||p.data,
+        tecnico:ALL_TECHS.includes(parsed.tecnico)?parsed.tecnico:p.tecnico,
+        atendimento:parsed.atendimento||parsed.tipo||parsed.type||p.atendimento,
+        cliente:parsed.cliente||parsed.empresa||p.cliente,
+        cidade:parsed.cidade||p.cidade,
+        patrimonio:parsed.patrimonio||p.patrimonio,
+        relatorio:parsed.relatorio||parsed.reportNum||p.relatorio,
+        chamado:parsed.chamado||parsed.numChamado||p.chamado,
+        horaInicio:parsed.horaInicio||parsed.inicio||parsed.entrada||p.horaInicio,
+        horaFim:parsed.horaFim||parsed.saida||parsed.termino||p.horaFim,
+        servicos:Array.isArray(parsed.servicos)?parsed.servicos:p.servicos,
+        obs:parsed.obs||parsed.observacao||p.obs,
+      }));
+      setMode("manual");
+      notify("✅ PDF lido! Confira os dados antes de salvar.");
+    }catch(err){setPdfErr("Erro ao ler PDF: "+(err?.message||JSON.stringify(err)));}
+    setPdfLoading(false);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#FFF",borderRadius:14,width:"100%",maxWidth:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"12px 18px",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:1}}>
+          <div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>{initial?"✏️ Editar Relatório":"➕ Novo Relatório"}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
+          {!initial&&<div style={{display:"flex",gap:8}}>
+            {[["manual","✏️ Manual"],["pdf","📄 Ler PDF"]].map(([m,l])=>(
+              <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"8px 0",borderRadius:8,border:`2px solid ${mode===m?"#F5C200":"#E0E0E0"}`,background:mode===m?"#FFFBF0":"#FFF",fontWeight:600,fontSize:12,cursor:"pointer",color:mode===m?"#C47D00":"#888"}}>{l}</button>
+            ))}
+          </div>}
+          {mode==="pdf"&&!initial&&(
+            <div style={{padding:18,background:"#FAFAFA",borderRadius:10,border:"2px dashed #E0E0E0",textAlign:"center"}}>
+              <div style={{fontSize:12,color:"#888",marginBottom:10}}>Selecione o PDF do relatório para preenchimento automático</div>
+              <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"9px 18px",borderRadius:20,background:pdfLoading?"#E0E0E0":"#8B5CF6",color:"#FFF",fontSize:12,fontWeight:700}}>
+                {pdfLoading?"⏳ Lendo...":"📎 Selecionar PDF"}
+                <input type="file" accept=".pdf" disabled={pdfLoading} style={{display:"none"}} onChange={e=>{onPdf(e.target.files[0]);e.target.value="";}}/>
+              </label>
+              {pdfErr&&<div style={{marginTop:10,fontSize:11,color:"#C62828",background:"#FFF0F0",borderRadius:8,padding:"8px 10px",textAlign:"left"}}>{pdfErr}</div>}
+            </div>
+          )}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data</label><input type="date" value={form.data} onChange={e=>upd("data",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label><select value={form.tecnico} onChange={e=>upd("tecnico",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Atendimento</label><select value={form.atendimento} onChange={e=>upd("atendimento",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700,color:form.atendimento==="corretivo"?"#C62828":"#1565C0"}}><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cliente</label><input type="text" value={form.cliente} onChange={e=>upd("cliente",e.target.value)} placeholder="Nome do cliente" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cidade</label><select value={form.cidade} onChange={e=>upd("cidade",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="">Selecione...</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Patrimônio</label><input type="text" value={form.patrimonio} onChange={e=>upd("patrimonio",e.target.value)} placeholder="PAT-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório</label><input type="text" value={form.relatorio} onChange={e=>upd("relatorio",e.target.value)} placeholder="REL-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Chamado</label><input type="text" value={form.chamado} onChange={e=>upd("chamado",e.target.value)} placeholder="CHM-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,background:"#FFFBF0",padding:10,borderRadius:8,border:"1px solid #FFE8A0"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Início</label><input type="time" value={form.horaInicio} onChange={e=>upd("horaInicio",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Fim</label><input type="time" value={form.horaFim} onChange={e=>upd("horaFim",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Trabalhadas</label><div style={{padding:"7px 8px",borderRadius:6,background:"#FFF",border:"1px solid #FFE8A0",fontSize:12,fontWeight:800,color:"#C47D00"}}>{horas||"—"}</div></div>
+          </div>
+          <div>
+            <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:5}}>🔧 Serviços</label>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {SERVICOS_RELATORIO.map(sv=>{const sel=(form.servicos||[]).includes(sv);return(<button key={sv} type="button" onClick={()=>toggleServico(sv)} style={{fontSize:10,padding:"4px 10px",borderRadius:16,border:sel?"2px solid #3B82F6":"1.5px solid #E0E0E0",background:sel?"#EFF6FF":"#FFF",color:sel?"#2563EB":"#888",fontWeight:sel?700:500,cursor:"pointer"}}>{sv}</button>);})}
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label>
+            <select value={form.status} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700,color:escSt(form.status).color||escSt(form.status).c}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+          </div>
+          {isPendencia&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,background:"#FFF8F0",padding:10,borderRadius:8,border:"1px solid #FFE0B0"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>🔖 Nº Requisição (REQ)</label><input type="text" value={form.requisicao} onChange={e=>upd("requisicao",e.target.value)} placeholder="REQ-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #FFD080"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>✅ Relatório de Conclusão</label><input type="text" value={form.relatorioConclusao} onChange={e=>upd("relatorioConclusao",e.target.value)} placeholder="REL-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #FFD080"}}/></div>
+          </div>}
+          <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observação</label><input type="text" value={form.obs} onChange={e=>upd("obs",e.target.value)} placeholder="Observações..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+          <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+            <BtnG onClick={onClose}>Cancelar</BtnG>
+            <BtnY onClick={()=>onSave({...form,horasTrabalhadas:horas,id:form.id||`REL${Date.now()}`})} disabled={!form.cliente}>{initial?"Salvar Alterações":"Adicionar Relatório"}</BtnY>
           </div>
         </div>
       </div>
@@ -1328,6 +1437,7 @@ export default function App(){
   const [relFiltroPat,setRelFiltroPat]=useState("");
   const [relFiltroEmp,setRelFiltroEmp]=useState("");
   const [relFiltroData,setRelFiltroData]=useState("");
+  const [relFiltroCidade,setRelFiltroCidade]=useState("");
   const [pdfLoading,setPdfLoading]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
   // Dashboard Processos filters
@@ -1854,7 +1964,7 @@ export default function App(){
           setEditSlot(null);
         }}
         />}
-        {modalReport&&<ReportModal initial={editReport} onClose={()=>{setModalReport(false);setEditReport(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editReport){setReports(p=>p.map(x=>x.id===dd.id?dd:x));db.save("relatorios",dd.id,dd);notify("✅ Atualizado!");}else{setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}setEditReport(null);setModalReport(false);}}/>}
+        {modalReport&&<RelatorioModal initial={editReport} onClose={()=>{setModalReport(false);setEditReport(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editReport){setReports(p=>p.map(x=>x.id===dd.id?dd:x));db.save("relatorios",dd.id,dd);notify("✅ Atualizado!");}else{setReports(p=>[dd,...p]);db.save("relatorios",dd.id,dd);notify("✅ Relatório salvo!");}setEditReport(null);setModalReport(false);}}/>}
         {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
 
         {uberModal&&(
@@ -1968,124 +2078,91 @@ export default function App(){
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const lista=(reports||[]).filter(r=>r&&(showArqRel?true:r.processoStatus!=="arquivado")).filter(r=>{
-            if(relFiltroData&&r.dataAtendimento!==relFiltroData)return false;
-            if(relFiltroEmp&&!(r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase()))return false;
+          const lista=(reports||[]).filter(r=>r&&(showArqRel?true:!r.arquivado)).filter(r=>{
+            const dataR=r.data||r.dataAtendimento||"";
+            if(relFiltroData&&dataR!==relFiltroData)return false;
+            if(relFiltroEmp&&!((r.cliente||r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase())))return false;
             if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
             if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
+            if(relFiltroCidade&&r.cidade!==relFiltroCidade)return false;
             if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
-            if(relFiltroStatus!=="todos"&&r.statusFinal!==relFiltroStatus)return false;
+            if(relFiltroStatus!=="todos"&&r.status!==relFiltroStatus)return false;
             return true;
-          });
-          const totalConc=lista.filter(r=>r.statusFinal==="Concluído").length;
-          const totalPend=lista.filter(r=>r.statusFinal!=="Concluído").length;
+          }).sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
+          const totalConc=lista.filter(r=>(r.status||"").includes("concluida")).length;
+          const totalPend=lista.filter(r=>(r.status||"").includes("pendente_pecas")).length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
 
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Header */}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
               <div>
                 <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📋 Conferência de Relatórios</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} relatório(s) · <span style={{color:"#C62828",fontWeight:700}}>{totalPend} pendentes</span></div>
+                <div style={{fontSize:11,color:"#888",marginTop:2}}>{lista.length} relatório(s) · <span style={{color:"#C62828",fontWeight:700}}>{totalPend} pendente(s) de peças</span></div>
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
-                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"Ocultar":"Arquivados"}</button>
-                <label style={{cursor:pdfLoading?"not-allowed":"pointer",display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:20,border:"none",background:pdfLoading?"#E0E0E0":"#1565C0",color:"#FFF",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
-                  {pdfLoading?"⏳ Lendo...":"📄 Ler PDF"}
-                  <input type="file" accept=".pdf" style={{display:"none"}} disabled={pdfLoading} onChange={async(e)=>{
-                    const file=e.target.files?.[0]; if(!file)return;
-                    setPdfLoading(true);
-                    try{
-                      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(file);});
-                      const resp=await fetch("https://mov-ia.vercel.app/api/read-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pdfBase64:b64})});
-                      const respText=await resp.text();
-                      if(!resp.ok){let m="Erro API ("+resp.status+"): "+respText.slice(0,200);try{const j=JSON.parse(respText);m=j.error||j.message||m;}catch(e){}throw new Error(m);}
-                      let data;try{data=JSON.parse(respText);}catch(e){throw new Error("Resposta inválida: "+respText.slice(0,100));}
-                      const txt=data.content?.[0]?.text||"{}";
-                      const parsed=JSON.parse(txt.replace(/```json|```/g,"").trim());
-                      const pecasAPI=(parsed.pecasUsadas||[]).map(p=>({situacao:"Peça Solicitada",peca:p.peca||"",cod:p.cod||"",quantidade:p.quantidade||"1",obs:""}));
-                      const row={id:`REL${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),atendimento:parsed.tipoAtendimento||"preventivo",statusFinal:parsed.statusFinal||"Pendente Peças",dataAtendimento:parsed.dataAtendimento||TODAY_STR,empresa:parsed.empresa||"",cidade:parsed.cidade||"",patrimonio:parsed.patrimonio||"",horimetro:parsed.horimetro||"",tecnico:parsed.tecnico||ALL_TECHS[0],chamado:parsed.numChamado||"",servico:parsed.servico||"Mecânica",obs:parsed.obs||"",pecas:pecasAPI,processoStatus:"em_andamento",reportNum:parsed.reportNum||"",dataAtendimento:parsed.dataAtendimento||parsed.date||"",atendimento:parsed.type||parsed.atendimento||"corretivo",statusFinal:parsed.statusFinal||parsed.status||"Pendente",chamado:parsed.numChamado||parsed.chamado||""};
-                      setReports(p=>[row,...p]);db.save("relatorios",row.id,row);notify("✅ Relatório criado via PDF!");
-                    }catch(err){alert("Erro ao processar PDF: "+(err?.message||JSON.stringify(err)));}
-                    setPdfLoading(false);e.target.value="";
-                  }}/>
-                </label>
-                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"dataAtendimento",label:"Data"},{key:"atendimento",label:"Tipo"},{key:"statusFinal",label:"Status"},{key:"empresa",label:"Empresa"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"tecnico",label:"Técnico"},{key:"chamado",label:"Chamado"},{key:"servico",label:"Serviço"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
-                <BtnY onClick={()=>setModalReport(true)}>+ Novo Relatório</BtnY>
+                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:totalPend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#E67E00",bg:"#FFF8F0",i:"🔧"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes Peças",v:totalPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#C62828",bg:"#FFF0F0",i:"🔧"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                  <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
             {/* Filtros */}
-            <div className="card" style={{padding:"6px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
-              <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Empresa" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",minWidth:140}}/>
-              <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",width:100}}/>
-              <select value={relFiltroTech} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-              <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
-              <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option><option>Pendente Peças</option><option>Concluído</option></select>
-              {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            <div className="card" style={{padding:"6px 8px",marginBottom:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
+              <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Cliente" style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",minWidth:120}}/>
+              <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",width:90}}/>
+              <select value={relFiltroTech} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={relFiltroCidade} onChange={e=>setRelFiltroCidade(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="">Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select>
+              <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
+              <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+              {(relFiltroData||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
             {/* Cards */}
-            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:13,marginTop:6}}>Use "+ Novo Relatório" ou "Ler PDF"</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
                 {lista.map(r=>{
                   const isCorr=r.atendimento==="corretivo";
-                  const isConc=r.statusFinal==="Concluído";
-                  const pecas=r.pecas||[];
-                  const borderC=isConc?"#1A7A3C":isCorr?"#C62828":"#1565C0";
-                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:r.processoStatus==="arquivado"?0.55:1}}>
-                    <div style={{padding:"7px 10px",background:isConc?"#F0FFF5":isCorr?"#FFF0F0":"#EFF6FF",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <span style={{fontSize:11,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"2px 10px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
-                        <select value={r.statusFinal||"Pendente Peças"} onChange={e=>updateReport(r.id,{statusFinal:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:isConc?"#1A7A3C":"#C62828",background:isConc?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option>Pendente Peças</option><option>Concluído</option></select>
-                      </div>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>addPecaRel(r.id)} title="Add Peça" style={{background:"#FFF8F0",border:"none",borderRadius:6,color:"#E67E00",cursor:"pointer",padding:"4px 7px",fontSize:13,fontWeight:700}}>+📦</button>
-                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,{processoStatus:r.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                  const st=escSt(r.status);
+                  const stColor=st.c||st.color||"#888";
+                  const isPendencia=(r.status||"").includes("pendente_pecas");
+                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${stColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
+                    <div style={{padding:"5px 7px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:8,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"1px 7px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
+                      <div style={{display:"flex",gap:2}}>
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"3px 5px",fontSize:10}}>✏️</button>
+                        <button onClick={()=>updateReport(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 5px",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 5px",fontSize:9,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {r.dataAtendimento||"—"} · PAT: <b>{r.patrimonio||"—"}</b> · Hor: {r.horimetro||"—"}</div></div>
-                        {r.reportNum&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px"}}>#{r.reportNum}</span>}
+                    <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
+                      <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
+                      <div style={{fontSize:9,color:"#888"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Cidade</div><div style={{fontSize:9,fontWeight:700}}>{r.cidade||"—"}</div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Patrimônio</div><div style={{fontSize:9,fontWeight:700}}>{r.patrimonio||"—"}</div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Relatório</div><div style={{fontSize:9,fontWeight:700,color:"#1565C0"}}>{r.relatorio||"—"}</div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Chamado</div><div style={{fontSize:9,fontWeight:700}}>{r.chamado||"—"}</div></div>
+                        <div style={{background:"#FFFBF0",borderRadius:6,padding:"3px 5px",gridColumn:"span 2"}}><div style={{color:"#C47D00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>⏱ Horas Trabalhadas</div><div style={{fontSize:9,fontWeight:700,color:"#C47D00"}}>{r.horaInicio||"—"} → {r.horaFim||"—"} · {r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"}</div></div>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Técnico</div><select value={r.tecnico||ALL_TECHS[0]} onChange={e=>updateReport(r.id,{tecnico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço</div><select value={r.servico||"Mecânica"} onChange={e=>updateReport(r.id,{servico:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Chamado</div><input type="text" value={r.chamado||""} onChange={e=>updateReport(r.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Cidade</div><input type="text" value={r.cidade||""} onChange={e=>updateReport(r.id,{cidade:e.target.value})} placeholder="—" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F6F0FB",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#8E44AD",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🔖 Requisição</div><input type="text" value={r.requisicao||""} onChange={e=>updateReport(r.id,{requisicao:e.target.value})} placeholder="REQ-000" style={{width:"100%",fontSize:12,fontWeight:700,color:"#8E44AD",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                      </div>
-                      {r.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {r.obs}</div>}
-                      {pecas.length>0&&<div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
-                        <div style={{fontSize:10,fontWeight:800,color:"#E67E00",textTransform:"uppercase",marginBottom:6}}>📦 Peças ({pecas.length})</div>
-                        {pecas.map((p,pi)=>{
-                          const stP=STS_PECA_COR[p.situacao]||STS_PECA_COR["Peça Solicitada"];
-                          return(<div key={pi} style={{background:stP.bg,borderRadius:8,padding:"8px 10px",marginBottom:4,borderLeft:`3px solid ${stP.c}`}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                              <select value={p.situacao||"Peça Solicitada"} onChange={e=>updatePecaRel(r.id,pi,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,color:stP.c,background:"transparent",border:"none",cursor:"pointer",outline:"none",padding:0}}>{STS_PECA_OPTS.map(s=><option key={s}>{s}</option>)}</select>
-                              <button onClick={()=>delPecaRel(r.id,pi)} style={{background:"none",border:"none",color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700}}>✕</button>
-                            </div>
-                            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 60px",gap:4}}>
-                              <input type="text" value={p.peca||""} onChange={e=>updatePecaRel(r.id,pi,{peca:e.target.value})} placeholder="Nome da peça" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
-                              <input type="text" value={p.cod||""} onChange={e=>updatePecaRel(r.id,pi,{cod:e.target.value})} placeholder="Código" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none"}}/>
-                              <input type="text" value={p.quantidade||""} onChange={e=>updatePecaRel(r.id,pi,{quantidade:e.target.value})} placeholder="Qtd" style={{fontSize:10,border:"none",background:"rgba(255,255,255,.7)",borderRadius:4,padding:"3px 6px",outline:"none",textAlign:"center"}}/>
-                            </div>
-                          </div>);
-                        })}
+                      {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"1px 6px",borderRadius:10,background:"#EFF6FF",color:"#2563EB",fontWeight:600}}>{sv}</span>)}</div>}
+                      <select value={r.status||"agendada"} onChange={e=>updateReport(r.id,{status:e.target.value})} style={{fontSize:9,padding:"3px 5px",borderRadius:20,border:"none",fontWeight:700,color:stColor,background:st.bg,cursor:"pointer"}}>
+                        {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
+                      </select>
+                      {isPendencia&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,background:"#FFF8F0",borderRadius:6,padding:"3px 5px",border:"1px solid #FFE0B0"}}>
+                        <div><div style={{color:"#C47D00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>🔖 REQ</div><input type="text" value={r.requisicao||""} onChange={e=>updateReport(r.id,{requisicao:e.target.value})} placeholder="REQ-000" style={{width:"100%",fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#C47D00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>✅ Rel. Conclusão</div><input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>}
-                      <div style={{fontSize:10,color:"#CCC",textAlign:"right"}}>{r.registradoPor||""}</div>
+                      <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:6,padding:"3px 6px",border:"1px solid transparent",outline:"none"}}/>
                     </div>
                   </div>);
                 })}
@@ -3201,9 +3278,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            const horas=calcHoras(agEntrada,agSaida);
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",servicos:agServicos,obsServico:agObsServ,horimetro:agHorimetro||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada,horaSaida:agSaida,horasTrabalhadas:horas}]);
-            setAgServicos([]);setAgObsServ("");setAgEmpresa("");setAgCidade("");setAgHorimetro("");setAgPat("");setAgEntrada("");setAgSaida("");setAgRelatorio("");setAgObs("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus)}]);
+            setAgEmpresa("");setAgCidade("");setAgPat("");setAgObs("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -3269,24 +3345,10 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><select value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:140}}><option value="">Selecione...</option>{["BH","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba"].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Horímetro</label><input type="text" placeholder="—" value={agHorimetro||""} onChange={e=>setAgHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="REL-001" value={agRelatorio||""} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:100}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:140}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={agEntrada} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,width:"100%",marginTop:4}}>
-                     <label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>🔧 Serviços</label>
-                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                       {["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"].map(sv=>{const sel=agServicos.includes(sv);return(<button key={sv} type="button" onClick={()=>setAgServicos(p=>sel?p.filter(x=>x!==sv):[...p,sv])} style={{fontSize:10,padding:"4px 10px",borderRadius:16,border:sel?"2px solid #3B82F6":"1.5px solid #E0E0E0",background:sel?"#EFF6FF":"#FFF",color:sel?"#2563EB":"#888",fontWeight:sel?700:500,cursor:"pointer"}}>{sv}</button>);})}
-                     </div>
-                   </div>
-                   <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:200}}>
-                     <label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>📝 Obs. Serviço</label>
-                     <input type="text" placeholder="Ex: Troca de rodas..." value={agObsServ} onChange={e=>setAgObsServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/>
-                   </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:180}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
                    <BtnY onClick={()=>{addAtend();setShowNovoAtend(false);}}>Adicionar</BtnY>
                 </div>
               </div>
@@ -3325,18 +3387,24 @@ export default function App(){
                   return(
                     <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
                       {cells.map((dn,i)=>{
-                        if(!dn)return<div key={i} style={{minHeight:92,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
+                        if(!dn)return<div key={i} style={{minHeight:100,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
                         const items=porDia[dn]||[];
-                        const shown=items.slice(0,3);
+                        const shown=items.slice(0,4);
                         const resto=items.length-shown.length;
+                        const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} onClick={()=>items.length>0&&setAgpSelectedDay(dt)} style={{minHeight:92,padding:"4px 5px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDE7":"#FFF",cursor:items.length>0?"pointer":"default",transition:"background .15s"}}>
-                            <div style={{fontSize:11,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888",marginBottom:3}}>{isToday?"📍 ":""}{dn}</div>
+                          <div key={i} onClick={()=>items.length>0&&setAgpSelectedDay(dt)} style={{minHeight:100,padding:"4px 5px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",cursor:items.length>0?"pointer":"default",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                              <div style={{fontSize:11,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888"}}>{isToday?"📍 ":""}{dn}</div>
+                              {ocupado&&<span style={{fontSize:7,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:8,padding:"1px 5px"}}>OCUPADO</span>}
+                            </div>
                             <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                              {shown.map((it,ii)=>{const tipoC=getTipoCor(it.s.type);const color=techColor(it.tech);return(
-                                <div key={ii} style={{fontSize:9,padding:"2px 4px",borderRadius:5,background:tipoC+"14",borderLeft:`3px solid ${color}`,color:"#1A1A1A",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
+                              {shown.map((it,ii)=>{const color=techColor(it.tech);const tNome=(it.tech||"").split(" ")[0];return(
+                                <div key={ii} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:9,padding:"2px 4px",borderRadius:5,background:color+"22",borderLeft:`3px solid ${color}`,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                                  <b style={{color}}>{tNome}</b> <span style={{color:"#333"}}>{it.s.client||"—"}</span>
+                                </div>
                               );})}
                               {resto>0&&<div style={{fontSize:9,color:"#94A3B8",fontWeight:700,paddingLeft:4}}>+{resto} mais</div>}
                             </div>
@@ -3347,6 +3415,9 @@ export default function App(){
                   );
                 })()}
               </div>
+              {agpTech!=="todos"&&<div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,fontSize:11,color:"#888"}}>
+                <span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{width:12,height:12,borderRadius:3,background:"#FFF0F0",border:"2px solid #C62828",display:"inline-block"}}/> dias com <b>{agpTech}</b> já escalado (ocupado)</span>
+              </div>}
 
               {/* Modal de detalhes do dia selecionado */}
               {agpSelectedDay&&(()=>{
@@ -3369,10 +3440,9 @@ export default function App(){
                           const st=escSt(s.status);
                           const tipoC=getTipoCor(s.type);
                           const color=techColor(tech);
-                          const horas=s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida);
                           const updateSlot=(changes)=>{
                             const arr=[...(schedule[key]||[])];
-                            arr[si]={...arr[si],...changes,horasTrabalhadas:calcHoras(changes.horaEntrada||arr[si].horaEntrada,changes.horaSaida||arr[si].horaSaida)};
+                            arr[si]={...arr[si],...changes};
                             saveSched(key,arr);
                           };
                           return(
@@ -3380,7 +3450,7 @@ export default function App(){
                               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
                                 <div style={{display:"flex",alignItems:"center",gap:6}}>
                                   <span style={{width:9,height:9,borderRadius:"50%",background:color,display:"inline-block"}}/>
-                                  <span style={{fontWeight:800,fontSize:12,color:"#1A1A1A"}}>{tech}</span>
+                                  <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
                                   <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"15",borderRadius:20,padding:"2px 8px"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
                                 </div>
                                 {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:2,flexShrink:0}}>
@@ -3388,22 +3458,12 @@ export default function App(){
                                   <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
                                 </div>)}
                               </div>
-                              <div style={{fontWeight:700,fontSize:12,color:"#1A1A1A",marginBottom:4}}>{s.client}</div>
-                              <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:5}}>
+                              <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A",marginBottom:4}}>{s.client}</div>
+                              <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
                                 {s.patrimonio&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
                                 {s.cidade&&<span style={{fontSize:9,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
-                                {s.horimetro&&<span style={{fontSize:9,background:"#FFFBF0",color:"#C47D00",borderRadius:8,padding:"2px 7px",fontWeight:600}}>⏱ {s.horimetro}</span>}
                               </div>
-                              <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:5}}>{["Mecânica","Elétrica","Peq.Reparos","Bateria","Carregador","Hidráulica","Outros"].map(sv=>{const svFull=sv==="Peq.Reparos"?"Pequenos Reparos":sv;const sel=(s.servicos||[]).includes(svFull);return(<button key={sv} onClick={()=>{const cur=s.servicos||[];const nv=sel?cur.filter(x=>x!==svFull):[...cur,svFull];updateSched(key,schedule[key].map(x=>x===s?{...x,servicos:nv}:x));}} style={{fontSize:9,padding:"2px 7px",borderRadius:12,border:sel?"1.5px solid #10B981":"1px solid #E2E8F0",background:sel?"#F0FDF4":"#FFF",color:sel?"#059669":"#94A3B8",fontWeight:sel?700:500,cursor:"pointer"}}>{sv}</button>);})}</div>
-                              <input type="text" value={s.obsServico||""} onChange={e=>{const nv=e.target.value;updateSched(key,schedule[key].map(x=>x===s?{...x,obsServico:nv}:x));}} placeholder="📝 Obs serviço..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1px solid #E2E8F0",background:"#FFFBEB",color:"#92400E",width:"100%",boxSizing:"border-box",marginBottom:5}}/>
-                              <input type="text" defaultValue={s.relatorio||""} onBlur={e=>updateSlot({relatorio:e.target.value})} placeholder="Nº Relatório" disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:11,padding:"5px 8px",border:"1px solid #E0E0E0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA",fontWeight:600,color:"#1565C0"}}/>
                               <input type="text" defaultValue={s.obs||""} onBlur={e=>updateSlot({obs:e.target.value})} placeholder="📝 Observações..." disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:11,padding:"5px 8px",border:"1px solid #FFE8A0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}/>
-                              <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:5}}>
-                                <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                <span style={{fontSize:11,color:"#AAA"}}>→</span>
-                                <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                {horas&&<span style={{fontSize:10,fontWeight:800,color:"#1A7A3C",background:"#F0FFF5",padding:"4px 7px",borderRadius:8,whiteSpace:"nowrap",border:"1px solid #C8E8D0"}}>{horas}</span>}
-                              </div>
                               <input type="date" defaultValue={dt} onBlur={e=>{
                                 if(isReadOnlyAgenda(user))return;
                                 if(e.target.value&&e.target.value!==dt){
@@ -3433,23 +3493,28 @@ export default function App(){
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,marginBottom:24,color:"#1E293B"}}>📊 Dashboard de Atendimentos</div>
+            <div style={{fontSize:11,color:"#94A3B8",marginTop:-16,marginBottom:20}}>Fonte: Conferência de Relatórios (aba "Técnicos Externos → Conf. Relatórios")</div>
 
             {/* ── FILTRO + GRÁFICOS ── */}
             {(()=>{
               const chartTitle={fontSize:11,fontWeight:700,color:"#888",marginBottom:12};
-              const inRange=d=>{ if(dashFrom&&(!d.date||d.date<dashFrom))return false; if(dashTo&&(!d.date||d.date>dashTo))return false; return true; };
-              const dashReports=agendaAtendimentos.filter(d=>(dashRegion==="todas"||d.region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d));
-              const prev=dashReports.filter(r=>r.type==="preventivo").length;
-              const corr=dashReports.filter(r=>r.type==="corretivo").length;
+              const inRange=d=>{ if(dashFrom&&(!d.data||d.data<dashFrom))return false; if(dashTo&&(!d.data||d.data>dashTo))return false; return true; };
+              const baseReports=(reports||[]).filter(r=>r&&!r.arquivado);
+              const dashReports=baseReports.filter(d=>{
+                const region=techRegionMap[d.tecnico]||"";
+                return (dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d);
+              });
+              const prev=dashReports.filter(r=>r.atendimento==="preventivo").length;
+              const corr=dashReports.filter(r=>r.atendimento==="corretivo").length;
               const totalPC=prev+corr;
               const pct=n=>totalPC?Math.round(n/totalPC*100):0;
               const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
-              const regPrev=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="preventivo").length);
-              const regCorr=regList.map(([k])=>dashReports.filter(r=>r.region===k&&r.type==="corretivo").length);
+              const regPrev=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="preventivo").length);
+              const regCorr=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="corretivo").length);
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
-              const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0)/60).toFixed(1));
+              const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const BLU="#2563EB",RED="#EF4444",YEL="#F5C200",ORG="#EA580C",GRN="#16A34A",PUR="#7C3AED",TEA="#0D9488";
               return(
                 <>
@@ -3460,7 +3525,7 @@ export default function App(){
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:12}}/></div>
                     {(dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos")&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");}}>✕ Limpar</BtnG>}
-                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} atendimento(s) no filtro</span>
+                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} relatório(s) no filtro</span>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
                     <div className="card" style={{padding:"8px 12px"}}>
@@ -3494,13 +3559,13 @@ export default function App(){
                   </div>
                   {/* Gráfico Tipo de Serviço x Técnico */}
                   {techsWith.length>0&&(()=>{
-                    const tipos=[...new Set(dashReports.map(r=>r.type).filter(Boolean))];
+                    const tipos=[...new Set(dashReports.map(r=>r.atendimento).filter(Boolean))];
                     const TIPO_COLORS={"preventivo":"#1A7A3C","corretivo":"#C62828","outros":"#E67E00"};
                     const chartServTechData={
                       labels:techsWith,
                       datasets:tipos.map(tipo=>({
                         label:tipo==="preventivo"?"Preventiva":tipo==="corretivo"?"Corretiva":"Outro",
-                        data:techsWith.map(t=>dashReports.filter(r=>r.tecnico===t&&r.type===tipo).length),
+                        data:techsWith.map(t=>dashReports.filter(r=>r.tecnico===t&&r.atendimento===tipo).length),
                         backgroundColor:TIPO_COLORS[tipo]||"#888",
                         borderRadius:8,borderSkipped:false,
                       }))
@@ -3515,41 +3580,41 @@ export default function App(){
                     );
                   })()}
 
-            {/* ── Serviços por Técnico ── */}
+            {/* ── Serviços por Técnico (fonte: Conferência de Relatórios) ── */}
             {(()=>{
-              const allAt=Object.entries(schedule).flatMap(([k,v])=>(v||[]).map(s=>({...s,tech:k.split("__")[0]})));
-              const SVC=["Mecânica","Elétrica","Pequenos Reparos","Bateria","Carregador","Hidráulica","Outros"];
-              const SCOL=["#3B82F6","#EF4444","#F59E0B","#10B981","#0EA5E9","#8B5CF6","#EC4899"];
-              const tN=[...new Set(allAt.map(a=>a.tech))].sort();
+              const allAt=dashReports;
+              const SVC=SERVICOS_RELATORIO;
+              const SCOL=["#3B82F6","#EF4444","#F59E0B","#10B981","#0EA5E9","#8B5CF6","#EC4899","#22D3EE","#84CC16","#F97316","#A855F7"];
+              const tN=techsWith;
               const comServ=allAt.filter(a=>a.servicos&&a.servicos.length>0).length;
-              const totalH=allAt.reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0);
+              const horasDe=r=>parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim))/60;
+              const totalH=allAt.reduce((a2,s2)=>a2+horasDe(s2),0);
               const sTQ=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).length);
-              const sTH=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0));
-              const qDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si],borderRadius:6}))};
-              const hDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tech===t&&s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+(parseFloat(s2.horas)||0),0)),backgroundColor:SCOL[si],borderRadius:6}))};
+              const sTH=SVC.map(sv=>allAt.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+horasDe(s2),0));
+              const qDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si%SCOL.length],borderRadius:6}))};
+              const hDS={labels:tN,datasets:SVC.map((sv,si)=>({label:sv,data:tN.map(t=>allAt.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+horasDe(s2),0)),backgroundColor:SCOL[si%SCOL.length],borderRadius:6}))};
               const sDS2={labels:SVC.map(s=>s.length>10?s.slice(0,10)+"…":s),datasets:[{label:"Qtd Atendimentos",data:sTQ,backgroundColor:"#3B82F6",borderRadius:8},{label:"Horas",data:sTH,backgroundColor:"rgba(59,130,246,0.2)",borderRadius:8}]};
               const stOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
               const bOp={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
-              const pSvc={};allAt.forEach(a=>{if(!a.patrimonio||!a.servicos)return;const p2=a.patrimonio;if(!pSvc[p2])pSvc[p2]={total:0,horas:0,svcs:{},obs:[]};pSvc[p2].total++;pSvc[p2].horas+=(parseFloat(a.horas)||0);a.servicos.forEach(sv=>{pSvc[p2].svcs[sv]=(pSvc[p2].svcs[sv]||0)+1;});if(a.obsServico)pSvc[p2].obs.push(a.obsServico);});
+              const pSvc={};allAt.forEach(a=>{if(!a.patrimonio||!a.servicos)return;const p2=a.patrimonio;if(!pSvc[p2])pSvc[p2]={total:0,horas:0,svcs:{},obs:[]};pSvc[p2].total++;pSvc[p2].horas+=horasDe(a);a.servicos.forEach(sv=>{pSvc[p2].svcs[sv]=(pSvc[p2].svcs[sv]||0)+1;});if(a.obs)pSvc[p2].obs.push(a.obs);});
               const pList=Object.entries(pSvc).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
               return(<div style={{marginTop:20}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><div style={{width:4,height:24,background:"#3B82F6",borderRadius:2}}/><div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3}}>Serviços Técnicos</div></div>
-                <div style={{display:"grid",gridTemplateColumns:"2fr repeat(3,1fr)",gap:12,marginBottom:20}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><div style={{width:4,height:24,background:"#3B82F6",borderRadius:2}}/><div style={{fontSize:18,fontWeight:900,color:"#1E293B",letterSpacing:-.3}}>Serviços Técnicos — o que foi trocado/executado</div></div>
+                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:12,marginBottom:20}}>
                   <div style={{background:"linear-gradient(135deg,#1E293B,#0F172A)",borderRadius:16,padding:"20px 24px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
                     <div style={{fontSize:11,fontWeight:600,color:"#94A3B8",marginBottom:8}}>Com Serviço Registrado</div>
                     <div style={{display:"flex",alignItems:"baseline",gap:8}}><span style={{fontSize:40,fontWeight:900,color:"#F5C200"}}>{comServ}</span><span style={{fontSize:14,color:"#94A3B8"}}>de {allAt.length}</span></div>
-                    <div style={{fontSize:12,color:"#64748B",marginTop:6}}>{totalH.toFixed(0)}h trabalhadas</div>
+                    <div style={{fontSize:12,color:"#64748B",marginTop:6}}>{totalH.toFixed(0)}h trabalhadas no total</div>
                   </div>
-                  {[[SVC[0],sTQ[0],sTH[0],SCOL[0]],[SVC[1],sTQ[1],sTH[1],SCOL[1]],[SVC[2],sTQ[2],sTH[2],SCOL[2]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:14,padding:"8px 12px",borderLeft:`4px solid ${c}`,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:8}}>{n}</div>
-                    <div style={{fontSize:19,fontWeight:800,color:"#1E293B"}}>{q}</div>
-                    <div style={{fontSize:11,color:"#64748B",marginTop:4}}>{h.toFixed(1)}h</div>
-                  </div>)}
+                  <div style={{background:"#FFF",borderRadius:14,padding:"20px 24px",boxShadow:"0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                    <div style={{fontSize:11,fontWeight:600,color:"#94A3B8",marginBottom:8}}>Média de Horas por Atendimento</div>
+                    <div style={{fontSize:30,fontWeight:900,color:"#1E293B"}}>{allAt.length?(totalH/allAt.length).toFixed(1):"0.0"}h</div>
+                  </div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-                  {[[SVC[3],sTQ[3],sTH[3],SCOL[3]],[SVC[4],sTQ[4],sTH[4],SCOL[4]],[SVC[5],sTQ[5],sTH[5],SCOL[5]],[SVC[6],sTQ[6],sTH[6],SCOL[6]]].map(([n,q,h,c],i)=><div key={i} style={{background:"#FFF",borderRadius:12,padding:"14px 16px",borderLeft:`4px solid ${c}`,boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>{n}</div>
-                    <div style={{fontSize:16,fontWeight:800,color:"#1E293B"}}>{q} <span style={{fontSize:11,color:"#94A3B8",fontWeight:600}}>{h.toFixed(1)}h</span></div>
+                <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(SVC.length,6)},1fr)`,gap:10,marginBottom:20}}>
+                  {SVC.map((n,i)=><div key={n} style={{background:"#FFF",borderRadius:12,padding:"10px 12px",borderLeft:`4px solid ${SCOL[i%SCOL.length]}`,boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{n}</div>
+                    <div style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>{sTQ[i]} <span style={{fontSize:10,color:"#94A3B8",fontWeight:600}}>{sTH[i].toFixed(1)}h</span></div>
                   </div>)}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
@@ -3569,7 +3634,7 @@ export default function App(){
                 {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
                   <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços por Patrimônio</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
-                    {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"16px",borderLeft:`4px solid ${SCOL[pi%7]}`}}>
+                    {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"16px",borderLeft:`4px solid ${SCOL[pi%SCOL.length]}`}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                         <span style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>PAT {pat}</span>
                         <span style={{fontSize:12,fontWeight:700,color:"#3B82F6"}}>{d2.total} atend · {d2.horas.toFixed(1)}h</span>
@@ -3581,35 +3646,36 @@ export default function App(){
                 </div>}
               </div>);
             })()}
-
-                  <div style={{fontSize:14,fontWeight:800,color:"#1E293B",margin:"4px 0 14px"}}>Visão geral (todos os atendimentos)</div>
                 </>
               );
             })()}
 
-            
-
             {/* Stats gerais */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-              {[
-                {l:"Total Atendimentos",v:agendaAtendimentos.length,c:"#1A1A1A"},
-                {l:"Preventivos",v:agendaAtendimentos.filter(r=>r.type==="preventivo").length,c:"#1565C0"},
-                {l:"Corretivos",v:agendaAtendimentos.filter(r=>r.type==="corretivo").length,c:"#C62828"},
-                {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
-              ].map((s,i)=>(
-                <div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 22px",borderLeft:`4px solid ${s.c}`,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
-                  <div style={{fontSize:10,color:"#AAA",fontWeight:700,marginBottom:8}}>{s.l}</div>
-                  <div style={{fontSize:36,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
-                </div>
-              ))}
-            </div>
+            {(()=>{
+              const baseReports=(reports||[]).filter(r=>r&&!r.arquivado);
+              return(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+                {[
+                  {l:"Total Relatórios",v:baseReports.length,c:"#1A1A1A"},
+                  {l:"Preventivos",v:baseReports.filter(r=>r.atendimento==="preventivo").length,c:"#1565C0"},
+                  {l:"Corretivos",v:baseReports.filter(r=>r.atendimento==="corretivo").length,c:"#C62828"},
+                  {l:"Emp. em Atraso",v:empAlerta,c:"#E67E00"},
+                ].map((s,i)=>(
+                  <div key={i} style={{background:"#FFF",borderRadius:14,padding:"18px 22px",borderLeft:`4px solid ${s.c}`,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+                    <div style={{fontSize:10,color:"#AAA",fontWeight:700,marginBottom:8}}>{s.l}</div>
+                    <div style={{fontSize:36,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              );
+            })()}
 
             {/* Horas totais do mês */}
             {(()=>{
               const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-              const mesReps=agendaAtendimentos.filter(r=>r.date&&r.date.startsWith(mesAtual));
-              const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
+              const mesReps=(reports||[]).filter(r=>r&&!r.arquivado&&r.data&&r.data.startsWith(mesAtual));
+              const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0);
               const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
               return(
                 <div style={{background:"#FFF",borderRadius:16,padding:"20px 24px",marginBottom:20,boxShadow:"0 4px 20px rgba(0,0,0,.06)",display:"flex",gap:32,alignItems:"center",flexWrap:"wrap",borderTop:"3px solid #C47D00"}}>
@@ -3619,11 +3685,11 @@ export default function App(){
                     <div style={{fontSize:12,color:"#AAA"}}>horas trabalhadas</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                    <div style={{fontSize:38,fontWeight:900,color:"#2563EB",lineHeight:1}}>{mesReps.filter(r=>r.type==="preventivo").length}</div>
+                    <div style={{fontSize:38,fontWeight:900,color:"#2563EB",lineHeight:1}}>{mesReps.filter(r=>r.atendimento==="preventivo").length}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>preventivos</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                    <div style={{fontSize:38,fontWeight:900,color:"#EF4444",lineHeight:1}}>{mesReps.filter(r=>r.type==="corretivo").length}</div>
+                    <div style={{fontSize:38,fontWeight:900,color:"#EF4444",lineHeight:1}}>{mesReps.filter(r=>r.atendimento==="corretivo").length}</div>
                     <div style={{fontSize:12,color:"#AAA"}}>corretivos</div>
                   </div>
                   <div style={{display:"flex",alignItems:"baseline",gap:8}}>
@@ -3640,10 +3706,10 @@ export default function App(){
                 const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
                 const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"—";
                 const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-                const techReps=agendaAtendimentos.filter(r=>r.tecnico===tech&&r.date&&r.date.startsWith(mesAtual));
-                const totalMin=techReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas),0);
-                const prevs=techReps.filter(r=>r.type==="preventivo").length;
-                const corrs=techReps.filter(r=>r.type==="corretivo").length;
+                const techReps=(reports||[]).filter(r=>r&&!r.arquivado&&r.tecnico===tech&&r.data&&r.data.startsWith(mesAtual));
+                const totalMin=techReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0);
+                const prevs=techReps.filter(r=>r.atendimento==="preventivo").length;
+                const corrs=techReps.filter(r=>r.atendimento==="corretivo").length;
                 const color=techColor(tech);
                 return(
                   <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
@@ -3672,15 +3738,14 @@ export default function App(){
                     {techReps.length>0&&<div style={{padding:"0 16px 12px"}}>
                       {techReps.slice(0,2).map((r,i)=>(
                         <div key={i} style={{fontSize:11,color:"#555",padding:"3px 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                          <span style={{fontSize:9,fontWeight:700,padding:"1px 4px",borderRadius:3,background:tipoCfg(r.type).bg,color:tipoCfg(r.type).color,marginRight:4}}>{tipoCfg(r.type).l}</span>
-                          {r.empresa}
+                          <span style={{fontSize:9,fontWeight:700,padding:"1px 4px",borderRadius:3,background:tipoCfg(r.atendimento).bg,color:tipoCfg(r.atendimento).color,marginRight:4}}>{tipoCfg(r.atendimento).l}</span>
+                          {r.cliente}
                         </div>
                       ))}
                     </div>}
                   </div>
                 );
               })}
-            
             </div>
           </div>
         )}
