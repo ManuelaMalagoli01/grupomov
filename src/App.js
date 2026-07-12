@@ -3479,35 +3479,35 @@ export default function App(){
                   return(
                     <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
                       {cells.map((dn,i)=>{
-                        if(!dn)return<div key={i} style={{minHeight:150,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
+                        if(!dn)return<div key={i} style={{minHeight:340,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
                         const items=porDia[dn]||[];
-                        const shown=items.slice(0,3);
+                        const shown=items.slice(0,8);
                         const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:150,padding:"4px 5px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
-                              <div style={{fontSize:11,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888"}}>{isToday?"📍 ":""}{dn}</div>
-                              {ocupado&&<span style={{fontSize:7,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:8,padding:"1px 5px"}}>OCUPADO</span>}
+                          <div key={i} style={{minHeight:340,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888"}}>{isToday?"📍 ":""}{dn}</div>
+                              {ocupado&&<span style={{fontSize:8,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:8,padding:"1px 6px"}}>OCUPADO</span>}
                             </div>
                             <div style={{display:"flex",flexDirection:"column",gap:3}}>
                               {shown.map((it,ii)=>{
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
                                 return(
-                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:8,padding:"3px 4px",borderRadius:5,background:color+"14",borderLeft:`3px solid ${color}`,cursor:"pointer"}}>
+                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:9,padding:"4px 5px",borderRadius:5,background:color+"14",borderLeft:`3px solid ${color}`,cursor:"pointer"}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                                      <b style={{color,fontSize:8}}>{it.tech}</b>
-                                      <span style={{fontSize:6,fontWeight:800,color:st.c,background:st.bg,borderRadius:6,padding:"1px 4px",whiteSpace:"nowrap"}}>{st.l}</span>
+                                      <b style={{color,fontSize:9}}>{it.tech}</b>
+                                      <span style={{fontSize:7,fontWeight:800,color:st.c,background:st.bg,borderRadius:6,padding:"1px 4px",whiteSpace:"nowrap"}}>{st.l}</span>
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
-                                    <div style={{color:"#666",fontSize:7,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.patrimonio?`🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
+                                    <div style={{color:"#666",fontSize:8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.patrimonio?`🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
                                   </div>
                                 );
                               })}
-                              {resto>0&&<div onClick={()=>setAgpSelectedDay(dt)} style={{fontSize:8,color:"#94A3B8",fontWeight:700,paddingLeft:4,cursor:"pointer"}}>+{resto} mais</div>}
+                              {resto>0&&<div onClick={()=>setAgpSelectedDay(dt)} style={{fontSize:9,color:"#94A3B8",fontWeight:700,paddingLeft:4,cursor:"pointer"}}>+{resto} mais</div>}
                             </div>
                           </div>
                         );
