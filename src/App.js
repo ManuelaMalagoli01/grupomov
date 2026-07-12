@@ -1427,6 +1427,9 @@ export default function App(){
   const [dashFrom,setDashFrom]=useState("");
   const [dashTo,setDashTo]=useState("");
   const [dashTech,setDashTech]=useState("todos");
+  const [dashServico,setDashServico]=useState("todos");
+  const [dashPatrimonio,setDashPatrimonio]=useState("");
+  const [showFiltrosDash,setShowFiltrosDash]=useState(false);
   const [dashOfiTech,setDashOfiTech]=useState("todos");
   const [dashOfiFrom,setDashOfiFrom]=useState("");
   const [dashOfiTo,setDashOfiTo]=useState("");
@@ -3513,8 +3516,12 @@ export default function App(){
               const baseReports=(reports||[]).filter(r=>r&&!r.arquivado);
               const dashReports=baseReports.filter(d=>{
                 const region=techRegionMap[d.tecnico]||"";
-                return (dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d);
+                if(!((dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d)))return false;
+                if(dashServico!=="todos"&&!(d.servicos||[]).includes(dashServico))return false;
+                if(dashPatrimonio&&!(d.patrimonio||"").toLowerCase().includes(dashPatrimonio.toLowerCase()))return false;
+                return true;
               });
+              const hasFilterDash=dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos"||dashServico!=="todos"||dashPatrimonio;
               const prev=dashReports.filter(r=>r.atendimento==="preventivo").length;
               const corr=dashReports.filter(r=>r.atendimento==="corretivo").length;
               const totalPC=prev+corr;
@@ -3529,15 +3536,22 @@ export default function App(){
               const BLU="#2563EB",RED="#EF4444",YEL="#F5C200",ORG="#EA580C",GRN="#16A34A",PUR="#7C3AED",TEA="#0D9488";
               return(
                 <>
-                  <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
-                    <span style={{fontSize:11,fontWeight:700,color:"#888",}}>Filtro</span>
-                    <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:12}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
-                    <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:12}}/></div>
-                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:12}}/></div>
-                    {(dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos")&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");}}>✕ Limpar</BtnG>}
-                    <span style={{marginLeft:"auto",fontSize:11,color:"#AAA"}}>{dashReports.length} relatório(s) no filtro</span>
-                  </div>
+                  <button onClick={()=>setShowFiltrosDash(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDash?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                    <span style={{fontSize:11}}>🔍</span>
+                    <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                    {hasFilterDash&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                    <span style={{fontSize:9,color:"#94A3B8"}}>{dashReports.length} relatório(s)</span>
+                    <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosDash?"▲":"▼"}</span>
+                  </button>
+                  {showFiltrosDash&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                    <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
+                    <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                    <select value={dashServico} onChange={e=>setDashServico(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos serviços</option>{SERVICOS_RELATORIO.map(s=><option key={s} value={s}>{s}</option>)}</select>
+                    <input type="text" value={dashPatrimonio} onChange={e=>setDashPatrimonio(e.target.value)} placeholder="Patrimônio..." style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",width:120}}/>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:11}}/></div>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:11}}/></div>
+                    {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");}}>✕ Limpar</BtnG>}
+                  </div>}
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
@@ -3642,7 +3656,7 @@ export default function App(){
                   <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços Realizados — Quantidade e Horas</div>
                   <ChartCanvas type="bar" data={sDS2} options={bOp} height={260}/>
                 </div>
-                {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
+                {pList.length>0&&<div style={{background:"#FFF",borderRadius:16,padding:"24px 28px",boxShadow:"0 4px 20px rgba(0,0,0,.06)",marginBottom:20}}>
                   <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:16}}>Serviços por Patrimônio</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
                     {pList.map(([pat,d2],pi)=><div key={pi} style={{background:"#F8FAFC",borderRadius:12,padding:"16px",borderLeft:`4px solid ${SCOL[pi%SCOL.length]}`}}>
@@ -3655,6 +3669,38 @@ export default function App(){
                     </div>)}
                   </div>
                 </div>}
+                {(()=>{
+                  const porPat={};
+                  allAt.filter(a=>a.atendimento==="corretivo"&&a.patrimonio&&a.data).forEach(a=>{
+                    if(!porPat[a.patrimonio])porPat[a.patrimonio]=[];
+                    porPat[a.patrimonio].push(a);
+                  });
+                  const retrabalhos=[];
+                  Object.entries(porPat).forEach(([pat,list])=>{
+                    const ordenado=[...list].sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+                    for(let i=1;i<ordenado.length;i++){
+                      const d1=new Date(ordenado[i-1].data),d2=new Date(ordenado[i].data);
+                      const dias=Math.round((d2-d1)/86400000);
+                      if(dias>=0&&dias<=30){
+                        retrabalhos.push({pat,dataAnterior:ordenado[i-1].data,dataAtual:ordenado[i].data,dias,tecnico:ordenado[i].tecnico,tecnicoAnterior:ordenado[i-1].tecnico,cliente:ordenado[i].cliente,relatorio:ordenado[i].relatorio});
+                      }
+                    }
+                  });
+                  if(retrabalhos.length===0)return null;
+                  return(
+                    <div style={{background:"#FFF3E8",border:"1.5px solid #FBBF24",borderRadius:16,padding:"20px 24px",marginBottom:20}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}><span style={{fontSize:18}}>⚠️</span><div style={{fontSize:14,fontWeight:800,color:"#92400E"}}>Alerta de Retrabalho — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:220,overflowY:"auto"}}>
+                        {retrabalhos.map((r,i)=>(
+                          <div key={i} style={{background:"#FFF",borderRadius:8,padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11}}>
+                            <div><b>PAT {r.pat}</b> — {r.cliente||"—"} <span style={{color:"#94A3B8"}}>· {r.tecnicoAnterior}{r.tecnico!==r.tecnicoAnterior?` → ${r.tecnico}`:""}</span></div>
+                            <div style={{color:"#C47D00",fontWeight:700}}>{fmtDataBR(r.dataAnterior)} → {fmtDataBR(r.dataAtual)} ({r.dias}d)</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>);
             })()}
                 </>
