@@ -3506,7 +3506,7 @@ export default function App(){
                                       <span style={{fontSize:7,fontWeight:800,color:st.c,background:st.bg,borderRadius:6,padding:"1px 4px",whiteSpace:"nowrap"}}>{st.l}</span>
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
-                                    <div style={{color:"#666",fontSize:8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.patrimonio?`🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
+                                    <div style={{color:"#666",fontSize:8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.cidade?`📍${it.s.cidade}`:""}{it.s.patrimonio?` · 🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
                                     {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>⏱ {it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"} {(it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida))&&`· Total: ${it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida)}`}</div>}
                                   </div>
                                 );
