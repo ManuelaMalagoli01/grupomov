@@ -2236,6 +2236,14 @@ export default function App(){
                       notify(`🧹 ${semServico.length} apontamento(s) sem serviço excluído(s)!`);
                     }
                   }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62828",background:"transparent",color:"#F87171",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir sem Serviço</button>
+                  <button onClick={()=>{
+                    const comDetalhamento=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&a.servico&&!SERVICOS_OFICINA.includes(a.servico));
+                    if(comDetalhamento.length===0){alert("Nenhum apontamento com descrição detalhada (fora das categorias do sistema) encontrado.");return;}
+                    if(window.confirm(`Excluir ${comDetalhamento.length} apontamento(s) com descrição detalhada (fora das categorias Mecânica/Hidráulica/Elétrica/etc.)? Serão mantidos apenas os que já usam as categorias do sistema. Essa ação não pode ser desfeita.`)){
+                      comDetalhamento.forEach(a=>delApon(a.id));
+                      notify(`🧹 ${comDetalhamento.length} apontamento(s) com descrição detalhada excluído(s)!`);
+                    }
+                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62828",background:"transparent",color:"#F87171",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir Descrições Detalhadas</button>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
                     📄 Ler PDF
