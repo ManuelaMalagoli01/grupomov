@@ -1496,12 +1496,13 @@ export default function App(){
   const [carSearch,setCarSearch]=useState(""); const [carFrom,setCarFrom]=useState(""); const [carTo,setCarTo]=useState(""); const [carMes,setCarMes]=useState(""); const [carAno,setCarAno]=useState("");
   const [modalCarros,setModalCarros]=useState(false);
   const [editCarro,setEditCarro]=useState(null);
-  const OP_FORM_EMPTY={cliente:"",localizacao:"",responsavel:"",telefone:"",email:"",patrimonio:"",bateria:"",carregador:"",modelo:"",mediaHoras:"",servicosRealizados:"",dataPreventiva:"",qtdPreventiva:"",qtdCorretiva:"",qtdMauUso:"",trocaPecas:"",obs:""};
+  const OP_FORM_EMPTY={cliente:"",localizacao:"",responsaveis:[{nome:"",telefone:"",email:""}],patrimonios:[{pat:"",modelo:"",mediaHoras:"",corretivas:"",motivo:""}],baterias:[],carregadores:[],cuidadosBateria:"nao",cuidadosBateriaObs:"",prevDiaMes:"",prevPeriodo:"manha",servicosRealizados:"",qtdPreventiva:"",qtdCorretiva:"",qtdMauUso:"",trocaPecas:"",obs:""};
   const [opForm,setOpForm]=useState(OP_FORM_EMPTY);
   const [modalOp,setModalOp]=useState(false);
   const [editOp,setEditOp]=useState(null);
   const [showArqOp,setShowArqOp]=useState(false);
   const [opSearch,setOpSearch]=useState("");
+  const [showFiltrosOp,setShowFiltrosOp]=useState(false);
   const [modalImportOp,setModalImportOp]=useState(false);
   const [showArqPendMan,setShowArqPendMan]=useState(false);
   const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
@@ -5081,25 +5082,58 @@ export default function App(){
             if(ratio>=0.2)return "moderada";
             return "operante";
           };
+          const bateriaAlerta=(o)=>{
+            const criticos=(o.patrimonios||[]).filter(p=>p.pat&&(parseFloat(p.mediaHoras)||0)>250);
+            if(criticos.length===0)return null;
+            const nBat=(o.baterias||[]).length;
+            if(nBat<2)return `${criticos.length} máquina(s) com +250h/mês — precisa(m) de 2 baterias (há ${nBat})`;
+            return null;
+          };
+          const patMaisCorretivas=(o)=>{
+            const list=(o.patrimonios||[]).filter(p=>p.pat&&(parseFloat(p.corretivas)||0)>0);
+            if(!list.length)return null;
+            return list.reduce((a,b)=>(parseFloat(b.corretivas)||0)>(parseFloat(a.corretivas)||0)?b:a);
+          };
+          const addRow=(field,empty,max)=>setOpForm(p=>{const arr=p[field]||[];if(arr.length>=max)return p;return{...p,[field]:[...arr,empty]};});
+          const updRow=(field,idx,key,val)=>setOpForm(p=>({...p,[field]:(p[field]||[]).map((r,i)=>i===idx?{...r,[key]:val}:r)}));
+          const delRow=(field,idx)=>setOpForm(p=>({...p,[field]:(p[field]||[]).filter((_,i)=>i!==idx)}));
           const salvarOp=()=>{
             if(!opForm.cliente){alert("Preencha ao menos o Cliente.");return;}
+            const clean={...opForm,
+              responsaveis:(opForm.responsaveis||[]).filter(r=>r.nome||r.telefone||r.email),
+              patrimonios:(opForm.patrimonios||[]).filter(r=>r.pat||r.modelo),
+              baterias:(opForm.baterias||[]).filter(r=>r.pat||r.modelo),
+              carregadores:(opForm.carregadores||[]).filter(r=>r.pat||r.modelo),
+            };
             if(editOp){
-              opCrud.update(editOp.id,{...opForm});
+              opCrud.update(editOp.id,clean);
               setModalOp(false);setEditOp(null);setOpForm(OP_FORM_EMPTY);
               notify("✅ Operação atualizada!");
             } else {
-              opCrud.add({...opForm,arquivado:false});
+              opCrud.add({...clean,arquivado:false});
               setModalOp(false);setOpForm(OP_FORM_EMPTY);
               notify("✅ Operação cadastrada!");
             }
           };
-          const abrirEditarOp=(o)=>{setEditOp(o);setOpForm({cliente:o.cliente||"",localizacao:o.localizacao||"",responsavel:o.responsavel||"",telefone:o.telefone||"",email:o.email||"",patrimonio:o.patrimonio||"",bateria:o.bateria||"",carregador:o.carregador||"",modelo:o.modelo||"",mediaHoras:o.mediaHoras||"",servicosRealizados:o.servicosRealizados||"",dataPreventiva:o.dataPreventiva||"",qtdPreventiva:o.qtdPreventiva||"",qtdCorretiva:o.qtdCorretiva||"",qtdMauUso:o.qtdMauUso||"",trocaPecas:o.trocaPecas||"",obs:o.obs||""});setModalOp(true);};
+          const abrirEditarOp=(o)=>{setEditOp(o);setOpForm({
+            cliente:o.cliente||"",localizacao:o.localizacao||"",
+            responsaveis:o.responsaveis&&o.responsaveis.length?o.responsaveis:[{nome:"",telefone:"",email:""}],
+            patrimonios:o.patrimonios&&o.patrimonios.length?o.patrimonios:[{pat:"",modelo:"",mediaHoras:"",corretivas:"",motivo:""}],
+            baterias:o.baterias||[],carregadores:o.carregadores||[],
+            cuidadosBateria:o.cuidadosBateria||"nao",cuidadosBateriaObs:o.cuidadosBateriaObs||"",
+            prevDiaMes:o.prevDiaMes||"",prevPeriodo:o.prevPeriodo||"manha",
+            servicosRealizados:o.servicosRealizados||"",qtdPreventiva:o.qtdPreventiva||"",qtdCorretiva:o.qtdCorretiva||"",qtdMauUso:o.qtdMauUso||"",trocaPecas:o.trocaPecas||"",obs:o.obs||"",
+          });setModalOp(true);};
           const lista=(operacoes||[]).filter(o=>o&&(showArqOp||!o.arquivado));
           const listaFil=lista.filter(o=>{
             if(!opSearch)return true;
             const q=opSearch.toLowerCase();
-            return (o.cliente||"").toLowerCase().includes(q)||(o.localizacao||"").toLowerCase().includes(q)||(o.patrimonio||"").toLowerCase().includes(q)||(o.responsavel||"").toLowerCase().includes(q);
+            if((o.cliente||"").toLowerCase().includes(q)||(o.localizacao||"").toLowerCase().includes(q))return true;
+            if((o.responsaveis||[]).some(r=>(r.nome||"").toLowerCase().includes(q)))return true;
+            if((o.patrimonios||[]).some(p=>(p.pat||"").toLowerCase().includes(q)))return true;
+            return false;
           });
+          const hasFilterOp=!!opSearch;
           const totalPrev=lista.reduce((a,o)=>a+(parseFloat(o.qtdPreventiva)||0),0);
           const totalCorr=lista.reduce((a,o)=>a+(parseFloat(o.qtdCorretiva)||0),0);
           const totalMU=lista.reduce((a,o)=>a+(parseFloat(o.qtdMauUso)||0),0);
@@ -5111,45 +5145,80 @@ export default function App(){
             {label:"Corretiva",data:top10.map(o=>parseFloat(o.qtdCorretiva)||0),backgroundColor:"#C62828",borderRadius:5,borderSkipped:false},
           ]};
           const chartOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
+          const joinRows=(arr,keys)=>(arr||[]).filter(r=>keys.some(k=>r[k])).map(r=>keys.map(k=>r[k]||"").join(":")).join(";");
+          const parseRows=(str,keys)=>{if(!str)return[];return String(str).split(";").filter(Boolean).map(chunk=>{const parts=chunk.split(":");const o={};keys.forEach((k,i)=>o[k]=parts[i]||"");return o;});};
+
+          const RowsEditor=({label,field,keys,placeholders,max,types})=>{
+            const rows=opForm[field]||[];
+            return(
+              <div style={{background:"#FAFBFC",borderRadius:8,padding:"8px 10px",border:"1px solid #EEE"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                  <span style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase"}}>{label}</span>
+                  <span style={{fontSize:9,color:"#AAA"}}>{rows.length}/{max}</span>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {rows.map((r,idx)=>(
+                    <div key={idx} style={{display:"flex",gap:4,alignItems:"center"}}>
+                      {keys.map((k,ki)=>(
+                        <input key={k} type={(types&&types[ki])||"text"} value={r[k]||""} onChange={e=>updRow(field,idx,k,e.target.value)} placeholder={placeholders[ki]} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",flex:1,minWidth:0}}/>
+                      ))}
+                      <button onClick={()=>delRow(field,idx)} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:10,fontWeight:700,flexShrink:0}}>✕</button>
+                    </div>
+                  ))}
+                </div>
+                {rows.length<max&&<button onClick={()=>addRow(field,Object.fromEntries(keys.map(k=>[k,""])),max)} style={{marginTop:6,fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer"}}>+ Adicionar</button>}
+              </div>
+            );
+          };
+
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               {/* Modal inserir/editar */}
               {modalOp&&(
                 <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalOp(false);setEditOp(null);setOpForm(OP_FORM_EMPTY);}}}>
-                  <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+                  <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
                     <div style={{padding:"10px 14px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
                       <div style={{fontWeight:800,fontSize:15,color:"#1A1A1A"}}>{editOp?"✏️ Editar Operação":"➕ Nova Operação — Cliente"}</div>
                       <button onClick={()=>{setModalOp(false);setEditOp(null);setOpForm(OP_FORM_EMPTY);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
                     </div>
-                    <div style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Dados do Cliente</div>
+                    <div style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                         <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cliente</label><input type="text" value={opForm.cliente} onChange={e=>setOpForm(p=>({...p,cliente:e.target.value}))} placeholder="Nome do cliente" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                         <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Localização</label><input type="text" value={opForm.localizacao} onChange={e=>setOpForm(p=>({...p,localizacao:e.target.value}))} placeholder="Cidade/UF" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Responsável</label><input type="text" value={opForm.responsavel} onChange={e=>setOpForm(p=>({...p,responsavel:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Telefone</label><input type="text" value={opForm.telefone} onChange={e=>setOpForm(p=>({...p,telefone:e.target.value}))} placeholder="(00) 00000-0000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Email</label><input type="text" value={opForm.email} onChange={e=>setOpForm(p=>({...p,email:e.target.value}))} placeholder="email@cliente.com" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+
+                      <RowsEditor label="👤 Responsáveis (até 10)" field="responsaveis" keys={["nome","telefone","email"]} placeholders={["Nome","Telefone","Email"]} max={10}/>
+
+                      <RowsEditor label="🏗️ Patrimônios / Máquinas (até 50)" field="patrimonios" keys={["pat","modelo","mediaHoras","corretivas","motivo"]} placeholders={["PAT","Modelo","Média h/mês","Nº corretivas","Motivo corretivas"]} max={50} types={["text","text","number","number","text"]}/>
+
+                      <RowsEditor label="🔋 Baterias (até 50)" field="baterias" keys={["pat","modelo","spec"]} placeholders={["Patrimônio","Modelo","Amperagem/Voltagem"]} max={50}/>
+
+                      <RowsEditor label="🔌 Carregadores (até 50)" field="carregadores" keys={["pat","modelo","spec"]} placeholders={["Patrimônio","Modelo","Amperagem/Voltagem"]} max={50}/>
+
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10,background:"#FFFBEB",padding:10,borderRadius:8,border:"1px solid #FFE8A0"}}>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>⚠️ Cuidados com Bateria?</label>
+                          <select value={opForm.cuidadosBateria} onChange={e=>setOpForm(p=>({...p,cuidadosBateria:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700}}>
+                            <option value="nao">Não</option><option value="sim">Sim</option>
+                          </select>
+                        </div>
+                        {opForm.cuidadosBateria==="sim"&&<div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <label style={{fontSize:10,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Descreva os cuidados necessários</label>
+                          <input type="text" value={opForm.cuidadosBateriaObs} onChange={e=>setOpForm(p=>({...p,cuidadosBateriaObs:e.target.value}))} placeholder="Ex: evitar descarga total, recarregar diariamente..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #FFD080"}}/>
+                        </div>}
                       </div>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginTop:6}}>Máquina / Patrimônio</div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Patrimônio</label><input type="text" value={opForm.patrimonio} onChange={e=>setOpForm(p=>({...p,patrimonio:e.target.value}))} placeholder="PAT-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Modelo</label><input type="text" value={opForm.modelo} onChange={e=>setOpForm(p=>({...p,modelo:e.target.value}))} placeholder="Modelo da máquina" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Média Horas (Horímetro)</label><input type="text" value={opForm.mediaHoras} onChange={e=>setOpForm(p=>({...p,mediaHoras:e.target.value}))} placeholder="Ex: 120h/mês" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                      </div>
+
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Bateria</label><input type="text" value={opForm.bateria} onChange={e=>setOpForm(p=>({...p,bateria:e.target.value}))} placeholder="Modelo/status da bateria" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Carregador</label><input type="text" value={opForm.carregador} onChange={e=>setOpForm(p=>({...p,carregador:e.target.value}))} placeholder="Modelo/status do carregador" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Preferência Preventiva — Dia do Mês</label><input type="number" min="1" max="31" value={opForm.prevDiaMes} onChange={e=>setOpForm(p=>({...p,prevDiaMes:e.target.value}))} placeholder="Ex: 15" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Período</label><select value={opForm.prevPeriodo} onChange={e=>setOpForm(p=>({...p,prevPeriodo:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="manha">Manhã</option><option value="tarde">Tarde</option></select></div>
                       </div>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginTop:6}}>Manutenção (severidade calculada automaticamente)</div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Preventiva</label><input type="date" value={opForm.dataPreventiva} onChange={e=>setOpForm(p=>({...p,dataPreventiva:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                         <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd Preventiva (ano)</label><input type="number" value={opForm.qtdPreventiva} onChange={e=>setOpForm(p=>({...p,qtdPreventiva:e.target.value}))} placeholder="0" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                         <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd Corretiva (ano)</label><input type="number" value={opForm.qtdCorretiva} onChange={e=>setOpForm(p=>({...p,qtdCorretiva:e.target.value}))} placeholder="0" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                         <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Qtd Mau Uso (ano)</label><input type="number" value={opForm.qtdMauUso} onChange={e=>setOpForm(p=>({...p,qtdMauUso:e.target.value}))} placeholder="0" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
                       </div>
-                      <div style={{background:calcSeveridade(opForm.qtdPreventiva,opForm.qtdCorretiva)?OP_SEVER[calcSeveridade(opForm.qtdPreventiva,opForm.qtdCorretiva)].bg:"#F5F5F5",borderRadius:8,padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <div style={{background:OP_SEVER[calcSeveridade(opForm.qtdPreventiva,opForm.qtdCorretiva)].bg,borderRadius:8,padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                         <span style={{fontSize:11,fontWeight:700,color:"#555"}}>Severidade calculada:</span>
                         <span style={{fontSize:12,fontWeight:800,color:OP_SEVER[calcSeveridade(opForm.qtdPreventiva,opForm.qtdCorretiva)].c}}>{OP_SEVER[calcSeveridade(opForm.qtdPreventiva,opForm.qtdCorretiva)].l}</span>
                       </div>
@@ -5165,77 +5234,90 @@ export default function App(){
                 </div>
               )}
 
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
-                <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
-                <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                   <BtnImport onClick={()=>setModalImportOp(true)}/>
-                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"Ocultar":"Ver Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(lista,"operacoes_grupomov",[{key:"cliente",label:"Cliente"},{key:"localizacao",label:"Localização"},{key:"responsavel",label:"Responsável"},{key:"telefone",label:"Telefone"},{key:"email",label:"Email"},{key:"patrimonio",label:"Patrimônio"},{key:"modelo",label:"Modelo"},{key:"bateria",label:"Bateria"},{key:"carregador",label:"Carregador"},{key:"mediaHoras",label:"Média Horas"},{key:"dataPreventiva",label:"Data Preventiva"},{key:"qtdPreventiva",label:"Qtd Preventiva"},{key:"qtdCorretiva",label:"Qtd Corretiva"},{key:"qtdMauUso",label:"Qtd Mau Uso"},{key:"servicosRealizados",label:"Serviços Realizados"},{key:"trocaPecas",label:"Troca Peças"},{key:"obs",label:"Obs"}])}/>
+                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"7px 12px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:10,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"Ocultar":"Ver Arquivados"}</button>
+                  <BtnExcel onClick={()=>{
+                    const cols=[{key:"cliente",label:"Cliente"},{key:"localizacao",label:"Localização"},{key:"_responsaveis",label:"Responsáveis"},{key:"_patrimonios",label:"Patrimônios"},{key:"_baterias",label:"Baterias"},{key:"_carregadores",label:"Carregadores"},{key:"cuidadosBateria",label:"Cuidados Bateria"},{key:"cuidadosBateriaObs",label:"Obs Cuidados"},{key:"prevDiaMes",label:"Dia Preventiva"},{key:"prevPeriodo",label:"Período Preventiva"},{key:"qtdPreventiva",label:"Qtd Preventiva"},{key:"qtdCorretiva",label:"Qtd Corretiva"},{key:"qtdMauUso",label:"Qtd Mau Uso"},{key:"servicosRealizados",label:"Serviços Realizados"},{key:"trocaPecas",label:"Troca Peças"},{key:"obs",label:"Obs"}];
+                    const data=lista.map(o=>({...o,_responsaveis:joinRows(o.responsaveis,["nome","telefone","email"]),_patrimonios:joinRows(o.patrimonios,["pat","modelo","mediaHoras","corretivas","motivo"]),_baterias:joinRows(o.baterias,["pat","modelo","spec"]),_carregadores:joinRows(o.carregadores,["pat","modelo","spec"])}));
+                    exportCSV(data,"operacoes_grupomov",cols);
+                  }}/>
                   <BtnY onClick={()=>{setEditOp(null);setOpForm(OP_FORM_EMPTY);setModalOp(true);}}>+ Novo</BtnY>
                 </div>
               </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,marginBottom:12}}>
                 {[{l:"Clientes",v:lista.length,c:"#1A1A1A",bg:"#FFF"},{l:"Preventivas",v:totalPrev,c:"#1565C0",bg:"#EFF6FF"},{l:"Corretivas",v:totalCorr,c:"#C62828",bg:"#FFF0F0"},{l:"Mau Uso",v:totalMU,c:"#E67E00",bg:"#FFF8F0"},{l:"Críticas+Severas",v:severCounts.critica+severCounts.severa,c:"#EA580C",bg:"#FFF3E8"},{l:"Operantes",v:severCounts.operante,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,i)=>(
-                  <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{k.l}</div>
-                    <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  <div key={i} className="card" style={{padding:"6px 8px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:7,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{k.l}</div>
+                    <div style={{fontSize:15,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                   </div>
                 ))}
               </div>
 
               {/* Dashboard Preventiva x Corretiva */}
-              <div className="card" style={{padding:12,marginBottom:14}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>📊 Preventiva × Corretiva por Cliente (Top 10 por corretivas)</div>
-                {top10.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={chartOpts} height={240}/>}
+              <div className="card" style={{padding:10,marginBottom:12}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#1E293B",marginBottom:8}}>📊 Preventiva × Corretiva por Cliente (Top 10 por corretivas)</div>
+                {top10.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:24,fontSize:11}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={chartOpts} height={200}/>}
               </div>
 
-              {/* Busca */}
-              <div className="card" style={{padding:"6px 10px",marginBottom:12,display:"flex",gap:8,alignItems:"center"}}>
-                <span style={{fontSize:11}}>🔍</span>
-                <input type="text" value={opSearch} onChange={e=>setOpSearch(e.target.value)} placeholder="Buscar cliente, localização, patrimônio, responsável..." style={{flex:1,fontSize:11,padding:"6px 8px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-              </div>
+              {/* Filtro colapsável (botão pequeno) */}
+              <button onClick={()=>setShowFiltrosOp(p=>!p)} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosOp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:8,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:10}}>🔍</span>
+                <span style={{fontSize:9,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {hasFilterOp&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosOp?"▲":"▼"}</span>
+              </button>
+              {showFiltrosOp&&<div className="card" style={{padding:"6px 8px",marginBottom:10,display:"flex",gap:6,alignItems:"center"}}>
+                <span style={{fontSize:10}}>🔍</span>
+                <input type="text" value={opSearch} onChange={e=>setOpSearch(e.target.value)} placeholder="Buscar cliente, localização, patrimônio, responsável..." style={{flex:1,fontSize:10,padding:"5px 7px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                {hasFilterOp&&<button onClick={()=>setOpSearch("")} style={{padding:"5px 10px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:9,cursor:"pointer",fontWeight:600}}>✕</button>}
+              </div>}
 
-              {/* Lista de clientes */}
-              {listaFil.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:6}}>🏢</div><div style={{fontSize:12,fontWeight:600}}>Nenhuma operação cadastrada</div></div>):(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              {/* Lista de clientes (cards pequenos) */}
+              {listaFil.length===0?(<div className="card" style={{padding:36,textAlign:"center",color:"#CCC"}}><div style={{fontSize:26,marginBottom:4}}>🏢</div><div style={{fontSize:10,fontWeight:600}}>Nenhuma operação cadastrada</div></div>):(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
                   {listaFil.map(o=>{
                     const sev=calcSeveridade(o.qtdPreventiva,o.qtdCorretiva);
                     const sevInfo=OP_SEVER[sev];
+                    const batAlert=bateriaAlerta(o);
+                    const patTop=patMaisCorretivas(o);
+                    const resp0=(o.responsaveis||[])[0];
+                    const respExtra=(o.responsaveis||[]).length-1;
+                    const patExtra=(o.patrimonios||[]).length;
                     return(
-                      <div key={o.id} className="card" style={{borderTop:`4px solid ${sevInfo.c}`,padding:0,overflow:"hidden",opacity:o.arquivado?0.6:1}}>
-                        <div style={{padding:"7px 10px",background:sevInfo.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:10,fontWeight:800,color:sevInfo.c}}>{sevInfo.l}</span>
-                          <div style={{display:"flex",gap:3}}>
-                            <button onClick={()=>abrirEditarOp(o)} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"3px 6px",fontSize:10}}>✏️</button>
-                            <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 6px",fontSize:10}}>{o.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))opCrud.del(o.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 6px",fontSize:10,fontWeight:700}}>✕</button>
+                      <div key={o.id} className="card" style={{borderTop:`3px solid ${sevInfo.c}`,padding:0,overflow:"hidden",opacity:o.arquivado?0.6:1}}>
+                        <div style={{padding:"4px 6px",background:sevInfo.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:8,fontWeight:800,color:sevInfo.c}}>{sevInfo.l}</span>
+                          <div style={{display:"flex",gap:2}}>
+                            <button onClick={()=>abrirEditarOp(o)} style={{background:"#EFF6FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"2px 5px",fontSize:9}}>✏️</button>
+                            <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"2px 5px",fontSize:9}}>{o.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))opCrud.del(o.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"2px 5px",fontSize:9,fontWeight:700}}>✕</button>
                           </div>
                         </div>
-                        <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:5}}>
-                          <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{o.cliente||"—"}</div>
-                          <div style={{fontSize:10,color:"#888"}}>📍 {o.localizacao||"—"} · {o.responsavel||"—"}</div>
-                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                            {o.telefone&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px"}}>📞 {o.telefone}</span>}
-                            {o.email&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px"}}>✉️ {o.email}</span>}
+                        <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:3}}>
+                          <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{o.cliente||"—"}</div>
+                          <div style={{fontSize:8,color:"#888"}}>📍 {o.localizacao||"—"}</div>
+                          {resp0&&<div style={{fontSize:8,color:"#555"}}>👤 {resp0.nome||"—"}{respExtra>0&&<span style={{color:"#94A3B8"}}> +{respExtra}</span>}</div>}
+                          <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🏗️ {patExtra} PAT</span>
+                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🔋 {(o.baterias||[]).length}</span>
+                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🔌 {(o.carregadores||[]).length}</span>
                           </div>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
-                            <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 6px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Patrimônio</div><div style={{fontSize:10,fontWeight:700}}>{o.patrimonio||"—"}</div></div>
-                            <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 6px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Modelo</div><div style={{fontSize:10,fontWeight:700}}>{o.modelo||"—"}</div></div>
-                            <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 6px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Bateria</div><div style={{fontSize:10,fontWeight:700}}>{o.bateria||"—"}</div></div>
-                            <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 6px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Carregador</div><div style={{fontSize:10,fontWeight:700}}>{o.carregador||"—"}</div></div>
-                            <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 6px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Média Horas (Horímetro)</div><div style={{fontSize:10,fontWeight:700}}>{o.mediaHoras||"—"}</div></div>
+                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:3}}>
+                            <div style={{background:"#EFF6FF",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#1565C0",fontSize:7,fontWeight:700}}>Prev.</div><div style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{o.qtdPreventiva||0}</div></div>
+                            <div style={{background:"#FFF0F0",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#C62828",fontSize:7,fontWeight:700}}>Corr.</div><div style={{fontSize:10,fontWeight:800,color:"#C62828"}}>{o.qtdCorretiva||0}</div></div>
+                            <div style={{background:"#FFF8F0",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#E67E00",fontSize:7,fontWeight:700}}>M.Uso</div><div style={{fontSize:10,fontWeight:800,color:"#E67E00"}}>{o.qtdMauUso||0}</div></div>
                           </div>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:4}}>
-                            <div style={{background:"#EFF6FF",borderRadius:6,padding:"3px 6px",textAlign:"center"}}><div style={{color:"#1565C0",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Prev.</div><div style={{fontSize:12,fontWeight:800,color:"#1565C0"}}>{o.qtdPreventiva||0}</div></div>
-                            <div style={{background:"#FFF0F0",borderRadius:6,padding:"3px 6px",textAlign:"center"}}><div style={{color:"#C62828",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Corr.</div><div style={{fontSize:12,fontWeight:800,color:"#C62828"}}>{o.qtdCorretiva||0}</div></div>
-                            <div style={{background:"#FFF8F0",borderRadius:6,padding:"3px 6px",textAlign:"center"}}><div style={{color:"#E67E00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>M.Uso</div><div style={{fontSize:12,fontWeight:800,color:"#E67E00"}}>{o.qtdMauUso||0}</div></div>
-                          </div>
-                          {o.dataPreventiva&&<div style={{fontSize:9,color:"#888"}}>📅 Próx. preventiva: <b>{fmtDataBR(o.dataPreventiva)}</b></div>}
-                          {o.servicosRealizados&&<div style={{fontSize:9,color:"#666",background:"#FAFAFA",borderRadius:6,padding:"3px 6px"}}>🔧 {o.servicosRealizados}</div>}
-                          {o.trocaPecas&&<div style={{fontSize:9,color:"#666",background:"#FFFBF0",borderRadius:6,padding:"3px 6px",borderLeft:"3px solid #F5C200"}}>🔩 {o.trocaPecas}</div>}
-                          {o.obs&&<div style={{fontSize:9,color:"#666",fontStyle:"italic"}}>💬 {o.obs}</div>}
+                          {o.prevDiaMes&&<div style={{fontSize:7,color:"#888"}}>🗓 Preventiva: dia {o.prevDiaMes} · {o.prevPeriodo==="tarde"?"Tarde":"Manhã"}</div>}
+                          {batAlert&&<div style={{fontSize:7,color:"#C62828",background:"#FFF0F0",borderRadius:5,padding:"2px 4px",fontWeight:700}}>🔋⚠️ {batAlert}</div>}
+                          {o.cuidadosBateria==="sim"&&<div style={{fontSize:7,color:"#C47D00",background:"#FFFBF0",borderRadius:5,padding:"2px 4px",fontWeight:700}}>⚠️ Cuidados c/ bateria: {o.cuidadosBateriaObs||"ver detalhes"}</div>}
+                          {patTop&&<div style={{fontSize:7,color:"#92400E",background:"#FFFBEB",borderRadius:5,padding:"2px 4px"}}>🔧 PAT {patTop.pat} — {patTop.corretivas} corretivas{patTop.motivo?`: ${patTop.motivo}`:""}</div>}
+                          {o.servicosRealizados&&<div style={{fontSize:7,color:"#666",background:"#FAFAFA",borderRadius:5,padding:"2px 4px"}}>🔧 {o.servicosRealizados}</div>}
+                          {o.obs&&<div style={{fontSize:7,color:"#666",fontStyle:"italic"}}>💬 {o.obs}</div>}
                         </div>
                       </div>
                     );
@@ -5244,14 +5326,24 @@ export default function App(){
               )}
 
               {/* Modal importar */}
-              {modalImportOp&&<ImportExcelModal title="Importar Operações" onClose={()=>setModalImportOp(false)} onImport={(rows)=>{
-                rows.forEach(r=>{opCrud.add({cliente:r.Cliente||r.cliente||"",localizacao:r["Localização"]||r.localizacao||"",responsavel:r["Responsável"]||r.responsavel||"",telefone:r.Telefone||r.telefone||"",email:r.Email||r.email||"",patrimonio:r["Patrimônio"]||r.patrimonio||"",modelo:r.Modelo||r.modelo||"",bateria:r.Bateria||r.bateria||"",carregador:r.Carregador||r.carregador||"",mediaHoras:r["Média Horas"]||r.mediaHoras||"",dataPreventiva:r["Data Preventiva"]||r.dataPreventiva||"",qtdPreventiva:r["Qtd Preventiva"]||r.qtdPreventiva||"",qtdCorretiva:r["Qtd Corretiva"]||r.qtdCorretiva||"",qtdMauUso:r["Qtd Mau Uso"]||r.qtdMauUso||"",servicosRealizados:r["Serviços Realizados"]||r.servicosRealizados||"",trocaPecas:r["Troca Peças"]||r.trocaPecas||"",obs:r.Obs||r.obs||"",arquivado:false});});
+              {modalImportOp&&<ImportExcelModal onClose={()=>setModalImportOp(false)} onImport={(rows)=>{
+                rows.forEach(r=>{opCrud.add({
+                  cliente:r.Cliente||r.cliente||"",localizacao:r["Localização"]||r.localizacao||"",
+                  responsaveis:parseRows(r["Responsáveis"]||r._responsaveis,["nome","telefone","email"]),
+                  patrimonios:parseRows(r["Patrimônios"]||r._patrimonios,["pat","modelo","mediaHoras","corretivas","motivo"]),
+                  baterias:parseRows(r["Baterias"]||r._baterias,["pat","modelo","spec"]),
+                  carregadores:parseRows(r["Carregadores"]||r._carregadores,["pat","modelo","spec"]),
+                  cuidadosBateria:r["Cuidados Bateria"]||r.cuidadosBateria||"nao",cuidadosBateriaObs:r["Obs Cuidados"]||r.cuidadosBateriaObs||"",
+                  prevDiaMes:r["Dia Preventiva"]||r.prevDiaMes||"",prevPeriodo:r["Período Preventiva"]||r.prevPeriodo||"manha",
+                  qtdPreventiva:r["Qtd Preventiva"]||r.qtdPreventiva||"",qtdCorretiva:r["Qtd Corretiva"]||r.qtdCorretiva||"",qtdMauUso:r["Qtd Mau Uso"]||r.qtdMauUso||"",
+                  servicosRealizados:r["Serviços Realizados"]||r.servicosRealizados||"",trocaPecas:r["Troca Peças"]||r.trocaPecas||"",obs:r.Obs||r.obs||"",arquivado:false});});
                 notify(`✅ ${rows.length} operação(ões) importada(s)!`);
                 setModalImportOp(false);
               }}/>}
             </div>
           );
         })()}
+
 
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
