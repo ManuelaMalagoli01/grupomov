@@ -96,10 +96,9 @@ const CARRO_STATUS = {
 const APROV_STATUS={
   aguardando_retorno:{l:"⏳ Aguardando Retorno",c:"#E67E00",bg:"#FFF8F0"},
   em_negociacao:{l:"🤝 Em Negociação",c:"#1565C0",bg:"#EFF6FF"},
-  aprovado_cliente:{l:"✅ Aprovado pelo Cliente",c:"#1A7A3C",bg:"#F0FFF5"},
+  aprovado_cliente:{l:"✅ Aprovado / Aguardando Faturamento",c:"#0D9488",bg:"#F0FDFA"},
   negado_cliente:{l:"❌ Negado pelo Cliente",c:"#C62828",bg:"#FFF0F0"},
-  aguardando_faturamento:{l:"🧾 Aguardando Faturamento",c:"#0D9488",bg:"#F0FDFA"},
-  cobrado_faturado:{l:"💰 Cobrado / Faturado",c:"#6A1B9A",bg:"#F3E5F5"},
+  cobrado_faturado:{l:"💰 Faturado / Concluído",c:"#6A1B9A",bg:"#F3E5F5"},
   encerrado_sem_cobranca:{l:"🔒 Encerrado s/ Cobrança",c:"#546E7A",bg:"#ECEFF1"},
 };
 const RUP_SOLICITACAO=[
@@ -4543,8 +4542,8 @@ export default function App(){
           const valAF=allAF.reduce((acc,p)=>acc+parseVal(p.valor),0);
           const valTotal=valMU+valAF;
           const valAprov=[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const valAguardFat=[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_faturamento").reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const valFaturado=[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").reduce((acc,p)=>acc+parseVal(p.valor),0);
+          const mesAtualStr=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+          const valFaturado=[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).reduce((acc,p)=>acc+parseVal(p.valor),0);
           const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           // Counts por aprovCliente
           const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
@@ -4637,7 +4636,7 @@ export default function App(){
             </div>}
 
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:20}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
               <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A1A1A"}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Total Processos</div>
                 <div style={{fontSize:32,fontWeight:900,color:"#1A1A1A"}}>{allMU.length+allAF.length}</div>
@@ -4648,20 +4647,15 @@ export default function App(){
                 <div style={{fontSize:18,fontWeight:900,color:"#E67E00"}}>{fmtR(valTotal)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {fmtR(valMU)} · AF: {fmtR(valAF)}</div>
               </div>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A7A3C",background:"#F0FFF5"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado pelo Cliente</div>
-                <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{fmtR(valAprov)}</div>
+              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #0D9488",background:"#F0FDFA"}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado / Aguard. Faturamento</div>
+                <div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{fmtR(valAprov)}</div>
                 <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length} processo(s)</div>
               </div>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #0D9488",background:"#F0FDFA"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>🧾 Aguardando Faturamento</div>
-                <div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{fmtR(valAguardFat)}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_faturamento").length} processo(s)</div>
-              </div>
               <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Cobrado / Faturado</div>
+                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Faturado / Concluído (no mês)</div>
                 <div style={{fontSize:18,fontWeight:900,color:"#6A1B9A"}}>{fmtR(valFaturado)}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").length} processo(s)</div>
+                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).length} processo(s) · zera no início do mês</div>
               </div>
             </div>
 
@@ -4851,28 +4845,16 @@ export default function App(){
               const muAll=allMU;
               const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
               const temFiltroEnvio=muEnvioDe||muEnvioAte;
-              const campoData=muFiltroModo==="aprovacao"?"dataAprovacao":"dataEnvio";
+              const inPeriodo=d0=>{if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;if(temFiltroEnvio){if(muEnvioDe&&d0<muEnvioDe)return false;if(muEnvioAte&&d0>muEnvioAte)return false;return true;}return d>=semanaAtras;};
+              const enviadoNoPeriodo=p=>inPeriodo(p.dataEnvio||p.date);
+              const aprovadoNoPeriodo=p=>(p.aprovCliente||"")==="aprovado_cliente"&&inPeriodo(p.dataAprovacao);
               const muSemana=muAll.filter(p=>{
-                if(muFiltroModo==="aprovacao"){
-                  if((p.aprovCliente||"")!=="aprovado_cliente")return false;
-                  const d0=p.dataAprovacao;if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;
-                  if(temFiltroEnvio){
-                    if(muEnvioDe&&d0<muEnvioDe)return false;
-                    if(muEnvioAte&&d0>muEnvioAte)return false;
-                    return true;
-                  }
-                  return d>=semanaAtras;
-                }
-                const d0=p.dataEnvio||p.date;if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;
-                if(temFiltroEnvio){
-                  if(muEnvioDe&&d0<muEnvioDe)return false;
-                  if(muEnvioAte&&d0>muEnvioAte)return false;
-                  return true;
-                }
-                return d>=semanaAtras;
-              }).sort((a,b)=>((b[campoData]||b.date||"")).localeCompare(a[campoData]||a.date||""));
+                if(muFiltroModo==="aprovacao")return aprovadoNoPeriodo(p);
+                if(muFiltroModo==="envio")return enviadoNoPeriodo(p);
+                return enviadoNoPeriodo(p)||aprovadoNoPeriodo(p);
+              }).sort((a,b)=>((b.dataAprovacao||b.dataEnvio||b.date||"")).localeCompare(a.dataAprovacao||a.dataEnvio||a.date||""));
               const valorSemana=muSemana.reduce((a,p)=>a+parseVal(p.valor),0);
-              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");});
+              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[],tickets:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");if(p.ticket)empData[emp].tickets.push(p.ticket);});
               const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
               const statusData=Object.entries(APROV_STATUS).map(([k,s])=>({k,l:s.l,c:s.c,bg:s.bg,qtd:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,valor:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((a,p)=>a+parseVal(p.valor),0)})).filter(s=>s.qtd>0);
               return(
@@ -4915,6 +4897,7 @@ export default function App(){
                           <div>
                             <div style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>{emp}</div>
                             <div style={{fontSize:9,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
+                            {d.tickets.length>0&&<div style={{fontSize:9,color:"#6A1B9A",fontWeight:600}}>🎫 Ticket: {d.tickets.slice(0,3).join(", ")}</div>}
                           </div>
                           <div style={{fontSize:11,fontWeight:800,color:"#F43F5E"}}>{fmtR(d.valor)}</div>
                         </div>
