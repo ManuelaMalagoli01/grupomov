@@ -1171,7 +1171,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   const SERVICOS_TABS = ["mau_uso","a_faturar","dashboard_processos","sas"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota"];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "operacoes"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [oficinasOpen, setOficinasOpen] = useState(OFICINAS_TABS.includes(tab));
@@ -1334,6 +1334,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
         </>}
 
         <SubBtn k="pendencias_frota" l="🚜 Pendências Frota"/>
+        <SubBtn k="operacoes" l="🏢 Operações"/>
       </div>}
 
       {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos, SAS) */}
@@ -1361,7 +1362,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
         <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
       </div>}
 
-      <Btn k="operacoes" l="🏢 Operações"/>
       <Btn k="carros" l="🚙 Carros"/>
       {canSee("somanuela")&&<Btn k="prioridades_clientes" l="⭐ Prioridades Clientes"/>}
       {canSee("somanuela")&&<Btn k="pendencias_manuela_tab" l="📋 Pendências Manuela"/>}
