@@ -831,11 +831,25 @@ function ImportAponModal({onClose,onImport,label}){
   const doImport=()=>{
     const mapped=rows.map(o=>{
       const MESES_MAP={"janeiro":"01","fevereiro":"02","março":"03","abril":"04","maio":"05","junho":"06","julho":"07","agosto":"08","setembro":"09","outubro":"10","novembro":"11","dezembro":"12"};
+      const toISO=(str)=>{
+        if(!str)return "";
+        str=String(str).trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(str))return str; // já no padrão
+        let m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/); // dd/mm/aaaa
+        if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+        m=str.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/); // dd-mm-aaaa
+        if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+        if(/^\d+(\.\d+)?$/.test(str)){ // serial de data do Excel
+          const n=parseFloat(str);const dt=new Date(Math.round((n-25569)*86400*1000));
+          if(!isNaN(dt))return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
+        }
+        return str;
+      };
       const dia=String(pick("dia")(o)||"").padStart(2,"0");
       const mesNome=String(pick("mês")(o)||pick("mes")(o)||"").toLowerCase().trim();
       const mesNum=MESES_MAP[mesNome]||mesNome.padStart(2,"0");
       const ano=String(pick("ano")(o)||"");
-      const dataCalc=(dia&&mesNum&&ano)?`${dia}/${mesNum}/${ano}`:String(pick("data")(o)||pick("date")(o)||"");
+      const dataCalc=(dia&&mesNum&&ano)?`${(ano.length===2?"20"+ano:ano)}-${mesNum.padStart(2,"0")}-${dia.padStart(2,"0")}`:toISO(pick("data")(o)||pick("date")(o)||"");
       return{
       id:"AX"+Date.now()+Math.random().toString(36).slice(2,6),
       data:dataCalc,
@@ -843,7 +857,7 @@ function ImportAponModal({onClose,onImport,label}){
       patrimonio:String(pick("nº do pat")(o)||pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
       tecnico:String(pick("técnico")(o)||pick("tecnico")(o)||""),
       modelo:String(pick("modelo")(o)||""),
-      servico:String(pick("serviço realizado")(o)||pick("servico")(o)||pick("serviço")(o)||pick("tipo")(o)||""),
+      servico:"", // deixado em branco propositalmente — inserção manual posterior (métricas de trabalho)
       inicio:String(pick("inicial")(o)||pick("inicio")(o)||pick("início")(o)||pick("entrada")(o)||""),
       termino:String(pick("terminio")(o)||pick("termino")(o)||pick("término")(o)||pick("saida")(o)||""),
       total:String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""),
@@ -859,7 +873,7 @@ function ImportAponModal({onClose,onImport,label}){
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22}}>
-          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Técnico, O.S, Dia, Mês, Ano, Inicial, Término, Total Hora, Nº do PAT, Modelo, Serviço Realizado, Observação</b> (formato PAINEL)</div>
+          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Técnico, O.S, Dia, Mês, Ano, Inicial, Término, Total Hora, Nº do PAT, Modelo, Observação</b> (formato PAINEL). A data é convertida automaticamente para o padrão do sistema (AAAA-MM-DD). O campo <b>Serviço</b> é importado em branco propositalmente — insira manualmente depois, serviço por serviço, para as métricas de trabalho.</div>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{marginBottom:12}}/>
           {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo...</div>}
           {err&&<div style={{color:"#DC2626",fontSize:12}}>{err}</div>}
