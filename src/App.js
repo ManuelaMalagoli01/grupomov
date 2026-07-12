@@ -811,6 +811,8 @@ function ImportAponModal({onClose,onImport,label}){
   const [loading,setLoading]=useState(false);
   const fileRef=useRef();
   const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const HEADER_KEYWORDS=["técnico","tecnico","o.s","os","dia","mês","mes","ano","inicial","início","inicio","termin","total","pat","observ","serviç","servic","modelo","data"];
+  const scoreRow=(row)=>row.reduce((acc,cell)=>{ const s=String(cell||"").trim().toLowerCase(); if(!s)return acc; return acc+(HEADER_KEYWORDS.some(k=>s.includes(k))?1:0); },0);
   const onFile=async(f)=>{
     if(!f)return;setErr("");setLoading(true);setRows(null);
     try{
@@ -822,7 +824,23 @@ function ImportAponModal({onClose,onImport,label}){
         if(!data.length)setErr("Vazia.");else setRows(data);
       }else{
         const XLSX=await loadXLSX();const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:"array"});
-        const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        // Lê como matriz bruta (sem assumir que a linha 1 é o cabeçalho) para detectar automaticamente
+        // a linha real do cabeçalho, mesmo que existam linhas em branco antes dela na planilha.
+        const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false,blankrows:true});
+        let headerIdx=0,bestScore=-1;
+        for(let i=0;i<Math.min(raw.length,20);i++){
+          const sc=scoreRow(raw[i]||[]);
+          if(sc>bestScore){bestScore=sc;headerIdx=i;}
+        }
+        let data;
+        if(bestScore>=2){
+          const headerRow=raw[headerIdx].map((h,i)=>String(h||"").trim()||`Coluna${i+1}`);
+          data=raw.slice(headerIdx+1).filter(r=>r.some(c=>String(c||"").trim()!=="")).map(r=>{const o={};headerRow.forEach((h,i)=>o[h]=r[i]!==undefined?r[i]:"");return o;});
+        }else{
+          // fallback: comportamento padrão (linha 1 como cabeçalho)
+          data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        }
         if(!data.length)setErr("Vazia.");else setRows(data);
       }
     }catch(e){setErr("Erro ao ler arquivo.");}
@@ -845,11 +863,32 @@ function ImportAponModal({onClose,onImport,label}){
         }
         return str;
       };
+      const toTime=(str)=>{
+        if(!str)return "";
+        str=String(str).trim();
+        let m=str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|am|pm)?$/);
+        if(m){
+          let h=parseInt(m[1]),mi=m[2];
+          if(m[3]){const ap=m[3].toLowerCase();if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;}
+          return `${String(h).padStart(2,"0")}:${mi}`;
+        }
+        if(/^\d+(\.\d+)?$/.test(str)){ // fração de dia do Excel (ex: 0.5 = 12:00)
+          const frac=parseFloat(str);
+          if(frac>=0&&frac<1){
+            const totalMin=Math.round(frac*24*60);
+            return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;
+          }
+        }
+        return str;
+      };
       const dia=String(pick("dia")(o)||"").padStart(2,"0");
       const mesNome=String(pick("mês")(o)||pick("mes")(o)||"").toLowerCase().trim();
       const mesNum=MESES_MAP[mesNome]||mesNome.padStart(2,"0");
       const ano=String(pick("ano")(o)||"");
       const dataCalc=(dia&&mesNum&&ano)?`${(ano.length===2?"20"+ano:ano)}-${mesNum.padStart(2,"0")}-${dia.padStart(2,"0")}`:toISO(pick("data")(o)||pick("date")(o)||"");
+      const inicioRaw=String(pick("inicial")(o)||pick("inicio")(o)||pick("início")(o)||pick("entrada")(o)||"");
+      const terminoRaw=String(pick("terminio")(o)||pick("termino")(o)||pick("término")(o)||pick("saida")(o)||"");
+      const inicioT=toTime(inicioRaw),terminoT=toTime(terminoRaw);
       return{
       id:"AX"+Date.now()+Math.random().toString(36).slice(2,6),
       data:dataCalc,
@@ -858,9 +897,9 @@ function ImportAponModal({onClose,onImport,label}){
       tecnico:String(pick("técnico")(o)||pick("tecnico")(o)||""),
       modelo:String(pick("modelo")(o)||""),
       servico:"", // deixado em branco propositalmente — inserção manual posterior (métricas de trabalho)
-      inicio:String(pick("inicial")(o)||pick("inicio")(o)||pick("início")(o)||pick("entrada")(o)||""),
-      termino:String(pick("terminio")(o)||pick("termino")(o)||pick("término")(o)||pick("saida")(o)||""),
-      total:String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""),
+      inicio:inicioT,
+      termino:terminoT,
+      total:toTime(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
       obs:String(pick("obsevação")(o)||pick("observação")(o)||pick("obs")(o)||pick("observ")(o)||""),
     };});
     onImport(mapped);
