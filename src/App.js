@@ -2602,7 +2602,7 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=(pendHebert||[]).filter(r=>r&&(showArqHeb||!r.arquivado));
+          const list=(pendHebert||[]).filter(r=>r&&(showArqHeb?r.arquivado:!r.arquivado));
           const fS=formServH;const sfS=setFormServH;const fM=filtroMesH;const sfM=setFiltroMesH;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -2618,7 +2618,7 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 1340</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
                 <BtnImport onClick={()=>setModalImportPH(true)}/>
-                <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#D97706":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Arquivados":"📦 Arquivados"}</button>
+                <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#D97706":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Voltar aos Ativos":"📦 Consultar Arquivados"}</button>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
                 <input type="month" value={fM} onChange={e=>sfM(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/>
@@ -2725,7 +2725,7 @@ export default function App(){
         {tab==="pendencias_manuela_tab"&&user.id==="manuela"&&(()=>{
           const STS_PM={Finalizado:{c:"#1A7A3C",bg:"#F0FFF5"},Pendente:{c:"#C62828",bg:"#FFF0F0"},"Em Andamento":{c:"#1565C0",bg:"#F0F4FF"}};
           const PRI_PM={Urgente:{c:"#C62828",bg:"#FFF0F0"},Normal:{c:"#555",bg:"#F5F5F5"},"Médio Prazo":{c:"#1565C0",bg:"#F0F4FF"}};
-          const list=(pendManuela||[]).filter(r=>r&&(showArqPendMan||!r.arquivado));
+          const list=(pendManuela||[]).filter(r=>r&&(showArqPendMan?r.arquivado:!r.arquivado));
           const emptyForm={tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""};
           const form=pendManForm;
           const upd=(k,v)=>setPendManForm(p=>({...p,[k]:v}));
@@ -2742,7 +2742,7 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📋 Pendências Manuela</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
-                <button onClick={()=>setShowArqPendMan(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPendMan?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPendMan?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                <button onClick={()=>setShowArqPendMan(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPendMan?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPendMan?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
               </div>
 
               {/* Formulário */}
@@ -3110,7 +3110,7 @@ export default function App(){
         {/* ── REQ. EMPRÉSTIMO ── */}
         {tab==="emprestimos"&&(()=>{
           const SIT={Aprovado:{c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},Atendido:{c:"#1565C0",bg:"#EFF6FF",i:"📦"},Pendente:{c:"#E67E00",bg:"#FFF8F0",i:"⏳"},"Parcialmente Atendido":{c:"#8E44AD",bg:"#F6F0FB",i:"🔀"},"Retorno Concluído":{c:"#00838F",bg:"#E0F7FA",i:"🔁"},Ruptura:{c:"#C62828",bg:"#FFF0F0",i:"🔴"}};
-          const lista=(emprestimos||[]).filter(e=>e&&(showArqEmp||e.processoStatus!=="arquivado"));
+          const lista=(emprestimos||[]).filter(e=>e&&(showArqEmp?e.processoStatus==="arquivado":e.processoStatus!=="arquivado"));
           const pend=lista.filter(e=>e.situacao==="Pendente"||!e.situacao).length;
           const atrasados=lista.filter(e=>{const s=e.dataRetorno?diffDays(e.dataRetorno):null;return s!==null&&s<0;}).length;
                     const applyFilter=(r,d=r.data||"")=>{
@@ -3126,7 +3126,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🔄 Empréstimo e Retorno</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s){atrasados>0&&<span style={{color:"#C62828",fontWeight:700}}> · ⚠️ {atrasados} em atraso</span>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEmp?"#1A1A1A":"#FFF",color:showArqEmp?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEmp?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEmp?"#1A1A1A":"#FFF",color:showArqEmp?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEmp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Item"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"dataRetorno",label:"Retorno"},{key:"observacao",label:"Obs"}])}/>
                 <BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY>
               </div>
@@ -3190,7 +3190,7 @@ export default function App(){
 
         {/* ── SAÍDA/ENTRADA ── */}
         {tab==="saida_entrada"&&(()=>{
-          const lista=(saidaEntrada||[]).filter(s=>s&&(showArqSaida||s.processoStatus!=="arquivado"));
+          const lista=(saidaEntrada||[]).filter(s=>s&&(showArqSaida?s.processoStatus==="arquivado":s.processoStatus!=="arquivado"));
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
@@ -3207,7 +3207,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Novo Registro</BtnY>
               </div>
@@ -3933,7 +3933,7 @@ export default function App(){
         {/* ── PENDÊNCIAS FROTA ── */}
         {tab==="pendencias_frota"&&(()=>{
           const TIPO={bateria:{l:"🔋 Bateria",c:"#F5C200",bg:"#FFFBF0"},carregador:{l:"🔌 Carregador",c:"#1565C0",bg:"#EFF6FF"},estrado:{l:"🟫 Estrado",c:"#8B5E3C",bg:"#FDF5EC"},maquina:{l:"🏗️ Máquina",c:"#546E7A",bg:"#ECEFF1"}};
-          const lista=(frota||[]).filter(r=>r&&(showArqFro||!r.arquivado));
+          const lista=(frota||[]).filter(r=>r&&(showArqFro?r.arquivado:!r.arquivado));
           const pend=lista.filter(r=>r.resolvido!=="sim").length;
           const resolvidos=lista.filter(r=>r.resolvido==="sim").length;
                     const applyFilter=(r,d=r.dataEnvio||"")=>{
@@ -3949,7 +3949,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚜 Pendências Frota</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} item(ns) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFro?"#1A1A1A":"#FFF",color:showArqFro?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFro?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFro?"#1A1A1A":"#FFF",color:showArqFro?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFro?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"pendencias_frota",[{key:"dataEnvio",label:"Dt Envio"},{key:"rel",label:"REL"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"pat",label:"PAT"},{key:"patTipo",label:"Tipo"},{key:"resolvido",label:"Resolvido"},{key:"novoPat",label:"Novo PAT"},{key:"nf",label:"NF"},{key:"relEntrega",label:"Rel Entrega"}])}/>
                 <BtnY onClick={()=>{setFroEdit({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",nf:"",relEntrega:""});setFroModal(true);}}>+ Nova Pendência</BtnY>
               </div>
@@ -4005,14 +4005,14 @@ export default function App(){
 
         {/* ── PRIORIDADES CLIENTES (somente Manuela) ── */}
         {tab==="prioridades_clientes"&&user.id==="manuela"&&(()=>{
-          const list=(prioridades||[]).filter(r=>r&&(showArqPri||!r.arquivado));
+          const list=(prioridades||[]).filter(r=>r&&(showArqPri?r.arquivado:!r.arquivado));
           const STS={escalado_diretoria:"Escalado Diretoria",escalado_financeiro:"Escalado Financeiro",escalado_comercial:"Escalado Comercial",ag_gilberto:"Ag Sr Gilberto",manutencao:"Manutenção Resolvendo",concluido:"Concluído",pendente:"Pendente"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⭐ Prioridades Clientes</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>setShowArqPri(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPri?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPri?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <button onClick={()=>setShowArqPri(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPri?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPri?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
                   <BtnY onClick={()=>priCrud.add({data:TODAY_STR,empresa:"",pat:"",motivo:"",canal:"email",responsavel:"",status:"pendente",dataResolucao:"",obs:""})}>+ Nova Prioridade</BtnY>
                 </div>
               </div>
@@ -4043,7 +4043,7 @@ export default function App(){
         {tab==="ruptura_almox"&&(()=>{
           const SOL_LABEL={sem_estoque:"Sem estoque",cadastro_compra:"Cadastro e compra",cadastrado_aguard:"Cadastrado aguardando",compra_aguard_ret:"Compra aguard. retorno",consumo_gilberto:"Consumo Gilberto"};
           const ST={aguardando:{l:"Aguardando",c:"#E67E00",bg:"#FFF8F0",icon:"⏳"},aguard_aprov_dir:{l:"Aguard. Diretoria",c:"#8E44AD",bg:"#F6F0FB",icon:"🏛️"},separado_suporte:{l:"Separado no Suporte",c:"#1565C0",bg:"#EFF6FF",icon:"📦"},liberado_almox:{l:"Liberado pelo Almox",c:"#1A7A3C",bg:"#F0FFF5",icon:"✅"}};
-          const lista=(rupturas||[]).filter(r=>r&&(showArqRuptura||!r.arquivado));
+          const lista=(rupturas||[]).filter(r=>r&&(showArqRuptura?r.arquivado:!r.arquivado));
           const byStatus={aguardando:lista.filter(r=>r.status==="aguardando"||!r.status),aguard_aprov_dir:lista.filter(r=>r.status==="aguard_aprov_dir"),separado_suporte:lista.filter(r=>r.status==="separado_suporte"),liberado_almox:lista.filter(r=>r.status==="liberado_almox")};
           const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           const ym=`${rupYear}-${String(rupMonth+1).padStart(2,"0")}`;
@@ -4171,7 +4171,7 @@ export default function App(){
                 <div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#E67E00",fontWeight:700}}>{byStatus.aguardando?.length||0} aguardando</span></div>
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"Ocultar":"Ver Arquivados"}</button>
+                <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <button onClick={()=>setViewMode(v=>v==="cards"?"calendario":"cards")} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontWeight:600}}>{viewMode==="cards"?"📅 Calendário":"🃏 Cards"}</button>
                 <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
                 <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
@@ -4949,7 +4949,7 @@ export default function App(){
 
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
-          const lista=(sas||[]).filter(s=>s&&(showArqSas||s.status!=="arquivado"));
+          const lista=(sas||[]).filter(s=>s&&(showArqSas?s.status==="arquivado":s.status!=="arquivado"));
           const pend=lista.filter(s=>s.status==="pendente"||!s.status).length;
           const conc=lista.filter(s=>s.status==="concluido").length;
           const totalVal=lista.reduce((acc,s)=>{const v=parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
@@ -4967,7 +4967,7 @@ export default function App(){
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportSas(true)}/>
-                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"sas_grupomov",[{key:"dataSolicitacao",label:"Dt Solic."},{key:"email",label:"Email"},{key:"nfNum",label:"NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Dt Realiz."},{key:"relatorioMov",label:"Rel MOV"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",deslocamento:"",observacao:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
@@ -5124,7 +5124,7 @@ export default function App(){
             prevDiaMes:o.prevDiaMes||"",prevPeriodo:o.prevPeriodo||"manha",
             servicosRealizados:o.servicosRealizados||"",qtdPreventiva:o.qtdPreventiva||"",qtdCorretiva:o.qtdCorretiva||"",qtdMauUso:o.qtdMauUso||"",trocaPecas:o.trocaPecas||"",obs:o.obs||"",
           });setModalOp(true);};
-          const lista=(operacoes||[]).filter(o=>o&&(showArqOp||!o.arquivado));
+          const lista=(operacoes||[]).filter(o=>o&&(showArqOp?o.arquivado:!o.arquivado));
           const listaFil=lista.filter(o=>{
             if(!opSearch)return true;
             const q=opSearch.toLowerCase();
@@ -5238,7 +5238,7 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
                 <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                   <BtnImport onClick={()=>setModalImportOp(true)}/>
-                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"7px 12px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:10,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"Ocultar":"Ver Arquivados"}</button>
+                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"7px 12px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:10,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                   <BtnExcel onClick={()=>{
                     const cols=[{key:"cliente",label:"Cliente"},{key:"localizacao",label:"Localização"},{key:"_responsaveis",label:"Responsáveis"},{key:"_patrimonios",label:"Patrimônios"},{key:"_baterias",label:"Baterias"},{key:"_carregadores",label:"Carregadores"},{key:"cuidadosBateria",label:"Cuidados Bateria"},{key:"cuidadosBateriaObs",label:"Obs Cuidados"},{key:"prevDiaMes",label:"Dia Preventiva"},{key:"prevPeriodo",label:"Período Preventiva"},{key:"qtdPreventiva",label:"Qtd Preventiva"},{key:"qtdCorretiva",label:"Qtd Corretiva"},{key:"qtdMauUso",label:"Qtd Mau Uso"},{key:"servicosRealizados",label:"Serviços Realizados"},{key:"trocaPecas",label:"Troca Peças"},{key:"obs",label:"Obs"}];
                     const data=lista.map(o=>({...o,_responsaveis:joinRows(o.responsaveis,["nome","telefone","email"]),_patrimonios:joinRows(o.patrimonios,["pat","modelo","mediaHoras","corretivas","motivo"]),_baterias:joinRows(o.baterias,["pat","modelo","spec"]),_carregadores:joinRows(o.carregadores,["pat","modelo","spec"])}));
@@ -5362,7 +5362,7 @@ export default function App(){
             }
           };
           const abrirEditar=(c)=>{setEditCarro(c);setCarForm({placa:c.placa,status:c.status||"orcamento_pendente",data:c.data||TODAY_STR,responsavel:c.responsavel||"",kmAtual:c.kmAtual||"",kmUltimaRevisao:c.kmUltimaRevisao||"",valorUltimaRevisao:c.valorUltimaRevisao||"",ultimaRevisaoData:c.ultimaRevisaoData||"",itensSubstituidos:c.itensSubstituidos||[],itensSubstituidosObs:c.itensSubstituidosObs||"",itensProximaRevisao:c.itensProximaRevisao||[],itensProximaRevisaoObs:c.itensProximaRevisaoObs||"",proximaRevisaoData:c.proximaRevisaoData||"",oficina:c.oficina||"",obs:c.obs||"",requisicao:c.requisicao||""});setModalCarros(true);};
-          const lista=(carros||[]).filter(c=>c&&(showArqCarros||!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
+          const lista=(carros||[]).filter(c=>c&&(showArqCarros?c.arquivado:!c.arquivado)&&(carFiltroPlaca==="todas"||c.placa===carFiltroPlaca));
           const applyFilter=(r,d=r.data||"")=>{
             if(carSearch){const q=carSearch.toLowerCase();if(!((r.placa||"").toLowerCase().includes(q)||(r.responsavel||"").toLowerCase().includes(q)||(r.oficina||"").toLowerCase().includes(q)||(r.requisicao||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
             if(carFrom&&d<carFrom)return false;
@@ -5452,7 +5452,7 @@ export default function App(){
                     <option value="todas">🌐 Todas as placas</option>
                     {PLACAS_CARROS.map(p=><option key={p}>{p}</option>)}
                   </select>
-                  <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Arquivados":"📁 Ver Arquivados"}</button>
+                  <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
                   <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
                   <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
                 </div>
@@ -5924,7 +5924,7 @@ export default function App(){
           const EQ_OPT=["Cliente","Patrimônio/Nº Série","OS ou REL","Máquina","Bateria","Carregador","Carrinho","Outros"];
           const PM={urgente:{l:"🔴 Urgente",c:"#DC2626"},medio:{l:"🟡 Médio",c:"#D97706"},normal:{l:"🟢 Normal",c:"#059669"}};
           const SM={pendente:"⏳ Pendente",em_andamento:"🔄 Em Andamento",concluido:"✅ Concluído"};
-          const list=(pendMatheus||[]).filter(r=>r&&(showArqMat||!r.arquivado));
+          const list=(pendMatheus||[]).filter(r=>r&&(showArqMat?r.arquivado:!r.arquivado));
           const fS=formServM;const sfS=setFormServM;const fM=filtroMesM;const sfM=setFiltroMesM;
           const shEq=S_EQUIP.includes(fS.servico);const shOb=S_OBS.includes(fS.servico);
           const reset=()=>sfS({data:TODAY_STR,servico:"",equipCateg:"",equipDetalhe:"",descricao:"",prioridade:"normal",status:"pendente",obsCondicional:"",obs:""});
@@ -5940,7 +5940,7 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 150</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
                 <BtnImport onClick={()=>setModalImportPM(true)}/>
-                <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#D97706":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Arquivados":"📦 Arquivados"}</button>
+                <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#D97706":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Voltar aos Ativos":"📦 Consultar Arquivados"}</button>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
                 <input type="month" value={fM} onChange={e=>sfM(e.target.value)} style={{fontSize:11,padding:"6px 10px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/>
