@@ -624,7 +624,7 @@ function RelatorioModal({initial,onClose,onSave}){
 // ── MODAL PROCESSO (Mau Uso / A Faturar) ─────────────────────────────────────
 function ProcessoModal({onClose,onSave,tipo,initial}){
   const isMU=tipo==="mau_uso";
-  const [form,setForm]=useState(initial||{date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",numMauUso:"",ov:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
+  const [form,setForm]=useState(initial||{date:TODAY_STR,empresa:"",patrimonio:"",relatorio:"",chamado:"",enviadoAprovacao:"nao",dataEnvio:"",aprovado:"nao",dataAprovacao:"",numMauUso:"",ov:"",ticket:"",dataEnvioTicket:"",valor:"",aprovadoPor:"",servicoExecutado:"nao",numChamado2:"",relatorio2:"",obs:""});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
   const sla=form.enviadoAprovacao==="sim"&&form.dataEnvio?diffDays(form.dataEnvio):null;
   return(
@@ -654,11 +654,16 @@ function ProcessoModal({onClose,onSave,tipo,initial}){
               <Sel label="Aprovado?" value={form.aprovado} onChange={v=>upd("aprovado",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim — aprovado"}]}/>
               {isMU&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <Inp label="💰 Valor (R$)" value={form.valor} onChange={v=>upd("valor",v)} placeholder="0,00"/>
-                <Inp label="OV" value={form.ov} onChange={v=>upd("ov",v)} placeholder="OV-001"/>
+                <Inp label="Nota de Débito" value={form.ov} onChange={v=>upd("ov",v)} placeholder="ND-001"/>
               </div>}
+              {isMU&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <Inp label="🎫 Ticket Faturamento" value={form.ticket} onChange={v=>upd("ticket",v)} placeholder="TCK-001"/>
+                <Inp type="date" label="Data Envio do Ticket" value={form.dataEnvioTicket} onChange={v=>upd("dataEnvioTicket",v)}/>
+              </div>}
+              <Inp label="Nº Mau Uso" value={form.numMauUso} onChange={v=>upd("numMauUso",v)} placeholder="MU-001"/>
               {form.aprovado==="sim"&&<div style={{display:"grid",gridTemplateColumns:isMU?"1fr 1fr":"1fr 1fr",gap:12}}>
-                {isMU&&<Inp label="Nº Mau Uso" value={form.numMauUso} onChange={v=>upd("numMauUso",v)} placeholder="MU-001"/>}
                 {!isMU&&<Inp label="OV" value={form.ov} onChange={v=>upd("ov",v)} placeholder="OV-001"/>}
+                {isMU&&<Inp type="date" label="✅ Data de Aprovação" value={form.dataAprovacao} onChange={v=>upd("dataAprovacao",v)}/>}
                 <Inp label="Aprovado por" value={form.aprovadoPor} onChange={v=>upd("aprovadoPor",v)} placeholder="Nome"/>
               </div>}
             </div>
@@ -1453,6 +1458,7 @@ export default function App(){
   const [dashProcFTipo,setDashProcFTipo]=useState("todos");
   const [muEnvioDe,setMuEnvioDe]=useState("");
   const [muEnvioAte,setMuEnvioAte]=useState("");
+  const [muFiltroModo,setMuFiltroModo]=useState("envio");
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
@@ -2982,7 +2988,10 @@ export default function App(){
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Nº MU</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Cham.</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{background:"#F0FFF5",borderRadius:6,padding:"2px 4px",border:"1px solid #C8E8D0",gridColumn:"span 2"}}><div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>💰 Valor</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Nota Débito</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>🎫 Ticket</div><input type="text" value={p.ticket||""} onChange={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Envio Ticket</div><input type="date" value={p.dataEnvioTicket||""} onChange={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:p.aprovCliente==="aprovado_cliente"?"#F0FFF5":"#F8F9FA",borderRadius:6,padding:"2px 4px",border:p.aprovCliente==="aprovado_cliente"?"1px solid #C8E8D0":"none"}}><div style={{color:p.aprovCliente==="aprovado_cliente"?"#1A7A3C":"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>✅ Data Aprov.</div><input type="date" value={p.dataAprovacao||""} onChange={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{width:"100%",fontSize:8,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
                       {p.obs&&<div style={{fontSize:8,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:6,padding:"3px 5px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2}}>
@@ -4841,7 +4850,18 @@ export default function App(){
               const muAll=allMU;
               const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
               const temFiltroEnvio=muEnvioDe||muEnvioAte;
+              const campoData=muFiltroModo==="aprovacao"?"dataAprovacao":"dataEnvio";
               const muSemana=muAll.filter(p=>{
+                if(muFiltroModo==="aprovacao"){
+                  if((p.aprovCliente||"")!=="aprovado_cliente")return false;
+                  const d0=p.dataAprovacao;if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;
+                  if(temFiltroEnvio){
+                    if(muEnvioDe&&d0<muEnvioDe)return false;
+                    if(muEnvioAte&&d0>muEnvioAte)return false;
+                    return true;
+                  }
+                  return d>=semanaAtras;
+                }
                 const d0=p.dataEnvio||p.date;if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;
                 if(temFiltroEnvio){
                   if(muEnvioDe&&d0<muEnvioDe)return false;
@@ -4849,7 +4869,7 @@ export default function App(){
                   return true;
                 }
                 return d>=semanaAtras;
-              }).sort((a,b)=>(b.dataEnvio||b.date||"").localeCompare(a.dataEnvio||a.date||""));
+              }).sort((a,b)=>((b[campoData]||b.date||"")).localeCompare(a[campoData]||a.date||""));
               const valorSemana=muSemana.reduce((a,p)=>a+parseVal(p.valor),0);
               const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");});
               const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
@@ -4862,9 +4882,9 @@ export default function App(){
                       <div style={{fontSize:19,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
                     </div>
                     <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:12,padding:"8px 12px"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Enviados p/ Aprovação {temFiltroEnvio?"(período)":"na Semana"}</div>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>{muFiltroModo==="aprovacao"?"Aprovados":"Enviados p/ Aprovação"} {temFiltroEnvio?"(período)":"na Semana"}</div>
                       <div style={{fontSize:19,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
-                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>{temFiltroEnvio?"filtro de data ativo":"últimos 7 dias"} · por data de envio</div>
+                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>{temFiltroEnvio?"filtro de data ativo":"últimos 7 dias"} · por data de {muFiltroModo==="aprovacao"?"aprovação":"envio"}</div>
                     </div>
                     <div style={{background:"#FFF",borderRadius:12,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
                       <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Valor Total</div>
@@ -4885,10 +4905,16 @@ export default function App(){
                       ))}
                     </div>
                   </div>
-                  {/* Enviados para aprovação: empresa + nº MU + data de envio + valor + status — filtro por data, tudo editável */}
+                  {/* Enviados/Aprovados: empresa + nº MU + data de envio + data de aprovação + valor + status — filtro por data, tudo editável */}
                   <div className="card" style={{padding:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-                      <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso Enviados p/ Aprovação</div>
+                      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                        <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso</div>
+                        <div style={{display:"flex",borderRadius:20,overflow:"hidden",border:"1px solid #334155"}}>
+                          <button onClick={()=>setMuFiltroModo("envio")} style={{fontSize:9,fontWeight:700,padding:"3px 10px",border:"none",cursor:"pointer",background:muFiltroModo==="envio"?"#F43F5E":"transparent",color:"#FFF"}}>Por Envio</button>
+                          <button onClick={()=>setMuFiltroModo("aprovacao")} style={{fontSize:9,fontWeight:700,padding:"3px 10px",border:"none",cursor:"pointer",background:muFiltroModo==="aprovacao"?"#F43F5E":"transparent",color:"#FFF"}}>Por Aprovação</button>
+                        </div>
+                      </div>
                       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
                         <span style={{fontSize:9,color:"#94A3B8"}}>🗓</span>
                         <input type="date" value={muEnvioDe} onChange={e=>setMuEnvioDe(e.target.value)} style={{fontSize:10,padding:"3px 6px",borderRadius:6,border:"1px solid #334155",background:"#0F172A",color:"#FFF"}}/>
@@ -4898,14 +4924,15 @@ export default function App(){
                         <div style={{fontSize:11,fontWeight:700,color:"#F43F5E",background:"#FFF",borderRadius:20,padding:"2px 10px"}}>{muSemana.length} · {fmtR(valorSemana)}</div>
                       </div>
                     </div>
-                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum envio no período</div>):(
+                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
                       <div className="tbl-wrap"><table>
-                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Valor</th><th>Status Aprovação</th></tr></thead>
+                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Data Aprovação</th><th>Valor</th><th>Status Aprovação</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="text" defaultValue={p.numMauUso||""} onBlur={e=>updateMU(p.id,{numMauUso:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="date" defaultValue={p.dataEnvio||p.date||""} onBlur={e=>updateMU(p.id,{dataEnvio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
+                            <td><input type="date" defaultValue={p.dataAprovacao||""} onBlur={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",color:"#1A7A3C",fontWeight:700}}/></td>
                             <td><input type="text" defaultValue={p.valor||""} onBlur={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px",border:"none",cursor:"pointer"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
