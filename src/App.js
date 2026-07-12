@@ -2210,6 +2210,11 @@ export default function App(){
             if(editingAponId){
               const changes={data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,obs:aponNovaObs};
               updateApon(editingAponId,changes);setEditingAponId(null);notify("✅ Apontamento atualizado!");
+              // Limpa filtros ativos para garantir que o registro editado continue visível na lista
+              if(ofiNovaServ!=="todos")setOfiNovaServ("todos");
+              if(ofiNovaTech!=="todos"&&changes.tecnico!==ofiNovaTech)setOfiNovaTech("todos");
+              if(ofiNovaFrom&&changes.data<ofiNovaFrom)setOfiNovaFrom("");
+              if(ofiNovaTo&&changes.data>ofiNovaTo)setOfiNovaTo("");
               setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");
               return;
             }
@@ -2300,10 +2305,10 @@ export default function App(){
                         <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                        <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>{setAponNovaData(a.data||TODAY_STR);setAponNovaOS(a.os||"");setAponNovaPat(a.patrimonio||"");setAponNovaTech(a.tecnico||OFICINA_TECHS[0]);setAponNovaServ(a.servico||"");setAponNovaInicio(a.inicio||"");setAponNovaTermino(a.termino||"");setAponNovaObs(a.obs||"");setEditingAponId(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 7px",fontSize:13}}>✏️</button>
-                          <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 7px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir?"))delApon(a.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                        <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:8}}>
+                          <button onClick={()=>{setAponNovaData(a.data||TODAY_STR);setAponNovaOS(a.os||"");setAponNovaPat(a.patrimonio||"");setAponNovaTech(a.tecnico||OFICINA_TECHS[0]);setAponNovaServ(a.servico||"");setAponNovaInicio(a.inicio||"");setAponNovaTermino(a.termino||"");setAponNovaObs(a.obs||"");setEditingAponId(a.id);window.scrollTo(0,0);notify("✏️ Dados carregados no formulário — edite e salve!");}} title="Editar (carrega no formulário acima)" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:13}}>✏️ Editar</button>
+                          <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm(`Excluir permanentemente o apontamento da OS ${a.os||"—"} (${fmtDataBR(a.data)})? Essa ação não pode ser desfeita.`))delApon(a.id);}} title="Excluir permanentemente" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
                         </div></td>
                       </tr>);
                     })}
