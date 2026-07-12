@@ -117,7 +117,7 @@ const PEND_ACOES = ["Reunião","Envio de Email","Treinamento","Feedback","Retorn
 const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const fmtDataBR=d=>{if(!d)return"—";if(d.includes("/"))return d;const p=d.split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;};
 const TODAY      = new Date();
-const LOGO_MOV = "data:image/jpeg;base64,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";
+const LOGO_MOV = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIUAAAA+CAYAAAAF19iKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAABCDSURBVHhe7Z15kBzVfcc/r4+5Z++VdlfHaoXEEgljhEoiBmRkJ8JBAcoO8aGEMlfsokjsiiGJHcouByMHu6BcdhycigkkTnAMJiFgYnPjMuaSZA7JkkC3Vrvaa/beuaeP/NE7uzOzM909O6MVReZT1VWrPt50v/ft3+/3fu+9lujp7TGpUSMHgb+rJooaeUiFO2rUqImixjyq4j48qsSSRh9NdR4U2dKZYUIypXE6kmA6nkGRBV3LQsiShIkJJsSTOsPjSVJpHQBJEqxdGWZiKsPQWGK2fCEEqzqCaJpJ71AMgDXLw6iKhDFTViZjMDqVYiqWwZx5Iq9Hpr3FR33QiyyBCUxFMwyOJYgndczsiTXyqNhSeFSJro4Q9UGVwdEkR3qnOdI7zanBGFNxDaspQJIkQn6VdFpnfDJNNKHRGFZZuyKMLInZ8sJ+D16PnPMLACZBn0LAp8CMSEJ+FUkSTEymmYxmUD0S5ywL45+5NhRQ6F5Zh1eV6RuOcbh3ihOnowgB5ywLEwpYZdWYT8WiWNLgxe+R6R2OMzyeZDqeYTqeYWwqRX8kTjSh5Z0/Fc8wPJ6kPxInMpHG71UI+tW8c1whBMm0QWQyxeBogv5IAlMI6kIeZFnQ2uBHCMHx01FGJ1NE4xoT0TQ9gzGSaZ3VHeHCEmvMULEoWpv8TCc0Ysn8xs9SykJb+62DmmYUHi4bw7DciAl4VJnmBi+nIzEyBWVnNINoIoPXI+P3FlqkGlRDFKoik0wb6HqJ1i9AkSS8qkxDyENjnZfxqRTxVKbwtLJQJInGkAdJmExF08hCIAlBciZWKSSa0NANk5Z6X+GhGtUQBdm31CVtzT7OXRlmVXuQWCJDz2AMmIspXGOa1AUU1qwI091ZR3Ojl/5IglTGQMwWV7xcLWNiGgZeT1Ue/31H5bVimshF6t6jymzobqalIf9tHJ5McaI/iikEQgj0MgRViGaYxOIaQ+MJDh6bZGA0gWGYsy5LzLinQlRVQkiCRAlL8v+dikWRSuv4/cpsV3QOE0UWiILd6bRONKHRNxyjMeylqc4zd9A0MTGRhNXDyEVIUn4XUgjiSZ2B0QQjEyky+lzsoBkGac0gGCgewIYCCrIkMTqZKjxUoxqiGBpPEg6oNISKN0ApJqbSTEZTrFwaJDTTeIYJsYSOz6ugKnO3psgSqmz1NtyQzhhMTKVob/LjUfMf0euRaQh6mI6lSaZqlqIYFYtiZCJFLKGxelmYlW1Bgn4Fn1em3kEkumFyOpIAIehcGkSRrFvpj8QJBxRWtPrxe2UCPoVV7SGEJBgYiRcWUxTDMBkcjaMbJh84p4GWeu/MPXlYuzyEqkocPz1deFmNGaqa0QwHFCRJQgCGaZJMGQyNJ4glNBRZYmVbkJGJJFOxud5GU52H5novw+MpJqNphICmsJeWRu+sS0plDAZH5nIe2QxnMqUzOJoo2e31qBLtzX4CPgVZEhgmJFIag6MJEjUrUZKqiCKLIgkkWSBmLIHmsptaDFkWs5lOTTfL6uEUosjSjCjMeXmLGvOpqihqvD+oOKao8f6jJooa86iJosY8Ko4pZBlWLlWoC+QPLhUr1DTh1GCGyZhzsKfIsK7LW7h7HqZpsv94umQPxA5JQFO9TGe7wrbNAS67wE93p0pznURag77hDG8cSvHM6wneeDfJwIhOOjP3Q0G/4KJuH0KYiNyEm7AS7AIrySaAQydT9EWcezx+n2DzOi9B/9z7apU6l8wzDJOnXnPXPV8IFYuiqU7mga+28tGNgcJD89AN+Mp9I/zw8anCQ/Po7lTZ9eByrCq1MGelNrcvnTFZcc1JUunyHqOpTubjlwe56rIAl3zAT9BfJFc/g26YHOrJ8L8vx3jo6WlO9Ftd48awxKGfrsTvcza4//joJHf806ijeDee5+Xxe9ppCJUu892TaTbd2Fe4u2qU/mWXSMLEqwokCcdNVeD3NzuLB2D7JUFkKb9cWbK6qbJE3lbODCoBbLnQz2PfbuPuW5vYtjlgKwiwfnddl4fbdjTyxD3tXPuREJIkGJ82ONLnboR383ofXo/97wBcfVmQ+qB9szz8/JlNvNn/uguEEHhyUtJOXNTtRbVPdhLwS3x4g/thbbeaEAKu2hLk3/9uKRvP8xJw8YbnoijQ1aHy/dtbuPXaOvxewcPPRV39fnOdTEu9/fwNVYFPbA3ljPLOZ3xa5xcvnznXQTVEIUk4NnIurQ0Sl17gL9ydx6o2hWWt7gp10R4wEz9c9wchfvA3rbTUV/bY4aDE1/+sib+9vpHfHksTTzrfRTgosWaF/TNdviFAZ7u9cF7bn2JgzDkmq4TKamfWUthIuwBJEuzYFircPYsQcOG5Xjrb7CtnFuf2QAjY8bEw3/rzFltfXQ4+j+ALn2rgm7c0o7qY7tkQkljf5bG1AtddGcqbr1pIOmPyyt4E0/H3uCgkAWoZogDYepEfT4mXRlUE67rUsk27HR9c6+FLn6mnzsFXZzQYnTQ4NagxHTMcU+uKDBes8eBRnZ/f6xF0daglz12xVOHidfYuc2hMZ8/BlOtZbgvFvpZcIAQlH7QUSxoVNpxbvALqAoLLN7gLRnFhKHxewRc+2UB3Z868jSJMxgx2/usYm27oZf2OU1z9VwM8vStBpvjU07IxTZNlrTLBEmLfutFPU13xY1mO9mY4eDxduLvq2N+FCyQJPC7MZy6yDFtKBJKd7SrrV9s3YB4Oqrj8Qh+f2FraXTFjIW6+a5h/eGSCyISVS3jj3RS3f2+EvUerNxGnu9NDU5F4JuCT2LzOh6+EYLI8uzvO1Bl2HVRDFEKAWqalEALO7/IUdSFX/G7AlY/OYtroQlXgwa8ttS3PNOHL34/wzK44WkFuqW9I47qvD5IsMwdSis42hbbm+Tezsk1h0zovNuEEmgY/eynmqqdTKRWLQpKEbaWXYs0Klc62fFX4fRKfvbLc9Rila2n7pUHHOOKtwyleeGNuNVohp4d17v7RuGN84QaPKlizbP6bsHa5Sle7fSU+9VqM3uEq+TIH7GvMBapiJXfKZfkSla6O/IpY36WyrNW+ctwiy4Lrt9sLzDTh1X1Jegbs088/eTbKMZdJKic2rZufut9+acA2sNYNk/ufmFoUK0FVRJEzGaYcGsKC1cuspX9ZPr3NPnFTjFIV1VwnsbTJvlsbjRu8eSjpOKM8Mq7xyAvVMd1bN/pRcnSvKnDFxfaB9eHeDK/vTxbuPmNULgrFSjuXiywJLvugH99M6rcx7JzUKofzz/GwpNFeFOPTBr9607myNR1ODmSIJysP8pa3ynS0zKnij7aGaG0ofZ+mCU+9Eie9OJ4DqiOKhbkPgA3d3llRrF/tpbWh/Nsp9fZ2dag0hEpXNkBaMxmZtHcdWY72Zhgac3euHZIk2NBtuRBZEnz+43W21nFs2uDVfckznpvIpfxWKEBVBbK8sBvuaFFYu8JyIZdc4KWlfiHxxPwaFQLqggKPwwBUOjO3cMiJE/1aVUQBcOWHLHdx3iqVC8+dH2PkcrgnzcGTZz43kUvFovAolvoXgiLDZ64IEfYLzuv05vlat5RqVFURtl08gNFJveT1hUzHdaKJyt0HwIfO9xH0S1y1JWibDTYMk7cOpxgYWUTfUQ1R+MrMURTy0Y1+li9R2Hie/RtTLjOL0G1JlVHXGc2KLapBR4vCN29p5lqHEdFUhqL5kzNN5aKw6Uq5obNN4Us7GljlMDpYLsmUie5QmeUI2ppZVbh3Yfi8gpuvCfM7q+bnLHIZiGjsWsReR5bKWhTwO/htJ2RZ8Olt1qSVamGaMD5lkEzZ24rmetl1Q/u9Er5FXqX+b7+YJpawf4YzQcVPme09nC1KxQRH+jKMTdmbCo8CkktVtDbKNIbdnVsNpuIGj74QLdy9KFQsCr+34iLOCEd7nUXh9QiWLXHnts5drhYdtzhTvLA7welIGUFPFam4RX3exXt7ijE3mTefyZjBtMOs8eY6iW0u54wuX6rQVGcvIN0wmYgaJa2XW3Qdfvbr6mRQF0LFovCXMcq9mOi6yTO7Sw90MTMAt67L49gV9nsF68/xoNhrgtFJg7seGKs483mkL8O+Y4ubm8ilYlG4tRQZzUoWLSaPPOfsky+5wMeqdvteQENY5g8vCTgGpdMxgwMn0gxVMIfSNOE3B5P0R6ozALcQKhaF25ji/scnuOGuYUc/Xy52Mhsa09nnMEnm/NUe1q2yN3cXdXvoaHUwE8C+oyn2Hklx7PTC3/JY0uS1/UmicbsnO7O4a1EbXFsKHd4+nOLkwOIFT6Zpcvv3Rth1IMWuA0l2HUiyO7sdtLY9B5P83qbSA3GKDN/4fLOrXsp/PhslGjcrGmaPjOm8sm/xcxO5VCwKv8u+u6bDwIjGW4fs39xycQrG9ryT5qadQ9y0c5ibdg5z484IN+2McNNd1nbjzgjf+clk4WWzXLMlyJrlDkEHMB03eP23VmP++u2FP+Oed5L0DCxcVNXAXYva4NZS6LqJpsNjv7S+rV097FWh6yanBrWcLUNP7jZgbcWQZcEXP1XvKrH2w8enmIhascSLb8QWHGz+x9PTi57WLqRiUfhdiiIz86BvHk5WdVqZk6Uol2w6OxQQ/MUf19Pd6Twm0zes8d8vzok9GjfZd7S40Ow4flpj94GFW5lqUfEC459/p50Pbyjtk7Pc+cAY9z40AcBtf1LPnZ9rLjwFgL1HUjz5cpw//Vh43nS9YqQyJj99Lpqz9Nha8p2VqhDWkWxIIHL+kbdv5o/s36GAYPM6Hy02E2CYGX7/7sMT3PPQRN4E389uD3PfX7fmnevEnf8yxr0/turobFKxKF68r4NNDotYAL72z2N892HrgZctUdj70Aq8RQak7vjBKI++GOWhO9u4eL3zW0qOA5lf2pnn9f0pPnnHIBPT+TY/6JM49tjKvE8K2BGNm3zk1j7e7SnfwlQbd3dsg9suqZbz8dPBEZ1fFplBnc6YPPFSjMawTDjgvonFWRCEaVprQ66/c2ieIABiSYMjve4b+KW3EwyMzC/nbOCuRW1wOyCWGzwZpslzu6zvXObSH9HoG9ZY2izT6LBa6mxiGCZPvx7nxruG6beZAPP87tKfc8wlo1mzyqMLDE6rTcU177b3kfv5RNOENw+l6B3Kr9DfvJvCMGFpk+z4jYazhWnC//wqxhfvjXCi394SvLY/6epjKv2RDLsOJBznfywWFdd8sVVexdC0fPEc69M4eGIu82cY8PNXY0iSoKVexufSLS0Wmg6nBjW+8cAYn/v7CIMu5msOj+kMjDqfd/y0xjsn7AW2mFQcaJ58YiXNdc69hFu+HeHHT899gUWSBLftqOeOG5pQFZiIGmz/y37e6Unz5esa+cr1jXnXn02O9GZ46tU4//VilLcOu+8y1geteZiFC5zyRnZN2Hs4zXN74q5czWJQsSge/OpSwgGBJAlkyUQIa8KsLFkNn/0s0d0/Guf5PflfYOnu9HD3rU0EfBI9Axm+fv8YY1M6N19dz9VbAoiZj4hZuQOrLOujY3OTcoWwPoeQzS9kz529ZqZbKrD+R4G841hlZa/LlmOa1rjJ3iMpnt2V4O3DKUYn9QWtKc12e0viYi7pYlOxKGq8/3hvOe4a7wlqoqgxD/Hkk0/W3EeNPP4PQWMCzxZukRMAAAAASUVORK5CYII=";
 const PAD        = n=>String(n).padStart(2,"0");
 const fmtDate    = d=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
 const TODAY_STR  = fmtDate(TODAY);
@@ -287,8 +287,8 @@ function LoginScreen({onLogin, users=USERS}){
         <div style={{position:"absolute",top:0,left:0,right:0,height:5,background:"linear-gradient(90deg,#F5C200,#FFE066,#F5C200)"}}/>
 
         <div style={{textAlign:"center",marginBottom:36}}>
-          <div style={{width:84,height:84,borderRadius:20,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
-            <img src={LOGO_MOV} alt="Grupo MOV" style={{height:54,width:"auto"}}/>
+          <div style={{width:120,margin:"0 auto 18px",borderRadius:16,overflow:"hidden",boxShadow:"0 12px 32px rgba(0,0,0,.25)",animation:"glow 3s ease-in-out infinite"}}>
+            <img src={LOGO_MOV} alt="Grupo MOV" style={{width:"100%",height:"auto",display:"block"}}/>
           </div>
           <div style={{fontSize:24,fontWeight:900,color:"#1A1A1A",letterSpacing:-.8}}>Grupo MOV</div>
           <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
@@ -1343,7 +1343,7 @@ export default function App(){
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
-  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState("");
+  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false);
   const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState("");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
   const [saiSearch,setSaiSearch]=useState(""); const [saiFrom,setSaiFrom]=useState(""); const [saiTo,setSaiTo]=useState(""); const [saiMes,setSaiMes]=useState(""); const [saiAno,setSaiAno]=useState("");
@@ -2823,9 +2823,11 @@ export default function App(){
             if(muTo&&d>muTo)return false;
             if(muMes&&!d.slice(5,7).startsWith(muMes))return false;
             if(muAno&&!d.startsWith(muAno))return false;
+            if(muAprov&&muAprov!=="todos"&&(r.aprovCliente||"aguardando_retorno")!==muAprov)return false;
             return true;
           };
           const listaFil=lista.filter(applyFilter);
+          const hasFilterMU=muSearch||muFrom||muTo||muMes||muAno||(muAprov&&muAprov!=="todos");
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>⚠️ Mau Uso</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
@@ -2836,61 +2838,69 @@ export default function App(){
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
               {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF8F8",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  <div style={{fontSize:19,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            <div className="card" style={{padding:"3px 5px",marginBottom:14,display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:8}}>🔍</span><input type="text" value={muSearch} onChange={e=>setMuSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, chamado..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:8,borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+
+            {/* Filtros (colapsável) */}
+            <button onClick={()=>setShowFiltrosMU(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosMU?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:10,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:11}}>🔍</span>
+              <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {hasFilterMU&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosMU?"▲":"▼"}</span>
+            </button>
+            {showFiltrosMU&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:8}}>🔍</span><input type="text" value={muSearch} onChange={e=>setMuSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, chamado..." style={{width:"100%",padding:"6px 8px 6px 26px",fontSize:8,borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:8,color:"#888",fontWeight:600}}>De</span><input type="date" value={muFrom} onChange={e=>setMuFrom(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:8,color:"#888",fontWeight:600}}>Até</span><input type="date" value={muTo} onChange={e=>setMuTo(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
               <select value={muMes} onChange={e=>setMuMes(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
               <select value={muAno} onChange={e=>setMuAno(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(muSearch||muFrom||muTo||muMes||muAno)&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:8,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
+              <select value={muAprov} onChange={e=>setMuAprov(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Status Aprovação: Todos</option>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
+              {hasFilterMU&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');setMuAprov('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:8,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:8,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
                 {listaFil.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const slaD=p.date?diffDays(p.date):null;
                   return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
-                    <div style={{padding:"7px 10px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"5px 7px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:3,alignItems:"center"}}>
-                        <span style={{fontSize:8,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
-                        {slaD!==null&&<span style={{fontSize:8,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
+                        <span style={{fontSize:8,fontWeight:700,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"1px 7px"}}>{st.l}</span>
+                        {slaD!==null&&<span style={{fontSize:8,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"1px 6px"}}>⏱ {slaD}d</span>}
                       </div>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{setEditMU(p);setModalMU(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:8}}>✏️</button>
-                        <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:8}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:8,fontWeight:600}}>✕</button>
+                      <div style={{display:"flex",gap:2}}>
+                        <button onClick={()=>{setEditMU(p);setModalMU(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"3px 5px",fontSize:8}}>✏️</button>
+                        <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 5px",fontSize:8}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 5px",fontSize:8,fontWeight:600}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"3px 5px",display:"flex",flexDirection:"column",gap:3}}>
+                    <div style={{padding:"4px 6px",display:"flex",flexDirection:"column",gap:3}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:8,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:8,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
-                        <span style={{fontSize:8,fontWeight:600,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:8,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                        <div><div style={{fontSize:8,fontWeight:800,color:"#1A1A1A",marginBottom:1}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:8,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
+                        <span style={{fontSize:8,fontWeight:600,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:8,padding:"2px 7px"}}>{p.aprovado==="sim"?"✅":"❌"}</span>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nº Mau Uso</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F0FFF5",borderRadius:8,padding:"3px 5px",border:"1.5px solid #C8E8D0"}}><div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>💰 Valor (R$)</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:2}}>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Rel.</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Nº MU</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Cham.</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F0FFF5",borderRadius:6,padding:"2px 4px",border:"1px solid #C8E8D0",gridColumn:"span 2"}}><div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>💰 Valor</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"2px 4px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
-                      {p.obs&&<div style={{fontSize:8,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
-                      <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
-                        <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:2}}>Status Aprovação Cliente</div>
-                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:8,padding:"3px 5px",borderRadius:6,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
+                      {p.obs&&<div style={{fontSize:8,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:6,padding:"3px 5px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2}}>
+                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:8,padding:"2px 4px",borderRadius:6,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
                           {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                         </select>
+                        <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{width:"100%",fontSize:8,padding:"2px 4px",borderRadius:6,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
+                          <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
+                        </select>
                       </div>
-                      <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{fontSize:8,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
-                        <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
-                      </select>
                     </div>
                   </div>);
                 })}
@@ -4731,62 +4741,80 @@ export default function App(){
                 </div>
               ))}
             </div>
-          
 
-</div>);
-        })()}
-
-            {/* ── ROW: Empresa × Mau Uso × Valor ── */}
+            {/* ── Mau Uso por Empresa (semana) ── */}
             {(()=>{
-              const muAll=(processosMU||[]).filter(p=>p&&p.processoStatus!=="arquivado");
+              const muAll=allMU;
               const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
-              const muSemana=muAll.filter(p=>{if(!p.date&&!p.dataAbertura)return false;const d=new Date(p.date||p.dataAbertura);return d>=semanaAtras;});
-              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=(parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0);empData[emp].mus.push(p.muNumero||p.numMauUso||"—");});
+              const muSemana=muAll.filter(p=>{const d0=p.dataEnvio||p.date;if(!d0)return false;const d=new Date(d0);return !isNaN(d)&&d>=semanaAtras;}).sort((a,b)=>(b.dataEnvio||b.date||"").localeCompare(a.dataEnvio||a.date||""));
+              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");});
               const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
               const empChart={labels:empList.map(([e])=>e.length>18?e.slice(0,18)+"…":e),datasets:[{label:"Qtd Mau Uso",data:empList.map(([,d])=>d.qtd),backgroundColor:"#F43F5E",borderRadius:8},{label:"Valor (R$ mil)",data:empList.map(([,d])=>Math.round(d.valor/1000)),backgroundColor:"rgba(244,63,94,0.25)",borderRadius:8}]};
               const empOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:12,padding:12}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}};
               return(
                 <div style={{marginTop:16}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:14,padding:"8px 12px"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Total Mau Uso</div>
-                      <div style={{fontSize:32,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
+                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:12,padding:"8px 12px"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Total Mau Uso</div>
+                      <div style={{fontSize:19,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
                     </div>
-                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:14,padding:"8px 12px"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Enviados na Semana</div>
-                      <div style={{fontSize:32,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
-                      <div style={{fontSize:10,color:"#64748B",marginTop:4}}>últimos 7 dias</div>
+                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:12,padding:"8px 12px"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Enviados p/ Aprovação na Semana</div>
+                      <div style={{fontSize:19,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
+                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>últimos 7 dias · por data de envio</div>
                     </div>
-                    <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Valor Total</div>
-                      <div style={{fontSize:22,fontWeight:900,color:"#1E293B"}}>R$ {muAll.reduce((a,p)=>a+(parseFloat((p.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."))||0),0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                    <div style={{background:"#FFF",borderRadius:12,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Valor Total</div>
+                      <div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>{fmtR(muAll.reduce((a,p)=>a+parseVal(p.valor),0))}</div>
                     </div>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr",gap:16,marginBottom:16}}>
-                    <div style={{background:"#FFF",borderRadius:16,padding:"22px 24px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-                      <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:14}}>📊 Empresa × Qtd × Valor</div>
-                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={empChart} options={empOpts} height={260}/>}
+                  <div style={{display:"grid",gridTemplateColumns:"1.5fr 1fr",gap:14,marginBottom:14}}>
+                    <div className="card" style={{padding:12}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>📊 Empresa × Qtd × Valor</div>
+                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={empChart} options={empOpts} height={240}/>}
                     </div>
-                    <div style={{background:"#FFF",borderRadius:16,padding:"22px 24px",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-                      <div style={{fontSize:14,fontWeight:800,color:"#1E293B",marginBottom:14}}>🏢 Detalhamento por Empresa</div>
-                      <div style={{maxHeight:300,overflowY:"auto"}}>
+                    <div className="card" style={{padding:12}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>🏢 Detalhamento por Empresa</div>
+                      <div style={{maxHeight:280,overflowY:"auto"}}>
                         {empList.map(([emp,d],i)=>(
-                          <div key={i} style={{padding:"10px 12px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div key={i} style={{padding:"7px 8px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                             <div>
-                              <div style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>{emp}</div>
-                              <div style={{fontSize:10,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
+                              <div style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>{emp}</div>
+                              <div style={{fontSize:9,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
                             </div>
-                            <div style={{fontSize:13,fontWeight:800,color:"#F43F5E"}}>R$ {d.valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                            <div style={{fontSize:11,fontWeight:800,color:"#F43F5E"}}>{fmtR(d.valor)}</div>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
+                  {/* Enviados para aprovação na semana: empresa + nº MU + data de envio */}
+                  <div className="card" style={{padding:0,overflow:"hidden"}}>
+                    <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso Enviados p/ Aprovação — Últimos 7 dias</div>
+                      <div style={{fontSize:11,fontWeight:700,color:"#F43F5E",background:"#FFF",borderRadius:20,padding:"2px 10px"}}>{muSemana.length}</div>
+                    </div>
+                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum envio nos últimos 7 dias</div>):(
+                      <div className="tbl-wrap"><table>
+                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Status Aprovação</th></tr></thead>
+                        <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
+                          <tr key={p.id}>
+                            <td style={{fontSize:11,fontWeight:700}}>{p.empresa||"—"}</td>
+                            <td style={{fontSize:11}}>{p.numMauUso||"—"}</td>
+                            <td style={{fontSize:11}}>{fmtDataBR(p.dataEnvio||p.date)}</td>
+                            <td><span style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>{as?.l||"—"}</span></td>
+                          </tr>
+                        );})}</tbody>
+                      </table></div>
+                    )}
+                  </div>
                 </div>
               );
             })()}
-}
+          </div>);
+        })()}
+
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
           const lista=(sas||[]).filter(s=>s&&(showArqSas||s.status!=="arquivado"));
