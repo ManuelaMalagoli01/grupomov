@@ -4874,6 +4874,7 @@ export default function App(){
               const valorSemana=muSemana.reduce((a,p)=>a+parseVal(p.valor),0);
               const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");});
               const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
+              const statusData=Object.entries(APROV_STATUS).map(([k,s])=>({k,l:s.l,c:s.c,bg:s.bg,qtd:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,valor:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((a,p)=>a+parseVal(p.valor),0)})).filter(s=>s.qtd>0);
               return(
                 <div style={{marginTop:16}}>
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
@@ -4893,6 +4894,20 @@ export default function App(){
                     </div>
                   </div>
                   <div className="card" style={{padding:12,marginBottom:14}}>
+                    <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>💰 Valor Total por Status de Aprovação</div>
+                    {statusData.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:12,fontSize:11}}>Sem dados</div>:(
+                      <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(statusData.length,4)},1fr)`,gap:8}}>
+                        {statusData.map(s=>(
+                          <div key={s.k} style={{background:s.bg,borderRadius:8,padding:"7px 9px",border:`1px solid ${s.c}33`}}>
+                            <div style={{fontSize:9,fontWeight:700,color:s.c}}>{s.l}</div>
+                            <div style={{fontSize:14,fontWeight:900,color:s.c}}>{fmtR(s.valor)}</div>
+                            <div style={{fontSize:8,color:s.c,opacity:.75}}>{s.qtd} processo(s)</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="card" style={{padding:12,marginBottom:14}}>
                     <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>🏢 Detalhamento por Empresa</div>
                     <div style={{maxHeight:280,overflowY:"auto"}}>
                       {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20,fontSize:11}}>Sem dados</div>:empList.map(([emp,d],i)=>(
@@ -4906,7 +4921,7 @@ export default function App(){
                       ))}
                     </div>
                   </div>
-                  {/* Enviados/Aprovados: empresa + nº MU + data de envio + data de aprovação + valor + status — filtro por data, tudo editável */}
+                  {/* Enviados/Aprovados: empresa + nº MU + data de envio + data de aprovação + valor + nota débito + ticket + status — filtro por data, tudo editável */}
                   <div className="card" style={{padding:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
@@ -4927,7 +4942,7 @@ export default function App(){
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
                       <div className="tbl-wrap"><table>
-                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Data Aprovação</th><th>Valor</th><th>Status Aprovação</th></tr></thead>
+                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Data Aprovação</th><th>Valor</th><th>Nota Débito</th><th>Ticket Fatur.</th><th>Status Aprovação</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
@@ -4935,6 +4950,8 @@ export default function App(){
                             <td><input type="date" defaultValue={p.dataEnvio||p.date||""} onBlur={e=>updateMU(p.id,{dataEnvio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
                             <td><input type="date" defaultValue={p.dataAprovacao||""} onBlur={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",color:"#1A7A3C",fontWeight:700}}/></td>
                             <td><input type="text" defaultValue={p.valor||""} onBlur={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><input type="text" defaultValue={p.ov||""} onBlur={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><input type="text" defaultValue={p.ticket||""} onBlur={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{fontSize:11,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px",border:"none",cursor:"pointer"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
                         );})}</tbody>
