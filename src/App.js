@@ -2309,7 +2309,7 @@ export default function App(){
                     }}/>
                   </label>
                   <BtnImport onClick={()=>setModalImportApon(true)}/>
-                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"tecnico",label:"Técnico"},{key:"servico",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
+                  <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"tecnico",label:"Técnico"},{key:"_servicoEmBranco",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
                 </div>
               </div>
               <div style={{padding:"7px 10px",background:"#FFFBF0",borderBottom:"2px solid #FFE8A0",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
