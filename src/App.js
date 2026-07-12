@@ -1458,7 +1458,7 @@ export default function App(){
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
   const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false);
-  const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState("");
+  const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState(""); const [afAprov,setAfAprov]=useState("todos");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
   const [saiSearch,setSaiSearch]=useState(""); const [saiFrom,setSaiFrom]=useState(""); const [saiTo,setSaiTo]=useState(""); const [saiMes,setSaiMes]=useState(""); const [saiAno,setSaiAno]=useState("");
   const [finSearch,setFinSearch]=useState(""); const [finFrom,setFinFrom]=useState(""); const [finTo,setFinTo]=useState(""); const [finMes,setFinMes]=useState(""); const [finAno,setFinAno]=useState("");
@@ -2905,7 +2905,7 @@ export default function App(){
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosMU||[]).filter(p=>p&&(showArqMU||p.processoStatus!=="arquivado"));
+          const lista=(processosMU||[]).filter(p=>p&&(showArqMU?p.processoStatus==="arquivado":p.processoStatus!=="arquivado"));
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -2922,10 +2922,10 @@ export default function App(){
           const hasFilterMU=muSearch||muFrom||muTo||muMes||muAno||(muAprov&&muAprov!=="todos");
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>⚠️ Mau Uso</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>⚠️ Mau Uso {showArqMU&&<span style={{fontSize:12,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{showArqMU?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
               <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportMU2(true)}/>
-                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:8,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"Ocultar":"Ver Arquivados"}</button>
+                <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:8,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
@@ -3004,7 +3004,7 @@ export default function App(){
         {/* ── PROCESSOS A FATURAR ── */}
         {tab==="a_faturar"&&(()=>{
           const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
-          const lista=(processosAF||[]).filter(p=>p&&(showArqAF||p.processoStatus!=="arquivado"));
+          const lista=(processosAF||[]).filter(p=>p&&(showArqAF?p.processoStatus==="arquivado":p.processoStatus!=="arquivado"));
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
@@ -3015,16 +3015,17 @@ export default function App(){
             if(afTo&&d>afTo)return false;
             if(afMes&&!d.slice(5,7).startsWith(afMes))return false;
             if(afAno&&!d.startsWith(afAno))return false;
+            if(afAprov&&afAprov!=="todos"&&(r.aprovCliente||"aguardando_retorno")!==afAprov)return false;
             return true;
           };
           const listaFil=lista.filter(applyFilter);
           const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar {showArqAF&&<span style={{fontSize:12,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{showArqAF?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
               <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportAF2(true)}/>
-                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:8,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"Ocultar":"Ver Arquivados"}</button>
+                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:8,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
               </div>
@@ -3047,7 +3048,8 @@ export default function App(){
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:8,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
               <select value={afMes} onChange={e=>setAfMes(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
               <select value={afAno} onChange={e=>setAfAno(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(afSearch||afFrom||afTo||afMes||afAno)&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:8,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              <select value={afAprov} onChange={e=>setAfAprov(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Status Aprovação: Todos</option>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
+              {(afSearch||afFrom||afTo||afMes||afAno||(afAprov&&afAprov!=="todos"))&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');setAfAprov('todos');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:8,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>💰</div><div style={{fontSize:8,fontWeight:600}}>{afSearch||afFrom||afTo||afMes||afAno?"Nenhum resultado":"Nenhum processo"}</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
