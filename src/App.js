@@ -1722,6 +1722,7 @@ export default function App(){
   const [agpTech,setAgpTech]=useState("todos");
   const [agpStatus,setAgpStatus]=useState("todos");
   const [agpCidade,setAgpCidade]=useState("todas");
+  const [agpCliente,setAgpCliente]=useState("");
   const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
   const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
   const [agpSelectedDay,setAgpSelectedDay]=useState(null);
@@ -3457,6 +3458,7 @@ export default function App(){
           const matchSt=s=>agpStatus==="todos"||s.status===agpStatus;
           const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
           const matchCidade=s=>agpCidade==="todas"||s.cidade===agpCidade;
+          const matchCliente=s=>!agpCliente||(s.client||"").toLowerCase().includes(agpCliente.toLowerCase());
           const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i).trim();}).filter(Boolean)));
           const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
@@ -3491,6 +3493,7 @@ export default function App(){
                 <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
                 <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                 <select value={agpCidade} onChange={e=>setAgpCidade(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todas">📍 Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c} value={c}>{c}</option>)}</select>
+                <input type="text" value={agpCliente} onChange={e=>setAgpCliente(e.target.value)} placeholder="🔍 Buscar cliente..." style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",minWidth:160}}/>
                 <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                 <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
               </div>
@@ -3572,7 +3575,7 @@ export default function App(){
                     let items=[];
                     techsList.forEach(tech=>{
                       const key=`${tech}__${dt}`;
-                      (schedule[key]||[]).forEach((s,si)=>{if(matchSt(s)&&matchTipo(s)&&matchCidade(s))items.push({tech,si,s});});
+                      (schedule[key]||[]).forEach((s,si)=>{if(matchSt(s)&&matchTipo(s)&&matchCidade(s)&&matchCliente(s))items.push({tech,si,s});});
                     });
                     porDia[dn]=items;
                   });
@@ -3628,7 +3631,7 @@ export default function App(){
                 let items=[];
                 techsList.forEach(tech=>{
                   const key=`${tech}__${dt}`;
-                  (schedule[key]||[]).forEach((s,si)=>{if(matchSt(s)&&matchTipo(s)&&matchCidade(s))items.push({tech,key,si,s});});
+                  (schedule[key]||[]).forEach((s,si)=>{if(matchSt(s)&&matchTipo(s)&&matchCidade(s)&&matchCliente(s))items.push({tech,key,si,s});});
                 });
                 return(
                   <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setAgpSelectedDay(null)}>
