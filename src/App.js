@@ -1,6 +1,6 @@
         /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
-// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v5
+// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v6
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
