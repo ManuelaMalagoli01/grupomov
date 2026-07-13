@@ -5177,7 +5177,7 @@ export default function App(){
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
                       <div className="tbl-wrap"><table>
-                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Data Aprovação</th><th>Valor</th><th>Nota Débito</th><th>Ticket Fatur.</th><th>Status Aprovação</th></tr></thead>
+                        <thead><tr><th>Empresa</th><th>Nº Mau Uso</th><th>Data Envio</th><th>Data Aprovação</th><th>Valor</th><th>Nota Débito</th><th>Ticket Fatur.</th><th>Dt Envio Ticket</th><th>Status Aprovação</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
@@ -5187,6 +5187,7 @@ export default function App(){
                             <td><input type="text" defaultValue={p.valor||""} onBlur={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="text" defaultValue={p.ov||""} onBlur={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="text" defaultValue={p.ticket||""} onBlur={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{fontSize:11,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
+                            <td><input type="date" defaultValue={p.dataEnvioTicket||""} onBlur={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{fontSize:11,fontWeight:600,color:"#6A1B9A",border:"none",background:"transparent",outline:"none"}}/></td>
                             <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px",border:"none",cursor:"pointer"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
                         );})}</tbody>
