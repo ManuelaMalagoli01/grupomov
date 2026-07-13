@@ -2421,7 +2421,31 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#555"}}>{a.modelo||"—"}</td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                        <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={e=>{updateApon(a.id,{servico:e.target.value});notify(e.target.value?`✅ Serviço definido: ${e.target.value}`:"✅ Serviço limpo");}} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
+                        <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
+                          const novoValor=e.target.value;
+                          const idAlvo=a.id;
+                          updateApon(idAlvo,{servico:novoValor});
+                          notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
+                          setTimeout(async()=>{
+                            try{
+                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*`,{headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG"}});
+                              const json=await res.json();
+                              const row=json&&json[0];
+                              const servicoNoBanco=row&&row.data&&row.data.servico;
+                              if(!res.ok){
+                                alert(`❌ ERRO ao conferir no banco (status ${res.status}): ${JSON.stringify(json).slice(0,300)}`);
+                              }else if(!row){
+                                alert(`❌ Registro ${idAlvo} NÃO encontrado no banco! (pode ter sido salvo com outro ID)`);
+                              }else if((servicoNoBanco||"")===novoValor){
+                                notify(`✅ Confirmado no banco: ${novoValor||"(vazio)"}`);
+                              }else{
+                                alert(`❌ NÃO SALVOU! No banco está: "${servicoNoBanco||"(vazio)"}" — mas você escolheu: "${novoValor}"`);
+                              }
+                            }catch(err){
+                              alert("❌ Erro ao conferir no banco: "+err.message);
+                            }
+                          },1500);
+                        }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
                         <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
