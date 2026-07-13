@@ -1,6 +1,6 @@
         /* eslint-disable */
 import { useState, useRef, useEffect, Fragment } from "react";
-// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v5
+// ── SUPABASE CONFIG ─────────────────────────────────────────────────────────── v6
 const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
@@ -10,7 +10,8 @@ const db = {
   async get(table) {
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        cache: "no-store",
+        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache"}
       });
       if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
       const rows = await res.json();
@@ -27,6 +28,7 @@ const db = {
       try {
         const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
           method: "POST",
+          cache: "no-store",
           headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
           body: JSON.stringify({id, data})
         });
@@ -2435,7 +2437,7 @@ export default function App(){
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
                           setTimeout(async()=>{
                             try{
-                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*`,{headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG"}});
+                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*&_ts=${Date.now()}`,{cache:"no-store",headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Cache-Control":"no-cache"}});
                               const json=await res.json();
                               const row=json&&json[0];
                               const servicoNoBanco=row&&row.data&&row.data.servico;
