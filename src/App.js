@@ -417,16 +417,18 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS,initial}){
 }
 
 // ── MODAL IMPORTAR EXCEL ──────────────────────────────────────────────────────
-const IMPORT_COLS = ["Data","Nº Relatório","Tipo","Empresa","Patrimônio","Técnico","Data Atend.","Chamado","Ação","Horas Trab.","Status"];
+const IMPORT_COLS = ["Data","Técnico","Atendimento","Cliente","Cidade","Patrimônio","Relatório","Chamado","Início","Fim","Trabalhadas","Status"];
 function ImportExcelModal({onClose,onImport}){
   const [rows,setRows]=useState(null);
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
   const fileRef=useRef();
 
-  const pick=k=>(o)=>{ // pega valor por nome de coluna (tolerante a variações)
+  const pick=k=>(o)=>{ // pega valor por nome de coluna (tolerante a variações: maiúscula/minúscula, acento, parcial)
     const keys=Object.keys(o);
-    const found=keys.find(x=>x.trim().toLowerCase()===k.toLowerCase());
+    const norm=s=>String(s).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    const alvo=norm(k);
+    const found=keys.find(x=>norm(x)===alvo)||keys.find(x=>norm(x).includes(alvo));
     return found?o[found]:"";
   };
   const parseCSV=(txt)=>{
@@ -468,24 +470,52 @@ function ImportExcelModal({onClose,onImport}){
     }
   };
   const confirmar=()=>{
+    const toISO=(str)=>{
+      if(!str)return "";
+      str=String(str).trim();
+      if(/^\d{4}-\d{2}-\d{2}$/.test(str))return str;
+      let m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+      m=str.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
+      if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+      if(/^\d+(\.\d+)?$/.test(str)){
+        const n=parseFloat(str);const dt=new Date(Math.round((n-25569)*86400*1000));
+        if(!isNaN(dt))return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
+      }
+      return str;
+    };
+    const toTime=(str)=>{
+      if(!str)return "";
+      str=String(str).trim();
+      let m=str.match(/^(\d{1,2}):(\d{2})/);
+      if(m)return `${m[1].padStart(2,"0")}:${m[2]}`;
+      if(/^\d+(\.\d+)?$/.test(str)){
+        const frac=parseFloat(str);
+        if(frac>=0&&frac<1){const totalMin=Math.round(frac*24*60);return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;}
+      }
+      return str;
+    };
     const novos=rows.map((o,i)=>{
-      const st=String(pick("Status")(o)||"").trim();
+      const st=String(pick("Status")(o)||"").trim().toLowerCase().replace(/\s+/g,"_");
+      const horaInicio=toTime(pick("Início")(o)||pick("Inicio")(o)||pick("Entrada")(o));
+      const horaFim=toTime(pick("Fim")(o)||pick("Término")(o)||pick("Termino")(o)||pick("Saida")(o));
+      const dataAt=toISO(pick("Data")(o)||pick("Data Atend")(o));
       return {
         id:`R${Date.now()}${i}`,
-        dataReg:String(pick("Data")(o)||""),
-        reportNum:String(pick("Nº Relatório")(o)||pick("No Relatório")(o)||pick("Numero")(o)||""),
-        type:mapTipo(pick("Tipo")(o)),
-        empresa:String(pick("Empresa")(o)||""),
-        patrimonio:String(pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
+        data:dataAt,
+        dataAtendimento:dataAt,
+        date:dataAt,
         tecnico:String(pick("Técnico")(o)||pick("Tecnico")(o)||""),
-        date:String(pick("Data Atend.")(o)||pick("Data Atendimento")(o)||""),
-        dataAtendimento:String(pick("Data Atend.")(o)||pick("Data Atendimento")(o)||""),
-        atendimento:mapTipo(pick("Tipo")(o)),
-        numChamado:String(pick("Chamado")(o)||""),chamado:String(pick("Chamado")(o)||""),
-        acao:String(pick("Ação")(o)||pick("Acao")(o)||""),
-        horasTrabalhadas:String(pick("Horas Trab.")(o)||pick("Horas")(o)||""),
-        status:REL_STATUS_KEYS.includes(st)?st:"",
-        processoStatus:"em_andamento",statusFinal:String(pick("Status")(o)||pick("Status Final")(o)||"Pendente"),
+        atendimento:mapTipo(pick("Atendimento")(o)||pick("Tipo")(o)),
+        cliente:String(pick("Cliente")(o)||pick("Empresa")(o)||""),
+        cidade:String(pick("Cidade")(o)||""),
+        patrimonio:String(pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
+        relatorio:String(pick("Relatório")(o)||pick("Relatorio")(o)||pick("Nº Relatório")(o)||pick("Numero")(o)||""),
+        chamado:String(pick("Chamado")(o)||""),numChamado:String(pick("Chamado")(o)||""),
+        horaInicio,horaFim,
+        horasTrabalhadas:String(pick("Trabalhadas")(o)||pick("Horas Trab")(o)||pick("Horas")(o)||"")||calcHoras(horaInicio,horaFim),
+        status:ESCALA_STATUS_KEYS.includes(st)?st:"agendada",
+        obs:String(pick("Obs")(o)||pick("Observação")(o)||""),
       };
     });
     onImport(novos);
@@ -2150,7 +2180,7 @@ export default function App(){
         {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("sas",d.id,d));setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
         {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("processos_mu",d.id,d));setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
         {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("processos_af",d.id,d));setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
-        {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("reports",d.id,d));setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
+        {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_hebert",d.id,d));setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportApon&&<ImportAponModal label="Apontamentos 1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
