@@ -2446,7 +2446,7 @@ export default function App(){
                               }else if((servicoNoBanco||"")===novoValor){
                                 notify(`✅ Confirmado no banco: ${novoValor||"(vazio)"}`);
                               }else{
-                                alert(`❌ NÃO SALVOU! No banco está: "${servicoNoBanco||"(vazio)"}" — mas você escolheu: "${novoValor}"`);
+                                alert(`❌ NÃO SALVOU! ID: ${idAlvo}\nQuantidade de linhas encontradas com esse ID: ${json.length}\nNo banco está: "${servicoNoBanco||"(vazio)"}" — mas você escolheu: "${novoValor}"`);
                               }
                             }catch(err){
                               alert("❌ Erro ao conferir no banco: "+err.message);
