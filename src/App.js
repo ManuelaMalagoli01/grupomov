@@ -29,11 +29,14 @@ const db = {
         const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
           method: "POST",
           cache: "no-store",
-          headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+          headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates,return=representation"},
           body: JSON.stringify({id, data})
         });
-        if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
-      } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); }
+        const text = await res.text();
+        if(!res.ok){ console.error("DB save error:",table,res.status,text); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+text.slice(0,250)); return {ok:false,status:res.status,body:text}; }
+        let parsed=null; try{parsed=JSON.parse(text);}catch(e){}
+        return {ok:true,status:res.status,body:parsed};
+      } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); return {ok:false,error:e.message}; }
     });
     __saveQueues[key] = next;
     return next;
@@ -1873,7 +1876,8 @@ export default function App(){
       saved=updated.find(r=>r.id===id);
       return updated;
     });
-    if(saved)db.save("apontamentos_oficina",id,saved);
+    if(saved)return db.save("apontamentos_oficina",id,saved);
+    return Promise.resolve({ok:false,error:"registro não encontrado localmente"});
   };
   const addApon=()=>{ const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:"",inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:"",arquivado:false}; setApontamentos(p=>[...p,row]); db.save("apontamentos_oficina",row.id,row); notify("✅ Linha adicionada!"); };
   const delApon=(id)=>{ setApontamentos(p=>p.filter(x=>x.id!==id)); db.delete("apontamentos_oficina",id); };
@@ -2433,27 +2437,19 @@ export default function App(){
                         <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
                           const novoValor=e.target.value;
                           const idAlvo=a.id;
-                          updateApon(idAlvo,{servico:novoValor});
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
-                          setTimeout(async()=>{
-                            try{
-                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*`,{cache:"no-store",headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Cache-Control":"no-cache"}});
-                              const json=await res.json();
-                              const row=json&&json[0];
-                              const servicoNoBanco=row&&row.data&&row.data.servico;
-                              if(!res.ok){
-                                alert(`❌ ERRO ao conferir no banco (status ${res.status}): ${JSON.stringify(json).slice(0,300)}`);
-                              }else if(!row){
-                                alert(`❌ Registro ${idAlvo} NÃO encontrado no banco! (pode ter sido salvo com outro ID)`);
-                              }else if((servicoNoBanco||"")===novoValor){
-                                notify(`✅ Confirmado no banco: ${novoValor||"(vazio)"}`);
-                              }else{
-                                alert(`❌ NÃO SALVOU! ID: ${idAlvo}\nQuantidade de linhas encontradas com esse ID: ${json.length}\nNo banco está: "${servicoNoBanco||"(vazio)"}" — mas você escolheu: "${novoValor}"`);
-                              }
-                            }catch(err){
-                              alert("❌ Erro ao conferir no banco: "+err.message);
-                            }
-                          },1500);
+                          const result=await updateApon(idAlvo,{servico:novoValor});
+                          if(!result||!result.ok){
+                            alert(`❌ ERRO ao salvar (status ${result&&result.status}): ${JSON.stringify(result&&(result.body||result.error)).slice(0,300)}`);
+                            return;
+                          }
+                          const linhaSalva=Array.isArray(result.body)?result.body[0]:result.body;
+                          const servicoSalvo=linhaSalva&&linhaSalva.data&&linhaSalva.data.servico;
+                          if((servicoSalvo||"")===novoValor){
+                            notify(`✅ Confirmado no banco: ${novoValor||"(vazio)"}`);
+                          }else{
+                            alert(`❌ A resposta do banco não bate! ID: ${idAlvo}\nO banco confirmou salvar: "${servicoSalvo||"(vazio)"}" — mas você escolheu: "${novoValor}"\nResposta completa: ${JSON.stringify(result.body).slice(0,300)}`);
+                          }
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
