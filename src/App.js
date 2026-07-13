@@ -2028,6 +2028,9 @@ export default function App(){
 
   .tbl-wrap{overflow-x:auto;width:100%;}
   table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
+  .compact-table th{padding:6px 8px!important;font-size:9px!important;}
+  .compact-table td{padding:5px 8px!important;font-size:11px!important;}
+  .compact-table td input,.compact-table td select{font-size:11px!important;}
   th{
     background:#F8F9FA;padding:10px 14px;
     text-align:left;font-size:10.5px;font-weight:700;
@@ -5177,8 +5180,8 @@ export default function App(){
                       </div>
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
-                      <div className="tbl-wrap"><table style={{minWidth:1120,tableLayout:"fixed"}}>
-                        <thead><tr><th style={{width:200}}>Empresa</th><th style={{width:130}}>Nº Mau Uso</th><th style={{width:110}}>Data Envio</th><th style={{width:120}}>Data Aprovação</th><th style={{width:110}}>Valor</th><th style={{width:90}}>Nota Débito</th><th style={{width:75}}>Ticket Fatur.</th><th style={{width:95}}>Dt Envio Ticket</th><th style={{width:190}}>Status Aprovação</th></tr></thead>
+                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:960,tableLayout:"fixed"}}>
+                        <thead><tr><th style={{width:150}}>Empresa</th><th style={{width:100}}>Nº Mau Uso</th><th style={{width:95}}>Data Envio</th><th style={{width:100}}>Data Aprovação</th><th style={{width:90}}>Valor</th><th style={{width:75}}>Nota Débito</th><th style={{width:65}}>Ticket Fatur.</th><th style={{width:85}}>Dt Envio Ticket</th><th style={{width:170}}>Status Aprovação</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
