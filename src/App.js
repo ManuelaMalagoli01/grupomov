@@ -847,7 +847,7 @@ function ImportAponModal({onClose,onImport,label}){
     setLoading(false);
   };
   const doImport=()=>{
-    const mapped=rows.map(o=>{
+    const mapped=rows.map((o,idxRow)=>{
       const MESES_MAP={"janeiro":"01","fevereiro":"02","março":"03","abril":"04","maio":"05","junho":"06","julho":"07","agosto":"08","setembro":"09","outubro":"10","novembro":"11","dezembro":"12"};
       const toISO=(str)=>{
         if(!str)return "";
@@ -890,7 +890,7 @@ function ImportAponModal({onClose,onImport,label}){
       const terminoRaw=String(pick("terminio")(o)||pick("termino")(o)||pick("término")(o)||pick("saida")(o)||"");
       const inicioT=toTime(inicioRaw),terminoT=toTime(terminoRaw);
       return{
-      id:"AX"+Date.now()+Math.random().toString(36).slice(2,6),
+      id:"AX"+Date.now()+"_"+idxRow+"_"+Math.random().toString(36).slice(2,6),
       data:dataCalc,
       os:String(pick("o.s")(o)||pick("os")(o)||pick("ordem")(o)||""),
       patrimonio:String(pick("nº do pat")(o)||pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
@@ -2306,6 +2306,32 @@ export default function App(){
                       notify(`🔄 ${comDetalhamento.length} apontamento(s) atualizado(s) — descrição movida para Observações!`);
                     }
                   }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1565C0",background:"transparent",color:"#60A5FA",fontSize:11,cursor:"pointer",fontWeight:600}}>🔄 Mover Descrição p/ Observação</button>
+                  <button onClick={()=>{
+                    const seen={};
+                    const dups=[];
+                    (apontamentos||[]).forEach(a=>{
+                      if(!a||a.oficina==="150")return;
+                      if(seen[a.id]){dups.push(a);}else{seen[a.id]=true;}
+                    });
+                    if(dups.length===0){alert("Nenhum ID duplicado encontrado.");return;}
+                    if(window.confirm(`Encontrados ${dups.length} apontamento(s) com ID duplicado (provavelmente da importação). Corrigir gerando um novo ID único para cada um, sem apagar nenhum dado?`)){
+                      setApontamentos(prev=>{
+                        const seen2={};
+                        return (prev||[]).map(a=>{
+                          if(!a||a.oficina==="150")return a;
+                          if(seen2[a.id]){
+                            const novoId=`APO${Date.now()}_${Math.floor(Math.random()*999999)}`;
+                            const novo={...a,id:novoId};
+                            db.save("apontamentos_oficina",novoId,novo);
+                            return novo;
+                          }
+                          seen2[a.id]=true;
+                          return a;
+                        });
+                      });
+                      notify(`✅ ${dups.length} ID(s) duplicado(s) corrigido(s)!`);
+                    }
+                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#F5A623",fontSize:11,cursor:"pointer",fontWeight:600}}>🆔 Corrigir IDs Duplicados</button>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
                     📄 Ler PDF
