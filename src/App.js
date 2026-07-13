@@ -2438,7 +2438,12 @@ export default function App(){
                           const novoValor=e.target.value;
                           const idAlvo=a.id;
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
-                          const result=await updateApon(idAlvo,{servico:novoValor});
+                          const merged={...a,servico:novoValor};
+                          setApontamentos(prev=>{
+                            const existe=(prev||[]).some(r=>r.id===idAlvo);
+                            return existe?(prev||[]).map(r=>r.id===idAlvo?merged:r):[...(prev||[]),merged];
+                          });
+                          const result=await db.save("apontamentos_oficina",idAlvo,merged);
                           if(!result||!result.ok){
                             alert(`❌ ERRO ao salvar (status ${result&&result.status}): ${JSON.stringify(result&&(result.body||result.error)).slice(0,300)}`);
                             return;
