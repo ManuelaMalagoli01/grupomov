@@ -2059,8 +2059,10 @@ export default function App(){
   .tbl-wrap{overflow-x:auto;width:100%;}
   table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
   .compact-table th{padding:5px 6px!important;font-size:8.5px!important;}
-  .compact-table td{padding:4px 6px!important;font-size:10px!important;}
-  .compact-table td input,.compact-table td select{font-size:10px!important;}
+  .compact-table td{padding:4px 3px!important;font-size:9.5px!important;}
+  .compact-table td input,.compact-table td select{font-size:9.5px!important;min-width:0!important;}
+  .compact-table td input[type=date]{padding:0!important;}
+  .compact-table td input[type=date]::-webkit-calendar-picker-indicator{padding:0;margin-left:1px;width:11px;height:11px;filter:opacity(.55);}
   th{
     background:#F8F9FA;padding:10px 14px;
     text-align:left;font-size:10.5px;font-weight:700;
@@ -5210,8 +5212,8 @@ export default function App(){
                       </div>
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
-                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:560,tableLayout:"fixed"}}>
-                        <thead><tr><th style={{width:85}}>Empresa</th><th style={{width:55}}>Nº MU</th><th style={{width:55}}>Envio</th><th style={{width:55}}>Aprov.</th><th style={{width:55}}>Valor</th><th style={{width:40}}>N.Déb.</th><th style={{width:38}}>Ticket</th><th style={{width:55}}>Env.Tkt</th><th style={{width:105}}>Status</th></tr></thead>
+                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:500,tableLayout:"fixed"}}>
+                        <thead><tr><th style={{width:78}}>Empresa</th><th style={{width:50}}>Nº MU</th><th style={{width:50}}>Envio</th><th style={{width:50}}>Aprov.</th><th style={{width:50}}>Valor</th><th style={{width:36}}>N.Déb.</th><th style={{width:32}}>Ticket</th><th style={{width:50}}>Env.Tkt</th><th style={{width:95}}>Status</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
@@ -5222,7 +5224,7 @@ export default function App(){
                             <td><input type="text" defaultValue={p.ov||""} onBlur={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="text" defaultValue={p.ticket||""} onBlur={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{fontSize:11,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="date" defaultValue={p.dataEnvioTicket||""} onBlur={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{fontSize:11,fontWeight:600,color:"#6A1B9A",border:"none",background:"transparent",outline:"none"}}/></td>
-                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:8,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:8,padding:"2px 3px",border:"none",cursor:"pointer",width:"100%",maxWidth:126}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
+                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:7.5,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:6,padding:"2px 2px",border:"none",cursor:"pointer",width:"100%",maxWidth:98}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
                         );})}</tbody>
                       </table></div>
