@@ -5,6 +5,7 @@ const SUPA_URL = "https://kpaddzigzqbnkfzprlwl.supabase.co";
 const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
 let __dbErrShown=false;
+const __saveQueues={};
 const db = {
   async get(table) {
     try {
@@ -16,15 +17,24 @@ const db = {
       return Array.isArray(rows) ? rows.map(r => r.data) : [];
     } catch(e) { console.error("DB get error:", e); return []; }
   },
-  async save(table, id, data) {
-    try {
-      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
-        method: "POST",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
-        body: JSON.stringify({id, data})
-      });
-      if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
-    } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); }
+  save(table, id, data) {
+    // Enfileira gravações do MESMO registro (mesma tabela+id) para que sempre sejam
+    // enviadas ao servidor em ordem, evitando que uma grava mais antiga (ex: criação)
+    // chegue depois de uma mais nova (ex: edição do serviço) e sobrescreva o resultado.
+    const key = table+"::"+id;
+    const prev = __saveQueues[key] || Promise.resolve();
+    const next = prev.then(async () => {
+      try {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+          method: "POST",
+          headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates"},
+          body: JSON.stringify({id, data})
+        });
+        if(!res.ok){ const t=await res.text(); console.error("DB save error:",table,res.status,t); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+t.slice(0,250)); }
+      } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); }
+    });
+    __saveQueues[key] = next;
+    return next;
   },
   async delete(table, id) {
     try {
