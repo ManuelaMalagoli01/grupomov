@@ -2437,7 +2437,7 @@ export default function App(){
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
                           setTimeout(async()=>{
                             try{
-                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*&_ts=${Date.now()}`,{cache:"no-store",headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Cache-Control":"no-cache"}});
+                              const res=await fetch(`https://kpaddzigzqbnkfzprlwl.supabase.co/rest/v1/apontamentos_oficina?id=eq.${encodeURIComponent(idAlvo)}&select=*`,{cache:"no-store",headers:{"apikey":"sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Authorization":"Bearer sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG","Cache-Control":"no-cache"}});
                               const json=await res.json();
                               const row=json&&json[0];
                               const servicoNoBanco=row&&row.data&&row.data.servico;
