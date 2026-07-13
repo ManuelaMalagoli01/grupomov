@@ -1622,6 +1622,7 @@ export default function App(){
   const [showArqApon,setShowArqApon]=useState(false);
   const [showFiltrosApon,setShowFiltrosApon]=useState(false);
   const [showNovoApon,setShowNovoApon]=useState(false);
+  const [editingAponId,setEditingAponId]=useState(null);
   const [showFiltrosApon150,setShowFiltrosApon150]=useState(false);
   const [aponNovaData,setAponNovaData]=useState(TODAY_STR);
   const [aponNovaOS,setAponNovaOS]=useState("");
