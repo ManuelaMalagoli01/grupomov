@@ -1207,21 +1207,21 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 
 function AppTopBar({user, setUser, setModalUsers}){
   return(
-    <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <img src={LOGO_MOV} alt="Grupo MOV" style={{height:32,width:"auto",display:"block"}}/>
-        <div>
+    <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 2px 8px rgba(0,0,0,.3)",overflowX:"auto",overflowY:"hidden",gap:16,scrollbarWidth:"thin",scrollbarColor:"#475569 #0F172A"}} className="app-topbar-scroll">
+      <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+        <img src={LOGO_MOV} alt="Grupo MOV" style={{height:32,width:"auto",display:"block",flexShrink:0}}/>
+        <div style={{whiteSpace:"nowrap"}}>
           <div style={{fontSize:13,fontWeight:800,color:"#FFF"}}>Grupo MOV</div>
           <div style={{fontSize:9,color:"#888",letterSpacing:1,textTransform:"uppercase"}}>Gestão de Manutenção</div>
         </div>
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",borderRadius:8,padding:"5px 10px"}}>
-          <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{user.name[0]}</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
+          <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A",flexShrink:0}}>{user.name[0]}</div>
           <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
         </div>
-        {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>👤 Usuários</button>}
-        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer"}}>Sair</button>
+        {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",color:"#F5C200",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>👤 Usuários</button>}
+        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"#AAA",borderRadius:7,padding:"6px 12px",fontSize:11,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
       </div>
     </div>
   );
@@ -2002,6 +2002,11 @@ export default function App(){
   }
   input:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.12);}
   input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;}
+
+  .app-topbar-scroll::-webkit-scrollbar{height:6px;}
+  .app-topbar-scroll::-webkit-scrollbar-track{background:#0F172A;}
+  .app-topbar-scroll::-webkit-scrollbar-thumb{background:#475569;border-radius:10px;}
+  .app-topbar-scroll::-webkit-scrollbar-thumb:hover{background:#64748B;}
 
   .notif{
     position:fixed;top:18px;right:18px;z-index:9999;
