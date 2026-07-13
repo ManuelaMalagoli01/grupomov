@@ -2058,9 +2058,9 @@ export default function App(){
 
   .tbl-wrap{overflow-x:auto;width:100%;}
   table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
-  .compact-table th{padding:6px 8px!important;font-size:9px!important;}
-  .compact-table td{padding:5px 8px!important;font-size:11px!important;}
-  .compact-table td input,.compact-table td select{font-size:11px!important;}
+  .compact-table th{padding:5px 6px!important;font-size:8.5px!important;}
+  .compact-table td{padding:4px 6px!important;font-size:10px!important;}
+  .compact-table td input,.compact-table td select{font-size:10px!important;}
   th{
     background:#F8F9FA;padding:10px 14px;
     text-align:left;font-size:10.5px;font-weight:700;
@@ -5210,8 +5210,8 @@ export default function App(){
                       </div>
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
-                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:960,tableLayout:"fixed"}}>
-                        <thead><tr><th style={{width:150}}>Empresa</th><th style={{width:100}}>Nº Mau Uso</th><th style={{width:95}}>Data Envio</th><th style={{width:100}}>Data Aprovação</th><th style={{width:90}}>Valor</th><th style={{width:75}}>Nota Débito</th><th style={{width:65}}>Ticket Fatur.</th><th style={{width:85}}>Dt Envio Ticket</th><th style={{width:170}}>Status Aprovação</th></tr></thead>
+                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:800,tableLayout:"fixed"}}>
+                        <thead><tr><th style={{width:120}}>Empresa</th><th style={{width:80}}>Nº Mau Uso</th><th style={{width:80}}>Data Envio</th><th style={{width:80}}>Data Aprov.</th><th style={{width:75}}>Valor</th><th style={{width:60}}>N.Débito</th><th style={{width:55}}>Ticket</th><th style={{width:75}}>Envio Ticket</th><th style={{width:150}}>Status</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
@@ -5222,7 +5222,7 @@ export default function App(){
                             <td><input type="text" defaultValue={p.ov||""} onBlur={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="text" defaultValue={p.ticket||""} onBlur={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{fontSize:11,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
                             <td><input type="date" defaultValue={p.dataEnvioTicket||""} onBlur={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{fontSize:11,fontWeight:600,color:"#6A1B9A",border:"none",background:"transparent",outline:"none"}}/></td>
-                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:10,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:20,padding:"2px 8px",border:"none",cursor:"pointer"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
+                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:9,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:10,padding:"2px 4px",border:"none",cursor:"pointer",width:"100%",maxWidth:145}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                           </tr>
                         );})}</tbody>
                       </table></div>
