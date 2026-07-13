@@ -5210,8 +5210,8 @@ export default function App(){
                       </div>
                     </div>
                     {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
-                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:680,tableLayout:"fixed"}}>
-                        <thead><tr><th style={{width:100}}>Empresa</th><th style={{width:70}}>Nº MU</th><th style={{width:70}}>Envio</th><th style={{width:70}}>Aprov.</th><th style={{width:65}}>Valor</th><th style={{width:50}}>N.Déb.</th><th style={{width:45}}>Ticket</th><th style={{width:65}}>Env.Tkt</th><th style={{width:130}}>Status</th></tr></thead>
+                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:560,tableLayout:"fixed"}}>
+                        <thead><tr><th style={{width:85}}>Empresa</th><th style={{width:55}}>Nº MU</th><th style={{width:55}}>Envio</th><th style={{width:55}}>Aprov.</th><th style={{width:55}}>Valor</th><th style={{width:40}}>N.Déb.</th><th style={{width:38}}>Ticket</th><th style={{width:55}}>Env.Tkt</th><th style={{width:105}}>Status</th></tr></thead>
                         <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
                           <tr key={p.id}>
                             <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
