@@ -5191,8 +5191,8 @@ export default function App(){
                     </div>
                   </div>
                   {/* Enviados/Aprovados: empresa + nº MU + data de envio + data de aprovação + valor + nota débito + ticket + status — filtro por data, tudo editável */}
-                  <div className="card" style={{padding:0,overflow:"hidden"}}>
-                    <div style={{padding:"7px 10px",background:"#1E293B",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+                  <div className="card" style={{padding:0,overflow:"visible",borderRadius:14}}>
+                    <div style={{padding:"7px 10px",background:"#1E293B",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                         <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso</div>
                         <div style={{display:"flex",borderRadius:20,overflow:"hidden",border:"1px solid #334155"}}>
