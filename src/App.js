@@ -251,16 +251,38 @@ const analisarAlertaPreventivo = (r) => {
   if(!r||r.atendimento!=="preventivo")return null;
   const pend=String(r.pendencias||"").trim();
   const obs=String(r.obs||"").trim();
-  if(pend) return {level:"urgente",label:"🔴 URGENTE — Pendência",color:"#C62828",bg:"#FFF0F0",border:"#F5C2C2"};
-  if(!obs) return null;
-  const o=obs.toLowerCase();
-  const mencionaPecas=/pe[çc]a/i.test(o);
-  const mencionaCodigo=/c[oó]digo/i.test(o)||/\b[a-z]{1,4}[-\s]?\d{3,}\b/i.test(o);
-  const mencionaUnidade=/unidade|unid\.|\bun\.?\b/i.test(o);
-  if(mencionaPecas||mencionaCodigo||mencionaUnidade){
-    return {level:"urgente",label:"🔴 URGENTE — Peças/Códigos",color:"#C62828",bg:"#FFF0F0",border:"#F5C2C2"};
+  const combinado=`${obs} ${pend}`;
+  if(!obs&&!pend){
+    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#000",bg:"#DCFCE7",border:"#86EFAC"};
   }
-  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#E67E00",bg:"#FFF8F0",border:"#FFDBA8"};
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/\b[a-zA-Z]{1,4}[-\s]?\d{3,}\b/g,/\b\d{3,}\b/g];
+  let achados=[];
+  padroes.forEach(re=>{const m=combinado.match(re);if(m)achados=achados.concat(m);});
+  achados=[...new Set(achados.map(a=>a.trim()).filter(Boolean))];
+  if(pend||achados.length>0){
+    return {level:"urgente",label:"🔴 URGENTE"+(achados.length?` — ${achados.slice(0,3).join(", ")}`:" — Pendência"),color:"#000",bg:"#C62828",border:"#8E1D1D",achados};
+  }
+  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#000",bg:"#B45309",border:"#7C3D07"};
+};
+// Destaca (em negrito) as palavras/códigos-chave dentro de um texto, para exibição
+const destacarPalavrasChave=(texto)=>{
+  if(!texto)return texto;
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/\b[a-zA-Z]{1,4}[-\s]?\d{3,}\b/g,/\b\d{3,}\b/g];
+  let partes=[{txt:texto,marcado:false}];
+  padroes.forEach(re=>{
+    partes=partes.flatMap(p=>{
+      if(p.marcado)return [p];
+      const out=[];let last=0;let m;const re2=new RegExp(re.source,re.flags);
+      while((m=re2.exec(p.txt))){
+        if(m.index>last)out.push({txt:p.txt.slice(last,m.index),marcado:false});
+        out.push({txt:m[0],marcado:true});
+        last=m.index+m[0].length;
+      }
+      if(last<p.txt.length)out.push({txt:p.txt.slice(last),marcado:false});
+      return out.length?out:[p];
+    });
+  });
+  return partes.map((p,i)=>p.marcado?<b key={i} style={{background:"#FFE066",color:"#000",padding:"0 2px",borderRadius:3}}>{p.txt}</b>:<span key={i}>{p.txt}</span>);
 };
 
 const AGENDA_STATUS = {
@@ -2033,7 +2055,8 @@ export default function App(){
   ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
 
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pulseAlert{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.35)}50%{box-shadow:0 0 0 5px rgba(198,40,40,0)}}
+  @keyframes pulseUrgente{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.45)}50%{box-shadow:0 0 0 6px rgba(198,40,40,0)}}
+  @keyframes pulseModerado{0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,.4)}50%{box-shadow:0 0 0 6px rgba(180,83,9,0)}}
   @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
   @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
@@ -2333,7 +2356,10 @@ export default function App(){
                     </div>
                     <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
                       {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;return(
-                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"5px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseAlert 1.4s ease-in-out infinite":undefined}}>{alerta.label}</button>
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"6px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseUrgente 1.3s ease-in-out infinite":alerta.level==="moderado"?"pulseModerado 1.6s ease-in-out infinite":undefined}}>{alerta.label}</button>
+                          {alerta.achados&&alerta.achados.length>0&&<div style={{fontSize:8,color:"#7C2D12",background:"#FFF7ED",borderRadius:6,padding:"3px 6px",lineHeight:1.4}}>{destacarPalavrasChave(`${r.obs||""} ${r.pendencias||""}`.trim())}</div>}
+                        </div>
                       );})()}
                       <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                       <div style={{fontSize:9,color:"#888"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}</div>
