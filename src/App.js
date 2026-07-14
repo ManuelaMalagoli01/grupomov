@@ -1596,6 +1596,7 @@ export default function App(){
   const [dashOfi150To,setDashOfi150To]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
+  const [showFiltrosRel,setShowFiltrosRel]=useState(false);
   const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
   const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
   const [relFiltroTech,setRelFiltroTech]=useState("todos");
@@ -2328,7 +2329,14 @@ export default function App(){
               ))}
             </div>
             {/* Filtros */}
-            <div className="card" style={{padding:"6px 8px",marginBottom:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+            <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:11}}>🔍</span>
+              <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              <span style={{fontSize:9,color:"#94A3B8"}}>{lista.length} relatório(s)</span>
+              <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosRel?"▲":"▼"}</span>
+            </button>
+            {showFiltrosRel&&<div className="card" style={{padding:"6px 8px",marginBottom:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
               <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={relFiltroDataDe} onChange={e=>setRelFiltroDataDe(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={relFiltroDataAte} onChange={e=>setRelFiltroDataAte(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
@@ -2340,7 +2348,7 @@ export default function App(){
               <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
               <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
               {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe("");setRelFiltroDataAte("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
+            </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
