@@ -2564,7 +2564,7 @@ export default function App(){
                   Object.keys(agendaOfi).forEach(k=>{
                     const i=k.indexOf("__"); if(i<0) return;
                     const kt=k.slice(0,i), kd=k.slice(i+2);
-                    if(kt!==tech||!kd.startsWith(ym)) return;
+                    if((kt!==tech&&!tech.startsWith(kt))||!kd.startsWith(ym)) return;
                     (agendaOfi[k]||[]).forEach((s,si)=>{
                       if(agOfiServico==="todos"||s.servico===agOfiServico) entries.push({s,date:kd,key:k,si});
                     });
@@ -5985,7 +5985,7 @@ export default function App(){
                   Object.keys(agendaOfi150).forEach(k=>{
                     const i=k.indexOf("__"); if(i<0) return;
                     const kt=k.slice(0,i), kd=k.slice(i+2);
-                    if(kt!==tech||!kd.startsWith(ym)) return;
+                    if((kt!==tech&&!tech.startsWith(kt))||!kd.startsWith(ym)) return;
                     (agendaOfi150[k]||[]).forEach((s,si)=>{
                       if(agOfi150Servico==="todos"||s.servico===agOfi150Servico) entries.push({s,date:kd,key:k,si});
                     });
