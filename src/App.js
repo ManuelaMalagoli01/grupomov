@@ -1535,6 +1535,8 @@ export default function App(){
   const [dashTo,setDashTo]=useState("");
   const [dashTech,setDashTech]=useState("todos");
   const [dashServico,setDashServico]=useState("todos");
+  const [dashAtendimento,setDashAtendimento]=useState("todos");
+  const [dashStatus,setDashStatus]=useState("todos");
   const [dashPatrimonio,setDashPatrimonio]=useState("");
   const [showFiltrosDash,setShowFiltrosDash]=useState(false);
   const [dashOfiTech,setDashOfiTech]=useState("todos");
@@ -3759,8 +3761,8 @@ export default function App(){
         {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,marginBottom:24,color:"#1E293B"}}>📊 Dashboard de Atendimentos</div>
-            <div style={{fontSize:11,color:"#94A3B8",marginTop:-16,marginBottom:20}}>Fonte: Conferência de Relatórios (aba "Técnicos Externos → Conf. Relatórios")</div>
+            <div style={{fontWeight:900,fontSize:26,letterSpacing:-.8,marginBottom:4,color:"#0F172A"}}>📊 Dashboard de Atendimentos</div>
+            <div style={{fontSize:11,color:"#94A3B8",marginBottom:20}}>Fonte de dados: Conferência de Relatórios (Técnicos Externos) — a Agenda não é usada como parâmetro</div>
 
             {/* ── FILTRO + GRÁFICOS ── */}
             {(()=>{
@@ -3772,9 +3774,11 @@ export default function App(){
                 if(!((dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d)))return false;
                 if(dashServico!=="todos"&&!(d.servicos||[]).includes(dashServico))return false;
                 if(dashPatrimonio&&!(d.patrimonio||"").toLowerCase().includes(dashPatrimonio.toLowerCase()))return false;
+                if(dashAtendimento!=="todos"&&d.atendimento!==dashAtendimento)return false;
+                if(dashStatus!=="todos"&&(d.status||"agendada")!==dashStatus)return false;
                 return true;
               });
-              const hasFilterDash=dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos"||dashServico!=="todos"||dashPatrimonio;
+              const hasFilterDash=dashRegion!=="todas"||dashFrom||dashTo||dashTech!=="todos"||dashServico!=="todos"||dashPatrimonio||dashAtendimento!=="todos"||dashStatus!=="todos";
               const prev=dashReports.filter(r=>r.atendimento==="preventivo").length;
               const corr=dashReports.filter(r=>r.atendimento==="corretivo").length;
               const totalPC=prev+corr;
@@ -3800,11 +3804,35 @@ export default function App(){
                     <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
                     <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                     <select value={dashServico} onChange={e=>setDashServico(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos serviços</option>{SERVICOS_RELATORIO.map(s=><option key={s} value={s}>{s}</option>)}</select>
+                    <select value={dashAtendimento} onChange={e=>setDashAtendimento(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todo atendimento</option><option value="preventivo">📋 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
+                    <select value={dashStatus} onChange={e=>setDashStatus(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                     <input type="text" value={dashPatrimonio} onChange={e=>setDashPatrimonio(e.target.value)} placeholder="Patrimônio..." style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",width:120}}/>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:11}}/></div>
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:11}}/></div>
-                    {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");}}>✕ Limpar</BtnG>}
+                    {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:22}}>
+                    <div style={{background:"linear-gradient(135deg,#0F172A,#1E293B)",borderRadius:16,padding:"18px 20px",boxShadow:"0 8px 24px rgba(15,23,42,.18)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>Total Atendimentos</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#F5C200",lineHeight:1}}>{dashReports.length}</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#1D4ED8,#2563EB)",borderRadius:16,padding:"18px 20px",boxShadow:"0 8px 24px rgba(37,99,235,.22)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#DBEAFE",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>📋 Preventivas</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#FFF",lineHeight:1}}>{prev}</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#B91C1C,#EF4444)",borderRadius:16,padding:"18px 20px",boxShadow:"0 8px 24px rgba(239,68,68,.22)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#FEE2E2",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🔧 Corretivas</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#FFF",lineHeight:1}}>{corr}</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#B45309,#EA580C)",borderRadius:16,padding:"18px 20px",boxShadow:"0 8px 24px rgba(234,88,12,.22)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#FED7AA",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>⏱ Total de Horas</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#FFF",lineHeight:1}}>{techHours.reduce((a,h)=>a+h,0).toFixed(0)}h</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#166534,#16A34A)",borderRadius:16,padding:"18px 20px",boxShadow:"0 8px 24px rgba(22,163,74,.22)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#DCFCE7",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>👷 Técnicos Ativos</div>
+                      <div style={{fontSize:32,fontWeight:900,color:"#FFF",lineHeight:1}}>{techsWith.length}</div>
+                    </div>
+                  </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
