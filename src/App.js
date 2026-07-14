@@ -85,7 +85,7 @@ const CIDADES_TECNICOS = ["BH","Contagem","Santa Luzia","Ribeirão das Neves","L
 const SERVICOS_RELATORIO = [...SERVICOS_OFICINA,"Serviços Preventivos","Outros"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
-  metropolitana:{ label:"Metropolitana BH", techs:["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro","Matheus Felipe","Pedro Pimentel"] },
+  metropolitana:{ label:"Metropolitana BH", techs:["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro","Matheus Felipe","Pedro Pimentel","Helbert Junior"] },
   roca:         { label:"Roca",              techs:["Artur Gerônimo","Eduardo Oliveira","Luiz Ribeiro","Pedro Souza","Lucio Silva"] },
   centroOeste:  { label:"Centro-Oeste",      techs:["Bruno Alexandre","Marcus Vinicius Botelho Dos Santos","Junio Ferreira","Reginaldo Souza"] },
 };
