@@ -2314,6 +2314,19 @@ export default function App(){
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
+                <button onClick={()=>{
+                  const alvos=(reports||[]).filter(r=>r&&!r.cidade&&(r.cliente||"").includes(" - "));
+                  if(alvos.length===0){alert("Nenhum relatório encontrado com cidade faltando dentro do nome do cliente.");return;}
+                  if(window.confirm(`Encontrados ${alvos.length} relatório(s) com cidade "escondida" dentro do nome do cliente. Corrigir separando automaticamente? Essa ação atualiza os registros no banco.`)){
+                    alvos.forEach(r=>{
+                      const partes=r.cliente.split(" - ");
+                      const cidade=partes[partes.length-1].trim();
+                      const clienteFinal=partes.slice(0,-1).join(" - ").trim();
+                      updateReport(r.id,{cliente:clienteFinal,cidade});
+                    });
+                    notify(`✅ ${alvos.length} relatório(s) corrigido(s) — cidade separada do cliente!`);
+                  }
+                }} title="Corrige relatórios importados antes da separação automática de cidade" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#C47D00",fontSize:11,cursor:"pointer",fontWeight:600}}>🏙️ Corrigir Cidades Antigas</button>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>✅ {showArqRel?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
