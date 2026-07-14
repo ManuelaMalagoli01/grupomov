@@ -2296,9 +2296,13 @@ export default function App(){
             if(relFiltroStatus!=="todos"&&r.status!==relFiltroStatus)return false;
             return true;
           }).sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
-          const totalConc=lista.filter(r=>(r.status||"").includes("concluida")).length;
+          const totalConc=lista.filter(r=>r.arquivado||(r.status||"").includes("concluida")).length;
           const totalPend=lista.filter(r=>(r.status||"").includes("pendente_pecas")).length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
+          const alertasCalc=lista.map(r=>analisarAlertaPreventivo(r));
+          const totalUrgente=alertasCalc.filter(a=>a&&a.level==="urgente").length;
+          const totalModerado=alertasCalc.filter(a=>a&&a.level==="moderado").length;
+          const totalSemPendencia=alertasCalc.filter(a=>a&&a.level==="ok").length;
 
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Header */}
@@ -2309,14 +2313,14 @@ export default function App(){
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
-                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
+                <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>✅ {showArqRel?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes Peças",v:totalPend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:totalConc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Corretivos",v:totalCorr,c:"#C62828",bg:"#FFF0F0",i:"🔧"}].map((k,i)=>(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:14}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
