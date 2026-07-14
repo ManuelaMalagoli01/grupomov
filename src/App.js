@@ -85,13 +85,13 @@ const CIDADES_TECNICOS = ["BH","Contagem","Santa Luzia","Ribeirão das Neves","L
 const SERVICOS_RELATORIO = [...SERVICOS_OFICINA,"Serviços Preventivos","Outros"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
-  metropolitana:{ label:"Metropolitana BH", techs:["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"] },
-  roca:         { label:"Roca",              techs:["Arthur","Eduardo","Luiz Ribeiro"] },
-  centroOeste:  { label:"Centro-Oeste",      techs:["Bruno","Marcus"] },
+  metropolitana:{ label:"Metropolitana BH", techs:["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro","Matheus Felipe","Pedro Pimentel"] },
+  roca:         { label:"Roca",              techs:["Artur Gerônimo","Eduardo Oliveira","Luiz Ribeiro","Pedro Souza","Lucio Silva"] },
+  centroOeste:  { label:"Centro-Oeste",      techs:["Bruno Alexandre","Marcus Vinicius Botelho Dos Santos","Junio Ferreira","Reginaldo Souza"] },
 };
-const METRO_PREV = ["Rafael","Helbert","Luiz Guilherme"];
-const METRO_CORR = ["Anderson","Dilson","Rafael","Helbert","Luiz Guilherme"];
-const NAO_PREVENTIVA = ["Anderson","Dilson"];
+const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
+const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
+const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
 const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
@@ -196,6 +196,7 @@ const ESCALA_STATUS = {
   mau_uso:                   {l:"Mau Uso",                   c:"#C47D00", bg:"#FFFBF0"},
   a_faturar:                 {l:"A Faturar",                 c:"#00838F", bg:"#E0F7FA"},
   ferias:                    {l:"Férias",                    c:"#5C6BC0", bg:"#EEF0FB"},
+  folga:                     {l:"Folga",                     c:"#607D8B", bg:"#ECEFF1"},
   entrega_tecnica:           {l:"Entrega Técnica",           c:"#7B1FA2", bg:"#F6EAFB"},
 };
 const ESCALA_STATUS_KEYS = Object.keys(ESCALA_STATUS);
@@ -238,7 +239,9 @@ const loadXLSX = () => new Promise((resolve,reject)=>{
 });
 // Mapeia rótulo de Tipo (planilha) para valor interno
 const mapTipo = label => {
-  const t=(label||"").toString().toLowerCase();
+  const t=(label||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(t.includes("prevent"))return "preventivo";
+  if(t.includes("corret"))return "corretivo";
   const found=TIPOS.find(x=>x.l.toLowerCase().includes(t)&&t)||TIPOS.find(x=>t.includes(x.v));
   return found?found.v:"corretivo";
 };
@@ -417,7 +420,7 @@ function ReportModal({onClose,onSave,techs=ALL_TECHS,initial}){
 }
 
 // ── MODAL IMPORTAR EXCEL ──────────────────────────────────────────────────────
-const IMPORT_COLS = ["Data","Técnico","Atendimento","Cliente","Cidade","Patrimônio","Relatório","Chamado","Início","Fim","Trabalhadas","Status"];
+const IMPORT_COLS = ["Data","Tipo de Serviço","Técnico 1","Cliente","Cidade","PAT/S.N","Modelo","Horimetro","Início hora trabalhada","Fim da hora trabalhada","Total hora trabalhada","Relatório","Chamado"];
 function ImportExcelModal({onClose,onImport}){
   const [rows,setRows]=useState(null);
   const [err,setErr]=useState("");
@@ -496,26 +499,28 @@ function ImportExcelModal({onClose,onImport}){
       return str;
     };
     const novos=rows.map((o,i)=>{
-      const st=String(pick("Status")(o)||"").trim().toLowerCase().replace(/\s+/g,"_");
-      const horaInicio=toTime(pick("Início")(o)||pick("Inicio")(o)||pick("Entrada")(o));
-      const horaFim=toTime(pick("Fim")(o)||pick("Término")(o)||pick("Termino")(o)||pick("Saida")(o));
-      const dataAt=toISO(pick("Data")(o)||pick("Data Atend")(o));
+      const horaInicio=toTime(pick("Início hora")(o)||pick("Inicio hora")(o)||pick("Início")(o)||pick("Entrada")(o));
+      const horaFim=toTime(pick("Fim da hora")(o)||pick("Fim hora")(o)||pick("Fim")(o)||pick("Saida")(o));
+      const dataAt=toISO(pick("Data")(o));
       return {
         id:`R${Date.now()}${i}`,
         data:dataAt,
         dataAtendimento:dataAt,
         date:dataAt,
-        tecnico:String(pick("Técnico")(o)||pick("Tecnico")(o)||""),
-        atendimento:mapTipo(pick("Atendimento")(o)||pick("Tipo")(o)),
+        tecnico:String(pick("Técnico 1")(o)||pick("Tecnico 1")(o)||pick("Técnico")(o)||pick("Tecnico")(o)||""),
+        atendimento:mapTipo(pick("Tipo de Serviço")(o)||pick("Tipo de Servico")(o)||pick("Atendimento")(o)),
         cliente:String(pick("Cliente")(o)||pick("Empresa")(o)||""),
         cidade:String(pick("Cidade")(o)||""),
-        patrimonio:String(pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
-        relatorio:String(pick("Relatório")(o)||pick("Relatorio")(o)||pick("Nº Relatório")(o)||pick("Numero")(o)||""),
+        patrimonio:String(pick("PAT/S.N")(o)||pick("PAT")(o)||pick("Patrimônio")(o)||pick("Patrimonio")(o)||""),
+        modelo:String(pick("Modelo")(o)||""),
+        horimetro:String(pick("Horímetro")(o)||pick("Horimetro")(o)||""),
+        relatorio:String(pick("Relatório")(o)||pick("Relatorio")(o)||""),
         chamado:String(pick("Chamado")(o)||""),numChamado:String(pick("Chamado")(o)||""),
         horaInicio,horaFim,
-        horasTrabalhadas:String(pick("Trabalhadas")(o)||pick("Horas Trab")(o)||pick("Horas")(o)||"")||calcHoras(horaInicio,horaFim),
-        status:ESCALA_STATUS_KEYS.includes(st)?st:"agendada",
-        obs:String(pick("Obs")(o)||pick("Observação")(o)||""),
+        horasTrabalhadas:String(pick("Total hora trabalhada")(o)||pick("Total hora")(o)||pick("Trabalhada")(o)||"")||calcHoras(horaInicio,horaFim),
+        servicos:[], // deixado em branco propositalmente — inserção manual posterior
+        status:"agendada",
+        obs:"", // deixado em branco propositalmente — inserção manual posterior
       };
     });
     onImport(novos);
@@ -560,7 +565,7 @@ function ImportExcelModal({onClose,onImport}){
 
 // ── MODAL RELATÓRIO (Conferência de Relatórios — Técnicos Externos) ─────────
 function RelatorioModal({initial,onClose,onSave}){
-  const EMPTY={data:TODAY_STR,tecnico:ALL_TECHS[0],atendimento:"preventivo",cliente:"",cidade:"",patrimonio:"",relatorio:"",chamado:"",horaInicio:"",horaFim:"",servicos:[],status:"agendada",requisicao:"",relatorioConclusao:"",obs:""};
+  const EMPTY={data:TODAY_STR,tecnico:ALL_TECHS[0],atendimento:"preventivo",cliente:"",cidade:"",patrimonio:"",modelo:"",horimetro:"",relatorio:"",chamado:"",horaInicio:"",horaFim:"",servicos:[],status:"agendada",requisicao:"",relatorioConclusao:"",obs:""};
   const [mode,setMode]=useState("manual");
   const [pdfLoading,setPdfLoading]=useState(false);
   const [pdfErr,setPdfErr]=useState("");
@@ -586,6 +591,8 @@ function RelatorioModal({initial,onClose,onSave}){
         cliente:parsed.cliente||parsed.empresa||p.cliente,
         cidade:parsed.cidade||p.cidade,
         patrimonio:parsed.patrimonio||p.patrimonio,
+        modelo:parsed.modelo||p.modelo,
+        horimetro:parsed.horimetro||p.horimetro,
         relatorio:parsed.relatorio||parsed.reportNum||p.relatorio,
         chamado:parsed.chamado||parsed.numChamado||p.chamado,
         horaInicio:parsed.horaInicio||parsed.inicio||parsed.entrada||p.horaInicio,
@@ -632,6 +639,8 @@ function RelatorioModal({initial,onClose,onSave}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Patrimônio</label><input type="text" value={form.patrimonio} onChange={e=>upd("patrimonio",e.target.value)} placeholder="PAT-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Modelo</label><input type="text" value={form.modelo||""} onChange={e=>upd("modelo",e.target.value)} placeholder="Modelo da máquina" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horímetro</label><input type="text" value={form.horimetro||""} onChange={e=>upd("horimetro",e.target.value)} placeholder="Ex: 1234h" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório</label><input type="text" value={form.relatorio} onChange={e=>upd("relatorio",e.target.value)} placeholder="REL-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Chamado</label><input type="text" value={form.chamado} onChange={e=>upd("chamado",e.target.value)} placeholder="CHM-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
           </div>
@@ -2244,7 +2253,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"Ocultar":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
@@ -2291,6 +2300,8 @@ export default function App(){
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Cidade</div><div style={{fontSize:9,fontWeight:700}}>{r.cidade||"—"}</div></div>
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Patrimônio</div><div style={{fontSize:9,fontWeight:700}}>{r.patrimonio||"—"}</div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Modelo</div><div style={{fontSize:9,fontWeight:700}}>{r.modelo||"—"}</div></div>
+                        <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Horímetro</div><div style={{fontSize:9,fontWeight:700}}>{r.horimetro||"—"}</div></div>
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Relatório</div><div style={{fontSize:9,fontWeight:700,color:"#1565C0"}}>{r.relatorio||"—"}</div></div>
                         <div style={{background:"#F8F9FA",borderRadius:6,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>Chamado</div><div style={{fontSize:9,fontWeight:700}}>{r.chamado||"—"}</div></div>
                         <div style={{background:"#FFFBF0",borderRadius:6,padding:"3px 5px",gridColumn:"span 2"}}><div style={{color:"#C47D00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>⏱ Horas Trabalhadas</div><div style={{fontSize:9,fontWeight:700,color:"#C47D00"}}>{r.horaInicio||"—"} → {r.horaFim||"—"} · {r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"}</div></div>
