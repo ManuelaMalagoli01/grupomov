@@ -2307,7 +2307,7 @@ export default function App(){
                       <span style={{fontSize:8,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"1px 7px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
                       <div style={{display:"flex",gap:2}}>
                         <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"3px 5px",fontSize:10}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 5px",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 5px",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 5px",fontSize:9,fontWeight:700}}>✕</button>
                       </div>
                     </div>
@@ -3783,7 +3783,7 @@ export default function App(){
             {(()=>{
               const chartTitle={fontSize:11,fontWeight:700,color:"#888",marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.data||d.data<dashFrom))return false; if(dashTo&&(!d.data||d.data>dashTo))return false; return true; };
-              const baseReports=(reports||[]).filter(r=>r&&!r.arquivado);
+              const baseReports=(reports||[]); // inclui arquivados: quando arquivado, o status já é fixado como concluída
               const dashReports=baseReports.filter(d=>{
                 const region=techRegionMap[d.tecnico]||"";
                 if(!((dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d)))return false;
@@ -4005,7 +4005,7 @@ export default function App(){
 
             {/* Stats gerais */}
             {(()=>{
-              const baseReports=(reports||[]).filter(r=>r&&!r.arquivado);
+              const baseReports=(reports||[]); // inclui arquivados: quando arquivado, o status já é fixado como concluída
               return(
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
                 {[
