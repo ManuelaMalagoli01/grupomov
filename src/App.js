@@ -246,14 +246,14 @@ const mapTipo = label => {
   return found?found.v:"corretivo";
 };
 
-// ── Alerta de prioridade para relatórios PREVENTIVOS, com base em Observações/Pendências ──
+// ── Alerta de prioridade para relatórios (Preventivos e Corretivos), com base em Observações/Pendências ──
 const analisarAlertaPreventivo = (r) => {
-  if(!r||r.atendimento!=="preventivo")return null;
+  if(!r||(r.atendimento!=="preventivo"&&r.atendimento!=="corretivo"))return null;
   const pend=String(r.pendencias||"").trim();
   const obs=String(r.obs||"").trim();
   const combinado=`${obs} ${pend}`;
   if(!obs&&!pend){
-    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#00732E,#009739)",border:"#00541F"};
+    return {level:"ok",label:"🟢 Sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#00732E,#009739)",border:"#00541F"};
   }
   const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/\b[a-zA-Z]{1,4}[-\s]?\d{3,}\b/g,/\b\d{3,}\b/g];
   let achados=[];
