@@ -246,6 +246,23 @@ const mapTipo = label => {
   return found?found.v:"corretivo";
 };
 
+// ── Alerta de prioridade para relatórios PREVENTIVOS, com base em Observações/Pendências ──
+const analisarAlertaPreventivo = (r) => {
+  if(!r||r.atendimento!=="preventivo")return null;
+  const pend=String(r.pendencias||"").trim();
+  const obs=String(r.obs||"").trim();
+  if(pend) return {level:"urgente",label:"🔴 URGENTE — Pendência",color:"#C62828",bg:"#FFF0F0",border:"#F5C2C2"};
+  if(!obs) return null;
+  const o=obs.toLowerCase();
+  const mencionaPecas=/pe[çc]a/i.test(o);
+  const mencionaCodigo=/c[oó]digo/i.test(o)||/\b[a-z]{1,4}[-\s]?\d{3,}\b/i.test(o);
+  const mencionaUnidade=/unidade|unid\.|\bun\.?\b/i.test(o);
+  if(mencionaPecas||mencionaCodigo||mencionaUnidade){
+    return {level:"urgente",label:"🔴 URGENTE — Peças/Códigos",color:"#C62828",bg:"#FFF0F0",border:"#F5C2C2"};
+  }
+  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#E67E00",bg:"#FFF8F0",border:"#FFDBA8"};
+};
+
 const AGENDA_STATUS = {
   "agendada":{color:"#2563EB",bg:"#EFF6FF",dot:"#1565C0",label:"Agendada"},
   "confirmada":{color:"#16A34A",bg:"#F0FDF4",dot:"#1A7A3C",label:"Confirmada"},
@@ -529,6 +546,7 @@ function ImportExcelModal({onClose,onImport}){
         servicos:[], // deixado em branco propositalmente — inserção manual posterior
         status:"agendada",
         obs:"", // deixado em branco propositalmente — inserção manual posterior
+        pendencias:String(pick("Pendencias")(o)||pick("Pendência")(o)||pick("Pendencia")(o)||""),
       };
     });
     onImport(novos);
@@ -573,7 +591,7 @@ function ImportExcelModal({onClose,onImport}){
 
 // ── MODAL RELATÓRIO (Conferência de Relatórios — Técnicos Externos) ─────────
 function RelatorioModal({initial,onClose,onSave}){
-  const EMPTY={data:TODAY_STR,tecnico:ALL_TECHS[0],atendimento:"preventivo",cliente:"",cidade:"",patrimonio:"",modelo:"",horimetro:"",relatorio:"",chamado:"",horaInicio:"",horaFim:"",servicos:[],status:"agendada",requisicao:"",relatorioConclusao:"",obs:""};
+  const EMPTY={data:TODAY_STR,tecnico:ALL_TECHS[0],atendimento:"preventivo",cliente:"",cidade:"",patrimonio:"",modelo:"",horimetro:"",relatorio:"",chamado:"",horaInicio:"",horaFim:"",servicos:[],status:"agendada",requisicao:"",relatorioConclusao:"",obs:"",pendencias:""};
   const [mode,setMode]=useState("manual");
   const [pdfLoading,setPdfLoading]=useState(false);
   const [pdfErr,setPdfErr]=useState("");
@@ -672,6 +690,7 @@ function RelatorioModal({initial,onClose,onSave}){
             <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>✅ Relatório de Conclusão</label><input type="text" value={form.relatorioConclusao} onChange={e=>upd("relatorioConclusao",e.target.value)} placeholder="REL-000" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #FFD080"}}/></div>
           </div>}
           <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Observação</label><input type="text" value={form.obs} onChange={e=>upd("obs",e.target.value)} placeholder="Observações..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Pendências</label><input type="text" value={form.pendencias||""} onChange={e=>upd("pendencias",e.target.value)} placeholder="Pendências identificadas (se houver)..." style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
           <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
             <BtnG onClick={onClose}>Cancelar</BtnG>
             <BtnY onClick={()=>onSave({...form,horasTrabalhadas:horas,id:form.id||`REL${Date.now()}`})} disabled={!form.cliente}>{initial?"Salvar Alterações":"Adicionar Relatório"}</BtnY>
@@ -2014,6 +2033,7 @@ export default function App(){
   ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
 
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulseAlert{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.35)}50%{box-shadow:0 0 0 5px rgba(198,40,40,0)}}
   @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
   @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
@@ -2267,7 +2287,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqRel?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"}])}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
@@ -2312,6 +2332,9 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
+                      {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;return(
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"5px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseAlert 1.4s ease-in-out infinite":undefined}}>{alerta.label}</button>
+                      );})()}
                       <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                       <div style={{fontSize:9,color:"#888"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}</div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
@@ -2332,6 +2355,7 @@ export default function App(){
                         <div><div style={{color:"#C47D00",fontSize:8,fontWeight:700,textTransform:"uppercase"}}>✅ Rel. Conclusão</div><input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>}
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:6,padding:"3px 6px",border:"1px solid transparent",outline:"none"}}/>
+                      <input type="text" value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Pendências (se houver)..." style={{fontSize:9,color:r.pendencias?"#C62828":"#999",fontWeight:r.pendencias?700:400,background:r.pendencias?"#FFF0F0":"#F8F9FA",borderRadius:6,padding:"3px 6px",border:r.pendencias?"1px solid #F5C2C2":"1px solid transparent",outline:"none"}}/>
                     </div>
                   </div>);
                 })}
