@@ -253,16 +253,16 @@ const analisarAlertaPreventivo = (r) => {
   const obs=String(r.obs||"").trim();
   const combinado=`${obs} ${pend}`;
   if(!obs&&!pend){
-    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#000",bg:"#DCFCE7",border:"#86EFAC"};
+    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#14532D,#166534)",border:"#0F3D22"};
   }
   const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/\b[a-zA-Z]{1,4}[-\s]?\d{3,}\b/g,/\b\d{3,}\b/g];
   let achados=[];
   padroes.forEach(re=>{const m=combinado.match(re);if(m)achados=achados.concat(m);});
   achados=[...new Set(achados.map(a=>a.trim()).filter(Boolean))];
   if(pend||achados.length>0){
-    return {level:"urgente",label:"🔴 URGENTE"+(achados.length?` — ${achados.slice(0,3).join(", ")}`:" — Pendência"),color:"#000",bg:"#C62828",border:"#8E1D1D",achados};
+    return {level:"urgente",label:"🔴 URGENTE"+(achados.length?` — ${achados.slice(0,3).join(", ")}`:" — Pendência"),color:"#000",bg:"linear-gradient(135deg,#7F1D1D,#B91C1C)",border:"#5C1414",achados};
   }
-  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#000",bg:"#B45309",border:"#7C3D07"};
+  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#000",bg:"linear-gradient(135deg,#78350F,#9A4A0C)",border:"#552505"};
 };
 // Destaca (em negrito) as palavras/códigos-chave dentro de um texto, para exibição
 const destacarPalavrasChave=(texto)=>{
@@ -2369,7 +2369,7 @@ export default function App(){
                     <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
                       {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;return(
                         <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"6px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseUrgente 1.3s ease-in-out infinite":alerta.level==="moderado"?"pulseModerado 1.6s ease-in-out infinite":undefined}}>{alerta.label}</button>
+                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"7px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.3,boxShadow:"0 2px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12)",animation:alerta.level==="urgente"?"pulseUrgente 1.3s ease-in-out infinite":alerta.level==="moderado"?"pulseModerado 1.6s ease-in-out infinite":undefined}}>{alerta.label}</button>
                           {alerta.achados&&alerta.achados.length>0&&<div style={{fontSize:8,color:"#7C2D12",background:"#FFF7ED",borderRadius:6,padding:"3px 6px",lineHeight:1.4}}>{destacarPalavrasChave(`${r.obs||""} ${r.pendencias||""}`.trim())}</div>}
                         </div>
                       );})()}
