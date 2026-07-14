@@ -253,7 +253,7 @@ const analisarAlertaPreventivo = (r) => {
   const obs=String(r.obs||"").trim();
   const combinado=`${obs} ${pend}`;
   if(!obs&&!pend){
-    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#14532D,#166534)",border:"#0F3D22"};
+    return {level:"ok",label:"🟢 Preventiva sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#00732E,#009739)",border:"#00541F"};
   }
   const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/\b[a-zA-Z]{1,4}[-\s]?\d{3,}\b/g,/\b\d{3,}\b/g];
   let achados=[];
