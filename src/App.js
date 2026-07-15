@@ -206,6 +206,12 @@ const EXEC_MAUUSO_STATUS = {
   aguardando_pecas:{l:"⏳ Aguardando Peças",c:"#C62828",bg:"#FFF0F0"},
 };
 const EXEC_MAUUSO_STATUS_KEYS = Object.keys(EXEC_MAUUSO_STATUS);
+const SAS_PECAS_STATUS = {
+  concluido:{l:"✅ Concluído",c:"#1A7A3C",bg:"#F0FFF5"},
+  pendente:{l:"🕐 Pendente",c:"#B45309",bg:"#FFF8F0"},
+  aguardando_pecas:{l:"⏳ Aguardando Peças",c:"#C62828",bg:"#FFF0F0"},
+};
+const SAS_PECAS_STATUS_KEYS = Object.keys(SAS_PECAS_STATUS);
 const escSt = s => ESCALA_STATUS[s] || ESCALA_STATUS.agendada;
 // Data/hora de registro (formato brasileiro)
 const fmtDateTime = iso => { if(!iso) return "—"; const d=new Date(iso); if(isNaN(d)) return "—"; return d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
@@ -1333,7 +1339,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   const bdg=(k)=>badges[k]||0;
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos","sas"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos","sas","sas_pecas"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "operacoes"];
@@ -1510,6 +1516,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
         <SubBtn k="dashboard_processos" l="📊 Dash Processos"/>
         {!user?.semSas&&<SubBtn k="sas" l="📄 SAS"/>}
+        {!user?.semSas&&<SubBtn k="sas_pecas" l="🔧 Solicitação de Peças"/>}
       </div>}
 
       {/* ADMINISTRATIVO - ACORDEÃO (Uber, Financeiro) */}
@@ -1616,6 +1623,17 @@ export default function App(){
   const [efMUStatus,setEfMUStatus]=useState("todos");
   const [efMUDe,setEfMUDe]=useState("");
   const [efMUAte,setEfMUAte]=useState("");
+  const [sasPecas,setSasPecas]=useState([]);
+  const [modalSasPecas,setModalSasPecas]=useState(false);
+  const [editSasPecas,setEditSasPecas]=useState(null);
+  const [showArqSasPecas,setShowArqSasPecas]=useState(false);
+  const [showFiltrosSasPecas,setShowFiltrosSasPecas]=useState(false);
+  const SASPECAS_EMPTY={status:"pendente",dataSolicitacao:TODAY_STR,cliente:"",nf:"",relatorioMov:"",maquina:"",peca:"",arEnvio:"",previsaoRecebimento:"",dataExecucao:"",chamado:"",relatorio:"",arquivado:false};
+  const [sasPecasForm,setSasPecasForm]=useState(SASPECAS_EMPTY);
+  const [fSpCliente,setFSpCliente]=useState("");
+  const [fSpStatus,setFSpStatus]=useState("todos");
+  const [fSpDe,setFSpDe]=useState("");
+  const [fSpAte,setFSpAte]=useState("");
   const [relFiltroStatus,setRelFiltroStatus]=useState("todos");
   const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
   const [relFiltroTech,setRelFiltroTech]=useState("todos");
@@ -1893,12 +1911,12 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
         safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso")
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas")
       ]);
       if(rels.length>0) setReports(rels);
       if(mus.length>0) setProcessosMU(mus);
@@ -1919,6 +1937,7 @@ export default function App(){
       if(carrosRows.length>0) setCarros(carrosRows);
       if(opRows && opRows.length>0) setOperacoes(opRows);
       if(execMURows && execMURows.length>0) setExecMauUso(execMURows);
+      if(sasPecasRows && sasPecasRows.length>0) setSasPecas(sasPecasRows);
       if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
       if(ap150Rows.length>0) setApontamentos150(ap150Rows);
       if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
@@ -1961,6 +1980,29 @@ export default function App(){
     if(saved)db.save("execucao_mau_uso",id,saved);
   };
   const delExecMU=(id)=>{setExecMauUso(p=>p.filter(x=>x.id!==id));db.delete("execucao_mau_uso",id);};
+  const updateSasPecas=(id,changes)=>{
+    let saved=null;
+    setSasPecas(prev=>{
+      const updated=(prev||[]).map(x=>x.id===id?{...x,...changes}:x);
+      saved=updated.find(x=>x.id===id);
+      return updated;
+    });
+    if(saved)db.save("sas_pecas",id,saved);
+  };
+  const delSasPecas=(id)=>{setSasPecas(p=>p.filter(x=>x.id!==id));db.delete("sas_pecas",id);};
+  const salvarSasPecas=()=>{
+    if(!sasPecasForm.cliente&&!sasPecasForm.peca){alert("Preencha ao menos o Cliente ou a Peça.");return;}
+    if(editSasPecas){
+      updateSasPecas(editSasPecas.id,sasPecasForm);
+      notify("✅ Solicitação atualizada!");
+    }else{
+      const row={...sasPecasForm,id:`SP${Date.now()}${Math.floor(Math.random()*9999)}`};
+      setSasPecas(p=>[row,...(p||[])]);
+      db.save("sas_pecas",row.id,row);
+      notify("✅ Nova solicitação registrada!");
+    }
+    setModalSasPecas(false);setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);
+  };
   const salvarExecMU=()=>{
     if(!execMUForm.numMauUso&&!execMUForm.cliente){alert("Preencha ao menos o Nº do Mau Uso ou o Cliente.");return;}
     if(editExecMU){
@@ -3475,6 +3517,114 @@ export default function App(){
                         <td style={{whiteSpace:"nowrap"}}>
                           <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11}}>{x.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
+                        </td>
+                      </tr>
+                    );})}</tbody>
+                  </table>
+                </div></div>
+              )}
+            </div>
+          );
+        })()}
+
+        {tab==="sas_pecas"&&(()=>{
+          const lista=(sasPecas||[]).filter(x=>x&&(showArqSasPecas?x.arquivado:!x.arquivado)).filter(x=>{
+            if(fSpCliente&&!(x.cliente||"").toLowerCase().includes(fSpCliente.toLowerCase()))return false;
+            if(fSpStatus!=="todos"&&x.status!==fSpStatus)return false;
+            if(fSpDe&&(x.dataSolicitacao||"")<fSpDe)return false;
+            if(fSpAte&&(x.dataSolicitacao||"")>fSpAte)return false;
+            return true;
+          }).sort((a,b)=>(b.dataSolicitacao||"").localeCompare(a.dataSolicitacao||""));
+          const qtdConcluido=lista.filter(x=>x.status==="concluido").length;
+          const qtdAguardPecas=lista.filter(x=>x.status==="aguardando_pecas").length;
+          const qtdPendente=lista.filter(x=>x.status==="pendente").length;
+          const hasFiltro=fSpCliente||fSpStatus!=="todos"||fSpDe||fSpAte;
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              {modalSasPecas&&(
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalSasPecas(false);setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);}}}>
+                  <div style={{background:"#FFF",borderRadius:14,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+                    <div style={{padding:"12px 16px",background:"#1A1A1A",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{fontWeight:800,fontSize:16,color:"#F5C200"}}>{editSasPecas?"✏️ Editar Solicitação":"🔧 Nova Execução — Solicitação de Peças"}</div>
+                      <button onClick={()=>{setModalSasPecas(false);setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);}} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+                    </div>
+                    <div style={{padding:18,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:3,gridColumn:"span 2"}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label><select value={sasPecasForm.status} onChange={e=>setSasPecasForm(p=>({...p,status:e.target.value}))} style={{fontSize:13,padding:"8px 9px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700,color:SAS_PECAS_STATUS[sasPecasForm.status]?.c}}>{SAS_PECAS_STATUS_KEYS.map(k=><option key={k} value={k}>{SAS_PECAS_STATUS[k].l}</option>)}</select></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data da Solicitação</label><input type="date" value={sasPecasForm.dataSolicitacao} onChange={e=>setSasPecasForm(p=>({...p,dataSolicitacao:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cliente</label><input type="text" value={sasPecasForm.cliente} onChange={e=>setSasPecasForm(p=>({...p,cliente:e.target.value}))} placeholder="Nome do cliente" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>NF</label><input type="text" value={sasPecasForm.nf} onChange={e=>setSasPecasForm(p=>({...p,nf:e.target.value}))} placeholder="Nº Nota Fiscal" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório MOV</label><input type="text" value={sasPecasForm.relatorioMov} onChange={e=>setSasPecasForm(p=>({...p,relatorioMov:e.target.value}))} placeholder="Nº relatório MOV" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Máquina</label><input type="text" value={sasPecasForm.maquina} onChange={e=>setSasPecasForm(p=>({...p,maquina:e.target.value}))} placeholder="Modelo/PAT da máquina" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Peça</label><input type="text" value={sasPecasForm.peca} onChange={e=>setSasPecasForm(p=>({...p,peca:e.target.value}))} placeholder="Nome/código da peça" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>AR de Envio</label><input type="text" value={sasPecasForm.arEnvio} onChange={e=>setSasPecasForm(p=>({...p,arEnvio:e.target.value}))} placeholder="Código de rastreio/AR" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Previsão de Recebimento</label><input type="date" value={sasPecasForm.previsaoRecebimento} onChange={e=>setSasPecasForm(p=>({...p,previsaoRecebimento:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data Execução</label><input type="date" value={sasPecasForm.dataExecucao} onChange={e=>setSasPecasForm(p=>({...p,dataExecucao:e.target.value}))} style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Chamado</label><input type="text" value={sasPecasForm.chamado} onChange={e=>setSasPecasForm(p=>({...p,chamado:e.target.value}))} placeholder="Nº chamado" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório</label><input type="text" value={sasPecasForm.relatorio} onChange={e=>setSasPecasForm(p=>({...p,relatorio:e.target.value}))} placeholder="Nº relatório" style={{fontSize:12,padding:"7px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+                      <div style={{display:"flex",justifyContent:"flex-end",gap:8,gridColumn:"span 2",marginTop:6}}>
+                        <BtnG onClick={()=>{setModalSasPecas(false);setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);}}>Cancelar</BtnG>
+                        <BtnY onClick={salvarSasPecas}>{editSasPecas?"Salvar Alterações":"Registrar Solicitação"}</BtnY>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>🔧 Solicitação de Peças</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{lista.length} solicitação(ões)</div></div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <button onClick={()=>setShowArqSasPecas(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSasPecas?"#1A1A1A":"#FFF",color:showArqSasPecas?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqSasPecas?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
+                  <BtnExcel onClick={()=>exportCSV(lista,"solicitacao_pecas",[{key:"status",label:"Status"},{key:"dataSolicitacao",label:"Data Solicitação"},{key:"cliente",label:"Cliente"},{key:"nf",label:"NF"},{key:"relatorioMov",label:"Relatório MOV"},{key:"maquina",label:"Máquina"},{key:"peca",label:"Peça"},{key:"arEnvio",label:"AR Envio"},{key:"previsaoRecebimento",label:"Previsão Recebimento"},{key:"dataExecucao",label:"Data Execução"},{key:"chamado",label:"Chamado"},{key:"relatorio",label:"Relatório"}])}/>
+                  <BtnY onClick={()=>{setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);setModalSasPecas(true);}}>+ Nova Execução</BtnY>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
+                {[{l:"Concluído",v:qtdConcluido,c:SAS_PECAS_STATUS.concluido.c,bg:SAS_PECAS_STATUS.concluido.bg,i:"✅"},
+                  {l:"Aguardando Peças",v:qtdAguardPecas,c:SAS_PECAS_STATUS.aguardando_pecas.c,bg:SAS_PECAS_STATUS.aguardando_pecas.bg,i:"⏳"},
+                  {l:"Pendente",v:qtdPendente,c:SAS_PECAS_STATUS.pendente.c,bg:SAS_PECAS_STATUS.pendente.bg,i:"🕐"}].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                    <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:19,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={()=>setShowFiltrosSasPecas(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosSasPecas?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {hasFiltro&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosSasPecas?"▲":"▼"}</span>
+              </button>
+              {showFiltrosSasPecas&&<div className="card" style={{padding:"6px 8px",marginBottom:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+                <input type="text" value={fSpCliente} onChange={e=>setFSpCliente(e.target.value)} placeholder="🔍 Cliente..." style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",minWidth:140}}/>
+                <select value={fSpStatus} onChange={e=>setFSpStatus(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option>{SAS_PECAS_STATUS_KEYS.map(k=><option key={k} value={k}>{SAS_PECAS_STATUS[k].l}</option>)}</select>
+                <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fSpDe} onChange={e=>setFSpDe(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fSpAte} onChange={e=>setFSpAte(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
+                {hasFiltro&&<button onClick={()=>{setFSpCliente("");setFSpStatus("todos");setFSpDe("");setFSpAte("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>}
+
+              {lista.length===0?(<div className="card" style={{padding:36,textAlign:"center",color:"#CCC"}}><div style={{fontSize:26,marginBottom:4}}>🔧</div><div style={{fontSize:10,fontWeight:600}}>Nenhuma solicitação registrada</div></div>):(
+                <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+                  <table style={{minWidth:1100}}>
+                    <thead><tr><th>Status</th><th>Data Solic.</th><th>Cliente</th><th>NF</th><th>Rel. MOV</th><th>Máquina</th><th>Peça</th><th>AR Envio</th><th>Previsão Receb.</th><th>Data Exec.</th><th>Chamado</th><th>Relatório</th><th></th></tr></thead>
+                    <tbody>{lista.map(x=>{const stx=SAS_PECAS_STATUS[x.status]||SAS_PECAS_STATUS.pendente;return(
+                      <tr key={x.id}>
+                        <td><select value={x.status} onChange={e=>updateSasPecas(x.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,color:stx.c,background:stx.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{SAS_PECAS_STATUS_KEYS.map(k=><option key={k} value={k}>{SAS_PECAS_STATUS[k].l}</option>)}</select></td>
+                        <td><input type="date" defaultValue={x.dataSolicitacao||""} onBlur={e=>updateSasPecas(x.id,{dataSolicitacao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
+                        <td><input type="text" defaultValue={x.cliente||""} onBlur={e=>updateSasPecas(x.id,{cliente:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",width:120}}/></td>
+                        <td><input type="text" defaultValue={x.nf||""} onBlur={e=>updateSasPecas(x.id,{nf:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:70}}/></td>
+                        <td><input type="text" defaultValue={x.relatorioMov||""} onBlur={e=>updateSasPecas(x.id,{relatorioMov:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
+                        <td><input type="text" defaultValue={x.maquina||""} onBlur={e=>updateSasPecas(x.id,{maquina:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:100}}/></td>
+                        <td><input type="text" defaultValue={x.peca||""} onBlur={e=>updateSasPecas(x.id,{peca:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:110}}/></td>
+                        <td><input type="text" defaultValue={x.arEnvio||""} onBlur={e=>updateSasPecas(x.id,{arEnvio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:90}}/></td>
+                        <td><input type="date" defaultValue={x.previsaoRecebimento||""} onBlur={e=>updateSasPecas(x.id,{previsaoRecebimento:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
+                        <td><input type="date" defaultValue={x.dataExecucao||""} onBlur={e=>updateSasPecas(x.id,{dataExecucao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
+                        <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateSasPecas(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
+                        <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateSasPecas(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                          <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir esta solicitação?"))delSasPecas(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
                       </tr>
                     );})}</tbody>
