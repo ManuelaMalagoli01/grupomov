@@ -2402,8 +2402,8 @@ export default function App(){
                         <div style={{flex:1}}><span style={{fontWeight:700}}>Rel. Conclusão</span> <input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",width:70}}/></div>
                       </div>}
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",border:"none",background:"transparent",outline:"none",padding:0}}/>
-                      <input type="text" value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Pendências (se houver)..." style={{fontSize:9,color:r.pendencias?"#C62828":"#999",fontWeight:r.pendencias?700:400,border:"none",background:"transparent",outline:"none",padding:0}}/>
                     </div>
+                    <input type="text" value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" style={{fontSize:9,color:r.pendencias?"#C62828":"#AAA",fontWeight:r.pendencias?700:600,border:"none",borderTop:`1px solid ${r.pendencias?"#F5C2C2":"#F1F5F9"}`,background:r.pendencias?"#FFF5F5":"#FAFBFC",outline:"none",padding:"5px 7px",width:"100%",boxSizing:"border-box"}}/>
                   </div>);
                 })}
               </div>
