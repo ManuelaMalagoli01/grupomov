@@ -3942,36 +3942,36 @@ export default function App(){
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
                       <ChartCanvas type="doughnut" height={230}
-                        data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:2,borderColor:"#FFF",hoverOffset:6}]}}
-                        options={{cutout:"68%",maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
+                        data={{labels:["Preventivas","Corretivas"],datasets:[{data:[prev,corr],backgroundColor:[BLU,RED],borderWidth:3,borderColor:"#FFF",hoverOffset:10,spacing:2}]}}
+                        options={{cutout:"72%",maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:10,usePointStyle:true,pointStyle:"circle",padding:16}},tooltip:{backgroundColor:"#0F172A",padding:12,cornerRadius:10,titleFont:{size:12,weight:"bold"},bodyFont:{size:11},callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
                       <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:10,fontSize:13}}>
                         <span style={{color:BLU,fontWeight:700}}>{prev} prev · {pct(prev)}%</span>
                         <span style={{color:RED,fontWeight:700}}>{corr} corr · {pct(corr)}%</span>
                       </div>
                     </div>
                     <div className="card" style={{padding:"8px 12px"}}>
-                      <div style={chartTitle}>Por região</div>
-                      <ChartCanvas type="bar" height={230}
-                        data={{labels:regList.map(([,l])=>l),datasets:[{label:"Preventivas",data:regPrev,backgroundColor:BLU,borderRadius:8},{label:"Corretivas",data:regCorr,backgroundColor:RED,borderRadius:8}]}}
-                        options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}/>
+                      <div style={chartTitle}>Por região (total de atendimentos)</div>
+                      <ChartCanvas type="polarArea" height={230}
+                        data={{labels:regList.map(([,l])=>l),datasets:[{data:regList.map((_,i)=>regPrev[i]+regCorr[i]),backgroundColor:[BLU+"CC",TEA+"CC",PUR+"CC"],borderWidth:2,borderColor:"#FFF"}]}}
+                        options={{maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11,weight:"600"},boxWidth:10,usePointStyle:true,pointStyle:"circle"}},tooltip:{backgroundColor:"#0F172A",padding:12,cornerRadius:10}},scales:{r:{ticks:{display:false},grid:{color:"#F1F5F9"}}}}}/>
                     </div>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Atendimentos por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
-                        data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:YEL,borderColor:"#C9A200",borderWidth:1,borderRadius:8}]}}
-                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                        data={{labels:techsWith,datasets:[{label:"Atendimentos",data:techCounts,backgroundColor:"#F5C200",borderRadius:{topLeft:0,topRight:8,bottomRight:8,bottomLeft:0},borderSkipped:false,barPercentage:.65}]}}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0F172A",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:12,cornerRadius:10}},scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F1F5F9"}},y:{grid:{display:false},ticks:{font:{size:10,weight:"600"}}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico</div>
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
-                        data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:8}]}}
-                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                        data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:"#EA580C",borderRadius:{topLeft:0,topRight:8,bottomRight:8,bottomLeft:0},borderSkipped:false,barPercentage:.65}]}}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0F172A",padding:12,cornerRadius:10,callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true,grid:{color:"#F1F5F9"}},y:{grid:{display:false},ticks:{font:{size:10,weight:"600"}}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
-                    <div className="card" style={{padding:"8px 12px",gridColumn:"span 2"}}>
+                    <div className="card" style={{padding:"14px 16px",gridColumn:"span 2"}}>
                       <div style={chartTitle}>Horas trabalhadas por técnico — Preventiva × Corretiva</div>
-                      {techsWith.length?<ChartCanvas type="bar" height={Math.max(180,techsWith.length*36)}
-                        data={{labels:techsWith,datasets:[{label:"Preventiva",data:techHorasPrev,backgroundColor:BLU,borderRadius:6},{label:"Corretiva",data:techHorasCorr,backgroundColor:RED,borderRadius:6}]}}
-                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw} h`}}},scales:{x:{stacked:true,beginAtZero:true},y:{stacked:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                      {techsWith.length?<div style={{overflowX:"auto"}}><div style={{minWidth:Math.max(600,techsWith.length*90)}}><ChartCanvas type="bar" height={280}
+                        data={{labels:techsWith,datasets:[{label:"Preventiva",data:techHorasPrev,backgroundColor:BLU,borderRadius:{topLeft:8,topRight:8},borderSkipped:false,barPercentage:.7,categoryPercentage:.65},{label:"Corretiva",data:techHorasCorr,backgroundColor:RED,borderRadius:{topLeft:8,topRight:8},borderSkipped:false,barPercentage:.7,categoryPercentage:.65}]}}
+                        options={{indexAxis:"x",maintainAspectRatio:false,plugins:{legend:{position:"top",align:"end",labels:{font:{size:11,weight:"600"},boxWidth:12,usePointStyle:true,pointStyle:"circle"}},tooltip:{backgroundColor:"#0F172A",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:12,cornerRadius:10,callbacks:{label:c=>`${c.dataset.label}: ${c.raw} h`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10,weight:"600"}}},y:{beginAtZero:true,grid:{color:"#F1F5F9"},ticks:{font:{size:10}}}}}}/></div></div>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                   </div>
                   {/* Gráfico Tipo de Serviço x Técnico */}
