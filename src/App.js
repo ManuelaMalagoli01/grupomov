@@ -2383,7 +2383,7 @@ export default function App(){
                     </div>
                     <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
                       {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;
-                        const bgSolid={urgente:"#EF4444",moderado:"#F59E0B",ok:"#22C55E"}[alerta.level];
+                        const bgSolid={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853"}[alerta.level];
                         const dica=alerta.achados&&alerta.achados.length?` · ${alerta.achados.slice(0,3).join(", ")}`:"";
                         return(
                           <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:6,border:"none",background:bgSolid,color:"#FFF",fontFamily:"'Inter',-apple-system,sans-serif",fontWeight:700,fontSize:10,textTransform:"uppercase",cursor:"pointer",letterSpacing:.4,boxShadow:`0 2px 8px ${bgSolid}66`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
