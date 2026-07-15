@@ -260,9 +260,9 @@ const analisarAlertaPreventivo = (r) => {
   padroes.forEach(re=>{const m=combinado.match(re);if(m)achados=achados.concat(m);});
   achados=[...new Set(achados.map(a=>a.trim()).filter(Boolean))];
   if(pend||achados.length>0){
-    return {level:"urgente",label:"🔴 URGENTE"+(achados.length?` — ${achados.slice(0,3).join(", ")}`:" — Pendência"),color:"#000",bg:"linear-gradient(135deg,#7F1D1D,#B91C1C)",border:"#5C1414",achados};
+    return {level:"urgente",label:"🔴 Urgente",color:"#000",bg:"linear-gradient(135deg,#7F1D1D,#B91C1C)",border:"#5C1414",achados};
   }
-  return {level:"moderado",label:"🟠 Prioridade Moderada",color:"#000",bg:"linear-gradient(135deg,#78350F,#9A4A0C)",border:"#552505"};
+  return {level:"moderado",label:"🟠 Moderado",color:"#000",bg:"linear-gradient(135deg,#78350F,#9A4A0C)",border:"#552505"};
 };
 // Destaca (em negrito) as palavras/códigos-chave dentro de um texto, para exibição
 const destacarPalavrasChave=(texto)=>{
@@ -2380,12 +2380,13 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
-                      {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;return(
-                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
-                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,width:"100%",padding:"7px 6px",borderRadius:8,border:`1.5px solid ${alerta.border}`,background:alerta.bg,color:alerta.color,fontWeight:900,fontSize:9,cursor:"pointer",letterSpacing:.3,boxShadow:"0 2px 6px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12)",animation:alerta.level==="urgente"?"pulseUrgente 1.3s ease-in-out infinite":alerta.level==="moderado"?"pulseModerado 1.6s ease-in-out infinite":undefined}}>{alerta.label}</button>
-                          {alerta.achados&&alerta.achados.length>0&&<div style={{fontSize:8,color:"#7C2D12",background:"#FFF7ED",borderRadius:6,padding:"3px 6px",lineHeight:1.4}}>{destacarPalavrasChave(`${r.obs||""} ${r.pendencias||""}`.trim())}</div>}
-                        </div>
-                      );})()}
+                      {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;
+                        const bgTint={urgente:"#FFF0F0",moderado:"#FFF8F0",ok:"#F0FFF5"}[alerta.level];
+                        const txtColor={urgente:"#C62828",moderado:"#B45309",ok:"#1A7A3C"}[alerta.level];
+                        const dica=alerta.achados&&alerta.achados.length?` (${alerta.achados.slice(0,4).join(", ")})`:"";
+                        return(
+                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"3px 9px",borderRadius:20,border:"none",background:bgTint,color:txtColor,fontWeight:800,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
+                        );})()}
                       <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                       <div style={{fontSize:9,color:"#94A3B8"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
                       <div style={{fontSize:9,color:"#64748B",lineHeight:1.7,borderTop:"1px solid #F1F5F9",borderBottom:"1px solid #F1F5F9",padding:"4px 0"}}>
