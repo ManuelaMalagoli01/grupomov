@@ -3901,19 +3901,19 @@ export default function App(){
                     <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:11}}/></div>
                     {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:20}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:10,marginBottom:16}}>
                     {[
-                      {l:"Total",v:dashReports.length,c:"#0F172A",i:"📊"},
-                      {l:"Preventivas",v:prev,c:"#2563EB",i:"📋"},
-                      {l:"Corretivas",v:corr,c:"#DC2626",i:"🔧"},
-                      {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#EA580C",i:"⏱"},
-                      {l:"Técnicos Ativos",v:techsWith.length,c:"#16A34A",i:"👷"},
-                      {l:"Concl. Preventiva",v:concPrev,c:"#0369A1",i:"✅"},
-                      {l:"Concl. Corretiva",v:concCorr,c:"#7E22CE",i:"✅"},
+                      {l:"Total",v:dashReports.length,c:"#1A1A1A",bg:"#FFF",i:"📊"},
+                      {l:"Preventivas",v:prev,c:"#2563EB",bg:"#EFF6FF",i:"📋"},
+                      {l:"Corretivas",v:corr,c:"#C62828",bg:"#FFF0F0",i:"🔧"},
+                      {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#B45309",bg:"#FFF8F0",i:"⏱"},
+                      {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",bg:"#F0FFF5",i:"👷"},
+                      {l:"Concl. Preventiva",v:concPrev,c:"#0369A1",bg:"#EFF9FF",i:"✅"},
+                      {l:"Concl. Corretiva",v:concCorr,c:"#7E22CE",bg:"#F6EEFB",i:"✅"},
                     ].map((k,i)=>(
-                      <div key={i} style={{background:"#FFF",borderRadius:12,padding:"12px 14px",borderLeft:`4px solid ${k.c}`,boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
-                        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4,marginBottom:5}}>{k.i} {k.l}</div>
-                        <div style={{fontSize:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                      <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
+                        <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
+                        <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                       </div>
                     ))}
                   </div>
