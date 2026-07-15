@@ -2391,7 +2391,7 @@ export default function App(){
                         <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                         <div style={{fontSize:9,color:"#94A3B8",marginTop:1}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
                       </div>
-                      <div style={{fontSize:9,color:"#475569",lineHeight:1.8,background:"#F8FAFC",borderRadius:8,padding:"6px 9px"}}>
+                      <div style={{fontSize:9,color:"#1E293B",lineHeight:1.8,background:"#F8FAFC",borderRadius:8,padding:"6px 9px"}}>
                         <b style={{color:typeColor}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:typeColor}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:typeColor}}>Horímetro</b> {r.horimetro}</>}
                         <br/><b style={{color:typeColor}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:typeColor}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
                       </div>
