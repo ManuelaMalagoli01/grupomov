@@ -249,7 +249,9 @@ const mapTipo = label => {
 // ── Alerta de prioridade para relatórios (Preventivos e Corretivos), com base em Observações/Pendências ──
 const analisarAlertaPreventivo = (r) => {
   if(!r||(r.atendimento!=="preventivo"&&r.atendimento!=="corretivo"))return null;
-  const pend=String(r.pendencias||"").trim();
+  const negativos=["nao","não","n/a","na","nenhuma","nenhum","-","sem pendencia","sem pendência","ok","nada"];
+  let pend=String(r.pendencias||"").trim();
+  if(negativos.includes(pend.toLowerCase()))pend="";
   const obs=String(r.obs||"").trim();
   const combinado=`${obs} ${pend}`;
   if(!obs&&!pend){
