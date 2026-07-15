@@ -270,7 +270,7 @@ const analisarAlertaPreventivo = (r) => {
   if(!obs&&!pend){
     return {level:"ok",label:"🟢 Sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#00732E,#009739)",border:"#00541F"};
   }
-  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/nome\s+d[aeo]\s+(pe[çc]a|equipamento|componente)/gi,/m[aá]quina\s+parada/gi,/aguardando\s+aprova[çc][aã]o/gi,/mau\s*uso/gi,/or[çc]amento\w*/gi];
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/n[uú]mero\w*/gi,/pr[oó]xima\s+preventiva/gi,/pr[oó]ximo\s+atendimento/gi,/futuramente/gi,/verificar\w*/gi,/(realizar|fazer)\s+a\s+troca\s+de/gi,/verificar\s+a\s+possibilidade\s+de\s+troca/gi,/atendimento\s+futuro/gi];
   let achados=[];
   padroes.forEach(re=>{const m=combinado.match(re);if(m)achados=achados.concat(m);});
   achados=[...new Set(achados.map(a=>a.trim()).filter(Boolean))];
@@ -282,7 +282,7 @@ const analisarAlertaPreventivo = (r) => {
 // Destaca (em negrito) as palavras/códigos-chave dentro de um texto, para exibição
 const destacarPalavrasChave=(texto)=>{
   if(!texto)return texto;
-  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/nome\s+d[aeo]\s+(pe[çc]a|equipamento|componente)/gi,/m[aá]quina\s+parada/gi,/aguardando\s+aprova[çc][aã]o/gi,/mau\s*uso/gi,/or[çc]amento\w*/gi];
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/n[uú]mero\w*/gi,/pr[oó]xima\s+preventiva/gi,/pr[oó]ximo\s+atendimento/gi,/futuramente/gi,/verificar\w*/gi,/(realizar|fazer)\s+a\s+troca\s+de/gi,/verificar\s+a\s+possibilidade\s+de\s+troca/gi,/atendimento\s+futuro/gi];
   let partes=[{txt:texto,marcado:false}];
   padroes.forEach(re=>{
     partes=partes.flatMap(p=>{
