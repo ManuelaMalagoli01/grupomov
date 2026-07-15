@@ -2375,7 +2375,7 @@ export default function App(){
                   const st=escSt(r.status);
                   const stColor=st.c||st.color||"#888";
                   const isPendencia=(r.status||"").includes("pendente_pecas");
-                  const typeColor=isCorr?"#DC2626":"#2563EB";
+                  const typeColor=isCorr?"#EA580C":"#2563EB";
                   return(<div key={r.id} className="card" style={{borderLeft:`5px solid ${typeColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
                     <div style={{padding:"6px 8px",background:`${typeColor}0D`,borderBottom:`1px solid ${typeColor}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <span style={{fontSize:9,fontWeight:800,color:typeColor,display:"flex",alignItems:"center",gap:4}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
