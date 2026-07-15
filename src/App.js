@@ -1638,6 +1638,7 @@ export default function App(){
   const [relFiltroAtend,setRelFiltroAtend]=useState("todos");
   const [relFiltroTech,setRelFiltroTech]=useState("todos");
   const [relFiltroPat,setRelFiltroPat]=useState("");
+  const [relFiltroRelatorio,setRelFiltroRelatorio]=useState("");
   const [relFiltroEmp,setRelFiltroEmp]=useState("");
   const [relFiltroData,setRelFiltroData]=useState("");
   const [relFiltroDataDe,setRelFiltroDataDe]=useState("");
@@ -2376,6 +2377,7 @@ export default function App(){
             if(relFiltroDataAte&&dataR>relFiltroDataAte)return false;
             if(relFiltroEmp&&!((r.cliente||r.empresa||"").toLowerCase().includes(relFiltroEmp.toLowerCase())))return false;
             if(relFiltroPat&&!(r.patrimonio||"").toLowerCase().includes(relFiltroPat.toLowerCase()))return false;
+            if(relFiltroRelatorio&&!(r.relatorio||"").toLowerCase().includes(relFiltroRelatorio.toLowerCase()))return false;
             if(relFiltroTech!=="todos"&&r.tecnico!==relFiltroTech)return false;
             if(relFiltroCidade&&r.cidade!==relFiltroCidade)return false;
             if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
@@ -2433,7 +2435,7 @@ export default function App(){
             <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
               <span style={{fontSize:11}}>🔍</span>
               <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-              {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroRelatorio||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
               <span style={{fontSize:9,color:"#94A3B8"}}>{lista.length} relatório(s)</span>
               <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosRel?"▲":"▼"}</span>
             </button>
@@ -2443,11 +2445,12 @@ export default function App(){
               <button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe(TODAY_STR);setRelFiltroDataAte("");}} title="Ver relatórios a partir de hoje — conferência futura" style={{padding:"6px 12px",borderRadius:20,background:"#EFF6FF",color:"#1565C0",border:"1px solid #BFDBFE",fontSize:11,cursor:"pointer",fontWeight:700}}>📅 Conferência Futura</button>
               <input type="text" value={relFiltroEmp} onChange={e=>setRelFiltroEmp(e.target.value)} placeholder="🔍 Cliente" style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",minWidth:120}}/>
               <input type="text" value={relFiltroPat} onChange={e=>setRelFiltroPat(e.target.value)} placeholder="🔍 PAT" style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",width:90}}/>
+              <input type="text" value={relFiltroRelatorio} onChange={e=>setRelFiltroRelatorio(e.target.value)} placeholder="🔍 Relatório" style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",width:100}}/>
               <select value={relFiltroTech} onChange={e=>setRelFiltroTech(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
               <select value={relFiltroCidade} onChange={e=>setRelFiltroCidade(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="">Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select>
               <select value={relFiltroAtend} onChange={e=>setRelFiltroAtend(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos tipos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select>
               <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
-              {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe("");setRelFiltroDataAte("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroRelatorio||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe("");setRelFiltroDataAte("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroRelatorio("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
