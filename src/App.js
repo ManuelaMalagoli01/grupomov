@@ -2377,10 +2377,15 @@ export default function App(){
                   const st=escSt(r.status);
                   const stColor=st.c||st.color||"#888";
                   const isPendencia=(r.status||"").includes("pendente_pecas");
-                  const typeColor=isCorr?"#7C3AED":"#2563EB";
-                  return(<div key={r.id} className="card" style={{borderLeft:`5px solid ${typeColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
-                    <div style={{padding:"6px 8px",background:`${typeColor}0D`,borderBottom:`1px solid ${typeColor}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:9,fontWeight:800,color:typeColor,display:"flex",alignItems:"center",gap:4}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
+                  const alerta=analisarAlertaPreventivo(r)||{level:"neutro",label:"",achados:[]};
+                  const alertColor={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853",neutro:"#94A3B8"}[alerta.level];
+                  const alertBgTint={urgente:"#FFEBEE",moderado:"#FFF3E0",ok:"#E8F9EF",neutro:"#F8FAFC"}[alerta.level];
+                  return(<div key={r.id} className="card" style={{borderLeft:`5px solid ${alertColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
+                    <div style={{padding:"6px 8px",background:alertBgTint,borderBottom:`1px solid ${alertColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontSize:9,fontWeight:700,color:"#64748B",display:"flex",alignItems:"center",gap:3}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
+                        {alerta.label&&<span style={{fontSize:8,fontWeight:900,color:"#000",background:alertColor,borderRadius:20,padding:"1px 8px",textTransform:"uppercase",letterSpacing:.3,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}</span>}
+                      </div>
                       <div style={{display:"flex",gap:5}}>
                         <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",color:"#1565C0",cursor:"pointer",fontSize:10}}>✏️</button>
                         <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",cursor:"pointer",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
@@ -2388,19 +2393,14 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
-                      {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;
-                        const bgSolid={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853"}[alerta.level];
-                        const dica=alerta.achados&&alerta.achados.length?` · ${alerta.achados.slice(0,3).join(", ")}`:"";
-                        return(
-                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:6,border:"none",background:bgSolid,color:"#FFF",fontFamily:"'Inter',-apple-system,sans-serif",fontWeight:700,fontSize:10,textTransform:"uppercase",cursor:"pointer",letterSpacing:.4,boxShadow:`0 2px 8px ${bgSolid}66`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
-                        );})()}
+                      {alerta.achados&&alerta.achados.length>0&&<div title={`Encontrado: ${alerta.achados.join(", ")}`} style={{fontSize:8,color:"#7C2D12",background:"#FFF7ED",borderRadius:6,padding:"3px 6px"}}>🔎 {alerta.achados.slice(0,3).join(", ")}</div>}
                       <div>
                         <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                         <div style={{fontSize:9,color:"#94A3B8",marginTop:1}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
                       </div>
                       <div style={{fontSize:9,color:"#1E293B",lineHeight:1.8,background:"#F8FAFC",borderRadius:8,padding:"6px 9px"}}>
-                        <b style={{color:typeColor}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:typeColor}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:typeColor}}>Horímetro</b> {r.horimetro}</>}
-                        <br/><b style={{color:typeColor}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:typeColor}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
+                        <b style={{color:"#334155"}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:"#334155"}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:"#334155"}}>Horímetro</b> {r.horimetro}</>}
+                        <br/><b style={{color:"#334155"}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:"#334155"}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
                       </div>
                       {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"1px 6px",borderRadius:10,background:"#EFF6FF",color:"#2563EB",fontWeight:600}}>{sv}</span>)}</div>}
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
