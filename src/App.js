@@ -2298,7 +2298,6 @@ export default function App(){
             return true;
           }).sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
           const totalConc=lista.filter(r=>r.arquivado||(r.status||"").includes("concluida")).length;
-          const totalConcHoje=(reports||[]).filter(r=>r&&(r.arquivado||(r.status||"").includes("concluida"))&&(r.data||r.dataAtendimento)===TODAY_STR).length;
           const totalPend=lista.filter(r=>(r.status||"").includes("pendente_pecas")).length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
           const alertasCalc=lista.map(r=>analisarAlertaPreventivo(r));
@@ -2335,7 +2334,7 @@ export default function App(){
             </div>
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},{l:"Concluídos Hoje",v:totalConcHoje,c:"#0D9488",bg:"#F0FDFA",i:"📆"}].map((k,i)=>(
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
@@ -3884,7 +3883,6 @@ export default function App(){
               const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida");
               const concPrev=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="preventivo").length;
               const concCorr=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="corretivo").length;
-              const concHoje=(reports||[]).filter(r=>r&&isConcluido(r)&&(r.data||r.dataAtendimento)===TODAY_STR).length;
               const techHorasPrev=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="preventivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const techHorasCorr=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="corretivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const BLU="#2563EB",RED="#EF4444",YEL="#F5C200",ORG="#EA580C",GRN="#16A34A",PUR="#7C3AED",TEA="#0D9488";
@@ -3917,7 +3915,6 @@ export default function App(){
                       {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",bg:"#F0FFF5",i:"👷"},
                       {l:"Concl. Preventiva",v:concPrev,c:"#0369A1",bg:"#EFF9FF",i:"✅"},
                       {l:"Concl. Corretiva",v:concCorr,c:"#7E22CE",bg:"#F6EEFB",i:"✅"},
-                      {l:"Concluídos Hoje",v:concHoje,c:"#0D9488",bg:"#F0FDFA",i:"📆"},
                     ].map((k,i)=>(
                       <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                         <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
