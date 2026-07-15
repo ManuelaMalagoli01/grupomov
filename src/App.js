@@ -3515,7 +3515,8 @@ export default function App(){
                         <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateExecMU(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateExecMU(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{setEditExecMU(x);setExecMUForm({...EXECMU_EMPTY,...x});setModalExecMU(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11}}>✏️</button>
+                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
                       </tr>
@@ -3623,7 +3624,8 @@ export default function App(){
                         <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateSasPecas(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateSasPecas(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{setEditSasPecas(x);setSasPecasForm({...SASPECAS_EMPTY,...x});setModalSasPecas(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11}}>✏️</button>
+                          <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir esta solicitação?"))delSasPecas(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
                       </tr>
