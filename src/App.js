@@ -2284,7 +2284,7 @@ export default function App(){
       <>
         {/* ── CONFERÊNCIA DE RELATÓRIOS ── */}
         {tab==="relatorios"&&(()=>{
-          const lista=(reports||[]).filter(r=>r&&(showArqRel?r.arquivado:!r.arquivado)).filter(r=>{
+          const matchFiltrosSecundarios=r=>{
             const dataR=r.data||r.dataAtendimento||"";
             if(relFiltroData&&dataR!==relFiltroData)return false;
             if(relFiltroDataDe&&dataR<relFiltroDataDe)return false;
@@ -2296,8 +2296,11 @@ export default function App(){
             if(relFiltroAtend!=="todos"&&r.atendimento!==relFiltroAtend)return false;
             if(relFiltroStatus!=="todos"&&r.status!==relFiltroStatus)return false;
             return true;
-          }).sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
-          const totalConc=lista.filter(r=>r.arquivado||(r.status||"").includes("concluida")).length;
+          };
+          const lista=(reports||[]).filter(r=>r&&(showArqRel?r.arquivado:!r.arquivado)).filter(matchFiltrosSecundarios)
+            .sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
+          const todosFiltrados=(reports||[]).filter(r=>r&&matchFiltrosSecundarios(r)); // ignora o alternador ativos/arquivados - usado nos KPIs de contagem geral
+          const totalConc=todosFiltrados.filter(r=>r.arquivado||(r.status||"").includes("concluida")).length;
           const totalPend=lista.filter(r=>(r.status||"").includes("pendente_pecas")).length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
           const alertasCalc=lista.map(r=>analisarAlertaPreventivo(r));
