@@ -1874,6 +1874,7 @@ export default function App(){
   const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
   const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
   const [agpSelectedDay,setAgpSelectedDay]=useState(null);
+  const [showFiltrosAgp,setShowFiltrosAgp]=useState(false);
   const [agTech,setAgTech]=useState(ALL_TECHS[0]);
   const [agDate,setAgDate]=useState("");
   const [agEmpresa,setAgEmpresa]=useState("");
@@ -3935,29 +3936,36 @@ export default function App(){
           };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
                 <div>
-                  <div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🗓 Agenda — Técnicos Externos</div>
-                  <div style={{fontSize:13,color:"#888",marginTop:2}}>{techsList.length} técnico(s)</div>
+                  <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🗓 Agenda — Técnicos Externos</div>
+                  <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{techsList.length} técnico(s)</div>
                 </div>
               </div>
 
               {/* Filtros */}
-              <div className="card" style={{padding:"6px 10px",marginBottom:18,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
+              <button onClick={()=>setShowFiltrosAgp(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosAgp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosAgp?"▲":"▼"}</span>
+              </button>
+              {showFiltrosAgp&&<div className="card" style={{padding:"6px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}>
                   <option value="todas">🌐 Todas Regiões</option>
                   <option value="metropolitana">Metropolitana</option>
                   <option value="roca">Roça</option>
                   <option value="centroOeste">Centro-Oeste</option>
                 </select>
-                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
-                <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
-                <select value={agpCidade} onChange={e=>setAgpCidade(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todas">📍 Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c} value={c}>{c}</option>)}</select>
-                <input type="text" value={agpCliente} onChange={e=>setAgpCliente(e.target.value)} placeholder="🔍 Buscar cliente..." style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",minWidth:160}}/>
-                <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-              </div>
+                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
+                <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                <select value={agpCidade} onChange={e=>setAgpCidade(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todas">📍 Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c} value={c}>{c}</option>)}</select>
+                <input type="text" value={agpCliente} onChange={e=>setAgpCliente(e.target.value)} placeholder="🔍 Buscar cliente..." style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",minWidth:160}}/>
+                <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente)&&<button onClick={()=>{setAgpRegion("todas");setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>}
 
               {/* Novo Atendimento */}
               {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
@@ -4051,10 +4059,10 @@ export default function App(){
                         const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:460,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF0F0":isToday?"#FFFDE7":"#FFF",transition:"background .15s",border:ocupado?"2px solid #C62828":undefined}}>
+                          <div key={i} style={{minHeight:460,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF8F8":isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:ocupado?"3px solid #C62828":isToday?"3px solid #F5C200":"3px solid transparent"}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#888"}}>{isToday?"📍 ":""}{dn}</div>
-                              {ocupado&&<span style={{fontSize:8,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:8,padding:"1px 6px"}}>OCUPADO</span>}
+                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"📍 ":""}{dn}</div>
+                              {ocupado&&<span style={{fontSize:8,fontWeight:800,color:"#C62828",background:"#FFF0F0",border:"1px solid #FFD0D0",borderRadius:8,padding:"1px 6px"}}>OCUPADO</span>}
                             </div>
                             <div style={{display:"flex",flexDirection:"column",gap:3}}>
                               {shown.map((it,ii)=>{
