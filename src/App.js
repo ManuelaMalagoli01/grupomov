@@ -2370,33 +2370,38 @@ export default function App(){
                   const st=escSt(r.status);
                   const stColor=st.c||st.color||"#888";
                   const isPendencia=(r.status||"").includes("pendente_pecas");
-                  return(<div key={r.id} className="card" style={{borderTop:`4px solid ${stColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
-                    <div style={{padding:"5px 7px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:8,fontWeight:800,color:isCorr?"#C62828":"#1565C0",background:"#FFF",border:`1px solid ${isCorr?"#C6282833":"#1565C033"}`,borderRadius:20,padding:"1px 7px"}}>{isCorr?"🔧 Corretivo":"🔵 Preventivo"}</span>
-                      <div style={{display:"flex",gap:2}}>
-                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"3px 5px",fontSize:10}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"3px 5px",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 5px",fontSize:9,fontWeight:700}}>✕</button>
+                  const typeColor=isCorr?"#DC2626":"#2563EB";
+                  return(<div key={r.id} className="card" style={{borderLeft:`5px solid ${typeColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
+                    <div style={{padding:"6px 8px",background:`${typeColor}0D`,borderBottom:`1px solid ${typeColor}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:9,fontWeight:800,color:typeColor,display:"flex",alignItems:"center",gap:4}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
+                      <div style={{display:"flex",gap:5}}>
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",color:"#1565C0",cursor:"pointer",fontSize:10}}>✏️</button>
+                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",cursor:"pointer",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #FECACA",borderRadius:"50%",color:"#C62828",cursor:"pointer",fontSize:10,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
+                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
                       {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;
                         const bgSolid={urgente:"#EF4444",moderado:"#F59E0B",ok:"#22C55E"}[alerta.level];
                         const dica=alerta.achados&&alerta.achados.length?` · ${alerta.achados.slice(0,3).join(", ")}`:"";
                         return(
                           <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:6,border:"none",background:bgSolid,color:"#FFF",fontFamily:"'Inter',-apple-system,sans-serif",fontWeight:700,fontSize:10,textTransform:"uppercase",cursor:"pointer",letterSpacing:.4,boxShadow:`0 2px 8px ${bgSolid}66`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
                         );})()}
-                      <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
-                      <div style={{fontSize:9,color:"#94A3B8"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
-                      <div style={{fontSize:9,color:"#64748B",lineHeight:1.7,borderTop:"1px solid #F1F5F9",borderBottom:"1px solid #F1F5F9",padding:"4px 0"}}>
-                        <b style={{color:"#334155"}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:"#334155"}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:"#334155"}}>Horímetro</b> {r.horimetro}</>}
-                        <br/><b style={{color:"#334155"}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:"#334155"}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
+                      <div>
+                        <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
+                        <div style={{fontSize:9,color:"#94A3B8",marginTop:1}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
+                      </div>
+                      <div style={{fontSize:9,color:"#475569",lineHeight:1.8,background:"#F8FAFC",borderRadius:8,padding:"6px 9px"}}>
+                        <b style={{color:typeColor}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:typeColor}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:typeColor}}>Horímetro</b> {r.horimetro}</>}
+                        <br/><b style={{color:typeColor}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:typeColor}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
                       </div>
                       {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"1px 6px",borderRadius:10,background:"#EFF6FF",color:"#2563EB",fontWeight:600}}>{sv}</span>)}</div>}
-                      <select value={r.status||"agendada"} onChange={e=>updateReport(r.id,{status:e.target.value})} style={{fontSize:9,padding:"3px 5px",borderRadius:20,border:"none",fontWeight:700,color:stColor,background:st.bg,cursor:"pointer"}}>
-                        {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
-                      </select>
-                      {isPendencia&&<div style={{display:"flex",gap:8,fontSize:9,color:"#C47D00"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+                        <select value={r.status||"agendada"} onChange={e=>updateReport(r.id,{status:e.target.value})} style={{fontSize:9,padding:"4px 8px",borderRadius:20,border:"none",fontWeight:700,color:stColor,background:st.bg,cursor:"pointer"}}>
+                          {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
+                        </select>
+                      </div>
+                      {isPendencia&&<div style={{display:"flex",gap:8,fontSize:9,color:"#C47D00",background:"#FFF8F0",borderRadius:8,padding:"5px 8px"}}>
                         <div style={{flex:1}}><span style={{fontWeight:700}}>REQ</span> <input type="text" value={r.requisicao||""} onChange={e=>updateReport(r.id,{requisicao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",width:60}}/></div>
                         <div style={{flex:1}}><span style={{fontWeight:700}}>Rel. Conclusão</span> <input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",width:70}}/></div>
                       </div>}
