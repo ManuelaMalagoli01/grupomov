@@ -2056,7 +2056,7 @@ export default function App(){
   ::-webkit-scrollbar-thumb:hover{background:#B0B0B0;}
 
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pulseUrgente{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.45)}50%{box-shadow:0 0 0 6px rgba(198,40,40,0)}}
+  @keyframes pulseUrgente{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
   @keyframes pulseModerado{0%,100%{box-shadow:0 0 0 0 rgba(180,83,9,.4)}50%{box-shadow:0 0 0 6px rgba(180,83,9,0)}}
   @keyframes slideDown{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
   @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
@@ -2381,11 +2381,10 @@ export default function App(){
                     </div>
                     <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:4}}>
                       {(()=>{const alerta=analisarAlertaPreventivo(r);if(!alerta)return null;
-                        const bgTint={urgente:"#FFF0F0",moderado:"#FFF8F0",ok:"#F0FFF5"}[alerta.level];
-                        const txtColor={urgente:"#C62828",moderado:"#B45309",ok:"#1A7A3C"}[alerta.level];
-                        const dica=alerta.achados&&alerta.achados.length?` (${alerta.achados.slice(0,4).join(", ")})`:"";
+                        const bgSolid={urgente:"#EF4444",moderado:"#F59E0B",ok:"#22C55E"}[alerta.level];
+                        const dica=alerta.achados&&alerta.achados.length?` · ${alerta.achados.slice(0,3).join(", ")}`:"";
                         return(
-                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"3px 9px",borderRadius:20,border:"none",background:bgTint,color:txtColor,fontWeight:800,fontSize:9,cursor:"pointer",letterSpacing:.2,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
+                          <button onClick={()=>{setEditReport(r);setModalReport(true);}} title={alerta.achados?`Encontrado: ${alerta.achados.join(", ")}`:""} style={{display:"inline-flex",alignSelf:"flex-start",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:6,border:"none",background:bgSolid,color:"#FFF",fontFamily:"'Inter',-apple-system,sans-serif",fontWeight:700,fontSize:10,textTransform:"uppercase",cursor:"pointer",letterSpacing:.4,boxShadow:`0 2px 8px ${bgSolid}66`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}{dica}</button>
                         );})()}
                       <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                       <div style={{fontSize:9,color:"#94A3B8"}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
