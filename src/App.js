@@ -1335,7 +1335,7 @@ function AppTopBar({user, setUser, setModalUsers}){
   );
 }
 
-function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
+function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, setCollapsed=()=>{}}){
   const bdg=(k)=>badges[k]||0;
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
@@ -1345,15 +1345,11 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "operacoes"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
-  const [oficinasOpen, setOficinasOpen] = useState(OFICINAS_TABS.includes(tab));
-  const [tecExtOpen,setTecExtOpen]=useState(TECEXT_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
   const [adminOpen,setAdminOpen]=useState(ADMIN_TABS.includes(tab));
   const [almoxOpen,setAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
 
   const areaTecAtiva = AREA_TEC_TABS.includes(tab);
-  const oficinasAtiva = OFICINAS_TABS.includes(tab);
-  const tecExtAtiva = TECEXT_TABS.includes(tab);
   const servicosAtiva = SERVICOS_TABS.includes(tab);
   const adminAtiva = ADMIN_TABS.includes(tab);
   const almoxAtiva = ALMOX_TABS.includes(tab);
@@ -1461,47 +1457,59 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
     </button>
   );
 
+  const GroupIcon=({icon,ativa,badgeCount,onClick,title})=>(
+    <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"rgba(245,194,0,.15)":"transparent",color:ativa?"#F5C200":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
+      {icon}
+      {badgeCount>0&&<span style={{position:"absolute",top:8,right:16,background:"#EF4444",color:"#FFF",borderRadius:8,minWidth:14,height:14,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{badgeCount}</span>}
+    </button>
+  );
+
+  const W = collapsed?68:220;
+  const ToggleBtn = (
+    <button onClick={()=>setCollapsed(p=>!p)} title={collapsed?"Expandir menu":"Recolher menu"} style={{position:"fixed",left:W-13,top:66,width:26,height:26,borderRadius:"50%",border:"2px solid #0F172A",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(0,0,0,.35)",zIndex:60,transition:"left .18s ease",fontFamily:"inherit"}}>{collapsed?"›":"‹"}</button>
+  );
+
+  if(collapsed) return(
+    <>
+      {ToggleBtn}
+      <div style={{position:"fixed",left:0,top:56,width:68,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+        <GroupIcon icon="🛠️" title="Área Técnica" ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
+        <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
+        <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
+        <GroupIcon icon="📦" title="Almoxarifado" ativa={almoxAtiva} badgeCount={empAlerta} onClick={()=>{setCollapsed(false);setAlmoxOpen(true);}}/>
+        <GroupIcon icon="🚙" title="Carros" ativa={tab==="carros"} badgeCount={0} onClick={()=>setTab("carros")}/>
+      </div>
+    </>
+  );
+
   return(
+    <>
+    {ToggleBtn}
     <div style={{position:"fixed",left:0,top:56,width:220,background:"linear-gradient(180deg,#1E293B,#0F172A)",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {/* ÁREA TÉCNICA - ACORDEÃO (Oficinas + Técnicos Externos + Pendências Frota) */}
+      {/* ÁREA TÉCNICA - GRUPO ÚNICO (sem sub-abas: Técnicos Externos e Oficinas viram apenas seções listadas) */}
       <GroupHeader label="Área Técnica" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")}/>
       {areaTecOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
-        {/* TÉCNICOS EXTERNOS - SUB-ACORDEÃO */}
-        <button onClick={()=>setTecExtOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 16px 8px 22px",border:"none",background:tecExtAtiva?"rgba(245,194,0,.10)":"transparent",color:tecExtAtiva?"#F5C200":"#94A3B8",fontSize:11,fontWeight:tecExtAtiva?700:500,cursor:"pointer",borderLeft:tecExtAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-          <span>👷 Técnicos Externos</span>
-          <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:tecExtOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
-        </button>
-        {tecExtOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-          <SubBtn k="agenda_prev" l="🗓 Agenda"/>
-          <SubBtn k="dashboard" l="📊 Dashboard"/>
-          <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
-        </div>}
+        <div style={{padding:"7px 16px 3px 22px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>👷 Técnicos Externos</div>
+        <SubBtn k="agenda_prev" l="🗓 Agenda"/>
+        <SubBtn k="dashboard" l="📊 Dashboard"/>
+        <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
 
-        {/* OFICINAS - SUB-ACORDEÃO */}
         {canSee("oficinas")&&<>
-          <button onClick={()=>setOficinasOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 16px 8px 22px",border:"none",background:oficinasAtiva?"rgba(245,194,0,.10)":"transparent",color:oficinasAtiva?"#F5C200":"#94A3B8",fontSize:11,fontWeight:oficinasAtiva?700:500,cursor:"pointer",borderLeft:oficinasAtiva?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-            <span>🏭 Oficinas</span>
-            <div style={{display:"flex",alignItems:"center",gap:5}}>
-              {(bdg("pendencias_hebert")+bdg("pendencias_matheus"))>0&&!oficinasOpen&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{bdg("pendencias_hebert")+bdg("pendencias_matheus")}</span>}
-              <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:oficinasOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
-            </div>
-          </button>
-          {oficinasOpen&&<div style={{background:"rgba(0,0,0,.15)"}}>
-            {canSee("oficina")&&<>
-              <div style={{padding:"5px 16px 2px 22px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 1340</div>
-              <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
-              <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
-              <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
-              {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
-            </>}
-            {canSee("ofi150")&&<>
-              <div style={{padding:"5px 16px 2px 22px",fontSize:9,fontWeight:700,color:"#475569",textTransform:"uppercase",letterSpacing:1}}>Oficina 150</div>
-              <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
-              <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
-              <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-              {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
-            </>}
-          </div>}
+          <div style={{padding:"7px 16px 3px 22px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>🏭 Oficinas</div>
+          {canSee("oficina")&&<>
+            <div style={{padding:"3px 16px 2px 28px",fontSize:9,fontWeight:600,color:"#475569"}}>Oficina 1340</div>
+            <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
+            <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
+            <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
+            {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
+          </>}
+          {canSee("ofi150")&&<>
+            <div style={{padding:"3px 16px 2px 28px",fontSize:9,fontWeight:600,color:"#475569"}}>Oficina 150</div>
+            <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
+            <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
+            <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
+          </>}
         </>}
 
         <SubBtn k="pendencias_frota" l="🚜 Pendências Frota"/>
@@ -1537,6 +1545,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
 
       <Btn k="carros" l="🚙 Carros"/>
     </div>
+    </>
   );
 }
 
@@ -1585,6 +1594,8 @@ export default function App(){
   const [schedule,setSchedule]=useState({});
   const [escalaStatusFilter,setEscalaStatusFilter]=useState("todos");
   const [notification,setNotification]=useState("");
+  const [sidebarCollapsed,setSidebarCollapsed]=useState(()=>{try{return localStorage.getItem("grupomov_sb_collapsed")==="1";}catch(e){return false;}});
+  useEffect(()=>{try{localStorage.setItem("grupomov_sb_collapsed",sidebarCollapsed?"1":"0");}catch(e){}},[sidebarCollapsed]);
 
   // Filtros relatórios
   const [filterTipo,setFilterTipo]=useState("todos");
@@ -2454,7 +2465,7 @@ export default function App(){
             </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:10}}>
                 {lista.map(r=>{
                   const isCorr=r.atendimento==="corretivo";
                   const st=escSt(r.status);
@@ -2462,42 +2473,41 @@ export default function App(){
                   const isPendencia=(r.status||"").includes("pendente_pecas");
                   const alerta=analisarAlertaPreventivo(r)||{level:"neutro",label:"",achados:[]};
                   const alertColor={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853",neutro:"#94A3B8"}[alerta.level];
-                  const alertBgTint={urgente:"#FFEBEE",moderado:"#FFF3E0",ok:"#E8F9EF",neutro:"#F8FAFC"}[alerta.level];
-                  return(<div key={r.id} className="card" style={{borderLeft:`5px solid ${alertColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1}}>
-                    <div style={{padding:"6px 8px",background:alertBgTint,borderBottom:`1px solid ${alertColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  return(<div key={r.id} className="card" style={{borderLeft:`3px solid ${alertColor}`,padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1,background:"#FFF"}}>
+                    <div style={{padding:"7px 10px",background:"#FAFBFC",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
                         <span style={{fontSize:9,fontWeight:700,color:"#64748B",display:"flex",alignItems:"center",gap:3}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
-                        {alerta.label&&<span style={{fontSize:10,fontWeight:900,color:"#000",background:alertColor,borderRadius:20,padding:"4px 12px",textTransform:"uppercase",letterSpacing:.4,boxShadow:`0 2px 6px ${alertColor}77`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}</span>}
+                        {alerta.label&&<span style={{fontSize:8.5,fontWeight:800,color:"#FFF",background:alertColor,borderRadius:20,padding:"2px 9px",textTransform:"uppercase",letterSpacing:.3}}>{alerta.label}</span>}
                       </div>
-                      <div style={{display:"flex",gap:5}}>
-                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",color:"#1565C0",cursor:"pointer",fontSize:10}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",cursor:"pointer",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #FECACA",borderRadius:"50%",color:"#C62828",cursor:"pointer",fontSize:10,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:4}}>
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:"50%",color:"#1565C0",cursor:"pointer",fontSize:10}}>✏️</button>
+                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:"concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:"50%",cursor:"pointer",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:"50%",color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
-                      {alerta.achados&&alerta.achados.length>0&&<div title={`Encontrado: ${alerta.achados.join(", ")}`} style={{fontSize:8,color:"#7C2D12",background:"#FFF7ED",borderRadius:6,padding:"3px 6px"}}>🔎 {alerta.achados.slice(0,3).join(", ")}</div>}
+                    <div style={{padding:"9px 10px",display:"flex",flexDirection:"column",gap:6}}>
+                      {alerta.achados&&alerta.achados.length>0&&<div title={`Encontrado: ${alerta.achados.join(", ")}`} style={{fontSize:8,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:6,padding:"3px 6px"}}>🔎 {alerta.achados.slice(0,3).join(", ")}</div>}
                       <div>
                         <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div>
                         <div style={{fontSize:9,color:"#94A3B8",marginTop:1}}>📅 {fmtDataBR(r.data||r.dataAtendimento)} · 👷 {r.tecnico||"—"}{r.cidade?` · 📍 ${r.cidade}`:""}</div>
                       </div>
-                      <div style={{fontSize:9,color:"#1E293B",lineHeight:1.8,background:"#F8FAFC",borderRadius:8,padding:"6px 9px"}}>
-                        <b style={{color:"#334155"}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:"#334155"}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:"#334155"}}>Horímetro</b> {r.horimetro}</>}
-                        <br/><b style={{color:"#334155"}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:"#334155"}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#C47D00"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
+                      <div style={{fontSize:9,color:"#475569",lineHeight:1.7,background:"#FFF",border:"1px solid #EEF1F4",borderRadius:8,padding:"6px 9px"}}>
+                        <b style={{color:"#1A1A1A"}}>PAT</b> {r.patrimonio||"—"}{r.modelo&&<> · <b style={{color:"#1A1A1A"}}>Modelo</b> {r.modelo}</>}{r.horimetro&&<> · <b style={{color:"#1A1A1A"}}>Horímetro</b> {r.horimetro}</>}
+                        <br/><b style={{color:"#1A1A1A"}}>Rel.</b> {r.relatorio||"—"}{r.chamado&&<> · <b style={{color:"#1A1A1A"}}>Chamado</b> {r.chamado}</>} · <b style={{color:"#1A1A1A"}}>⏱</b> {r.horaInicio||"—"}→{r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})
                       </div>
-                      {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"1px 6px",borderRadius:10,background:"#EFF6FF",color:"#2563EB",fontWeight:600}}>{sv}</span>)}</div>}
+                      {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"2px 7px",borderRadius:10,background:"#1A1A1A",color:"#F5C200",fontWeight:700}}>{sv}</span>)}</div>}
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
                         <select value={r.status||"agendada"} onChange={e=>updateReport(r.id,{status:e.target.value})} style={{fontSize:9,padding:"4px 8px",borderRadius:20,border:"none",fontWeight:700,color:stColor,background:st.bg,cursor:"pointer"}}>
                           {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                         </select>
                       </div>
-                      {isPendencia&&<div style={{display:"flex",gap:8,fontSize:9,color:"#C47D00",background:"#FFF8F0",borderRadius:8,padding:"5px 8px"}}>
-                        <div style={{flex:1}}><span style={{fontWeight:700}}>REQ</span> <input type="text" value={r.requisicao||""} onChange={e=>updateReport(r.id,{requisicao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",width:60}}/></div>
-                        <div style={{flex:1}}><span style={{fontWeight:700}}>Rel. Conclusão</span> <input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#C47D00",border:"none",background:"transparent",outline:"none",width:70}}/></div>
+                      {isPendencia&&<div style={{display:"flex",gap:8,fontSize:9,color:"#92400E",background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,padding:"5px 8px"}}>
+                        <div style={{flex:1}}><span style={{fontWeight:700}}>REQ</span> <input type="text" value={r.requisicao||""} onChange={e=>updateReport(r.id,{requisicao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#92400E",border:"none",background:"transparent",outline:"none",width:60}}/></div>
+                        <div style={{flex:1}}><span style={{fontWeight:700}}>Rel. Conclusão</span> <input type="text" value={r.relatorioConclusao||""} onChange={e=>updateReport(r.id,{relatorioConclusao:e.target.value})} placeholder="—" style={{fontSize:9,fontWeight:700,color:"#92400E",border:"none",background:"transparent",outline:"none",width:70}}/></div>
                       </div>}
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",border:"none",background:"transparent",outline:"none",padding:0}}/>
                     </div>
-                    <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:9.5,color:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#7F1D1D":"#166534",fontWeight:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?800:700,border:"none",borderTop:`2px solid ${(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#EF4444":"#86EFAC"}`,background:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#FEE2E2":"#F0FDF4",outline:"none",padding:"6px 8px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
+                    <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:9.5,color:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#7F1D1D":"#166534",fontWeight:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?800:700,border:"none",borderTop:`2px solid ${(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#EF4444":"#86EFAC"}`,background:"#FFF",outline:"none",padding:"6px 8px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
                   </div>);
                 })}
               </div>
@@ -6818,8 +6828,8 @@ export default function App(){
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
       <AppTopBar user={user} setUser={setUser} setModalUsers={setModalUsers}/>
-      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta} badges={menuBadges}/>
-      <div style={{marginLeft:220,padding:"24px 24px 60px",minHeight:"calc(100vh - 56px)"}}>
+      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta} badges={menuBadges} collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed}/>
+      <div style={{marginLeft:sidebarCollapsed?68:220,padding:"24px 24px 60px",minHeight:"calc(100vh - 56px)",transition:"margin-left .18s ease"}}>
         {renderTab()}
         {modals}
       </div>
