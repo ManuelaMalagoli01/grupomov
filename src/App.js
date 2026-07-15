@@ -2314,6 +2314,19 @@ export default function App(){
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
+                <button onClick={()=>{
+                  const alvos=(reports||[]).filter(r=>r&&!r.cidade&&(r.cliente||"").includes(" - "));
+                  if(alvos.length===0){alert("Nenhum relatório encontrado com cidade faltando dentro do nome do cliente.");return;}
+                  if(window.confirm(`Encontrados ${alvos.length} relatório(s) com cidade "escondida" dentro do nome do cliente. Corrigir separando automaticamente? Essa ação atualiza os registros no banco.`)){
+                    alvos.forEach(r=>{
+                      const partes=r.cliente.split(" - ");
+                      const cidade=partes[partes.length-1].trim();
+                      const clienteFinal=partes.slice(0,-1).join(" - ").trim();
+                      updateReport(r.id,{cliente:clienteFinal,cidade});
+                    });
+                    notify(`✅ ${alvos.length} relatório(s) corrigido(s) — cidade separada do cliente!`);
+                  }
+                }} title="Corrige relatórios importados antes da separação automática de cidade" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#C47D00",fontSize:11,cursor:"pointer",fontWeight:600}}>🏙️ Corrigir Cidades Antigas</button>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>✅ {showArqRel?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
@@ -3867,6 +3880,11 @@ export default function App(){
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
+              const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida");
+              const concPrev=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="preventivo").length;
+              const concCorr=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="corretivo").length;
+              const techHorasPrev=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="preventivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
+              const techHorasCorr=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="corretivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const BLU="#2563EB",RED="#EF4444",YEL="#F5C200",ORG="#EA580C",GRN="#16A34A",PUR="#7C3AED",TEA="#0D9488";
               return(
                 <>
@@ -3910,6 +3928,16 @@ export default function App(){
                       <div style={{fontSize:32,fontWeight:900,color:"#FFF",lineHeight:1}}>{techsWith.length}</div>
                     </div>
                   </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:22}}>
+                    <div style={{background:"linear-gradient(135deg,#0C4A6E,#0369A1)",borderRadius:16,padding:"16px 20px",boxShadow:"0 8px 24px rgba(3,105,161,.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <div><div style={{fontSize:10,fontWeight:700,color:"#BAE6FD",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>✅ Concluído — Preventiva</div><div style={{fontSize:26,fontWeight:900,color:"#FFF",lineHeight:1}}>{concPrev}</div></div>
+                      <div style={{fontSize:28}}>📋</div>
+                    </div>
+                    <div style={{background:"linear-gradient(135deg,#581C87,#7E22CE)",borderRadius:16,padding:"16px 20px",boxShadow:"0 8px 24px rgba(126,34,206,.2)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <div><div style={{fontSize:10,fontWeight:700,color:"#E9D5FF",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>✅ Concluído — Corretiva</div><div style={{fontSize:26,fontWeight:900,color:"#FFF",lineHeight:1}}>{concCorr}</div></div>
+                      <div style={{fontSize:28}}>🔧</div>
+                    </div>
+                  </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
@@ -3938,6 +3966,12 @@ export default function App(){
                       {techsWith.length?<ChartCanvas type="bar" height={Math.max(160,techsWith.length*34)}
                         data={{labels:techsWith,datasets:[{label:"Horas",data:techHours,backgroundColor:ORG,borderRadius:8}]}}
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} h`}}},scales:{x:{beginAtZero:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                    </div>
+                    <div className="card" style={{padding:"8px 12px",gridColumn:"span 2"}}>
+                      <div style={chartTitle}>Horas trabalhadas por técnico — Preventiva × Corretiva</div>
+                      {techsWith.length?<ChartCanvas type="bar" height={Math.max(180,techsWith.length*36)}
+                        data={{labels:techsWith,datasets:[{label:"Preventiva",data:techHorasPrev,backgroundColor:BLU,borderRadius:6},{label:"Corretiva",data:techHorasCorr,backgroundColor:RED,borderRadius:6}]}}
+                        options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw} h`}}},scales:{x:{stacked:true,beginAtZero:true},y:{stacked:true}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                   </div>
                   {/* Gráfico Tipo de Serviço x Técnico */}
