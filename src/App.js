@@ -2402,7 +2402,7 @@ export default function App(){
                       </div>}
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",border:"none",background:"transparent",outline:"none",padding:0}}/>
                     </div>
-                    <input type="text" value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" style={{fontSize:9,color:r.pendencias?"#C62828":"#AAA",fontWeight:r.pendencias?700:600,border:"none",borderTop:`1px solid ${r.pendencias?"#F5C2C2":"#F1F5F9"}`,background:r.pendencias?"#FFF5F5":"#FAFBFC",outline:"none",padding:"5px 7px",width:"100%",boxSizing:"border-box"}}/>
+                    <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:9,color:r.pendencias?"#C62828":"#AAA",fontWeight:r.pendencias?700:600,border:"none",borderTop:`1px solid ${r.pendencias?"#F5C2C2":"#F1F5F9"}`,background:r.pendencias?"#FFF5F5":"#FAFBFC",outline:"none",padding:"5px 7px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.4}}/>
                   </div>);
                 })}
               </div>
