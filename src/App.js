@@ -2370,7 +2370,7 @@ export default function App(){
             </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
                 {lista.map(r=>{
                   const isCorr=r.atendimento==="corretivo";
                   const st=escSt(r.status);
@@ -2383,7 +2383,7 @@ export default function App(){
                     <div style={{padding:"6px 8px",background:alertBgTint,borderBottom:`1px solid ${alertColor}33`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
                         <span style={{fontSize:9,fontWeight:700,color:"#64748B",display:"flex",alignItems:"center",gap:3}}>{isCorr?"🔧":"📋"} {isCorr?"Corretivo":"Preventivo"}</span>
-                        {alerta.label&&<span style={{fontSize:8,fontWeight:900,color:"#000",background:alertColor,borderRadius:20,padding:"1px 8px",textTransform:"uppercase",letterSpacing:.3,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}</span>}
+                        {alerta.label&&<span style={{fontSize:10,fontWeight:900,color:"#000",background:alertColor,borderRadius:20,padding:"4px 12px",textTransform:"uppercase",letterSpacing:.4,boxShadow:`0 2px 6px ${alertColor}77`,animation:alerta.level==="urgente"?"pulseUrgente 1.6s ease-in-out infinite":undefined}}>{alerta.label}</span>}
                       </div>
                       <div style={{display:"flex",gap:5}}>
                         <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:"50%",color:"#1565C0",cursor:"pointer",fontSize:10}}>✏️</button>
