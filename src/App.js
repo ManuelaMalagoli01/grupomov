@@ -1529,8 +1529,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}}){
       </div>}
 
       <Btn k="carros" l="🚙 Carros"/>
-      {canSee("somanuela")&&<Btn k="prioridades_clientes" l="⭐ Prioridades Clientes"/>}
-      {canSee("somanuela")&&<Btn k="pendencias_manuela_tab" l="📋 Pendências Manuela"/>}
     </div>
   );
 }
