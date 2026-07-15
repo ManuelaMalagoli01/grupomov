@@ -257,7 +257,7 @@ const analisarAlertaPreventivo = (r) => {
   if(!obs&&!pend){
     return {level:"ok",label:"🟢 Sem pendência",color:"#FFF",bg:"linear-gradient(135deg,#00732E,#009739)",border:"#00541F"};
   }
-  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi];
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/nome\w*/gi,/m[aá]quina\s+parada/gi,/aguardando\s+aprova[çc][aã]o/gi,/mau\s*uso/gi,/or[çc]amento\w*/gi];
   let achados=[];
   padroes.forEach(re=>{const m=combinado.match(re);if(m)achados=achados.concat(m);});
   achados=[...new Set(achados.map(a=>a.trim()).filter(Boolean))];
@@ -269,7 +269,7 @@ const analisarAlertaPreventivo = (r) => {
 // Destaca (em negrito) as palavras/códigos-chave dentro de um texto, para exibição
 const destacarPalavrasChave=(texto)=>{
   if(!texto)return texto;
-  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi];
+  const padroes=[/pe[çc]a\w*/gi,/c[oó]digo\w*/gi,/unidade\w*|\bunid\.?\b/gi,/nome\w*/gi,/m[aá]quina\s+parada/gi,/aguardando\s+aprova[çc][aã]o/gi,/mau\s*uso/gi,/or[çc]amento\w*/gi];
   let partes=[{txt:texto,marcado:false}];
   padroes.forEach(re=>{
     partes=partes.flatMap(p=>{
