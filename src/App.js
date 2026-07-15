@@ -2438,7 +2438,6 @@ export default function App(){
               <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosRel?"▲":"▼"}</span>
             </button>
             {showFiltrosRel&&<div className="card" style={{padding:"6px 8px",marginBottom:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-              <input type="date" value={relFiltroData} onChange={e=>setRelFiltroData(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}} title="Data exata"/>
               <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={relFiltroDataDe} onChange={e=>setRelFiltroDataDe(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={relFiltroDataAte} onChange={e=>setRelFiltroDataAte(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}/></div>
               <button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe(TODAY_STR);setRelFiltroDataAte("");}} title="Ver relatórios a partir de hoje — conferência futura" style={{padding:"6px 12px",borderRadius:20,background:"#EFF6FF",color:"#1565C0",border:"1px solid #BFDBFE",fontSize:11,cursor:"pointer",fontWeight:700}}>📅 Conferência Futura</button>
