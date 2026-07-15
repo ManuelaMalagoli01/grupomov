@@ -247,13 +247,12 @@ const mapTipo = label => {
 };
 
 // ── Alerta de prioridade para relatórios (Preventivos e Corretivos), com base em Observações/Pendências ──
+const normalizaTexto=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const ehPendenciaVazia=pend=>/^(nao|n\/?a|na|nenhum\w*|-+|ok|nada|sem\s*pend\w*)$/i.test(normalizaTexto(pend));
 const analisarAlertaPreventivo = (r) => {
   if(!r||(r.atendimento!=="preventivo"&&r.atendimento!=="corretivo"))return null;
-  const normaliza=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
   let pend=String(r.pendencias||"").trim();
-  const pendNorm=normaliza(pend);
-  const ehNegativo=/^(nao|n\/?a|na|nenhum\w*|-+|ok|nada|sem\s*pend\w*)$/i.test(pendNorm);
-  if(ehNegativo)pend="";
+  if(ehPendenciaVazia(pend))pend="";
   const obs=String(r.obs||"").trim();
   const combinado=`${obs} ${pend}`;
   if(!obs&&!pend){
@@ -2414,7 +2413,7 @@ export default function App(){
                       </div>}
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="💬 Observação..." style={{fontSize:9,color:"#666",border:"none",background:"transparent",outline:"none",padding:0}}/>
                     </div>
-                    <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:9.5,color:r.pendencias?"#7F1D1D":"#94A3B8",fontWeight:r.pendencias?800:600,border:"none",borderTop:`2px solid ${r.pendencias?"#EF4444":"#E2E8F0"}`,background:r.pendencias?"#FEE2E2":"#F8FAFC",outline:"none",padding:"6px 8px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
+                    <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="⚠️ Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:9.5,color:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#7F1D1D":"#94A3B8",fontWeight:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?800:600,border:"none",borderTop:`2px solid ${(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#EF4444":"#E2E8F0"}`,background:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#FEE2E2":"#F8FAFC",outline:"none",padding:"6px 8px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
                   </div>);
                 })}
               </div>
