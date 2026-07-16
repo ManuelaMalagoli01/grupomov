@@ -2936,7 +2936,8 @@ export default function App(){
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
-          OFICINA_TECHS.forEach(t=>{
+          const TECHS_NO_DASH=[...new Set([...OFICINA_TECHS, ...apMes.map(a=>a.tecnico).filter(Boolean)])];
+          TECHS_NO_DASH.forEach(t=>{
             const aps=apMes.filter(a=>a.tecnico===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
             const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
@@ -2952,9 +2953,9 @@ export default function App(){
             const aps=apMes.filter(a=>a.os===os);
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
-          const techAtivos=OFICINA_TECHS.filter(t=>byTech[t].aps.length>0);
-          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
-          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0);
+          const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
           const SERV_COLORS=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
           const chartServ={labels:servAtivos,datasets:[
@@ -2997,7 +2998,7 @@ export default function App(){
               <div style={{fontSize:12,color:"#888"}}>{MESES[agOfiMonth]} {agOfiYear} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_TECHS, ...(apontamentos||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
               <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
               <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
@@ -6607,7 +6608,8 @@ export default function App(){
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
-          OFICINA_150_TECHS.forEach(t=>{
+          const TECHS_NO_DASH=[...new Set([...OFICINA_150_TECHS, ...apMes.map(a=>a.tecnico).filter(Boolean)])];
+          TECHS_NO_DASH.forEach(t=>{
             const aps=apMes.filter(a=>a.tecnico===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
             const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
@@ -6623,9 +6625,9 @@ export default function App(){
             const aps=apMes.filter(a=>a.os===os);
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
-          const techAtivos=OFICINA_150_TECHS.filter(t=>byTech[t].aps.length>0);
-          const chartHoras={labels:techAtivos.length>0?techAtivos:OFICINA_150_TECHS,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):OFICINA_150_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):OFICINA_150_TECHS.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
-          const chartApon={labels:techAtivos.length>0?techAtivos:OFICINA_150_TECHS,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):OFICINA_150_TECHS.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):OFICINA_150_TECHS.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
+          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0);
+          const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
+          const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
           const SERV_COLORS150=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
           const chartServ={labels:servAtivos,datasets:[
@@ -6664,7 +6666,7 @@ export default function App(){
               <div style={{fontSize:12,color:"#888"}}>{MESES[agOfi150Month]} {agOfi150Year} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{OFICINA_150_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_150_TECHS, ...(apontamentos150||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
               <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
               <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028,2029].map(y=><option key={y}>{y}</option>)}</select>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
