@@ -2622,6 +2622,28 @@ export default function App(){
                       notify(`✅ ${dups.length} ID(s) duplicado(s) corrigido(s)!`);
                     }
                   }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#F5A623",fontSize:11,cursor:"pointer",fontWeight:600}}>🆔 Corrigir IDs Duplicados</button>
+                  <button onClick={()=>{
+                    const chave=a=>[a.os,a.patrimonio,a.data,a.tecnico,a.inicio,a.termino].map(v=>String(v||"").trim().toLowerCase()).join("|");
+                    const grupos={};
+                    (apontamentos||[]).forEach(a=>{
+                      if(!a||a.oficina==="150")return;
+                      const k=chave(a);
+                      if(!grupos[k])grupos[k]=[];
+                      grupos[k].push(a);
+                    });
+                    const paraExcluir=[];
+                    Object.values(grupos).forEach(grupo=>{
+                      if(grupo.length<2)return;
+                      // mantém o que tiver Serviço preenchido (ou o primeiro, se nenhum tiver); exclui o restante
+                      const ordenado=[...grupo].sort((a,b)=>(b.servico?1:0)-(a.servico?1:0));
+                      paraExcluir.push(...ordenado.slice(1));
+                    });
+                    if(paraExcluir.length===0){alert("Nenhum apontamento duplicado (mesma OS/PAT/data/técnico/horário) encontrado.");return;}
+                    if(window.confirm(`Encontrados ${paraExcluir.length} apontamento(s) duplicado(s) (mesma OS, PAT, data, técnico e horário). Excluir as cópias repetidas, mantendo apenas 1 de cada?`)){
+                      paraExcluir.forEach(a=>delApon(a.id));
+                      notify(`🧹 ${paraExcluir.length} apontamento(s) duplicado(s) excluído(s)!`);
+                    }
+                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62828",background:"transparent",color:"#F87171",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir Duplicados</button>
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
                     📄 Ler PDF
