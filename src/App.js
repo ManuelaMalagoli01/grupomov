@@ -11,27 +11,18 @@ const db = {
     try {
       let allRows = [];
       let from = 0;
-      let total = null;
+      const step = 1000;
       let guard = 0; // proteção contra loop infinito
-      while(guard++ < 200) {
-        const to = from + 999; // pede um bloco grande; o servidor limita sozinho se precisar
-        const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
+      while(guard++ < 500) {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*&order=id.asc&limit=${step}&offset=${from}`, {
           cache: "no-store",
-          headers: {
-            "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache",
-            "Range-Unit": "items", "Range": `${from}-${to}`, "Prefer": "count=exact"
-          }
+          headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache"}
         });
         if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} break; }
         const rows = await res.json();
-        if(!Array.isArray(rows) || rows.length===0) break;
+        if(!Array.isArray(rows) || rows.length===0) break; // página vazia = acabou, garantido, sem depender de headers
         allRows = allRows.concat(rows);
-        // lê o total real informado pelo servidor (ex: "Content-Range: 0-499/2327") em vez de supor
-        // que "veio menos que pedi = acabou" — servidores podem limitar a página abaixo do que pedimos.
-        const cr = res.headers.get("content-range");
-        if(cr){ const m = cr.match(/\/(\d+)$/); if(m) total = parseInt(m[1]); }
         from += rows.length;
-        if(total!==null && from>=total) break;
       }
       return allRows.map(r => r.data);
     } catch(e) { console.error("DB get error:", e); return []; }
