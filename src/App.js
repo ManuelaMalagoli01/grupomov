@@ -133,6 +133,9 @@ const TECNICO_SERVICO_AUTO=[
   {match:"pedro pimente",servico:"Carregador"},
   {match:"lucio",servico:"Pequenos Reparos"},
   {match:"davi",servico:"Pequenos Reparos"},
+  {match:"reginaldo",servico:"Mecânica"},
+  {match:"junio",servico:"Usinagem"},
+  {match:"eduardo",servico:"Mecânica"},
 ];
 const autoServicoPorTecnico=(tecNome)=>{
   const n=normalizeTec(tecNome);
@@ -2668,7 +2671,7 @@ export default function App(){
                   <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
                   <button onClick={()=>{
                     const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
-                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi) foi encontrado.");return;}
+                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo) foi encontrado.");return;}
                     if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
                       alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
                       notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
