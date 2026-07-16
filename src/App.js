@@ -2958,6 +2958,19 @@ export default function App(){
             </div>
           </div>
 
+          {/* Aviso: filtro sem dados */}
+          {apMes.length===0&&(()=>{
+            const mesesComDados=[...new Set((apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
+            if(mesesComDados.length===0)return null;
+            return(<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#FFFBEB",border:"1px solid #FDE68A",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <span style={{fontSize:12,color:"#92400E",fontWeight:700}}>⚠️ Nenhum apontamento em {MESES[agOfiMonth]}/{agOfiYear}{dashOfiTech!=="todos"?` para ${dashOfiTech}`:""}. Você tem dados em:</span>
+              {mesesComDados.slice(0,6).map(ym=>{
+                const [y,m]=ym.split("-");
+                return <button key={ym} onClick={()=>{setAgOfiYear(Number(y));setAgOfiMonth(Number(m)-1);setDashOfiFrom("");setDashOfiTo("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
+              })}
+            </div>);
+          })()}
+
           {/* KPIs */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
             {[
@@ -6614,6 +6627,19 @@ export default function App(){
               {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
             </div>
           </div>
+
+          {/* Aviso: filtro sem dados */}
+          {apMes.length===0&&(()=>{
+            const mesesComDados=[...new Set((apontamentos150||[]).filter(a=>a&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
+            if(mesesComDados.length===0)return null;
+            return(<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#FFFBEB",border:"1px solid #FDE68A",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <span style={{fontSize:12,color:"#92400E",fontWeight:700}}>⚠️ Nenhum apontamento em {MESES[agOfi150Month]}/{agOfi150Year}{dashOfi150Tech!=="todos"?` para ${dashOfi150Tech}`:""}. Você tem dados em:</span>
+              {mesesComDados.slice(0,6).map(ym=>{
+                const [y,m]=ym.split("-");
+                return <button key={ym} onClick={()=>{setAgOfi150Year(Number(y));setAgOfi150Month(Number(m)-1);setDashOfi150From("");setDashOfi150To("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
+              })}
+            </div>);
+          })()}
 
           {/* KPIs */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
