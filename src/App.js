@@ -48,6 +48,30 @@ const db = {
         headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
       });
     } catch(e) { console.error("DB delete error:", e); }
+  },
+  // Salva várias linhas de uma vez (usado nas importações de Excel). Envia em lotes pequenos e em
+  // sequência (não tudo de uma vez) pra não sobrecarregar o banco quando a planilha tem centenas/milhares
+  // de linhas — evita que parte das linhas "suma" silenciosamente por excesso de requisições simultâneas.
+  async saveBatch(table, rows, chunkSize=150) {
+    if(!rows||rows.length===0)return {ok:true,okCount:0,failedCount:0};
+    let okCount=0; const falhas=[];
+    for(let i=0;i<rows.length;i+=chunkSize){
+      const chunk=rows.slice(i,i+chunkSize).map(d=>({id:d.id,data:d}));
+      try{
+        const res=await fetch(`${SUPA_URL}/rest/v1/${table}`,{
+          method:"POST", cache:"no-store",
+          headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"},
+          body:JSON.stringify(chunk)
+        });
+        if(!res.ok){ const t=await res.text(); console.error("DB saveBatch error:",table,res.status,t); falhas.push({status:res.status,body:t,count:chunk.length}); }
+        else okCount+=chunk.length;
+      }catch(e){ console.error("DB saveBatch error:",e); falhas.push({error:e.message,count:chunk.length}); }
+    }
+    if(falhas.length>0){
+      const falhouCount=falhas.reduce((s,f)=>s+f.count,0);
+      alert(`⚠️ Importação parcial em "${table}": ${okCount} de ${rows.length} linha(s) salvas no banco.\n${falhouCount} linha(s) falharam ao salvar — tente reimportar (ou repetir só essa parte) depois.`);
+    }
+    return {ok:falhas.length===0,okCount,failedCount:rows.length-okCount};
   }
 };
 
@@ -2359,15 +2383,15 @@ export default function App(){
             </div>
           </div>
         )}
-        {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);stamp.forEach(d=>db.save("oficina",d.id,d));setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
-        {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("sas",d.id,d));setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
-        {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("processos_mu",d.id,d));setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
-        {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("processos_af",d.id,d));setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
-        {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
-        {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_hebert",d.id,d));setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
-        {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
-        {modalImportApon&&<ImportAponModal label="Apontamentos 1340" oficina="1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
-        {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);db.saveBatch("oficina",stamp);setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
+        {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);db.saveBatch("sas",stamp);setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
+        {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);db.saveBatch("processos_mu",stamp);setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
+        {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);db.saveBatch("processos_af",stamp);setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
+        {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);db.saveBatch("relatorios",stamp);setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
+        {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_hebert",stamp);setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
+        {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_matheus",stamp);setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
+        {modalImportApon&&<ImportAponModal label="Apontamentos 1340" oficina="1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);db.saveBatch("apontamentos_oficina",novos);setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);db.saveBatch("apontamentos_150",novos);setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalImportAgenda&&<ImportAgendaModal onClose={()=>setModalImportAgenda(false)} onImport={novos=>{
           novos.forEach(d=>{
             const tech=d.tecnico||"Sem Técnico";
@@ -2380,7 +2404,7 @@ export default function App(){
           notify(`✅ ${novos.length} atendimento(s) importado(s)!`);
         }}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
-        {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
+        {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);db.saveBatch("relatorios",stamp);setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
         {modalAF&&<ProcessoModal onClose={()=>{setModalAF(false);setEditAF(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editAF){setProcessosAF(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_af",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}setEditAF(null);setModalAF(false);}} tipo="a_faturar" initial={editAF}/>}
         {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
