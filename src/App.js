@@ -431,51 +431,43 @@ function LoginScreen({onLogin, users=USERS}){
     },400);
   };
   return(
-    <div style={{minHeight:"100vh",background:"radial-gradient(circle at 20% 20%, #2A2A2A 0%, #0D0D0D 60%)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"fixed",top:"-15%",right:"-10%",width:500,height:500,background:"radial-gradient(circle,rgba(245,194,0,.15) 0%,transparent 70%)",pointerEvents:"none",animation:"float1 8s ease-in-out infinite"}}/>
-      <div style={{position:"fixed",bottom:"-15%",left:"-10%",width:400,height:400,background:"radial-gradient(circle,rgba(245,194,0,.10) 0%,transparent 70%)",pointerEvents:"none",animation:"float2 10s ease-in-out infinite"}}/>
-      <div style={{position:"fixed",top:"40%",left:"50%",width:300,height:300,background:"radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%)",pointerEvents:"none"}}/>
+    <div style={{minHeight:"100vh",background:"#F4F6F9",display:"flex",alignItems:"center",justifyContent:"center",padding:24,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"fixed",top:0,left:0,right:0,height:6,background:"#F5C200"}}/>
+      <div style={{position:"fixed",bottom:-120,right:-120,width:320,height:320,borderRadius:"50%",background:"rgba(245,194,0,.08)",pointerEvents:"none"}}/>
       <style>{`
-        @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
-        @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
-        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes glow{0%,100%{box-shadow:0 8px 32px rgba(245,194,0,.25)}50%{box-shadow:0 8px 48px rgba(245,194,0,.4)}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
       `}</style>
 
-      <div style={{background:"rgba(255,255,255,.98)",backdropFilter:"blur(24px)",borderRadius:20,padding:44,border:"1px solid rgba(255,255,255,.3)",width:"100%",maxWidth:430,boxShadow:"0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1)",position:"relative",overflow:"hidden",animation:"slideUp .5s ease"}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,height:5,background:"linear-gradient(90deg,#F5C200,#FFE066,#F5C200)"}}/>
-
+      <div style={{background:"#FFFFFF",borderRadius:16,padding:44,border:"1px solid #E5E7EB",width:"100%",maxWidth:420,boxShadow:"0 4px 24px rgba(15,23,42,.08)",position:"relative",animation:"slideUp .4s ease"}}>
         <div style={{textAlign:"center",marginBottom:36}}>
-          <div style={{width:150,margin:"0 auto 14px"}}>
+          <div style={{width:170,margin:"0 auto 16px"}}>
             <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{width:"100%",height:"auto",display:"block"}}/>
           </div>
-          <div style={{fontSize:12,color:"#999",marginTop:5,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
+          <div style={{fontSize:12,color:"#94A3B8",marginTop:4,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
         </div>
 
         <div style={{marginBottom:18}}>
-          <label style={{display:"block",fontSize:11,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1.2,marginBottom:8}}>Usuário</label>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Usuário</label>
           <div style={{position:"relative"}}>
-            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#BBB"}}>👤</span>
-            <input ref={usernameRef} type="text" value={username} autoComplete="username" onChange={e=>{setUsername(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="nome.cargo" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:12,border:"2px solid #EEE",background:"#FAFAFA",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#EEE";e.target.style.background="#FAFAFA";}}/>
+            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#94A3B8"}}>👤</span>
+            <input ref={usernameRef} type="text" value={username} autoComplete="username" onChange={e=>{setUsername(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="nome.cargo" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#F8FAFC",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#E5E7EB";e.target.style.background="#F8FAFC";}}/>
           </div>
         </div>
         <div style={{marginBottom:26}}>
-          <label style={{display:"block",fontSize:11,fontWeight:800,color:"#888",textTransform:"uppercase",letterSpacing:1.2,marginBottom:8}}>Senha</label>
+          <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Senha</label>
           <div style={{position:"relative"}}>
-            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#BBB"}}>🔒</span>
-            <input type="password" value={pass} autoComplete="current-password" onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:12,border:"2px solid #EEE",background:"#FAFAFA",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#EEE";e.target.style.background="#FAFAFA";}}/>
+            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:15,color:"#94A3B8"}}>🔒</span>
+            <input type="password" value={pass} autoComplete="current-password" onChange={e=>{setPass(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&handle()} placeholder="••••••••" style={{width:"100%",padding:"13px 14px 13px 40px",fontSize:14,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#F8FAFC",boxSizing:"border-box",transition:"border-color .2s,background .2s",outline:"none"}} onFocus={e=>{e.target.style.borderColor="#F5C200";e.target.style.background="#FFF";}} onBlurCapture={e=>{e.target.style.borderColor="#E5E7EB";e.target.style.background="#F8FAFC";}}/>
           </div>
         </div>
 
         {err&&<div style={{background:"#FFF0F0",border:"1.5px solid #FFCDD2",borderRadius:10,padding:"7px 10px",fontSize:12,color:"#C62828",marginBottom:18,fontWeight:700,display:"flex",alignItems:"center",gap:6,animation:"slideUp .3s ease"}}><span>⚠️</span>{err}</div>}
 
-        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"15px",borderRadius:12,border:"none",background:loading?"#E0E0E0":"linear-gradient(135deg,#F5C200,#E0AD00)",color:"#1A1A1A",fontSize:13,fontWeight:800,cursor:loading?"not-allowed":"pointer",transition:"all .25s",boxShadow:loading?"none":"0 6px 20px rgba(245,194,0,.45)",letterSpacing:.3}}
-          onMouseEnter={e=>{if(!loading){e.target.style.transform="translateY(-2px)";e.target.style.boxShadow="0 8px 26px rgba(245,194,0,.55)";}}}
-          onMouseLeave={e=>{e.target.style.transform="translateY(0)";e.target.style.boxShadow=loading?"none":"0 6px 20px rgba(245,194,0,.45)";}}>
-          {loading?"⏳ Entrando...":"Entrar →"}
+        <button onClick={handle} disabled={loading} className="btn btn-primary" style={{width:"100%",padding:"14px",fontSize:14,opacity:loading?.6:1}}>
+          {loading?"Entrando...":"Entrar →"}
         </button>
 
-        <div style={{textAlign:"center",marginTop:24,fontSize:11,color:"#CCC"}}>Grupo MOV © {new Date().getFullYear()}</div>
+        <div style={{textAlign:"center",marginTop:24,fontSize:11,color:"#94A3B8"}}>Grupo MOV © {new Date().getFullYear()}</div>
       </div>
     </div>
   );
