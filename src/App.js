@@ -11,22 +11,27 @@ const db = {
     try {
       let allRows = [];
       let from = 0;
-      const pageSize = 1000; // limite padrão de linhas por requisição do Supabase — por isso paginamos
-      while(true) {
-        const to = from + pageSize - 1;
+      let total = null;
+      let guard = 0; // proteção contra loop infinito
+      while(guard++ < 200) {
+        const to = from + 999; // pede um bloco grande; o servidor limita sozinho se precisar
         const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
           cache: "no-store",
           headers: {
             "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache",
-            "Range-Unit": "items", "Range": `${from}-${to}`
+            "Range-Unit": "items", "Range": `${from}-${to}`, "Prefer": "count=exact"
           }
         });
         if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} break; }
         const rows = await res.json();
         if(!Array.isArray(rows) || rows.length===0) break;
         allRows = allRows.concat(rows);
-        if(rows.length < pageSize) break; // última página (veio menos que o tamanho da página)
-        from += pageSize;
+        // lê o total real informado pelo servidor (ex: "Content-Range: 0-499/2327") em vez de supor
+        // que "veio menos que pedi = acabou" — servidores podem limitar a página abaixo do que pedimos.
+        const cr = res.headers.get("content-range");
+        if(cr){ const m = cr.match(/\/(\d+)$/); if(m) total = parseInt(m[1]); }
+        from += rows.length;
+        if(total!==null && from>=total) break;
       }
       return allRows.map(r => r.data);
     } catch(e) { console.error("DB get error:", e); return []; }
