@@ -131,6 +131,18 @@ const autoServicoPorTecnico=(tecNome)=>{
   const found=TECNICO_SERVICO_AUTO.find(t=>n.includes(t.match));
   return found?found.servico:"";
 };
+const parseMin=h=>{
+  if(h===undefined||h===null||h==="")return 0;
+  const s=String(h).trim();
+  if(!s)return 0;
+  // formatos "H:MM" ou "H:MM:SS" (com "h" ou ":")
+  let m=s.match(/^(\d+)[hH:](\d{1,2})(?::\d{1,2})?$/);
+  if(m)return parseInt(m[1])*60+parseInt(m[2]||0);
+  // formatos decimais "1,5" ou "1.5" (horas fracionadas, vírgula ou ponto)
+  m=s.replace(",",".").match(/^(\d+(?:\.\d+)?)$/);
+  if(m)return Math.round(parseFloat(m[1])*60);
+  return 0;
+};
 const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
@@ -2903,7 +2915,6 @@ export default function App(){
         {tab==="dashboard_ofi"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
           const apMes=(apontamentos||[]).filter(a=>{
             if(!a.data)return false;
@@ -4285,7 +4296,6 @@ export default function App(){
               const corr=dashReports.filter(r=>r.atendimento==="corretivo").length;
               const totalPC=prev+corr;
               const pct=n=>totalPC?Math.round(n/totalPC*100):0;
-              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
               const regPrev=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="preventivo").length);
               const regCorr=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="corretivo").length);
@@ -4517,7 +4527,6 @@ export default function App(){
 
             {/* Horas totais do mês */}
             {(()=>{
-              const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
               const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
               const mesReps=(reports||[]).filter(r=>r&&!r.arquivado&&r.data&&r.data.startsWith(mesAtual));
               const totalMin=mesReps.reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0);
@@ -4548,7 +4557,6 @@ export default function App(){
             {/* Cards por técnico */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
               {ALL_TECHS.map(tech=>{
-                const parseMin=h=>{if(!h)return 0;const m=String(h).match(/^(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
                 const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"—";
                 const mesAtual=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
                 const techReps=(reports||[]).filter(r=>r&&!r.arquivado&&r.tecnico===tech&&r.data&&r.data.startsWith(mesAtual));
@@ -6578,7 +6586,6 @@ export default function App(){
         {tab==="dashboard_ofi_150"&&(()=>{
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfi150Year}-${String(agOfi150Month+1).padStart(2,"0")}`;
-          const parseMin=h=>{if(!h)return 0;const m=String(h).match(/(\d+)[hH:](\d+)/);return m?parseInt(m[1])*60+parseInt(m[2]||0):0;};
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
           const apMes=(apontamentos150||[]).filter(a=>{
             if(!a.data)return false;
