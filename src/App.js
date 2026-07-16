@@ -9,13 +9,26 @@ const __saveQueues={};
 const db = {
   async get(table) {
     try {
-      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
-        cache: "no-store",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache"}
-      });
-      if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} return []; }
-      const rows = await res.json();
-      return Array.isArray(rows) ? rows.map(r => r.data) : [];
+      let allRows = [];
+      let from = 0;
+      const pageSize = 1000; // limite padrão de linhas por requisição do Supabase — por isso paginamos
+      while(true) {
+        const to = from + pageSize - 1;
+        const res = await fetch(`${SUPA_URL}/rest/v1/${table}?select=*`, {
+          cache: "no-store",
+          headers: {
+            "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Cache-Control": "no-cache",
+            "Range-Unit": "items", "Range": `${from}-${to}`
+          }
+        });
+        if(!res.ok){ const t=await res.text(); console.error("DB get error:",table,res.status,t); if(!__dbErrShown&&res.status!==404){__dbErrShown=true;alert("Erro ao LER ("+table+"): "+res.status+" — "+t.slice(0,200));} break; }
+        const rows = await res.json();
+        if(!Array.isArray(rows) || rows.length===0) break;
+        allRows = allRows.concat(rows);
+        if(rows.length < pageSize) break; // última página (veio menos que o tamanho da página)
+        from += pageSize;
+      }
+      return allRows.map(r => r.data);
     } catch(e) { console.error("DB get error:", e); return []; }
   },
   save(table, id, data) {
