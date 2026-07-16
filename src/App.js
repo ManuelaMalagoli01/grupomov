@@ -333,6 +333,43 @@ const loadXLSX = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar leitor de Excel"));
   document.body.appendChild(sc);
 });
+const loadJsPDF = () => new Promise((resolve,reject)=>{
+  if(window.jspdf&&window.jspdf.jsPDF) return resolve(window.jspdf.jsPDF);
+  const sc=document.createElement("script");
+  sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  sc.onload=()=>window.jspdf&&window.jspdf.jsPDF?resolve(window.jspdf.jsPDF):reject(new Error("jsPDF não carregou"));
+  sc.onerror=()=>reject(new Error("Falha ao carregar gerador de PDF"));
+  document.body.appendChild(sc);
+});
+// Gera um PDF simples com o cabeçalho da marca + lista de campos (usado pelo botão "📄 PDF" dos cards)
+const gerarPDFCard = async (titulo, campos, subtitulo)=>{
+  try{
+    const jsPDF=await loadJsPDF();
+    const doc=new jsPDF();
+    doc.setFillColor(26,26,26); doc.rect(0,0,210,24,"F");
+    doc.setTextColor(245,194,0); doc.setFontSize(16); doc.setFont(undefined,"bold");
+    doc.text("GRUPO MOV",14,14);
+    doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,"normal");
+    doc.text("Gestão de Manutenção",14,20);
+    doc.setTextColor(26,26,26); doc.setFontSize(14); doc.setFont(undefined,"bold");
+    doc.text(String(titulo||"Documento"),14,36);
+    let y=44;
+    if(subtitulo){doc.setFontSize(10);doc.setTextColor(120,120,120);doc.setFont(undefined,"normal");doc.text(String(subtitulo),14,42);y=50;}
+    doc.setFontSize(10);
+    (campos||[]).forEach(([label,valor])=>{
+      if(y>280){doc.addPage();y=20;}
+      doc.setFont(undefined,"bold"); doc.setTextColor(90,90,90);
+      doc.text(label+":",14,y);
+      doc.setFont(undefined,"normal"); doc.setTextColor(20,20,20);
+      const lines=doc.splitTextToSize(String(valor===undefined||valor===null||valor===""?"—":valor),126);
+      doc.text(lines,68,y);
+      y+=6*Math.max(1,lines.length)+2;
+    });
+    doc.setFontSize(8); doc.setTextColor(160,160,160);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,14,290);
+    doc.save(`${String(titulo||"documento").replace(/[^a-zA-Z0-9]+/g,"_").slice(0,60)}.pdf`);
+  }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
+};
 // Mapeia rótulo de Tipo (planilha) para valor interno
 const mapTipo = label => {
   const t=(label||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -3701,6 +3738,7 @@ export default function App(){
                         {incompleto&&<span title="Faltam dados: Relatório, Nº MU ou Valor" style={{fontSize:10,fontWeight:700,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:20,padding:"3px 10px"}}>⚠ Verificar dados</span>}
                       </div>
                       <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>gerarPDFCard(`Mau Uso - ${p.empresa||"Sem Empresa"}`,[["Empresa",p.empresa],["Data",fmtDataBR(p.date)],["PAT",p.patrimonio],["Relatório",p.relatorio],["Nº Mau Uso",p.numMauUso],["Chamado",p.chamado],["Nota Débito",p.ov],["Ticket",p.ticket],["Envio Ticket",fmtDataBR(p.dataEnvioTicket)],["Data Aprovação",fmtDataBR(p.dataAprovacao)],["Valor",p.valor],["Status",st.l],["Aprovação Cliente",(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{}).l],["Aprovado",p.aprovado==="sim"?"Sim":"Não"],["Observações",p.obs]],`PAT ${p.patrimonio||"—"} · ${fmtDataBR(p.date)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:7,color:"#1A1A1A",cursor:"pointer",padding:"6px 10px",fontSize:12,fontWeight:700}}>📄 PDF</button>
                         <button onClick={()=>{setEditMU(p);setModalMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:7,color:"#FFF",cursor:"pointer",padding:"6px 10px",fontSize:12,fontWeight:600}}>✏️ Editar</button>
                         <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:7,color:"#FFF",cursor:"pointer",padding:"6px 9px",fontSize:12}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:7,color:"#FFF",cursor:"pointer",padding:"6px 9px",fontSize:12,fontWeight:600}}>✕</button>
@@ -3943,7 +3981,8 @@ export default function App(){
                         <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateSasPecas(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateSasPecas(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>{setEditSasPecas(x);setSasPecasForm({...SASPECAS_EMPTY,...x});setModalSasPecas(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11}}>✏️</button>
+                          <button onClick={()=>gerarPDFCard(`Solicitação de Peças - ${x.cliente||"Sem Cliente"}`,[["Cliente",x.cliente],["NF",x.nf],["Relatório MOV",x.relatorioMov],["Máquina",x.maquina],["Peça",x.peca],["Status",(SAS_PECAS_STATUS[x.status]||{}).l],["Data Solicitação",fmtDataBR(x.dataSolicitacao)],["AR Envio",x.arEnvio],["Previsão Recebimento",fmtDataBR(x.previsaoRecebimento)],["Data Execução",fmtDataBR(x.dataExecucao)],["Chamado",x.chamado],["Relatório",x.relatorio]],`${x.nf?`NF ${x.nf} · `:""}${fmtDataBR(x.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 6px",fontSize:11}}>📄</button>
+                          <button onClick={()=>{setEditSasPecas(x);setSasPecasForm({...SASPECAS_EMPTY,...x});setModalSasPecas(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>✏️</button>
                           <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm("Excluir esta solicitação?"))delSasPecas(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
@@ -6085,6 +6124,7 @@ export default function App(){
                       </div>
                       {_gc&&<div style={{fontSize:9,fontWeight:800,color:_gc,background:_gc+"15",borderRadius:8,padding:"2px 8px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</div>}
                       <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>gerarPDFCard(`SAS - ${s.cliente||s.nome||"Sem Cliente"}`,[["Cliente",s.cliente],["Nome",s.nome],["E-mail",s.email],["NF",s.nfNum],["Equipamento",s.equipamento],["Serviço",serv.l],["Data Solicitação",fmtDataBR(s.dataSolicitacao)],["Data Realização",fmtDataBR(s.dataRealizacao)],["Relatório MOV",s.relatorioMov],["Deslocamento",s.deslocamento],["Valor",s.valor?`R$ ${s.valor}`:""],["Status",s.status||"pendente"],["Observação",s.observacao]],`${s.nfNum?`NF ${s.nfNum} · `:""}${fmtDataBR(s.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:13}}>📄</button>
                         <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                         <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
@@ -6835,6 +6875,7 @@ export default function App(){
                               <td style={{fontSize:11,maxWidth:140,color:"#888"}}>{c.obs||"—"}</td>
                               <td style={{fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{c.registradoPor||"—"}</td>
                               <td style={{whiteSpace:"nowrap"}}>
+                                <button onClick={()=>gerarPDFCard(`Carro - ${c.placa||"Sem Placa"}`,[["Placa",c.placa],["Status",st.l],["Data",fmtDataBR(c.data)],["Responsável",c.responsavel],["KM Atual",c.kmAtual],["KM Última Revisão",c.kmUltimaRevisao],["Data Última Revisão",fmtDataBR(c.ultimaRevisaoData)],["Valor Última Revisão",c.valorUltimaRevisao],["Itens Substituídos",itensSubstLabel(c)],["Obs Itens Substituídos",c.itensSubstituidosObs],["Itens Próxima Revisão",itensProxLabel(c)],["Obs Próxima Revisão",c.itensProximaRevisaoObs],["Data Próxima Revisão",fmtDataBR(c.proximaRevisaoData)],["Oficina",c.oficina],["Requisição",c.requisicao],["Observações",c.obs]],`Placa ${c.placa||"—"}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:5,color:"#1A1A1A",cursor:"pointer",padding:"3px 7px",fontSize:13,marginRight:3}}>📄</button>
                                 <button onClick={()=>abrirEditar(c)} title="Editar" style={{background:"#F0F4FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"3px 7px",fontSize:13,marginRight:3}}>✏️</button>
                                 <button onClick={()=>updateCarro(c.id,{arquivado:!c.arquivado})} title={c.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"3px 6px",fontSize:13,marginRight:3}}>{c.arquivado?"📤":"🗄️"}</button>
                                 <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delCarro(c.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:11,fontWeight:700}}>✕</button>
