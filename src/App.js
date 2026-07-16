@@ -2968,6 +2968,7 @@ export default function App(){
                 const [y,m]=ym.split("-");
                 return <button key={ym} onClick={()=>{setAgOfiYear(Number(y));setAgOfiMonth(Number(m)-1);setDashOfiFrom("");setDashOfiTo("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
               })}
+              {dashOfiTech!=="todos"&&<button onClick={()=>setDashOfiTech("todos")} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #1A1A1A",background:"#1A1A1A",color:"#FFF",cursor:"pointer"}}>👷 Todos os técnicos</button>}
             </div>);
           })()}
 
@@ -6638,6 +6639,7 @@ export default function App(){
                 const [y,m]=ym.split("-");
                 return <button key={ym} onClick={()=>{setAgOfi150Year(Number(y));setAgOfi150Month(Number(m)-1);setDashOfi150From("");setDashOfi150To("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
               })}
+              {dashOfi150Tech!=="todos"&&<button onClick={()=>setDashOfi150Tech("todos")} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #1A1A1A",background:"#1A1A1A",color:"#FFF",cursor:"pointer"}}>👷 Todos os técnicos</button>}
             </div>);
           })()}
 
