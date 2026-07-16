@@ -42,7 +42,7 @@ const db = {
           body: JSON.stringify({id, data})
         });
         const text = await res.text();
-        if(!res.ok){ console.error("DB save error:",table,res.status,text); if(res.status!==404&&res.status!==422)alert("Erro ao SALVAR ("+table+"): "+res.status+" — "+text.slice(0,250)); return {ok:false,status:res.status,body:text}; }
+        if(!res.ok){ console.error("DB save error:",table,res.status,text); alert("❌ Erro ao SALVAR ("+table+"): "+res.status+" — "+text.slice(0,250)); return {ok:false,status:res.status,body:text}; }
         let parsed=null; try{parsed=JSON.parse(text);}catch(e){}
         return {ok:true,status:res.status,body:parsed};
       } catch(e) { console.error("DB save error:", e); alert("Erro de conexão ao salvar: "+e.message); return {ok:false,error:e.message}; }
