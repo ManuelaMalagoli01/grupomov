@@ -1072,17 +1072,17 @@ function ImportAponModal({onClose,onImport,label,oficina}){
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:22}}>
-          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Técnico, O.S, Dia, Mês, Ano, Inicial, Término, Total Hora, Nº do PAT, Modelo, Observação</b> (formato PAINEL). A data é convertida automaticamente para o padrão do sistema (AAAA-MM-DD). O campo <b>Serviço</b> é importado em branco propositalmente — insira manualmente depois, serviço por serviço, para as métricas de trabalho.</div>
+          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Técnico, O.S, Dia, Mês, Ano, Inicial, Término, Total Hora, Nº do PAT, Modelo, Observação</b> (formato PAINEL). A data é convertida automaticamente para o padrão do sistema (AAAA-MM-DD). O campo <b>Serviço</b> é preenchido automaticamente pra técnicos mapeados (Oficina 1340); os demais ficam em branco pra preenchimento manual.</div>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{marginBottom:12}}/>
-          {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo...</div>}
+          {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo planilha...</div>}
           {err&&<div style={{color:"#DC2626",fontSize:12}}>{err}</div>}
           {rows&&<div>
-            <div style={{fontSize:12,fontWeight:700,color:"#1E293B",marginBottom:8}}>{rows.length} linha(s) encontrada(s)</div>
+            <div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:8,background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:8,padding:"8px 10px"}}>✅ {rows.length} linha(s) prontas para importar — role até o fim e clique no botão amarelo abaixo</div>
             <div style={{maxHeight:200,overflowY:"auto",fontSize:10,border:"1px solid #E2E8F0",borderRadius:8,padding:8}}>
               {rows.slice(0,5).map((r,i)=><div key={i} style={{marginBottom:4,color:"#64748B"}}>{JSON.stringify(r).slice(0,120)}...</div>)}
               {rows.length>5&&<div style={{color:"#94A3B8"}}>... e mais {rows.length-5}</div>}
             </div>
-            <button onClick={doImport} style={{marginTop:12,width:"100%",padding:"10px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer"}}>Importar {rows.length} linha(s)</button>
+            <button onClick={doImport} style={{marginTop:14,width:"100%",padding:"16px",borderRadius:10,background:"#F5C200",border:"3px solid #1A1A1A",fontWeight:900,fontSize:16,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 4px 14px rgba(245,194,0,.5)",animation:"pulseUrgente 1.8s ease-in-out infinite"}}>⬇️ CLIQUE AQUI PARA IMPORTAR {rows.length} LINHA(S)</button>
           </div>}
         </div>
       </div>
