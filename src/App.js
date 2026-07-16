@@ -4284,7 +4284,7 @@ export default function App(){
               {/* Novo Atendimento */}
               {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
                 <button onClick={()=>setShowNovoAtend(true)} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)"}}>+ Novo Atendimento</button>
-                <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
+                <label style={{padding:"10px 18px",borderRadius:12,border:"none",background:"#8B5CF6",fontSize:13,cursor:"pointer",color:"#FFF",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:5,boxShadow:"0 2px 8px rgba(139,92,246,.35)"}}>
                   📄 Ler PDF
                   <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
                     const file=e.target.files[0];if(!file)return;
@@ -4373,25 +4373,24 @@ export default function App(){
                         const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:460,padding:"5px 6px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:ocupado?"#FFF8F8":isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:ocupado?"3px solid #C62828":isToday?"3px solid #F5C200":"3px solid transparent"}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"📍 ":""}{dn}</div>
-                              {ocupado&&<span style={{fontSize:8,fontWeight:800,color:"#C62828",background:"#FFF0F0",border:"1px solid #FFD0D0",borderRadius:8,padding:"1px 6px"}}>OCUPADO</span>}
+                          <div key={i} style={{minHeight:460,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent"}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"● ":""}{dn}</div>
+                              {ocupado&&<span style={{fontSize:8,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"1px 6px"}}>ocupado</span>}
                             </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
                               {shown.map((it,ii)=>{
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
                                 return(
-                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:9,padding:"4px 5px",borderRadius:5,background:color+"14",borderLeft:`3px solid ${color}`,cursor:"pointer"}}>
-                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                                      <b style={{color,fontSize:9}}>{it.tech}</b>
-                                      <span style={{fontSize:7,fontWeight:800,color:st.c,background:st.bg,borderRadius:6,padding:"1px 4px",whiteSpace:"nowrap"}}>{st.l}</span>
+                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:9.5,padding:"5px 6px",borderRadius:6,background:"#FAFBFC",borderLeft:`3px solid ${color}`,cursor:"pointer"}}>
+                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
+                                      <b style={{color:"#1A1A1A",fontSize:9.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
+                                      <span title={st.l} style={{width:6,height:6,borderRadius:"50%",background:st.c,flexShrink:0}}/>
                                     </div>
-                                    <div style={{color:"#1A1A1A",fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
-                                    {it.s.cidade&&<div style={{color:"#1565C0",fontWeight:800,fontSize:8}}>📍 {it.s.cidade}</div>}
-                                    <div style={{color:"#666",fontSize:8,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.patrimonio?`🏷️${it.s.patrimonio}`:""}{it.s.relatorio?` · Rel:${it.s.relatorio}`:""}</div>
-                                    {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#1A7A3C",fontSize:8,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>⏱ {it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"} {(it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida))&&`· Total: ${it.s.horasTrabalhadas||calcHoras(it.s.horaEntrada,it.s.horaSaida)}`}</div>}
+                                    <div style={{color:"#475569",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
+                                    {it.s.cidade&&<div style={{color:"#94A3B8",fontSize:8.5}}>{it.s.cidade}</div>}
+                                    {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#94A3B8",fontSize:8.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"}</div>}
                                   </div>
                                 );
                               })}
@@ -4405,7 +4404,7 @@ export default function App(){
                 })()}
               </div>
               {agpTech!=="todos"&&<div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,fontSize:11,color:"#888"}}>
-                <span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{width:12,height:12,borderRadius:3,background:"#FFF0F0",border:"2px solid #C62828",display:"inline-block"}}/> dias com <b>{agpTech}</b> já escalado (ocupado)</span>
+                <span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{width:12,height:12,borderRadius:3,background:"#F1F5F9",border:"2px solid #94A3B8",display:"inline-block"}}/> dias com <b>{agpTech}</b> já escalado (ocupado)</span>
               </div>}
 
               {/* Modal de detalhes do dia selecionado */}
