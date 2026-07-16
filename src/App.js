@@ -92,6 +92,21 @@ const REGIONS = {
 const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
+const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const TECNICO_SERVICO_AUTO=[
+  {match:"joao",servico:"Pintura"},
+  {match:"andre",servico:"Pintura"},
+  {match:"pedro souza",servico:"Bateria"},
+  {match:"pedro pimente",servico:"Carregador"},
+  {match:"lucio",servico:"Pequenos Reparos"},
+  {match:"davi",servico:"Pequenos Reparos"},
+];
+const autoServicoPorTecnico=(tecNome)=>{
+  const n=normalizeTec(tecNome);
+  if(!n)return "";
+  const found=TECNICO_SERVICO_AUTO.find(t=>n.includes(t.match));
+  return found?found.servico:"";
+};
 const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
@@ -930,22 +945,7 @@ function ImportAponModal({onClose,onImport,label,oficina}){
   const fileRef=useRef();
   const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
   // Automação: serviço padrão por técnico na Oficina 1340 (definido pela usuária — demais técnicos ficam em branco p/ preenchimento manual)
-  const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-  const TECNICO_SERVICO_AUTO=[
-    {match:"joao",servico:"Pintura"},
-    {match:"andre",servico:"Pintura"},
-    {match:"pedro souza",servico:"Bateria"},
-    {match:"pedro pimente",servico:"Carregador"},
-    {match:"lucio",servico:"Pequenos Reparos"},
-    {match:"davi",servico:"Pequenos Reparos"},
-  ];
-  const autoServico=(tecNome)=>{
-    if(oficina!=="1340")return "";
-    const n=normalizeTec(tecNome);
-    if(!n)return "";
-    const found=TECNICO_SERVICO_AUTO.find(t=>n.includes(t.match));
-    return found?found.servico:"";
-  };
+  const autoServico=(tecNome)=>oficina==="1340"?autoServicoPorTecnico(tecNome):"";
   const HEADER_KEYWORDS=["técnico","tecnico","o.s","os","dia","mês","mes","ano","inicial","início","inicio","termin","total","pat","observ","serviç","servic","modelo","data"];
   const scoreRow=(row)=>row.reduce((acc,cell)=>{ const s=String(cell||"").trim().toLowerCase(); if(!s)return acc; return acc+(HEADER_KEYWORDS.some(k=>s.includes(k))?1:0); },0);
   const onFile=async(f)=>{
@@ -2569,6 +2569,14 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
+                  <button onClick={()=>{
+                    const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
+                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi) foi encontrado.");return;}
+                    if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
+                      alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
+                      notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
+                    }
+                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"transparent",color:"#F5C200",fontSize:11,cursor:"pointer",fontWeight:600}}>🪄 Preencher Serviços por Técnico</button>
                   <button onClick={()=>{
                     const semServico=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico);
                     if(semServico.length===0){alert("Nenhum apontamento sem serviço encontrado.");return;}
