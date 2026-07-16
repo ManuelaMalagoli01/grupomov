@@ -3051,7 +3051,8 @@ export default function App(){
               borderSkipped:false,
             }))
           };
-          const chartOpts=(title)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
+          const fmtHoraDecimal=(v)=>{const totalMinV=Math.round(v*60);return `${Math.floor(totalMinV/60)}h${String(totalMinV%60).padStart(2,"0")}`;};
+          const chartOpts=(title)=>{const isHoras=title==="Horas";return {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${isHoras?fmtHoraDecimal(c.parsed.y):c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:isHoras?undefined:0,font:{size:11},callback:isHoras?(v)=>fmtHoraDecimal(v):undefined}}},animation:{duration:600}};};
           const chartOptsStacked=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
@@ -6720,7 +6721,8 @@ export default function App(){
               borderRadius:4,borderSkipped:false,
             }))
           };
-          const chartOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
+          const fmtHoraDecimal=(v)=>{const totalMinV=Math.round(v*60);return `${Math.floor(totalMinV/60)}h${String(totalMinV%60).padStart(2,"0")}`;};
+          const chartOpts=(title)=>{const isHoras=title==="Horas";return {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${isHoras?fmtHoraDecimal(c.parsed.y):c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:isHoras?undefined:0,font:{size:11},callback:isHoras?(v)=>fmtHoraDecimal(v):undefined}}},animation:{duration:600}};};
           const chartOptsStacked150=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
@@ -6774,7 +6776,7 @@ export default function App(){
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
               <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
-              <ChartCanvas type="bar" data={chartHoras} options={chartOpts()} height={220}/>
+              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
             </div>
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
