@@ -2188,7 +2188,7 @@ export default function App(){
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#F0F2F5;font-family:'Inter',sans-serif;}
+  body{background:#F1F4F8;font-family:'Inter',sans-serif;}
   textarea{resize:none;}
   ::-webkit-scrollbar{width:6px;height:6px;}
   ::-webkit-scrollbar-track{background:#F0F0F0;border-radius:3px;}
@@ -2202,19 +2202,19 @@ export default function App(){
   @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
   .card{
-    background:#FFFFFF;border-radius:10px;
-    box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
-    border:1px solid rgba(0,0,0,.06);
-    transition:box-shadow .2s ease;
+    background:#FFFFFF;border-radius:14px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 26px -8px rgba(15,23,42,.10);
+    border:1px solid rgba(15,23,42,.06);
+    transition:box-shadow .2s ease,transform .2s ease;
   }
-  .card:hover{box-shadow:0 2px 6px rgba(0,0,0,.06),0 8px 20px rgba(0,0,0,.07);}
+  .card:hover{box-shadow:0 2px 6px rgba(15,23,42,.06),0 16px 34px -10px rgba(15,23,42,.14);transform:translateY(-1px);}
 
-  .btn{cursor:pointer;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .18s ease;letter-spacing:0;}
-  .btn-primary{background:#F5C200;color:#1A1A1A;padding:9px 18px;box-shadow:0 2px 6px rgba(245,194,0,.3);}
-  .btn-primary:hover{background:#FFCF00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,194,0,.4);}
+  .btn{cursor:pointer;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;transition:all .18s ease;letter-spacing:0;}
+  .btn-primary{background:linear-gradient(135deg,#FFD84D,#F5C200);color:#1A1A1A;padding:9px 18px;box-shadow:0 2px 8px rgba(245,194,0,.4),0 1px 2px rgba(0,0,0,.06);}
+  .btn-primary:hover{background:linear-gradient(135deg,#FFE070,#FFCF00);transform:translateY(-1.5px);box-shadow:0 6px 16px rgba(245,194,0,.45),0 2px 4px rgba(0,0,0,.08);}
   .btn-primary:active{transform:translateY(0);}
-  .btn-ghost{background:transparent;color:#555;padding:8px 14px;border:1.5px solid #E0E0E0;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .18s;}
-  .btn-ghost:hover{background:#F5F5F5;border-color:#BDBDBD;color:#222;}
+  .btn-ghost{background:#FFF;color:#555;padding:8px 14px;border:1.5px solid #E5E7EB;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;border-radius:10px;cursor:pointer;transition:all .18s;box-shadow:0 1px 2px rgba(15,23,42,.03);}
+  .btn-ghost:hover{background:#F8FAFC;border-color:#CBD5E1;color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,23,42,.06);}
 
   .nav-tab{
     cursor:pointer;padding:9px 15px;border-radius:0;
@@ -2230,20 +2230,24 @@ export default function App(){
 
   select{
     background:#FFFFFF;color:#1A1A1A;
-    border:1.5px solid #E5E7EB;border-radius:8px;
+    border:1.5px solid #E5E7EB;border-radius:10px;
     padding:7px 10px;font-family:'Inter',sans-serif;font-size:12px;
-    cursor:pointer;outline:none;transition:border-color .15s;
+    cursor:pointer;outline:none;transition:all .15s;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
   }
+  select:hover{border-color:#CBD5E1;}
   select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
 
   input[type=text],input[type=password],input[type=date],input[type=time],textarea{
     background:#FFFFFF;color:#1A1A1A;
-    border:1.5px solid #E5E7EB;border-radius:8px;
+    border:1.5px solid #E5E7EB;border-radius:10px;
     padding:8px 11px;font-family:'Inter',sans-serif;font-size:12px;
     outline:none;transition:all .15s;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
   }
+  input:hover,textarea:hover{border-color:#CBD5E1;}
   input:focus,textarea:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.12);}
-  input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;}
+  input:disabled,select:disabled{background:#F9FAFB;color:#9CA3AF;cursor:not-allowed;box-shadow:none;}
 
   .app-topbar-scroll::-webkit-scrollbar{height:6px;}
   .app-topbar-scroll::-webkit-scrollbar-track{background:#0F172A;}
