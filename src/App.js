@@ -152,7 +152,13 @@ const parseMin=h=>{
   if(m)return Math.round(parseFloat(m[1])*60);
   return 0;
 };
-const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel"];
+const SETOR_150_TECHS=["matheus","pedro souza","pedro pimente"];
+const classificarSetor=(tecnico)=>{
+  const n=normalizeTec(tecnico);
+  if(!n)return "1340";
+  return SETOR_150_TECHS.some(t=>n.includes(t))?"150":"1340";
+};
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
@@ -1558,20 +1564,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="relatorios" l="📋 Conf. Relatórios"/>
 
         {canSee("oficinas")&&<>
-          <div style={{padding:"7px 16px 3px 22px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>🏭 Oficinas</div>
+          <div style={{padding:"7px 16px 3px 22px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>🏭 Oficina</div>
           {canSee("oficina")&&<>
-            <div style={{padding:"3px 16px 2px 28px",fontSize:9,fontWeight:600,color:"#475569"}}>Oficina 1340</div>
+            <div style={{padding:"3px 16px 2px 28px",fontSize:9,fontWeight:600,color:"#475569"}}>Geral Oficina</div>
             <SubBtn k="apontamentos_oficina" l="📝 Apontamentos"/>
             <SubBtn k="agenda_ofi" l="🗓 Agenda"/>
             <SubBtn k="dashboard_ofi" l="📊 Dashboard"/>
             {canSee("hebert")&&<SubBtn k="pendencias_hebert" l="🔧 Serviços Adm"/>}
-          </>}
-          {canSee("ofi150")&&<>
-            <div style={{padding:"3px 16px 2px 28px",fontSize:9,fontWeight:600,color:"#475569"}}>Oficina 150</div>
-            <SubBtn k="apontamentos_150" l="📝 Apontamentos"/>
-            <SubBtn k="agenda_ofi_150" l="🗓 Agenda"/>
-            <SubBtn k="dashboard_ofi_150" l="📊 Dashboard"/>
-            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm"/>}
+            {canSee("matheus")&&<SubBtn k="pendencias_matheus" l="🔧 Serviços Adm (150)"/>}
           </>}
         </>}
 
@@ -1678,6 +1678,7 @@ export default function App(){
   const [dashPatrimonio,setDashPatrimonio]=useState("");
   const [showFiltrosDash,setShowFiltrosDash]=useState(false);
   const [dashOfiTech,setDashOfiTech]=useState("todos");
+  const [dashOfiSetor,setDashOfiSetor]=useState("todos");
   const [dashOfiFrom,setDashOfiFrom]=useState("");
   const [dashOfiTo,setDashOfiTo]=useState("");
   const [dashOfi150Tech,setDashOfi150Tech]=useState("todos");
@@ -1826,6 +1827,8 @@ export default function App(){
   const [ofiNovaPat,setOfiNovaPat]=useState("");
   const [ofiNovaTech,setOfiNovaTech]=useState("todos");
   const [ofiNovaServ,setOfiNovaServ]=useState("todos");
+  const [ofiNovaSetor,setOfiNovaSetor]=useState("todos");
+  const [aponSelecionados,setAponSelecionados]=useState({});
   const [ofiNovaFrom,setOfiNovaFrom]=useState("");
   const [ofiNovaTo,setOfiNovaTo]=useState("");
   const [apontamentos,setApontamentos]=useState([]);
@@ -2584,21 +2587,65 @@ export default function App(){
         })()}
 
         {tab==="apontamentos_oficina"&&(()=>{
-          const lista=(apontamentos||[]).filter(a=>a&&(showArqApon||!a.arquivado)).filter(a=>{
+          const combinado=[
+            ...(apontamentos||[]).map(a=>a?({...a,_tabela:"apontamentos_oficina"}):a),
+            ...(apontamentos150||[]).map(a=>a?({...a,_tabela:"apontamentos_150"}):a),
+          ];
+          const lista=combinado.filter(a=>a&&(showArqApon||!a.arquivado)).filter(a=>{
             if(ofiNovaFrom&&(a.data||"")<ofiNovaFrom)return false;
             if(ofiNovaTo&&(a.data||"")>ofiNovaTo)return false;
             if(ofiNovaOS&&!(a.os||"").toLowerCase().includes(ofiNovaOS.toLowerCase()))return false;
             if(ofiNovaTech!=="todos"&&a.tecnico!==ofiNovaTech)return false;
             if(ofiNovaServ!=="todos"&&a.servico!==ofiNovaServ)return false;
+            if(ofiNovaSetor!=="todos"&&classificarSetor(a.tecnico)!==ofiNovaSetor)return false;
             return true;
           }).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+          const updateAponUnified=(a,changes)=>{
+            const tabela=a._tabela||"apontamentos_oficina";
+            if(tabela==="apontamentos_150"){
+              setApontamentos150(prev=>(prev||[]).map(r=>r.id===a.id?{...r,...changes}:r));
+              const atual=(apontamentos150||[]).find(r=>r.id===a.id)||a;
+              db.save("apontamentos_150",a.id,{...atual,...changes});
+            }else{
+              updateApon(a.id,changes);
+            }
+          };
+          const delAponUnified=(a)=>{
+            const tabela=a._tabela||"apontamentos_oficina";
+            if(tabela==="apontamentos_150"){
+              setApontamentos150(prev=>(prev||[]).filter(r=>r.id!==a.id));
+              db.delete("apontamentos_150",a.id);
+            }else{
+              delApon(a.id);
+            }
+          };
+          const idsVisiveis=lista.map(a=>a.id);
+          const qtdSelecionados=idsVisiveis.filter(id=>aponSelecionados[id]).length;
+          const toggleSelecionarTodos=()=>{
+            if(qtdSelecionados===idsVisiveis.length){
+              setAponSelecionados(prev=>{const novo={...prev};idsVisiveis.forEach(id=>delete novo[id]);return novo;});
+            }else{
+              setAponSelecionados(prev=>{const novo={...prev};idsVisiveis.forEach(id=>novo[id]=true);return novo;});
+            }
+          };
+          const excluirSelecionados=()=>{
+            const alvo=lista.filter(a=>aponSelecionados[a.id]);
+            if(alvo.length===0){alert("Nenhum apontamento selecionado.");return;}
+            if(window.confirm(`Excluir permanentemente ${alvo.length} apontamento(s) selecionado(s)? Essa ação não pode ser desfeita.`)){
+              alvo.forEach(a=>delAponUnified(a));
+              setAponSelecionados({});
+              notify(`🗑️ ${alvo.length} apontamento(s) excluído(s)!`);
+            }
+          };
           const totalMin=lista.reduce((acc,a)=>{const p=(a.total||"0:00").split(":");return acc+(parseInt(p[0]||0)*60+parseInt(p[1]||0));},0);
           const totalStr=`${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,"0")}m`;
           const inserir=()=>{
             const total=calcHoras(aponNovaInicio,aponNovaTermino);
             if(editingAponId){
               const changes={data:aponNovaData,os:aponNovaOS,patrimonio:aponNovaPat,tecnico:aponNovaTech,servico:aponNovaServ,inicio:aponNovaInicio,termino:aponNovaTermino,total,obs:aponNovaObs};
-              updateApon(editingAponId,changes);setEditingAponId(null);notify("✅ Apontamento atualizado!");
+              const original=combinado.find(a=>a&&a.id===editingAponId);
+              if(original)updateAponUnified(original,changes);else updateApon(editingAponId,changes);
+              setEditingAponId(null);notify("✅ Apontamento atualizado!");
               // Limpa filtros ativos para garantir que o registro editado continue visível na lista
               if(ofiNovaServ!=="todos")setOfiNovaServ("todos");
               if(ofiNovaTech!=="todos"&&changes.tecnico!==ofiNovaTech)setOfiNovaTech("todos");
@@ -2615,8 +2662,9 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
               <div style={{padding:"7px 10px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 1340</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
-                <div style={{display:"flex",gap:8}}>
+                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #EF4444",background:"#EF4444",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir Selecionados ({qtdSelecionados})</button>}
                   <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
                   <button onClick={()=>{
                     const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
@@ -2750,47 +2798,34 @@ export default function App(){
                 <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofiNovaTo} onChange={e=>setOfiNovaTo(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
                 <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                 <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                <select value={ofiNovaSetor} onChange={e=>setOfiNovaSetor(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",fontWeight:700}}><option value="todos">🏭 Todos os setores</option><option value="1340">Oficina 1340</option><option value="150">Oficina 150</option></select>
+                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos"||ofiNovaSetor!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");setOfiNovaSetor("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Clique em "+ Novo Apontamento" para começar</div>):(
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead><tr style={{background:"#1A1A1A"}}>
-                    {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
+                    <th style={{padding:"10px 12px",width:1}}><input type="checkbox" checked={idsVisiveis.length>0&&qtdSelecionados===idsVisiveis.length} onChange={toggleSelecionarTodos} style={{cursor:"pointer",width:15,height:15}}/></th>
+                    {["Data","OS","PAT","Setor","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {lista.map((a,idx)=>{
                       const cor=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Pintura:"#8E44AD","Pequenos Reparos":"#1A7A3C",Soldagem:"#546E7A",Usinagem:"#37474F",Carregador:"#00838F",Outros:"#888"})[a.servico]||"#555";
-                      return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
+                      const setorA=classificarSetor(a.tecnico);
+                      return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:aponSelecionados[a.id]?"#FFFBEB":a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
+                        <td style={{padding:"10px 12px"}}><input type="checkbox" checked={!!aponSelecionados[a.id]} onChange={()=>setAponSelecionados(prev=>{const novo={...prev};if(novo[a.id])delete novo[a.id];else novo[a.id]=true;return novo;})} style={{cursor:"pointer",width:15,height:15}}/></td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
                         <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
-                        
+                        <td style={{padding:"10px 12px"}}><span style={{fontSize:9,fontWeight:800,padding:"2px 8px",borderRadius:10,background:setorA==="150"?"#F3E8FF":"#EFF6FF",color:setorA==="150"?"#7C3AED":"#1565C0"}}>{setorA}</span></td>
                         <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
                         <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
                           const novoValor=e.target.value;
-                          const idAlvo=a.id;
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
-                          const merged={...a,servico:novoValor};
-                          setApontamentos(prev=>{
-                            const existe=(prev||[]).some(r=>r.id===idAlvo);
-                            return existe?(prev||[]).map(r=>r.id===idAlvo?merged:r):[...(prev||[]),merged];
-                          });
-                          const result=await db.save("apontamentos_oficina",idAlvo,merged);
-                          if(!result||!result.ok){
-                            alert(`❌ ERRO ao salvar (status ${result&&result.status}): ${JSON.stringify(result&&(result.body||result.error)).slice(0,300)}`);
-                            return;
-                          }
-                          const linhaSalva=Array.isArray(result.body)?result.body[0]:result.body;
-                          const servicoSalvo=linhaSalva&&linhaSalva.data&&linhaSalva.data.servico;
-                          if((servicoSalvo||"")===novoValor){
-                            notify(`✅ Confirmado no banco: ${novoValor||"(vazio)"}`);
-                          }else{
-                            alert(`❌ A resposta do banco não bate! ID: ${idAlvo}\nO banco confirmou salvar: "${servicoSalvo||"(vazio)"}" — mas você escolheu: "${novoValor}"\nResposta completa: ${JSON.stringify(result.body).slice(0,300)}`);
-                          }
+                          updateAponUnified(a,{servico:novoValor});
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
@@ -2799,14 +2834,14 @@ export default function App(){
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:8}}>
                           <button onClick={()=>{setAponNovaData(a.data||TODAY_STR);setAponNovaOS(a.os||"");setAponNovaPat(a.patrimonio||"");setAponNovaTech(a.tecnico||OFICINA_TECHS[0]);setAponNovaServ(a.servico||"");setAponNovaInicio(a.inicio||"");setAponNovaTermino(a.termino||"");setAponNovaObs(a.obs||"");setEditingAponId(a.id);setShowNovoApon(true);}} title="Editar" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:13}}>✏️ Editar</button>
-                          <button onClick={()=>updateApon(a.id,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm(`Excluir permanentemente o apontamento da OS ${a.os||"—"} (${fmtDataBR(a.data)})? Essa ação não pode ser desfeita.`))delApon(a.id);}} title="Excluir permanentemente" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
+                          <button onClick={()=>updateAponUnified(a,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm(`Excluir permanentemente o apontamento da OS ${a.os||"—"} (${fmtDataBR(a.data)})? Essa ação não pode ser desfeita.`))delAponUnified(a);}} title="Excluir permanentemente" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
                         </div></td>
                       </tr>);
                     })}
                   </tbody>
                   <tfoot><tr style={{background:"#1A1A1A"}}>
-                    <td colSpan={7} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
+                    <td colSpan={9} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
                     <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
                     <td colSpan={3}/>
                   </tr></tfoot>
@@ -2925,12 +2960,13 @@ export default function App(){
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agOfiYear}-${String(agOfiMonth+1).padStart(2,"0")}`;
           const fmtMin=m=>m>0?`${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`:"0h00";
-          const apMes=(apontamentos||[]).filter(a=>{
-            if(!a.data)return false;
+          const apMes=[...(apontamentos||[]),...(apontamentos150||[])].filter(a=>{
+            if(!a||!a.data)return false;
             if(dashOfiFrom&&a.data<dashOfiFrom)return false;
             if(dashOfiTo&&a.data>dashOfiTo)return false;
             if(!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym))return false;
             if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech)return false;
+            if(dashOfiSetor!=="todos"&&classificarSetor(a.tecnico)!==dashOfiSetor)return false;
             return true;
           });
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
@@ -2994,22 +3030,23 @@ export default function App(){
           {/* Cabeçalho + Filtros */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
             <div>
-              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 Dashboard Oficina 1340</div>
+              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 Dashboard Geral Oficina</div>
               <div style={{fontSize:12,color:"#888"}}>{MESES[agOfiMonth]} {agOfiYear} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_TECHS, ...(apontamentos||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
+              <select value={dashOfiSetor} onChange={e=>setDashOfiSetor(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",fontWeight:700}}><option value="todos">🏭 Todos os setores</option><option value="1340">Oficina 1340</option><option value="150">Oficina 150</option></select>
+              <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_TECHS, ...(apontamentos||[]).map(a=>a.tecnico).filter(Boolean), ...(apontamentos150||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
               <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
               <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-              {(dashOfiTech!=="todos"||dashOfiFrom||dashOfiTo)&&<BtnG onClick={()=>{setDashOfiTech("todos");setDashOfiFrom("");setDashOfiTo("");}}>✕ Limpar</BtnG>}
+              {(dashOfiTech!=="todos"||dashOfiSetor!=="todos"||dashOfiFrom||dashOfiTo)&&<BtnG onClick={()=>{setDashOfiTech("todos");setDashOfiSetor("todos");setDashOfiFrom("");setDashOfiTo("");}}>✕ Limpar</BtnG>}
             </div>
           </div>
 
           {/* Aviso: filtro sem dados */}
           {apMes.length===0&&(()=>{
-            const mesesComDados=[...new Set((apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
+            const mesesComDados=[...new Set([...(apontamentos||[]),...(apontamentos150||[])].filter(a=>a&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
             if(mesesComDados.length===0)return null;
             return(<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#FFFBEB",border:"1px solid #FDE68A",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
               <span style={{fontSize:12,color:"#92400E",fontWeight:700}}>⚠️ Nenhum apontamento em {MESES[agOfiMonth]}/{agOfiYear}{dashOfiTech!=="todos"?` para ${dashOfiTech}`:""}. Você tem dados em:</span>
