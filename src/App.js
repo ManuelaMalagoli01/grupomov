@@ -2014,14 +2014,36 @@ export default function App(){
       if(ofis.length>0) setOficina(ofis);
       if(agOfiRows.length>0){ const ao={}; agOfiRows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi(ao); }
       if(hebRows.length>0) setPendHebert(hebRows);
-      if(apRows.length>0) setApontamentos(apRows);
+      if(apRows.length>0){
+        const corrigidos=apRows.map(a=>{
+          if(a&&!a.servico){
+            const auto=autoServicoPorTecnico(a.tecnico);
+            if(auto)return {...a,servico:auto};
+          }
+          return a;
+        });
+        setApontamentos(corrigidos);
+        const paraSalvar=corrigidos.filter((a,i)=>a!==apRows[i]);
+        if(paraSalvar.length>0) db.saveBatch("apontamentos_oficina",paraSalvar);
+      }
       if(sasRows.length>0) setSas(sasRows);
       if(carrosRows.length>0) setCarros(carrosRows);
       if(opRows && opRows.length>0) setOperacoes(opRows);
       if(execMURows && execMURows.length>0) setExecMauUso(execMURows);
       if(sasPecasRows && sasPecasRows.length>0) setSasPecas(sasPecasRows);
       if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
-      if(ap150Rows.length>0) setApontamentos150(ap150Rows);
+      if(ap150Rows.length>0){
+        const corrigidos150=ap150Rows.map(a=>{
+          if(a&&!a.servico){
+            const auto=autoServicoPorTecnico(a.tecnico);
+            if(auto)return {...a,servico:auto};
+          }
+          return a;
+        });
+        setApontamentos150(corrigidos150);
+        const paraSalvar150=corrigidos150.filter((a,i)=>a!==ap150Rows[i]);
+        if(paraSalvar150.length>0) db.saveBatch("apontamentos_150",paraSalvar150);
+      }
       if(agOfi150Rows.length>0){ const ao={}; agOfi150Rows.forEach(r=>{ if(r&&r.key) ao[r.key]=r.slots||[]; else if(r&&r.id&&r.data&&r.data.key) ao[r.data.key]=r.data.slots||[]; }); setAgendaOfi150(ao); }
       if(matRows.length>0) setPendMatheus(matRows);
       if(rupRows&&rupRows.length>0) setRupturas(rupRows);
