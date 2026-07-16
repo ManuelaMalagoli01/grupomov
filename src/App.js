@@ -92,7 +92,7 @@ const REGIONS = {
 const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
-const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira"];
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
@@ -923,12 +923,29 @@ const BtnImport = ({onClick}) => (
   </button>
 );
 
-function ImportAponModal({onClose,onImport,label}){
+function ImportAponModal({onClose,onImport,label,oficina}){
   const [rows,setRows]=useState(null);
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
   const fileRef=useRef();
   const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  // Automação: serviço padrão por técnico na Oficina 1340 (definido pela usuária — demais técnicos ficam em branco p/ preenchimento manual)
+  const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+  const TECNICO_SERVICO_AUTO=[
+    {match:"joao",servico:"Pintura"},
+    {match:"andre",servico:"Pintura"},
+    {match:"pedro souza",servico:"Bateria"},
+    {match:"pedro pimente",servico:"Carregador"},
+    {match:"lucio",servico:"Pequenos Reparos"},
+    {match:"davi",servico:"Pequenos Reparos"},
+  ];
+  const autoServico=(tecNome)=>{
+    if(oficina!=="1340")return "";
+    const n=normalizeTec(tecNome);
+    if(!n)return "";
+    const found=TECNICO_SERVICO_AUTO.find(t=>n.includes(t.match));
+    return found?found.servico:"";
+  };
   const HEADER_KEYWORDS=["técnico","tecnico","o.s","os","dia","mês","mes","ano","inicial","início","inicio","termin","total","pat","observ","serviç","servic","modelo","data"];
   const scoreRow=(row)=>row.reduce((acc,cell)=>{ const s=String(cell||"").trim().toLowerCase(); if(!s)return acc; return acc+(HEADER_KEYWORDS.some(k=>s.includes(k))?1:0); },0);
   const onFile=async(f)=>{
@@ -1007,14 +1024,15 @@ function ImportAponModal({onClose,onImport,label}){
       const inicioRaw=String(pick("inicial")(o)||pick("inicio")(o)||pick("início")(o)||pick("entrada")(o)||"");
       const terminoRaw=String(pick("terminio")(o)||pick("termino")(o)||pick("término")(o)||pick("saida")(o)||"");
       const inicioT=toTime(inicioRaw),terminoT=toTime(terminoRaw);
+      const tecnicoVal=String(pick("técnico")(o)||pick("tecnico")(o)||"");
       return{
       id:"AX"+Date.now()+"_"+idxRow+"_"+Math.random().toString(36).slice(2,6),
       data:dataCalc,
       os:String(pick("o.s")(o)||pick("os")(o)||pick("ordem")(o)||""),
       patrimonio:String(pick("nº do pat")(o)||pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
-      tecnico:String(pick("técnico")(o)||pick("tecnico")(o)||""),
+      tecnico:tecnicoVal,
       modelo:String(pick("modelo")(o)||""),
-      servico:"", // deixado em branco propositalmente — inserção manual posterior (métricas de trabalho)
+      servico:autoServico(tecnicoVal), // preenchido automaticamente p/ técnicos mapeados (Oficina 1340); demais ficam em branco p/ inserção manual
       inicio:inicioT,
       termino:terminoT,
       total:toTime(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
@@ -2348,7 +2366,7 @@ export default function App(){
         {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("relatorios",d.id,d));setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_hebert",d.id,d));setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);stamp.forEach(d=>db.save("pendencias_matheus",d.id,d));setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
-        {modalImportApon&&<ImportAponModal label="Apontamentos 1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
+        {modalImportApon&&<ImportAponModal label="Apontamentos 1340" oficina="1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_oficina",d.id,d));setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalImportApon150&&<ImportAponModal label="Apontamentos 150" onClose={()=>setModalImportApon150(false)} onImport={novos=>{setApontamentos150(p=>[...novos,...(p||[])]);novos.forEach(d=>db.save("apontamentos_150",d.id,d));setModalImportApon150(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
         {modalImportAgenda&&<ImportAgendaModal onClose={()=>setModalImportAgenda(false)} onImport={novos=>{
           novos.forEach(d=>{
