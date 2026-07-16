@@ -113,7 +113,7 @@ const USERS = [
   { id:"pedro_souza_v", username:"pedro_souza.tecnico", name:"Pedro Souza",  role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda150:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
-const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem"];
+const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem","Bateria e Mecânica"];
 const CIDADES_TECNICOS = ["BH","Contagem","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba"];
 const SERVICOS_RELATORIO = [...SERVICOS_OFICINA,"Serviços Preventivos","Outros"];
 const OFICINAS_UNID = ["1340","150"];
@@ -136,6 +136,9 @@ const TECNICO_SERVICO_AUTO=[
   {match:"reginaldo",servico:"Mecânica"},
   {match:"junio",servico:"Usinagem"},
   {match:"eduardo",servico:"Mecânica"},
+  {match:"matheus",servico:"Bateria e Mecânica"},
+  {match:"hebert",servico:"Mecânica"},
+  {match:"guilherme",servico:"Mecânica"},
 ];
 const autoServicoPorTecnico=(tecNome)=>{
   const n=normalizeTec(tecNome);
@@ -2693,7 +2696,7 @@ export default function App(){
                   <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
                   <button onClick={()=>{
                     const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
-                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo) foi encontrado.");return;}
+                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo, Matheus, Hebert, Guilherme) foi encontrado.");return;}
                     if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
                       alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
                       notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
