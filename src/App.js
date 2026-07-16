@@ -159,6 +159,18 @@ const parseMin=h=>{
   return 0;
 };
 const SETOR_150_TECHS=["matheus","pedro souza","pedro pimente"];
+
+// ── COMERCIAL: opções de dropdown extraídas da planilha modelo da usuária ──
+const COM_TERMOMETRO = ["Em Análise","Em Análise 25%","Em Análise 70%","Declinada","Conversão OK"];
+const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
+const COM_EQUIPAMENTO = ["Empilhadeira a Combustão Diesel","Empilhadeira a Combustão GLP","Empilhadeira Contrapeso - Bateria Lítio","Empilhadeira Contrapeso Elétrica","Empilhadeira Patolada","Empilhadeira Patolada Manual","Empilhadeira Patolada Semi-Elétrica","Empilhadeira Retrátil","Empilhadeira Retrátil - Bateria Lítio","Paleteira Lítio","Paleteira","Paleteira com Balança e Impressora","Paleteira com Balança","Plataforma Elevatória","Rebocador","Transpaleteira Elétrica Operador a Bordo","Transpaleteira Elétrica Operador a Bordo - Bateria Lítio","Transpaleteira Elétrica Operador a Pé","Transpaleteira Elétrica Operador a Pé - Bateria Lítio","Transpaleteira Pantográfica","Lavadora de Piso","Selecionadora de Pedidos"];
+const COM_MARCA = ["SAS","MOV"];
+const COM_BATERIA = ["Chumbo","Lítio"];
+const COM_TIPO_SERVICO = ["Locação","Venda"];
+const COM_NOVO_SEMINOVO = ["Novo","Seminovo"];
+const COM_MOTIVO_PERDA = ["Cliente em Novo Projeto Comercial","Condição de Pagamento","Perdida por Preço","Perdido por Prazo de Entrega","Perdido por Indisponibilidade de Estoque"];
+const fmtBRL=(v)=>{const n=parseFloat(v);if(isNaN(n))return "R$ 0,00";return "R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});};
+const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","Em Análise 25%":"#F59E0B","Em Análise 70%":"#F97316","Declinada":"#EF4444","Conversão OK":"#22C55E"};
 const classificarSetor=(tecnico)=>{
   const n=normalizeTec(tecnico);
   if(!n)return "1340";
@@ -995,6 +1007,94 @@ const BtnImport = ({onClick}) => (
   </button>
 );
 
+function ImportComercialModal({onClose,onImport}){
+  const [rows,setRows]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const fileRef=useRef();
+  const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const toISO=(str)=>{
+    if(!str)return "";
+    str=String(str).trim();
+    const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+    const m2=str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m2)return str.slice(0,10);
+    return "";
+  };
+  const onFile=async(f)=>{
+    if(!f)return;
+    setLoading(true);setErr("");setRows(null);
+    try{
+      const XLSX=await loadXLSX();const buf=await f.arrayBuffer();const wb=XLSX.read(buf,{type:"array"});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+      const filtrado=data.filter(o=>Object.values(o).some(v=>String(v||"").trim()!==""));
+      if(filtrado.length===0){setErr("Planilha vazia ou sem dados reconhecíveis.");setLoading(false);return;}
+      setRows(filtrado);
+    }catch(e){setErr("Erro ao ler arquivo.");}
+    setLoading(false);
+  };
+  const doImport=()=>{
+    const mapped=rows.map((o,idx)=>({
+      id:"COM"+Date.now()+"_"+idx+"_"+Math.random().toString(36).slice(2,6),
+      termometro:String(pick("termômetro")(o)||pick("termometro")(o)||"Em Análise"),
+      considerarR:String(pick("considerar")(o)||"Sim"),
+      numeroProposta:String(pick("número da proposta")(o)||pick("numero da proposta")(o)||pick("proposta")(o)||""),
+      data:toISO(pick("data")(o)||""),
+      origemLead:String(pick("origem")(o)||""),
+      nomeCliente:String(pick("nome cliente")(o)||pick("cliente")(o)||""),
+      cnpj:String(pick("cnpj")(o)||""),
+      cidade:String(pick("cidade")(o)||""),
+      telefone:String(pick("telefone")(o)||""),
+      email:String(pick("e-mail")(o)||pick("email")(o)||""),
+      nomeContato:String(pick("nome contato")(o)||pick("contato")(o)||""),
+      vendedor:String(pick("vendedor")(o)||""),
+      qtd:String(pick("qtd")(o)||""),
+      equipamento:String(pick("equipamento")(o)||""),
+      marca:String(pick("marca")(o)||""),
+      modelo:String(pick("modelo")(o)||""),
+      capacidadeKg:String(pick("capacidade")(o)||""),
+      bateria:String(pick("bateria")(o)||""),
+      valor:String(pick("valor")(o)||"").replace(/[^\d,.-]/g,"").replace(",",".") ,
+      tipoServico:String(pick("tipo de serviço")(o)||pick("tipo de servico")(o)||""),
+      qtdMeses:String(pick("qtd. meses")(o)||pick("qtd meses")(o)||""),
+      novoSeminovo:String(pick("novo")(o)||""),
+      prazoEntregaDias:String(pick("prazo")(o)||""),
+      obs:String(pick("obs")(o)||""),
+      motivoPerda:String(pick("motivo")(o)||""),
+      followUp:String(pick("follow")(o)||""),
+      arquivado:false,
+    })).filter(r=>r.nomeCliente||r.numeroProposta);
+    if(mapped.length===0){setErr("Nenhuma linha com Cliente ou Nº da Proposta reconhecida.");return;}
+    onImport(mapped);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={onClose}>
+      <div className="card" style={{width:"100%",maxWidth:600,maxHeight:"85vh",overflowY:"auto",padding:0}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{color:"#F5C200",fontWeight:900,fontSize:17}}>📥 Importar Propostas (Excel)</div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:"#FFF",fontSize:18,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:22}}>
+          <div style={{fontSize:11,color:"#64748B",marginBottom:12}}>Colunas aceitas: <b>Termômetro, Considerar R$, Número da Proposta, Data, Origem do Lead, Nome Cliente, CNPJ, Cidade, Telefone, E-mail, Nome Contato, Vendedor, Qtd, Equipamento, Marca, Modelo, Capacidade, Bateria, Valor, Tipo de Serviço, Qtd. Meses, Novo/Seminovo, Prazo, Obs, Motivo da Perda, Follow-up</b> (mesmo formato da planilha modelo).</div>
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{marginBottom:12}}/>
+          {loading&&<div style={{color:"#3B82F6",fontSize:12}}>Lendo planilha...</div>}
+          {err&&<div style={{color:"#DC2626",fontSize:12}}>{err}</div>}
+          {rows&&<div>
+            <div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:8,background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:8,padding:"8px 10px"}}>✅ {rows.length} linha(s) prontas para importar — role até o fim e clique no botão amarelo abaixo</div>
+            <div style={{maxHeight:200,overflowY:"auto",fontSize:10,border:"1px solid #E2E8F0",borderRadius:8,padding:8}}>
+              {rows.slice(0,5).map((r,i)=><div key={i} style={{marginBottom:4,color:"#64748B"}}>{JSON.stringify(r).slice(0,120)}...</div>)}
+              {rows.length>5&&<div style={{color:"#94A3B8"}}>... e mais {rows.length-5}</div>}
+            </div>
+            <button onClick={doImport} style={{marginTop:14,width:"100%",padding:"16px",borderRadius:10,background:"#F5C200",border:"3px solid #1A1A1A",fontWeight:900,fontSize:16,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 4px 14px rgba(245,194,0,.5)",animation:"pulseUrgente 1.8s ease-in-out infinite"}}>⬇️ CLIQUE AQUI PARA IMPORTAR {rows.length} LINHA(S)</button>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ImportAponModal({onClose,onImport,label,oficina}){
   const [rows,setRows]=useState(null);
   const [err,setErr]=useState("");
@@ -1417,17 +1517,20 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos","sas","sas_pecas"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
+  const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "operacoes"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
   const [adminOpen,setAdminOpen]=useState(ADMIN_TABS.includes(tab));
   const [almoxOpen,setAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
+  const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab));
 
   const areaTecAtiva = AREA_TEC_TABS.includes(tab);
   const servicosAtiva = SERVICOS_TABS.includes(tab);
   const adminAtiva = ADMIN_TABS.includes(tab);
   const almoxAtiva = ALMOX_TABS.includes(tab);
+  const comercialAtiva = COMERCIAL_TABS.includes(tab);
 
   const canSee=(tipo)=>{
     if(tipo==="comercial") return user.acessoComercial||user.id==="manuela"||user.id==="gustavo";
@@ -1552,6 +1655,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
         <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
         <GroupIcon icon="📦" title="Almoxarifado" ativa={almoxAtiva} badgeCount={empAlerta} onClick={()=>{setCollapsed(false);setAlmoxOpen(true);}}/>
+        <GroupIcon icon="💼" title="Comercial" ativa={comercialAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setComercialOpen(true);}}/>
         <GroupIcon icon="🚙" title="Carros" ativa={tab==="carros"} badgeCount={0} onClick={()=>setTab("carros")}/>
       </div>
     </>
@@ -1610,6 +1714,13 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
         {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
         <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
+      </div>}
+
+      {/* COMERCIAL - ACORDEÃO (Propostas, Dashboard) */}
+      <GroupHeader label="Comercial" icon="💼" open={comercialOpen} setOpen={setComercialOpen} ativa={comercialAtiva} badgeCount={0}/>
+      {comercialOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        <SubBtn k="comercial" l="📋 Propostas"/>
+        <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
       </div>}
 
       <Btn k="carros" l="🚙 Carros"/>
@@ -1857,6 +1968,22 @@ export default function App(){
   const APON_EMPTY={data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0]||"",servico:"",inicio:"",termino:"",total:"",oficina:"1340",relatorio:"",obs:""};
   const [aponForm,setAponForm]=useState({data:TODAY_STR,os:"",patrimonio:"",tecnico:"",servico:"",inicio:"",termino:"",total:"",oficina:"1340",relatorio:"",obs:""});
   const [apontamentos150,setApontamentos150]=useState([]);
+  const [comercial,setComercial]=useState([]);
+  const [showFiltrosComercial,setShowFiltrosComercial]=useState(false);
+  const [comFiltroTermometro,setComFiltroTermometro]=useState("todos");
+  const [comFiltroOrigem,setComFiltroOrigem]=useState("todos");
+  const [comFiltroVendedor,setComFiltroVendedor]=useState("todos");
+  const [comFiltroCliente,setComFiltroCliente]=useState("");
+  const [comFiltroMes,setComFiltroMes]=useState("todos");
+  const [comFiltroAno,setComFiltroAno]=useState("todos");
+  const [showArqComercial,setShowArqComercial]=useState(false);
+  const [comSelecionados,setComSelecionados]=useState({});
+  const [modalComercial,setModalComercial]=useState(false);
+  const [editComercial,setEditComercial]=useState(null);
+  const [modalImportComercial,setModalImportComercial]=useState(false);
+  const [dashComVendedor,setDashComVendedor]=useState("todos");
+  const [dashComFrom,setDashComFrom]=useState("");
+  const [dashComTo,setDashComTo]=useState("");
   const [showArqApon150,setShowArqApon150]=useState(false);
   const [apon150NovaData,setApon150NovaData]=useState(TODAY_STR);
   const [apon150NovaOS,setApon150NovaOS]=useState("");
@@ -1996,14 +2123,15 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows, comRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
         safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas")
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas"), safeGet("comercial")
       ]);
       if(rels.length>0) setReports(rels);
+      if(comRows.length>0) setComercial(comRows);
       if(mus.length>0) setProcessosMU(mus);
       if(afs.length>0) setProcessosAF(afs);
       if(emps.length>0) setEmprestimos(emps);
@@ -6263,6 +6391,288 @@ export default function App(){
           );
         })()}
 
+
+        {tab==="comercial"&&(()=>{
+          const lblSt={fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4};
+          const inpSt={width:"100%",boxSizing:"border-box"};
+          const updateComercial=(id,changes)=>{
+            setComercial(prev=>{
+              const updated=(prev||[]).map(x=>x.id===id?{...x,...changes}:x);
+              const saved=updated.find(x=>x.id===id);
+              if(saved)db.save("comercial",id,saved);
+              return updated;
+            });
+          };
+          const COM_FORM_EMPTY={termometro:"Em Análise",considerarR:"Sim",numeroProposta:"",data:TODAY_STR,origemLead:COM_ORIGEM_LEAD[0],nomeCliente:"",cnpj:"",cidade:"",telefone:"",email:"",nomeContato:"",vendedor:"",qtd:"",equipamento:COM_EQUIPAMENTO[0],marca:COM_MARCA[0],modelo:"",capacidadeKg:"",bateria:"",valor:"",tipoServico:COM_TIPO_SERVICO[0],qtdMeses:"",novoSeminovo:COM_NOVO_SEMINOVO[0],prazoEntregaDias:"",obs:"",motivoPerda:"",followUp:""};
+          const salvarProposta=()=>{
+            const f=editComercial||COM_FORM_EMPTY;
+            if(!f.nomeCliente){alert("Preencha o Nome do Cliente.");return;}
+            if(f.id){
+              updateComercial(f.id,f);
+            }else{
+              const novo={...f,id:"COM"+Date.now(),registradoPor:user?.name||"",registradoEm:new Date().toISOString(),arquivado:false};
+              setComercial(p=>[novo,...(p||[])]);
+              db.save("comercial",novo.id,novo);
+            }
+            notify("✅ Proposta salva!");
+            setModalComercial(false);setEditComercial(null);
+          };
+          const lista=(comercial||[]).filter(c=>c&&(showArqComercial||!c.arquivado)).filter(c=>{
+            if(comFiltroTermometro!=="todos"&&c.termometro!==comFiltroTermometro)return false;
+            if(comFiltroOrigem!=="todos"&&c.origemLead!==comFiltroOrigem)return false;
+            if(comFiltroVendedor!=="todos"&&c.vendedor!==comFiltroVendedor)return false;
+            if(comFiltroCliente&&!(c.nomeCliente||"").toLowerCase().includes(comFiltroCliente.toLowerCase()))return false;
+            if(comFiltroMes!=="todos"&&(!c.data||c.data.slice(5,7)!==comFiltroMes))return false;
+            if(comFiltroAno!=="todos"&&(!c.data||c.data.slice(0,4)!==comFiltroAno))return false;
+            return true;
+          }).sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+          const vendedoresList=[...new Set((comercial||[]).map(c=>c.vendedor).filter(Boolean))].sort();
+          const valorTotal=lista.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+          const convertidas=lista.filter(c=>c.termometro==="Conversão OK").length;
+          const taxaConv=lista.length>0?((convertidas/lista.length)*100).toFixed(1):"0.0";
+          const idsVisiveis=lista.map(c=>c.id);
+          const qtdSelecionados=idsVisiveis.filter(id=>comSelecionados[id]).length;
+          const toggleSelecionarTodos=()=>{
+            if(qtdSelecionados===idsVisiveis.length){setComSelecionados(prev=>{const n={...prev};idsVisiveis.forEach(id=>delete n[id]);return n;});}
+            else{setComSelecionados(prev=>{const n={...prev};idsVisiveis.forEach(id=>n[id]=true);return n;});}
+          };
+          const excluirSelecionados=()=>{
+            const alvo=lista.filter(c=>comSelecionados[c.id]);
+            if(alvo.length===0){alert("Nenhuma proposta selecionada.");return;}
+            if(window.confirm(`Excluir permanentemente ${alvo.length} proposta(s) selecionada(s)?`)){
+              alvo.forEach(c=>{setComercial(p=>(p||[]).filter(x=>x.id!==c.id));db.delete("comercial",c.id);});
+              setComSelecionados({});
+              notify(`🗑️ ${alvo.length} proposta(s) excluída(s)!`);
+            }
+          };
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
+                <div>
+                  <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💼 Comercial — Propostas</div>
+                  <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} proposta(s) · {fmtBRL(valorTotal)} · {taxaConv}% conversão{qtdSelecionados>0?` · ${qtdSelecionados} selecionada(s)`:""}</div>
+                </div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #EF4444",background:"#EF4444",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir Selecionadas ({qtdSelecionados})</button>}
+                  <BtnImport onClick={()=>setModalImportComercial(true)}/>
+                  <BtnExcel onClick={()=>exportCSV(lista,"comercial",[
+                    {key:"termometro",label:"Termômetro da Negociação"},{key:"considerarR",label:"Considerar R$"},{key:"numeroProposta",label:"Número da Proposta"},
+                    {key:"data",label:"Data"},{key:"origemLead",label:"Origem do Lead"},{key:"nomeCliente",label:"Nome Cliente"},{key:"cnpj",label:"CNPJ"},
+                    {key:"cidade",label:"Cidade"},{key:"telefone",label:"Telefone"},{key:"email",label:"E-mail"},{key:"nomeContato",label:"Nome Contato"},
+                    {key:"vendedor",label:"Vendedor"},{key:"qtd",label:"Qtd"},{key:"equipamento",label:"Equipamento"},{key:"marca",label:"Marca"},{key:"modelo",label:"Modelo"},
+                    {key:"capacidadeKg",label:"Capacidade (Kg)"},{key:"bateria",label:"Bateria"},{key:"valor",label:"Valor"},{key:"tipoServico",label:"Tipo de Serviço"},
+                    {key:"qtdMeses",label:"Qtd. Meses"},{key:"novoSeminovo",label:"Novo/Seminovo"},{key:"prazoEntregaDias",label:"Prazo de Entrega (dias)"},
+                    {key:"obs",label:"Obs"},{key:"motivoPerda",label:"Motivo da Perda"},{key:"followUp",label:"Follow-up"}
+                  ])}/>
+                  <button onClick={()=>setShowArqComercial(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E5E7EB",background:showArqComercial?"#1A1A1A":"#FFF",color:showArqComercial?"#FFF":"#555",fontSize:12,fontWeight:700,cursor:"pointer"}}>{showArqComercial?"✓ ":""}Concluído/Arquivado</button>
+                  <button onClick={()=>{setEditComercial(null);setModalComercial(true);}} className="btn btn-primary">+ Nova Proposta</button>
+                </div>
+              </div>
+
+              {/* KPIs */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+                {[
+                  {icon:"📋",l:"Total Propostas",v:lista.length,c:"#1A1A1A"},
+                  {icon:"💰",l:"Valor Total",v:fmtBRL(valorTotal),c:"#1565C0"},
+                  {icon:"✅",l:"Convertidas",v:convertidas,c:"#22C55E"},
+                  {icon:"📈",l:"Taxa de Conversão",v:taxaConv+"%",c:"#C47D00"},
+                ].map((s,i)=>(
+                  <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:s.c,marginTop:2}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filtros */}
+              <button onClick={()=>setShowFiltrosComercial(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosComercial?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {(comFiltroTermometro!=="todos"||comFiltroOrigem!=="todos"||comFiltroVendedor!=="todos"||comFiltroCliente||comFiltroMes!=="todos"||comFiltroAno!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosComercial?"▲":"▼"}</span>
+              </button>
+              {showFiltrosComercial&&<div className="card" style={{padding:"6px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <select value={comFiltroTermometro} onChange={e=>setComFiltroTermometro(e.target.value)}><option value="todos">🌡️ Todos status</option>{COM_TERMOMETRO.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={comFiltroOrigem} onChange={e=>setComFiltroOrigem(e.target.value)}><option value="todos">Todas origens</option>{COM_ORIGEM_LEAD.map(o=><option key={o}>{o}</option>)}</select>
+                <select value={comFiltroVendedor} onChange={e=>setComFiltroVendedor(e.target.value)}><option value="todos">Todos vendedores</option>{vendedoresList.map(v=><option key={v}>{v}</option>)}</select>
+                <input type="text" value={comFiltroCliente} onChange={e=>setComFiltroCliente(e.target.value)} placeholder="🔍 Buscar cliente..." style={{minWidth:160}}/>
+                <select value={comFiltroMes} onChange={e=>setComFiltroMes(e.target.value)}><option value="todos">Todos meses</option>{MESES.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+                <select value={comFiltroAno} onChange={e=>setComFiltroAno(e.target.value)}><option value="todos">Todos anos</option>{[2025,2026,2027,2028].map(y=><option key={y} value={String(y)}>{y}</option>)}</select>
+                {(comFiltroTermometro!=="todos"||comFiltroOrigem!=="todos"||comFiltroVendedor!=="todos"||comFiltroCliente||comFiltroMes!=="todos"||comFiltroAno!=="todos")&&<button onClick={()=>{setComFiltroTermometro("todos");setComFiltroOrigem("todos");setComFiltroVendedor("todos");setComFiltroCliente("");setComFiltroMes("todos");setComFiltroAno("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>}
+
+              {/* Tabela */}
+              {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>💼</div>Clique em "+ Nova Proposta" para começar</div>):(
+                <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse"}}>
+                    <thead><tr style={{background:"#1A1A1A"}}>
+                      <th style={{padding:"10px 12px",width:1}}><input type="checkbox" checked={idsVisiveis.length>0&&qtdSelecionados===idsVisiveis.length} onChange={toggleSelecionarTodos} style={{cursor:"pointer",width:15,height:15}}/></th>
+                      {["Data","Nº Proposta","Cliente","Cidade","Vendedor","Status","Origem","Equipamento","Valor","Serviço",""].map((h,i)=>(
+                        <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>
+                      {lista.map((c,idx)=>{
+                        const corTerm=COM_TERMOMETRO_COR[c.termometro]||"#888";
+                        return(<tr key={c.id} style={{borderBottom:"1px solid #F0F0F0",background:comSelecionados[c.id]?"#FFFBEB":c.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:c.arquivado?0.55:1}}>
+                          <td style={{padding:"10px 12px"}}><input type="checkbox" checked={!!comSelecionados[c.id]} onChange={()=>setComSelecionados(prev=>{const n={...prev};if(n[c.id])delete n[c.id];else n[c.id]=true;return n;})} style={{cursor:"pointer",width:15,height:15}}/></td>
+                          <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700}}>{fmtDataBR(c.data)}</td>
+                          <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{c.numeroProposta||"—"}</td>
+                          <td style={{padding:"10px 12px",fontWeight:700}}>{c.nomeCliente||"—"}</td>
+                          <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{c.cidade||"—"}</td>
+                          <td style={{padding:"10px 12px",fontSize:12}}>{c.vendedor||"—"}</td>
+                          <td style={{padding:"10px 12px"}}><span style={{fontSize:9,fontWeight:800,padding:"3px 9px",borderRadius:20,background:corTerm+"1A",color:corTerm}}>{c.termometro||"—"}</span></td>
+                          <td style={{padding:"10px 12px",fontSize:11,color:"#666"}}>{c.origemLead||"—"}</td>
+                          <td style={{padding:"10px 12px",fontSize:11,color:"#666",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.equipamento||"—"}</td>
+                          <td style={{padding:"10px 12px",fontWeight:800,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtBRL(c.valor)}</td>
+                          <td style={{padding:"10px 12px",fontSize:11}}>{c.tipoServico||"—"}</td>
+                          <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:6}}>
+                            <button onClick={()=>{setEditComercial(c);setModalComercial(true);}} title="Editar" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:12}}>✏️</button>
+                            <button onClick={()=>{updateComercial(c.id,{arquivado:!c.arquivado});}} title={c.arquivado?"Reabrir":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{c.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm(`Excluir permanentemente a proposta de ${c.nomeCliente}?`)){setComercial(p=>(p||[]).filter(x=>x.id!==c.id));db.delete("comercial",c.id);}}} title="Excluir" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
+                          </div></td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div></div>
+              )}
+
+              {modalComercial&&(()=>{
+                const f=editComercial||COM_FORM_EMPTY;
+                const set=(k,v)=>setEditComercial({...f,[k]:v});
+                return(
+                  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>{setModalComercial(false);setEditComercial(null);}}>
+                    <div className="card" style={{width:"100%",maxWidth:760,maxHeight:"88vh",overflowY:"auto",padding:0}} onClick={e=>e.stopPropagation()}>
+                      <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{color:"#F5C200",fontWeight:900,fontSize:17}}>{f.id?"✏️ Editar Proposta":"+ Nova Proposta"}</div>
+                        <button onClick={()=>{setModalComercial(false);setEditComercial(null);}} style={{background:"transparent",border:"none",color:"#FFF",fontSize:18,cursor:"pointer"}}>✕</button>
+                      </div>
+                      <div style={{padding:22,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                        <div><label style={lblSt}>Termômetro da Negociação</label><select value={f.termometro} onChange={e=>set("termometro",e.target.value)} style={inpSt}>{COM_TERMOMETRO.map(t=><option key={t}>{t}</option>)}</select></div>
+                        <div><label style={lblSt}>Considerar R$</label><select value={f.considerarR} onChange={e=>set("considerarR",e.target.value)} style={inpSt}><option>Sim</option><option>Não</option></select></div>
+                        <div><label style={lblSt}>Nº da Proposta</label><input type="text" value={f.numeroProposta||""} onChange={e=>set("numeroProposta",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Data</label><input type="date" value={f.data||""} onChange={e=>set("data",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Origem do Lead</label><select value={f.origemLead} onChange={e=>set("origemLead",e.target.value)} style={inpSt}>{COM_ORIGEM_LEAD.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Vendedor</label><input type="text" value={f.vendedor||""} onChange={e=>set("vendedor",e.target.value)} style={inpSt}/></div>
+                        <div style={{gridColumn:"span 2"}}><label style={lblSt}>Nome do Cliente *</label><input type="text" value={f.nomeCliente||""} onChange={e=>set("nomeCliente",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>CNPJ</label><input type="text" value={f.cnpj||""} onChange={e=>set("cnpj",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Cidade</label><input type="text" value={f.cidade||""} onChange={e=>set("cidade",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Telefone</label><input type="text" value={f.telefone||""} onChange={e=>set("telefone",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>E-mail</label><input type="text" value={f.email||""} onChange={e=>set("email",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Nome do Contato</label><input type="text" value={f.nomeContato||""} onChange={e=>set("nomeContato",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Qtd</label><input type="number" value={f.qtd||""} onChange={e=>set("qtd",e.target.value)} style={inpSt}/></div>
+                        <div style={{gridColumn:"span 2"}}><label style={lblSt}>Equipamento</label><select value={f.equipamento} onChange={e=>set("equipamento",e.target.value)} style={inpSt}>{COM_EQUIPAMENTO.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Marca</label><select value={f.marca} onChange={e=>set("marca",e.target.value)} style={inpSt}>{COM_MARCA.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Modelo</label><input type="text" value={f.modelo||""} onChange={e=>set("modelo",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Capacidade (Kg)</label><input type="number" value={f.capacidadeKg||""} onChange={e=>set("capacidadeKg",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Bateria</label><select value={f.bateria||""} onChange={e=>set("bateria",e.target.value)} style={inpSt}><option value="">—</option>{COM_BATERIA.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Valor (R$)</label><input type="number" value={f.valor||""} onChange={e=>set("valor",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Tipo de Serviço</label><select value={f.tipoServico} onChange={e=>set("tipoServico",e.target.value)} style={inpSt}>{COM_TIPO_SERVICO.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Qtd. Meses</label><input type="number" value={f.qtdMeses||""} onChange={e=>set("qtdMeses",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Novo/Seminovo</label><select value={f.novoSeminovo} onChange={e=>set("novoSeminovo",e.target.value)} style={inpSt}>{COM_NOVO_SEMINOVO.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Prazo de Entrega (dias)</label><input type="number" value={f.prazoEntregaDias||""} onChange={e=>set("prazoEntregaDias",e.target.value)} style={inpSt}/></div>
+                        <div><label style={lblSt}>Motivo da Perda</label><select value={f.motivoPerda||""} onChange={e=>set("motivoPerda",e.target.value)} style={inpSt}><option value="">—</option>{COM_MOTIVO_PERDA.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div style={{gridColumn:"span 2"}}><label style={lblSt}>Follow-up</label><input type="text" value={f.followUp||""} onChange={e=>set("followUp",e.target.value)} style={inpSt}/></div>
+                        <div style={{gridColumn:"span 2"}}><label style={lblSt}>Observações</label><textarea value={f.obs||""} onChange={e=>set("obs",e.target.value)} rows={2} style={{...inpSt,resize:"vertical"}}/></div>
+                      </div>
+                      <div style={{padding:"14px 22px",borderTop:"1px solid #EEE",display:"flex",justifyContent:"flex-end",gap:10}}>
+                        <button onClick={()=>{setModalComercial(false);setEditComercial(null);}} className="btn btn-ghost">Cancelar</button>
+                        <button onClick={salvarProposta} className="btn btn-primary">💾 Salvar</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {modalImportComercial&&<ImportComercialModal onClose={()=>setModalImportComercial(false)} onImport={novos=>{setComercial(p=>[...novos,...(p||[])]);db.saveBatch("comercial",novos);setModalImportComercial(false);notify(`✅ ${novos.length} proposta(s) importada(s)!`);}}/>}
+            </div>
+          );
+        })()}
+
+        {tab==="dashboard_comercial"&&(()=>{
+          const lista=(comercial||[]).filter(c=>{
+            if(!c)return false;
+            if(dashComFrom&&(c.data||"")<dashComFrom)return false;
+            if(dashComTo&&(c.data||"")>dashComTo)return false;
+            if(dashComVendedor!=="todos"&&c.vendedor!==dashComVendedor)return false;
+            return true;
+          });
+          const vendedoresList=[...new Set((comercial||[]).map(c=>c.vendedor).filter(Boolean))].sort();
+          const valorTotal=lista.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+          const convertidas=lista.filter(c=>c.termometro==="Conversão OK");
+          const valorConvertido=convertidas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+          const taxaConv=lista.length>0?((convertidas.length/lista.length)*100).toFixed(1):"0.0";
+
+          const porTermometro=COM_TERMOMETRO.map(t=>lista.filter(c=>c.termometro===t).length);
+          const chartFunil={labels:COM_TERMOMETRO,datasets:[{label:"Propostas",data:porTermometro,backgroundColor:COM_TERMOMETRO.map(t=>COM_TERMOMETRO_COR[t]),borderRadius:6}]};
+
+          const origensAtivas=[...new Set(lista.map(c=>c.origemLead).filter(Boolean))];
+          const chartOrigem={labels:origensAtivas,datasets:[{data:origensAtivas.map(o=>lista.filter(c=>c.origemLead===o).length),backgroundColor:origensAtivas.map((_,i)=>["#1565C0","#F5C200","#22C55E","#EF4444","#8E44AD","#F97316","#00838F"][i%7])}]};
+
+          const porVendedor={};vendedoresList.forEach(v=>{porVendedor[v]=lista.filter(c=>c.vendedor===v).reduce((s,c)=>s+(parseFloat(c.valor)||0),0);});
+          const vendedoresOrdenados=[...vendedoresList].sort((a,b)=>porVendedor[b]-porVendedor[a]);
+          const chartVendedor={labels:vendedoresOrdenados,datasets:[{label:"Valor (R$)",data:vendedoresOrdenados.map(v=>porVendedor[v]),backgroundColor:"#1565C0",borderRadius:6}]};
+
+          const motivosAtivos=[...new Set(lista.filter(c=>c.termometro==="Declinada").map(c=>c.motivoPerda).filter(Boolean))];
+          const chartMotivo={labels:motivosAtivos,datasets:[{label:"Perdas",data:motivosAtivos.map(m=>lista.filter(c=>c.motivoPerda===m).length),backgroundColor:"#EF4444",borderRadius:6}]};
+
+          const chartOptsBase={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}};
+          const chartOptsPie={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:10}}},animation:{duration:600}};
+
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:12}}>
+                <div>
+                  <div style={{fontWeight:900,fontSize:24}}>📊 Dashboard Comercial</div>
+                  <div style={{fontSize:12,color:"#888"}}>{lista.length} proposta(s)</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <select value={dashComVendedor} onChange={e=>setDashComVendedor(e.target.value)}><option value="todos">👤 Todos vendedores</option>{vendedoresList.map(v=><option key={v}>{v}</option>)}</select>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashComFrom} onChange={e=>setDashComFrom(e.target.value)}/></div>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashComTo} onChange={e=>setDashComTo(e.target.value)}/></div>
+                  {(dashComVendedor!=="todos"||dashComFrom||dashComTo)&&<BtnG onClick={()=>{setDashComVendedor("todos");setDashComFrom("");setDashComTo("");}}>✕ Limpar</BtnG>}
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+                {[
+                  {icon:"📋",l:"Total Propostas",v:lista.length,c:"#1A1A1A"},
+                  {icon:"💰",l:"Valor Total",v:fmtBRL(valorTotal),c:"#1565C0"},
+                  {icon:"✅",l:"Valor Convertido",v:fmtBRL(valorConvertido),c:"#22C55E"},
+                  {icon:"📈",l:"Taxa de Conversão",v:taxaConv+"%",c:"#C47D00"},
+                ].map((s,i)=>(
+                  <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:s.c,marginTop:2}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                <div className="card" style={{padding:18}}>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🌡️ Funil da Negociação</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Propostas por estágio</div>
+                  <ChartCanvas type="bar" data={chartFunil} options={chartOptsBase} height={220}/>
+                </div>
+                <div className="card" style={{padding:18}}>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📡 Origem do Lead</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Distribuição por canal</div>
+                  <ChartCanvas type="doughnut" data={chartOrigem} options={chartOptsPie} height={220}/>
+                </div>
+                <div className="card" style={{padding:18}}>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>👤 Valor por Vendedor</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Soma do valor das propostas</div>
+                  <ChartCanvas type="bar" data={chartVendedor} options={chartOptsBase} height={220}/>
+                </div>
+                <div className="card" style={{padding:18}}>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>❌ Motivo da Perda</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Somente propostas declinadas</div>
+                  {motivosAtivos.length>0?<ChartCanvas type="bar" data={chartMotivo} options={chartOptsBase} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem perdas registradas</div>}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {tab==="carros"&&(()=>{
           const CARRO_FORM_EMPTY={placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""};
