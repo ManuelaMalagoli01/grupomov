@@ -3925,9 +3925,9 @@ export default function App(){
                         <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateExecMU(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateExecMU(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>{setEditExecMU(x);setExecMUForm({...EXECMU_EMPTY,...x});setModalExecMU(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11}}>✏️</button>
-                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
+                          <button onClick={()=>{setEditExecMU(x);setExecMUForm({...EXECMU_EMPTY,...x});setModalExecMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
+                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
                       </tr>
                     );})}</tbody>
@@ -4066,75 +4066,77 @@ export default function App(){
           };
           const listaFil=lista.filter(applyFilter);
           const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
+          const ST_SOLID={pendente:"#B45309",em_andamento:"#1D4E89",concluido:"#14532D",arquivado:"#616161"};
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💰 A Faturar {showArqAF&&<span style={{fontSize:12,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:8,color:"#888",marginTop:2}}>{showArqAF?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 A Faturar {showArqAF&&<span style={{fontSize:11,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{showArqAF?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportAF2(true)}/>
-                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:8,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
+                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:16}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Em Andamento",v:andamento,c:"#1565C0",bg:"#EFF6FF",i:"🔄"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Aprovados",v:aprov,c:"#6A1B9A",bg:"#F3E5F5",i:"👍"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A"},{l:"Pendentes",v:pend,c:"#B45309"},{l:"Em Andamento",v:andamento,c:"#1565C0"},{l:"Concluídos",v:conc,c:"#1A7A3C"},{l:"Aprovados",v:aprov,c:"#6A1B9A"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            {valorTotal>0&&<div className="card" style={{padding:"7px 20px",marginBottom:18,background:"linear-gradient(90deg,#1A7A3C,#2e9e57)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
+            {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:18,borderLeft:"4px solid #14532D",display:"flex",alignItems:"center",gap:12}}>
               <div style={{fontSize:24}}>💵</div>
-              <div><div style={{fontSize:8,fontWeight:700,opacity:.8,textTransform:"uppercase",letterSpacing:1}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+              <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900,color:"#14532D"}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
             </div>}
-            <div className="card" style={{padding:"3px 5px",marginBottom:14,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:8}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, OV..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:8,borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:8,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:8,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={afMes} onChange={e=>setAfMes(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={afAno} onChange={e=>setAfAno(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              <select value={afAprov} onChange={e=>setAfAprov(e.target.value)} style={{fontSize:8,padding:"3px 5px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Status Aprovação: Todos</option>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
-              {(afSearch||afFrom||afTo||afMes||afAno||(afAprov&&afAprov!=="todos"))&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');setAfAprov('todos');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:8,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            <div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, OV..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)}/></div>
+              <select value={afMes} onChange={e=>setAfMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={afAno} onChange={e=>setAfAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              <select value={afAprov} onChange={e=>setAfAprov(e.target.value)}><option value="todos">Status Aprovação: Todos</option>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
+              {(afSearch||afFrom||afTo||afMes||afAno||(afAprov&&afAprov!=="todos"))&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');setAfAprov('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>💰</div><div style={{fontSize:8,fontWeight:600}}>{afSearch||afFrom||afTo||afMes||afAno?"Nenhum resultado":"Nenhum processo"}</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>💰</div><div style={{fontSize:12,fontWeight:600}}>{afSearch||afFrom||afTo||afMes||afAno?"Nenhum resultado":"Nenhum processo"}</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))",gap:14}}>
                 {listaFil.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
+                  const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
                   const slaD=p.date?diffDays(p.date):null;
-                  return(<div key={p.id} className="card" style={{borderTop:`4px solid ${st.c}`,padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1}}>
-                    <div style={{padding:"7px 10px",background:st.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:3,alignItems:"center"}}>
-                        <span style={{fontSize:8,fontWeight:800,color:st.c,background:"#FFF",border:`1px solid ${st.c}33`,borderRadius:20,padding:"2px 10px"}}>{st.l}</span>
-                        {slaD!==null&&<span style={{fontSize:8,fontWeight:700,color:slaD>10?"#C62828":slaD>5?"#E67E00":"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 8px"}}>⏱ {slaD}d</span>}
+                  const urgente=slaD!==null&&slaD>10&&p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
+                  return(<div key={p.id} className="card" style={{padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,border:urgente?"1.5px solid #C62828":undefined,animation:urgente?"pulseUrgente 2s ease-in-out infinite":undefined}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
+                        {urgente&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
                       </div>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{setEditAF(p);setModalAF(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:8}}>✏️</button>
-                        <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:8}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:8,fontWeight:600}}>✕</button>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"3px 5px",display:"flex",flexDirection:"column",gap:4}}>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:8,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:8,color:"#888"}}>📅 {fmtDataBR(p.date)} · PAT: <b>{p.patrimonio||"—"}</b></div></div>
-                        <span style={{fontSize:8,fontWeight:600,color:p.aprovado==="sim"?"#1A7A3C":"#C62828",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:8,padding:"3px 10px"}}>{p.aprovado==="sim"?"✅ Aprovado":"❌ Não"}</span>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(p.date)} · PAT {p.patrimonio||"—"}</div></div>
+                        <span style={{fontSize:10,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:8,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:8,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:8,fontWeight:800,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"3px 5px"}}><div style={{color:"#AAA",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Serviço Exec.</div><select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:8,fontWeight:700,color:p.servicoExecutado==="sim"?"#1A7A3C":"#888",border:"none",background:"transparent",outline:"none",cursor:"pointer",padding:0}}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Serviço Executado</div><select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:600,color:p.servicoExecutado==="sim"?"#1A7A3C":"#64748B"}}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
                       </div>
-                      {p.obs&&<div style={{fontSize:8,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
-                      <div style={{borderTop:"1px solid #F0F0F0",paddingTop:8}}>
-                        <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:5}}>Status Aprovação Cliente</div>
-                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateAF(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:8,padding:"3px 5px",borderRadius:6,border:`1.5px solid ${(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00")}66`,color:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.c||"#E67E00",background:APROV_STATUS[p.aprovCliente||"aguardando_retorno"]?.bg||"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
+                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{p.obs}</div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateAF(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
                           {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                         </select>
+                        <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
+                          <option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
+                        </select>
                       </div>
-                      <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{fontSize:8,padding:"6px 10px",borderRadius:20,border:`1px solid ${st.c}44`,color:st.c,background:st.bg,fontWeight:700,cursor:"pointer"}}>
-                        <option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
-                      </select>
                     </div>
                   </div>);
                 })}
