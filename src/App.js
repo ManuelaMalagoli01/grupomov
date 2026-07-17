@@ -2667,7 +2667,7 @@ export default function App(){
           const lista=(reports||[]).filter(r=>r&&(showArqRel?r.arquivado:!r.arquivado)).filter(matchFiltrosSecundarios)
             .sort((a,b)=>(b.data||b.dataAtendimento||"").localeCompare(a.data||a.dataAtendimento||""));
           const todosFiltrados=(reports||[]).filter(r=>r&&matchFiltrosSecundarios(r)); // ignora o alternador ativos/arquivados - usado nos KPIs de contagem geral
-          const totalConc=todosFiltrados.filter(r=>r.arquivado||(r.status||"").includes("concluida")).length;
+          const totalConc=todosFiltrados.filter(r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar").length;
           const totalPend=lista.filter(r=>(r.status||"").includes("pendente_pecas")).length;
           const totalCorr=lista.filter(r=>r.atendimento==="corretivo").length;
           const alertasCalc=lista.map(r=>analisarAlertaPreventivo(r));
@@ -2728,28 +2728,14 @@ export default function App(){
             </div>
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},{l:"Mau Uso",v:totalMauUso,c:"#C47D00",bg:"#FFFBF0",i:"⚠️"},{l:"A Faturar",v:totalAFaturar,c:"#00838F",bg:"#E0F7FA",i:"💰"}].map((k,i)=>(
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅",sub:(totalMauUso>0||totalAFaturar>0)?`${totalMauUso} mau uso · ${totalAFaturar} a faturar`:null}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                  {k.sub&&<div style={{fontSize:8,color:"#94A3B8",marginTop:2}}>{k.sub}</div>}
                 </div>
               ))}
             </div>
-
-            {/* Mini dashboard: Mau Uso x A Faturar */}
-            {(totalMauUso>0||totalAFaturar>0)&&<div className="card" style={{padding:16,marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1.6fr",gap:16,alignItems:"center"}}>
-              <div>
-                <div style={{fontWeight:800,fontSize:13,marginBottom:2}}>📊 Mau Uso × A Faturar</div>
-                <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Relatórios classificados em cada situação (dentro do filtro atual)</div>
-                <div style={{display:"flex",gap:16}}>
-                  <div><div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Mau Uso</div><div style={{fontSize:22,fontWeight:900,color:"#C47D00"}}>{totalMauUso}</div></div>
-                  <div><div style={{fontSize:9,fontWeight:700,color:"#00838F",textTransform:"uppercase"}}>A Faturar</div><div style={{fontSize:22,fontWeight:900,color:"#00838F"}}>{totalAFaturar}</div></div>
-                </div>
-              </div>
-              <div style={{height:130}}>
-                <ChartCanvas type="bar" data={{labels:["Mau Uso","A Faturar"],datasets:[{data:[totalMauUso,totalAFaturar],backgroundColor:["#C47D00","#00838F"],borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}}}} height={130}/>
-              </div>
-            </div>}
 
             {/* Filtros */}
             <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -4635,7 +4621,9 @@ export default function App(){
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
-              const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida");
+              const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar";
+              const totalMauUso=dashReports.filter(r=>r.status==="mau_uso").length;
+              const totalAFaturar=dashReports.filter(r=>r.status==="a_faturar").length;
               const concPrev=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="preventivo").length;
               const concCorr=dashReports.filter(r=>isConcluido(r)&&r.atendimento==="corretivo").length;
               const techHorasPrev=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="preventivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
@@ -4712,6 +4700,12 @@ export default function App(){
                         data={{labels:techsWith,datasets:[{label:"Preventiva",data:techHorasPrev,backgroundColor:BLU,borderRadius:{topLeft:8,topRight:8},borderSkipped:false,barPercentage:.7,categoryPercentage:.65},{label:"Corretiva",data:techHorasCorr,backgroundColor:RED,borderRadius:{topLeft:8,topRight:8},borderSkipped:false,barPercentage:.7,categoryPercentage:.65}]}}
                         options={{indexAxis:"x",maintainAspectRatio:false,plugins:{legend:{position:"top",align:"end",labels:{font:{size:11,weight:"600"},boxWidth:12,usePointStyle:true,pointStyle:"circle"}},tooltip:{backgroundColor:"#0F172A",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:12,cornerRadius:10,callbacks:{label:c=>`${c.dataset.label}: ${c.raw} h`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10,weight:"600"}}},y:{beginAtZero:true,grid:{color:"#F1F5F9"},ticks:{font:{size:10}}}}}}/></div></div>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
+                    {(totalMauUso>0||totalAFaturar>0)&&<div className="card" style={{padding:"8px 12px"}}>
+                      <div style={chartTitle}>Mau Uso × A Faturar</div>
+                      <ChartCanvas type="bar" height={200}
+                        data={{labels:["Mau Uso","A Faturar"],datasets:[{data:[totalMauUso,totalAFaturar],backgroundColor:["#C47D00","#00838F"],borderRadius:6}]}}
+                        options={{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F1F5F9"},ticks:{precision:0,font:{size:11}}}}}}/>
+                    </div>}
                   </div>
                   {/* Gráfico Tipo de Serviço x Técnico */}
                   {techsWith.length>0&&(()=>{
