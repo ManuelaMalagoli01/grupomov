@@ -1906,7 +1906,7 @@ export default function App(){
   const [froSearch,setFroSearch]=useState(""); const [froFrom,setFroFrom]=useState(""); const [froTo,setFroTo]=useState(""); const [froMes,setFroMes]=useState(""); const [froAno,setFroAno]=useState("");
   const [rhSearch,setRhSearch]=useState(""); const [rhFrom,setRhFrom]=useState(""); const [rhTo,setRhTo]=useState(""); const [rhMes,setRhMes]=useState(""); const [rhAno,setRhAno]=useState("");
   const [uberSearch,setUberSearch]=useState(""); const [uberFrom,setUberFrom]=useState(""); const [uberTo,setUberTo]=useState(""); const [uberMes,setUberMes]=useState(""); const [uberAno,setUberAno]=useState("");
-  const [sasSearch,setSasSearch]=useState(""); const [sasFrom,setSasFrom]=useState(""); const [sasTo,setSasTo]=useState(""); const [sasMes,setSasMes]=useState(""); const [sasAno,setSasAno]=useState("");
+  const [sasSearch,setSasSearch]=useState(""); const [sasFrom,setSasFrom]=useState(""); const [sasTo,setSasTo]=useState(""); const [sasMes,setSasMes]=useState(""); const [sasAno,setSasAno]=useState(""); const [showFiltrosSas,setShowFiltrosSas]=useState(false);
   const [showArqReq,setShowArqReq]=useState(false);
   const [uberPedidos,setUberPedidos]=useState([]);
   const [showArqUber,setShowArqUber]=useState(false);
@@ -6153,14 +6153,20 @@ export default function App(){
                 </div>
               ))}
             </div>
-            <div className="card" style={{padding:"5px 8px",marginBottom:14,display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={sasSearch} onChange={e=>setSasSearch(e.target.value)} placeholder="Buscar cliente, equipamento, NF, relatório..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={sasFrom} onChange={e=>setSasFrom(e.target.value)} style={{fontSize:10,padding:"5px 8px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={sasTo} onChange={e=>setSasTo(e.target.value)} style={{fontSize:10,padding:"5px 8px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={sasMes} onChange={e=>setSasMes(e.target.value)} style={{fontSize:10,padding:"5px 8px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={sasAno} onChange={e=>setSasAno(e.target.value)} style={{fontSize:10,padding:"5px 8px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
+            <button onClick={()=>setShowFiltrosSas(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosSas?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:11}}>🔍</span>
+              <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosSas?"▲":"▼"}</span>
+            </button>
+            {showFiltrosSas&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={sasSearch} onChange={e=>setSasSearch(e.target.value)} placeholder="Buscar cliente, equipamento, NF, relatório..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={sasFrom} onChange={e=>setSasFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={sasTo} onChange={e=>setSasTo(e.target.value)}/></div>
+              <select value={sasMes} onChange={e=>setSasMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={sasAno} onChange={e=>setSasAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>}
             {/* ── SAS DASHBOARD ── */}
             {(()=>{
               const total=listaFil.length;
