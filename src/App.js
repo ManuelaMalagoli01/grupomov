@@ -2661,6 +2661,8 @@ export default function App(){
           const totalUrgente=alertasCalc.filter(a=>a&&a.level==="urgente").length;
           const totalModerado=alertasCalc.filter(a=>a&&a.level==="moderado").length;
           const totalSemPendencia=alertasCalc.filter(a=>a&&a.level==="ok").length;
+          const totalMauUso=todosFiltrados.filter(r=>r.status==="mau_uso").length;
+          const totalAFaturar=todosFiltrados.filter(r=>r.status==="a_faturar").length;
 
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Header */}
@@ -2713,13 +2715,29 @@ export default function App(){
             </div>
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"}].map((k,i)=>(
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅"},{l:"Mau Uso",v:totalMauUso,c:"#C47D00",bg:"#FFFBF0",i:"⚠️"},{l:"A Faturar",v:totalAFaturar,c:"#00838F",bg:"#E0F7FA",i:"💰"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
                   <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
                   <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
+
+            {/* Mini dashboard: Mau Uso x A Faturar */}
+            {(totalMauUso>0||totalAFaturar>0)&&<div className="card" style={{padding:16,marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1.6fr",gap:16,alignItems:"center"}}>
+              <div>
+                <div style={{fontWeight:800,fontSize:13,marginBottom:2}}>📊 Mau Uso × A Faturar</div>
+                <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Relatórios classificados em cada situação (dentro do filtro atual)</div>
+                <div style={{display:"flex",gap:16}}>
+                  <div><div style={{fontSize:9,fontWeight:700,color:"#C47D00",textTransform:"uppercase"}}>Mau Uso</div><div style={{fontSize:22,fontWeight:900,color:"#C47D00"}}>{totalMauUso}</div></div>
+                  <div><div style={{fontSize:9,fontWeight:700,color:"#00838F",textTransform:"uppercase"}}>A Faturar</div><div style={{fontSize:22,fontWeight:900,color:"#00838F"}}>{totalAFaturar}</div></div>
+                </div>
+              </div>
+              <div style={{height:130}}>
+                <ChartCanvas type="bar" data={{labels:["Mau Uso","A Faturar"],datasets:[{data:[totalMauUso,totalAFaturar],backgroundColor:["#C47D00","#00838F"],borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}}}} height={130}/>
+              </div>
+            </div>}
+
             {/* Filtros */}
             <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
               <span style={{fontSize:11}}>🔍</span>
