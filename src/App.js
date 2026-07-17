@@ -4953,58 +4953,59 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
+          const ST_SOLID_UBER={pendente:"#B45309",concluido:"#14532D",cancelado:"#7C2D2D"};
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🚗 Uber / Transporte</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} pedido(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🚗 Uber / Transporte</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} pedido(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"uber_grupomov",[{key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"endereco",label:"Endereço"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnY onClick={()=>{setUberEdit({data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:""});setUberModal(true);}}>+ Novo Pedido</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:i===3?18:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A"},{l:"Pendentes",v:pend,c:"#B45309"},{l:"Concluídos",v:conc,c:"#1A7A3C"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:i===3?18:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={uberSearch} onChange={e=>setUberSearch(e.target.value)} placeholder="Buscar solicitante, empresa, motivo..." style={{width:"100%",padding:"8px 10px 8px 28px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={uberFrom} onChange={e=>setUberFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={uberTo} onChange={e=>setUberTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={uberMes} onChange={e=>setUberMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={uberAno} onChange={e=>setUberAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(uberSearch||uberFrom||uberTo||uberMes||uberAno)&&<button onClick={()=>{setUberSearch('');setUberFrom('');setUberTo('');setUberMes('');setUberAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            <div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={uberSearch} onChange={e=>setUberSearch(e.target.value)} placeholder="Buscar solicitante, empresa, motivo..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={uberFrom} onChange={e=>setUberFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={uberTo} onChange={e=>setUberTo(e.target.value)}/></div>
+              <select value={uberMes} onChange={e=>setUberMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={uberAno} onChange={e=>setUberAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(uberSearch||uberFrom||uberTo||uberMes||uberAno)&&<button onClick={()=>{setUberSearch('');setUberFrom('');setUberTo('');setUberMes('');setUberAno('');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚗</div><div style={{fontSize:15,fontWeight:600}}>Nenhum pedido</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚗</div><div style={{fontSize:12,fontWeight:600}}>Nenhum pedido</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {listaFil.map(p=>{
-                  const ok=p.status==="concluido";
-                  return(<div key={p.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":"#E67E00"}`,padding:0,overflow:"hidden",opacity:p.arquivado?0.55:1}}>
-                    <div style={{padding:"7px 10px",background:ok?"#F0FFF5":"#FFF8F0",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <select value={p.status||"pendente"} onChange={e=>updateUber(p.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":"#E67E00",background:"#FFF",cursor:"pointer"}}>
-                        <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="cancelado">❌ Cancelado</option>
+                  const stSolid=ST_SOLID_UBER[p.status||"pendente"]||ST_SOLID_UBER.pendente;
+                  return(<div key={p.id} className="card" style={{padding:0,overflow:"hidden",opacity:p.arquivado?0.55:1}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <select value={p.status||"pendente"} onChange={e=>updateUber(p.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:"#FFF",background:stSolid,cursor:"pointer"}}>
+                        <option value="pendente">Pendente</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option>
                       </select>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{setUberEdit(p);setUberModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{p.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>{setUberEdit(p);setUberModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>updateUber(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{p.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delUber(p.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {p.data||"—"} · <b>{p.empresa||"—"}</b></div></div>
-                        <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{p.data||"—"} · {p.empresa||"—"}</div></div>
+                        <div style={{fontSize:16,fontWeight:900,color:"#14532D"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Motivo</div><input type="text" value={p.motivo||""} onChange={e=>updateUber(p.id,{motivo:e.target.value})} placeholder="Motivo" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Relatório</div><div style={{fontSize:11,fontWeight:700}}>{p.patrimonio||"—"} {p.relatorio&&<span style={{color:"#1565C0"}}>· {p.relatorio}</span>}</div></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Motivo</div><input type="text" value={p.motivo||""} onChange={e=>updateUber(p.id,{motivo:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>PAT · Relatório</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{p.patrimonio||"—"}{p.relatorio&&` · ${p.relatorio}`}</div></div>
                       </div>
-                      {p.endereco&&<div style={{fontSize:11,color:"#555",background:"#F8F9FA",borderRadius:8,padding:"6px 10px"}}>📍 {p.endereco}</div>}
-                      {p.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {p.obs}</div>}
-                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{p.registradoPor||""}</div>
+                      {p.endereco&&<div style={{fontSize:11,color:"#64748B",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>📍 {p.endereco}</div>}
+                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic"}}>{p.obs}</div>}
+                      <div style={{fontSize:10,color:"#CBD5E1",textAlign:"right"}}>{p.registradoPor||""}</div>
                     </div>
                   </div>);
                 })}
@@ -5032,70 +5033,66 @@ export default function App(){
           const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>💳 Financeiro</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} lançamento(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💳 Financeiro</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} lançamento(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFin?"#1A1A1A":"#FFF",color:showArqFin?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFin?"Ocultar":"Arquivados"}</button>
+                <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFin?"#1A1A1A":"#FFF",color:showArqFin?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFin?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"PAT"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Dt Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Vl Reembolso"}])}/>
                 <BtnY onClick={()=>{setFinEdit({data:TODAY_STR,ticket:"",solicitacao:"combustivel",tecnico:ALL_TECHS[0],atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",obs:""});setFinModalOpen(true);}}>+ Novo Lançamento</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Pagos",v:pago,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Sem Acerto",v:semAcerto,c:"#E67E00",bg:"#FFF8F0",i:"⚠️"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:19,fontWeight:800,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A"},{l:"Pendentes",v:pend,c:"#B45309"},{l:"Pagos",v:pago,c:"#1A7A3C"},{l:"Sem Acerto",v:semAcerto,c:"#B45309"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                 </div>
               ))}
             </div>
-            {totalVal>0&&<div className="card" style={{padding:"12px 20px",marginBottom:16,background:"linear-gradient(90deg,#1565C0,#1976D2)",color:"#FFF",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{fontSize:22}}>💵</div><div><div style={{fontSize:10,fontWeight:700,opacity:.8,textTransform:"uppercase"}}>Total em Lançamentos</div><div style={{fontSize:20,fontWeight:900}}>R$ {totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
+            {totalVal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:18,borderLeft:"4px solid #1D4E89",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:22}}>💵</div><div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Total em Lançamentos</div><div style={{fontSize:20,fontWeight:900,color:"#1D4E89"}}>R$ {totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
             </div>}
-                        <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={finSearch} onChange={e=>setFinSearch(e.target.value)} placeholder="Buscar técnico, ticket, atendimento, PAT..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={finFrom} onChange={e=>setFinFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={finTo} onChange={e=>setFinTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={finMes} onChange={e=>setFinMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={finAno} onChange={e=>setFinAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(finSearch||finFrom||finTo||finMes||finAno)&&<button onClick={()=>{setFinSearch('');setFinFrom('');setFinTo('');setFinMes('');setFinAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            <div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={finSearch} onChange={e=>setFinSearch(e.target.value)} placeholder="Buscar técnico, ticket, atendimento, PAT..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={finFrom} onChange={e=>setFinFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={finTo} onChange={e=>setFinTo(e.target.value)}/></div>
+              <select value={finMes} onChange={e=>setFinMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+              <select value={finAno} onChange={e=>setFinAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+              {(finSearch||finFrom||finTo||finMes||finAno)&&<button onClick={()=>{setFinSearch('');setFinFrom('');setFinTo('');setFinMes('');setFinAno('');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:15,fontWeight:600}}>Nenhum lançamento</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💳</div><div style={{fontSize:12,fontWeight:600}}>Nenhum lançamento</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {listaFil.map(f=>{
                   const sol=SOL[f.solicitacao||"outros"]||SOL.outros;
                   const pago=f.situacao==="pago";
-                  return(<div key={f.id} className="card" style={{borderTop:`4px solid ${sol.c}`,padding:0,overflow:"hidden",opacity:f.arquivado?0.55:1}}>
-                    <div style={{padding:"7px 10px",background:sol.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  return(<div key={f.id} className="card" style={{padding:0,overflow:"hidden",opacity:f.arquivado?0.55:1}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <span style={{fontSize:11,fontWeight:800,color:sol.c,background:"#FFF",border:`1px solid ${sol.c}33`,borderRadius:20,padding:"2px 10px"}}>{sol.l}</span>
-                        <select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:pago?"#1A7A3C":"#C62828",background:pago?"#DCFFE4":"#FFE0E0",cursor:"pointer"}}><option value="pago">✅ Pago</option><option value="pendente">⏳ Pendente</option></select>
+                        <span style={{fontSize:10,fontWeight:700,color:"#475569",background:"#F1F5F9",borderRadius:20,padding:"3px 11px"}}>{sol.l}</span>
+                        <select value={f.situacao||"pendente"} onChange={e=>updateFin(f.id,{situacao:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:"#FFF",background:pago?"#14532D":"#7C2D2D",cursor:"pointer"}}><option value="pago">Pago</option><option value="pendente">Pendente</option></select>
                       </div>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{setFinEdit(f);setFinModalOpen(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{f.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>{setFinEdit(f);setFinModalOpen(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>updateFin(f.id,{arquivado:!f.arquivado})} title={f.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{f.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delFin(f.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#888"}}>📅 {f.data||"—"} · Ticket: <b style={{color:"#1565C0"}}>{f.ticket||"—"}</b></div></div>
-                        <div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{f.valor?`R$ ${f.valor}`:"R$ —"}</div>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{f.tecnico||"—"}</div><div style={{fontSize:11,color:"#94A3B8"}}>{f.data||"—"} · Ticket {f.ticket||"—"}</div></div>
+                        <div style={{fontSize:16,fontWeight:900,color:"#14532D"}}>{f.valor?`R$ ${f.valor}`:"R$ —"}</div>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Atendimento / PAT</div><input type="text" defaultValue={f.atendimento||""} onBlur={e=>updateFin(f.id,{atendimento:e.target.value})} placeholder="Atendimento" style={{width:"100%",fontSize:11,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Acerto</div>
-                          <select value={f.acerto||"nao"} onChange={e=>updateFin(f.id,{acerto:e.target.value})} style={{fontSize:11,fontWeight:700,color:f.acerto==="sim"?"#1A7A3C":"#C62828",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
-                        </div>
-                        <div style={{background:"#EFF6FF",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#1565C0",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Ticket Acerto</div><input type="text" defaultValue={f.ticketAcerto||""} onBlur={e=>updateFin(f.id,{ticketAcerto:e.target.value})} placeholder="Nº ticket" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F3E5F5",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#6A1B9A",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Reembolso</div>
-                          <select value={f.reembolso||"nao"} onChange={e=>updateFin(f.id,{reembolso:e.target.value})} style={{fontSize:11,fontWeight:700,color:f.reembolso==="sim"?"#6A1B9A":"#888",border:"none",background:"transparent",cursor:"pointer",outline:"none",padding:0}}><option value="sim">✅ Sim</option><option value="nao">❌ Não</option></select>
-                        </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Atendimento / PAT</div><input type="text" defaultValue={f.atendimento||""} onBlur={e=>updateFin(f.id,{atendimento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Acerto</div><select value={f.acerto||"nao"} onChange={e=>updateFin(f.id,{acerto:e.target.value})} style={{fontSize:12,fontWeight:600,color:f.acerto==="sim"?"#1A7A3C":"#94A3B8"}}><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Ticket Acerto</div><input type="text" defaultValue={f.ticketAcerto||""} onBlur={e=>updateFin(f.id,{ticketAcerto:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Reembolso</div><select value={f.reembolso||"nao"} onChange={e=>updateFin(f.id,{reembolso:e.target.value})} style={{fontSize:12,fontWeight:600,color:f.reembolso==="sim"?"#6A1B9A":"#94A3B8"}}><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                         {f.reembolso==="sim"&&<>
-                          <div style={{background:"#F3E5F5",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#6A1B9A",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Valor Reembolso</div><input type="text" defaultValue={f.valorReembolso||""} onBlur={e=>updateFin(f.id,{valorReembolso:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:800,color:"#6A1B9A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                          <div style={{background:"#F3E5F5",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#6A1B9A",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Data Reembolso</div><input type="date" defaultValue={f.dataReembolso||""} onBlur={e=>updateFin(f.id,{dataReembolso:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600,color:"#6A1B9A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                          <div style={{background:"#EFF6FF",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#1565C0",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Ticket Reembolso</div><input type="text" defaultValue={f.ticketReembolso||""} onBlur={e=>updateFin(f.id,{ticketReembolso:e.target.value})} placeholder="Nº ticket" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor Reembolso</div><input type="text" defaultValue={f.valorReembolso||""} onBlur={e=>updateFin(f.id,{valorReembolso:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Reembolso</div><input type="date" defaultValue={f.dataReembolso||""} onBlur={e=>updateFin(f.id,{dataReembolso:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                          <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Ticket Reembolso</div><input type="text" defaultValue={f.ticketReembolso||""} onBlur={e=>updateFin(f.id,{ticketReembolso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         </>}
                       </div>
-                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{f.registradoPor||""} · {f.data||""}</div>
+                      <div style={{fontSize:10,color:"#CBD5E1",textAlign:"right"}}>{f.registradoPor||""}</div>
                     </div>
                   </div>);
                 })}
