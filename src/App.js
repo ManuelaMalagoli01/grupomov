@@ -234,7 +234,13 @@ const TIPOS = [
   {v:"carregador",l:"🔌 Carregador",color:"#AD1457",bg:"#FFF0F5"},
 ];
 const tipoCfg = v=>TIPOS.find(t=>t.v===v)||TIPOS[0];
-const TC = {"Anderson":"#E67E00","Dilson":"#1A7A3C","Rafael":"#1565C0","Helbert":"#6A1B9A","Luiz Guilherme":"#C62828","Denison":"#00838F","Arthur":"#4E342E","Eduardo":"#37474F","Luiz Ribeiro":"#558B2F","Bruno":"#AD1457","Marcus":"#283593"};
+const TC = {
+  "Anderson Almeida":"#E67E00","Dilson Santos":"#1A7A3C","Rafael Santos":"#1565C0","Hebert Santos":"#6A1B9A",
+  "Luiz G. Pinheiro":"#C62828","Matheus Felipe":"#00838F","Pedro Pimentel":"#AD1457","Helbert Junior":"#4E342E",
+  "Artur Gerônimo":"#283593","Eduardo Oliveira":"#37474F","Luiz Ribeiro":"#558B2F","Pedro Souza":"#D84315",
+  "Lucio Silva":"#00695C","Bruno Alexandre":"#8E24AA","Marcus Vinicius Botelho Dos Santos":"#5D4037",
+  "Junio Ferreira":"#0277BD","Reginaldo Souza":"#F9A825",
+};
 const techColor = t=>TC[t]||"#555";
 const statusCfg = {
   "aberto":{color:"#EF4444",bg:"#FEF2F2",label:"Aberto"},
@@ -4436,32 +4442,32 @@ export default function App(){
                   return(
                     <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
                       {cells.map((dn,i)=>{
-                        if(!dn)return<div key={i} style={{minHeight:460,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
+                        if(!dn)return<div key={i} style={{minHeight:520,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
                         const items=porDia[dn]||[];
-                        const shown=items.slice(0,10);
+                        const shown=items.slice(0,6);
                         const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:460,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent"}}>
+                          <div key={i} style={{minHeight:520,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent"}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
                               <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"● ":""}{dn}</div>
                               {ocupado&&<span style={{fontSize:8,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"1px 6px"}}>ocupado</span>}
                             </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                            <div style={{display:"flex",flexDirection:"column",gap:6}}>
                               {shown.map((it,ii)=>{
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
                                 return(
-                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:9.5,padding:"5px 6px",borderRadius:6,background:"#FAFBFC",borderLeft:`3px solid ${color}`,cursor:"pointer"}}>
+                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer"}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
-                                      <b style={{color:"#1A1A1A",fontSize:9.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
-                                      <span title={st.l} style={{width:6,height:6,borderRadius:"50%",background:st.c,flexShrink:0}}/>
+                                      <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
+                                      <span title={st.l} style={{width:8,height:8,borderRadius:"50%",background:st.c,flexShrink:0}}/>
                                     </div>
-                                    <div style={{color:"#475569",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
-                                    {it.s.cidade&&<div style={{color:"#94A3B8",fontSize:8.5}}>{it.s.cidade}</div>}
-                                    {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#94A3B8",fontSize:8.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"}</div>}
+                                    <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
+                                    <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
+                                    {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#475569",fontSize:9.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"}</div>}
                                   </div>
                                 );
                               })}
