@@ -4034,10 +4034,10 @@ export default function App(){
                         <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateSasPecas(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateSasPecas(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
                         <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>gerarPDFCard(`Solicitação de Peças - ${x.cliente||"Sem Cliente"}`,[["Cliente",x.cliente],["NF",x.nf],["Relatório MOV",x.relatorioMov],["Máquina",x.maquina],["Peça",x.peca],["Status",(SAS_PECAS_STATUS[x.status]||{}).l],["Data Solicitação",fmtDataBR(x.dataSolicitacao)],["AR Envio",x.arEnvio],["Previsão Recebimento",fmtDataBR(x.previsaoRecebimento)],["Data Execução",fmtDataBR(x.dataExecucao)],["Chamado",x.chamado],["Relatório",x.relatorio]],`${x.nf?`NF ${x.nf} · `:""}${fmtDataBR(x.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 6px",fontSize:11}}>📄</button>
-                          <button onClick={()=>{setEditSasPecas(x);setSasPecasForm({...SASPECAS_EMPTY,...x});setModalSasPecas(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>✏️</button>
-                          <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 6px",fontSize:11,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir esta solicitação?"))delSasPecas(x.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 6px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
+                          <button onClick={()=>gerarPDFCard(`Solicitação de Peças - ${x.cliente||"Sem Cliente"}`,[["Cliente",x.cliente],["NF",x.nf],["Relatório MOV",x.relatorioMov],["Máquina",x.maquina],["Peça",x.peca],["Status",(SAS_PECAS_STATUS[x.status]||{}).l],["Data Solicitação",fmtDataBR(x.dataSolicitacao)],["AR Envio",x.arEnvio],["Previsão Recebimento",fmtDataBR(x.previsaoRecebimento)],["Data Execução",fmtDataBR(x.dataExecucao)],["Chamado",x.chamado],["Relatório",x.relatorio]],`${x.nf?`NF ${x.nf} · `:""}${fmtDataBR(x.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10}}>📄</button>
+                          <button onClick={()=>{setEditSasPecas(x);setSasPecasForm({...SASPECAS_EMPTY,...x});setModalSasPecas(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginLeft:4}}>✏️</button>
+                          <button onClick={()=>updateSasPecas(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir esta solicitação?"))delSasPecas(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
                         </td>
                       </tr>
                     );})}</tbody>
@@ -6143,19 +6143,19 @@ export default function App(){
           const listaFil=lista.filter(applyFilter);
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📄 SAS</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></div></div>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📄 SAS</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} pendentes</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportSas(true)}/>
-                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
+                <button onClick={()=>setShowArqSas(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSas?"#1A1A1A":"#FFF",color:showArqSas?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSas?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"sas_grupomov",[{key:"dataSolicitacao",label:"Dt Solic."},{key:"email",label:"Email"},{key:"nfNum",label:"NF"},{key:"equipamento",label:"Equipamento"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Nome"},{key:"servico",label:"Serviço"},{key:"dataRealizacao",label:"Dt Realiz."},{key:"relatorioMov",label:"Rel MOV"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnY onClick={()=>{setSasEdit({dataSolicitacao:TODAY_STR,email:"",nfNum:"",cliente:"",deslocamento:"",observacao:"",nome:"",equipamento:"",relatorioMov:"",valor:"",dataRealizacao:"",envioFaturamento:""});setSasModal(true);}}>+ Novo SAS</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Pendentes",v:pend,c:"#C62828",bg:"#FFF0F0",i:"⏳"},{l:"Concluídos",v:conc,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0",bg:"#EFF6FF",i:"💵"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:i===3?16:30,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A"},{l:"Pendentes",v:pend,c:"#B45309"},{l:"Concluídos",v:conc,c:"#1A7A3C"},{l:"Total R$",v:`R$ ${totalVal.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,c:"#1565C0"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:i===3?18:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                 </div>
               ))}
             </div>
@@ -6201,41 +6201,42 @@ export default function App(){
               </>);
             })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {listaFil.map(s=>{
                   const serv=SERV[s.servico||"outros"]||SERV.outros;
                   const ok=s.status==="concluido";
                   const pend=s.status==="pendente"||!s.status;
                   const _gd=(()=>{if(!s.dataGarantia)return null;const _d2=new Date(s.dataGarantia+"T00:00:00"),_h2=new Date();_h2.setHours(0,0,0,0);return Math.floor((_d2-_h2)/86400000);})();const _gc=_gd!==null&&_gd>=0&&_gd<=30?"#DC2626":_gd!==null&&_gd>=0&&_gd<=180?"#D97706":null;
-                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${ok?"#1A7A3C":pend?"#C62828":serv.c}`,padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
-                    <div style={{padding:"7px 10px",background:ok?"#F0FFF5":pend?"#FFF0F0":serv.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <span style={{fontSize:11,fontWeight:800,color:serv.c,background:"#FFF",border:`1px solid ${serv.c}33`,borderRadius:20,padding:"2px 10px"}}>{serv.l}</span>
-                        <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,border:"none",color:ok?"#1A7A3C":pend?"#C62828":"#555",background:ok?"#DCFFE4":pend?"#FFE0E0":"#F0F0F0",cursor:"pointer"}}>
-                          <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option><option value="arquivado">🗄️ Arquivado</option>
+                  const stSolidSas=ok?"#14532D":pend?"#B45309":"#1D4E89";
+                  return(<div key={s.id} className="card" style={{padding:0,overflow:"hidden",opacity:s.status==="arquivado"?0.55:1}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
+                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"#475569",background:"#F1F5F9",borderRadius:20,padding:"3px 11px"}}>{serv.l}</span>
+                        <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:"#FFF",background:stSolidSas,cursor:"pointer"}}>
+                          <option value="pendente">Pendente</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
                         </select>
+                        {_gc&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:_gc,borderRadius:20,padding:"3px 10px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</span>}
                       </div>
-                      {_gc&&<div style={{fontSize:9,fontWeight:800,color:_gc,background:_gc+"15",borderRadius:8,padding:"2px 8px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</div>}
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>gerarPDFCard(`SAS - ${s.cliente||s.nome||"Sem Cliente"}`,[["Cliente",s.cliente],["Nome",s.nome],["E-mail",s.email],["NF",s.nfNum],["Equipamento",s.equipamento],["Serviço",serv.l],["Data Solicitação",fmtDataBR(s.dataSolicitacao)],["Data Realização",fmtDataBR(s.dataRealizacao)],["Relatório MOV",s.relatorioMov],["Deslocamento",s.deslocamento],["Valor",s.valor?`R$ ${s.valor}`:""],["Status",s.status||"pendente"],["Observação",s.observacao]],`${s.nfNum?`NF ${s.nfNum} · `:""}${fmtDataBR(s.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:13}}>📄</button>
-                        <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                        <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>gerarPDFCard(`SAS - ${s.cliente||s.nome||"Sem Cliente"}`,[["Cliente",s.cliente],["Nome",s.nome],["E-mail",s.email],["NF",s.nfNum],["Equipamento",s.equipamento],["Serviço",serv.l],["Data Solicitação",fmtDataBR(s.dataSolicitacao)],["Data Realização",fmtDataBR(s.dataRealizacao)],["Relatório MOV",s.relatorioMov],["Deslocamento",s.deslocamento],["Valor",s.valor?`R$ ${s.valor}`:""],["Status",s.status||"pendente"],["Observação",s.observacao]],`${s.nfNum?`NF ${s.nfNum} · `:""}${fmtDataBR(s.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"5px 9px",fontSize:11}}>📄</button>
+                        <button onClick={()=>{setSasEdit(s);setSasModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>updateSas(s.id,{status:s.status==="arquivado"?"pendente":"arquivado"})} title={s.status==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{s.status==="arquivado"?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"5px 8px",display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:11,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(s.dataSolicitacao)} · <b style={{color:"#1565C0"}}>{s.nfNum?`NF ${s.nfNum}`:""}</b></div></div>
-                        {s.valor&&<div style={{fontSize:17,fontWeight:900,color:"#1A7A3C"}}>R$ {s.valor}</div>}
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(s.dataSolicitacao)}{s.nfNum?` · NF ${s.nfNum}`:""}</div></div>
+                        {s.valor&&<div style={{fontSize:16,fontWeight:900,color:"#14532D"}}>R$ {s.valor}</div>}
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="Equip." style={{width:"100%",fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. MOV · Data Realiz.</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="REL-000" style={{width:"100%",fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        {s.deslocamento&&<div style={{background:"#F8FAFC",borderRadius:8,padding:"5px 8px"}}><div style={{color:"#64748B",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>🚗 Desloc.</div><div style={{fontSize:12,fontWeight:700,color:"#334155"}}>R$ {s.deslocamento}</div></div>}
-                        {s.envioFaturamento&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"5px 8px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Envio Faturamento</div><div style={{fontSize:11,fontWeight:700,color:"#1A7A3C"}}>{s.envioFaturamento}</div></div>}
-                        {s.observacao&&<div style={{background:"#FFFBEB",borderRadius:8,padding:"5px 8px",gridColumn:"span 2"}}><div style={{color:"#D97706",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>📝 Obs</div><div style={{fontSize:11,color:"#555"}}>{s.observacao}</div></div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Rel. MOV</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        {s.deslocamento&&<div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Deslocamento</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>R$ {s.deslocamento}</div></div>}
+                        {s.envioFaturamento&&<div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Faturamento</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{s.envioFaturamento}</div></div>}
                       </div>
-                      <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{s.registradoPor||""}</div>
+                      {s.observacao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{s.observacao}</div>}
+                      <div style={{fontSize:10,color:"#CBD5E1",textAlign:"right"}}>{s.registradoPor||""}</div>
                     </div>
                   </div>);
                 })}
