@@ -4392,6 +4392,43 @@ export default function App(){
                 </label>
                 <BtnImport onClick={()=>setModalImportAgenda(true)}/>
                 <BtnExcel onClick={()=>{const allAtend=Object.entries(schedule).flatMap(([k,v])=>{const[tech,dt]=k.split("__");return(v||[]).map(s=>({tecnico:tech,data:dt,cliente:s.client,cidade:s.cidade,patrimonio:s.patrimonio,horimetro:s.horimetro,entrada:s.horaEntrada,saida:s.horaSaida,horas:s.horasTrabalhadas||"",relatorio:s.relatorio,obs:s.obs,status:s.status,servicos:(s.servicos||[]).join(", "),obsServico:s.obsServico}));});exportCSV(allAtend,"agenda_tecnicos",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"entrada",label:"Entrada"},{key:"saida",label:"Saída"},{key:"horas",label:"Horas"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"},{key:"status",label:"Status"},{key:"servicos",label:"Serviços"},{key:"obsServico",label:"Obs Serviço"}]);}}/>
+                <button onClick={()=>{
+                  // Nomes canônicos = como aparecem na Conferência de Relatórios
+                  const canonicos=[...new Set((reports||[]).map(r=>r.tecnico).filter(Boolean))];
+                  const canonNorm=canonicos.map(c=>({raw:c,norm:normalizeTec(c)}));
+                  const acharCanonico=(rawTech)=>{
+                    const n=normalizeTec(rawTech);
+                    if(!n)return null;
+                    const exato=canonNorm.find(c=>c.norm===n);
+                    if(exato)return exato.raw;
+                    const parcial=canonNorm.find(c=>c.norm.startsWith(n)||n.startsWith(c.norm)||c.norm.split(" ")[0]===n.split(" ")[0]);
+                    return parcial?parcial.raw:null;
+                  };
+                  const novoSchedule={...schedule};
+                  const paraSalvar=[]; const paraExcluir=[];
+                  let corrigidos=0;
+                  Object.entries(schedule).forEach(([key,slots])=>{
+                    if(key.startsWith("PREV__"))return; // não mexe nas chaves de preventiva agendada (formato diferente)
+                    const idx=key.indexOf("__");
+                    if(idx<0)return;
+                    const rawTech=key.slice(0,idx), dt=key.slice(idx+2);
+                    const canon=acharCanonico(rawTech);
+                    if(!canon||canon===rawTech)return;
+                    const newKey=`${canon}__${dt}`;
+                    novoSchedule[newKey]=[...(novoSchedule[newKey]||[]),...(slots||[])];
+                    delete novoSchedule[key];
+                    paraSalvar.push({key:newKey,slots:novoSchedule[newKey]});
+                    paraExcluir.push(key);
+                    corrigidos++;
+                  });
+                  if(corrigidos===0){alert("Nenhum nome de técnico divergente encontrado (comparando com a Conferência de Relatórios).");return;}
+                  if(window.confirm(`Encontrados ${corrigidos} registro(s) de agenda com nome de técnico diferente do usado na Conferência de Relatórios. Corrigir e unificar automaticamente?`)){
+                    setSchedule(novoSchedule);
+                    paraSalvar.forEach(({key,slots})=>db.save("escala",key,{key,slots}));
+                    paraExcluir.forEach(key=>db.delete("escala",key));
+                    notify(`✅ ${corrigidos} registro(s) de agenda corrigido(s) e unificado(s)!`);
+                  }
+                }} title="Corrige o nome do tecnico na agenda para bater com o usado na Conferencia de Relatorios" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8E44AD",background:"transparent",color:"#8E44AD",fontSize:12,cursor:"pointer",fontWeight:600}}>🔧 Corrigir Nomes</button>
               </div>}
               {showNovoAtend&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowNovoAtend(false)}>
                 <div style={{background:"#FFF",borderRadius:16,width:680,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
