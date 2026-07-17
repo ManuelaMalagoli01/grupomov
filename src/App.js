@@ -241,7 +241,14 @@ const TC = {
   "Lucio Silva":"#00695C","Bruno Alexandre":"#8E24AA","Marcus Vinicius Botelho Dos Santos":"#5D4037",
   "Junio Ferreira":"#0277BD","Reginaldo Souza":"#F9A825",
 };
-const techColor = t=>TC[t]||"#555";
+const TC_NORM = Object.fromEntries(Object.entries(TC).map(([k,v])=>[normalizeTec(k),v]));
+const techColor = t=>{
+  const n=normalizeTec(t);
+  if(!n)return "#555";
+  if(TC_NORM[n])return TC_NORM[n];
+  const found=Object.keys(TC_NORM).find(k=>k.startsWith(n)||n.startsWith(k)||k.split(" ")[0]===n.split(" ")[0]);
+  return found?TC_NORM[found]:"#555";
+};
 const statusCfg = {
   "aberto":{color:"#EF4444",bg:"#FEF2F2",label:"Aberto"},
   "em andamento":{color:"#EA580C",bg:"#FFEDD5",label:"Em Andamento"},
@@ -4467,6 +4474,7 @@ export default function App(){
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
+                                    {it.s.relatorio&&<div style={{color:"#334155",fontSize:9.5,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Rel. {it.s.relatorio}</div>}
                                     {(it.s.horaEntrada||it.s.horaSaida)&&<div style={{color:"#475569",fontSize:9.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.horaEntrada||"—"} → {it.s.horaSaida||"—"}</div>}
                                   </div>
                                 );
