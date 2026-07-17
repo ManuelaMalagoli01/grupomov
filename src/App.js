@@ -2684,6 +2684,28 @@ export default function App(){
                     notify(`✅ ${alvos.length} relatório(s) corrigido(s) — cidade separada do cliente!`);
                   }
                 }} title="Corrige relatórios importados antes da separação automática de cidade" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#C47D00",fontSize:11,cursor:"pointer",fontWeight:600}}>🏙️ Corrigir Cidades Antigas</button>
+                <button onClick={()=>{
+                  const chave=r=>[r.relatorio,r.patrimonio,r.data||r.dataAtendimento,r.tecnico,r.horaInicio,r.horaFim].map(v=>String(v||"").trim().toLowerCase()).join("|");
+                  const grupos={};
+                  (reports||[]).forEach(r=>{
+                    if(!r)return;
+                    const k=chave(r);
+                    if(!grupos[k])grupos[k]=[];
+                    grupos[k].push(r);
+                  });
+                  const paraExcluir=[];
+                  Object.values(grupos).forEach(grupo=>{
+                    if(grupo.length<2)return;
+                    // mantém o mais completo (arquivado/concluído tem prioridade sobre agendado em aberto) e exclui o resto
+                    const ordenado=[...grupo].sort((a,b)=>(b.arquivado?1:0)-(a.arquivado?1:0));
+                    paraExcluir.push(...ordenado.slice(1));
+                  });
+                  if(paraExcluir.length===0){alert("Nenhum relatório duplicado encontrado (comparando ativos e arquivados juntos).");return;}
+                  if(window.confirm(`Encontrados ${paraExcluir.length} relatório(s) duplicado(s) (mesmo Relatório, PAT, Data, Técnico e Horário — verificado entre ativos e arquivados). Excluir as cópias repetidas, mantendo apenas 1 de cada?`)){
+                    paraExcluir.forEach(r=>{setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);});
+                    notify(`🧹 ${paraExcluir.length} relatório(s) duplicado(s) excluído(s)!`);
+                  }
+                }} title="Verifica duplicidade entre relatorios ativos e arquivados" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62826",background:"transparent",color:"#DC2626",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir Duplicados</button>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>✅ {showArqRel?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
