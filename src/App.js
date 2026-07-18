@@ -1557,10 +1557,11 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const bdg=(k)=>badges[k]||0;
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos","sas","sas_pecas"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
+  const SAS_TABS = ["sas","sas_pecas"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "operacoes"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -1568,12 +1569,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const [adminOpen,setAdminOpen]=useState(ADMIN_TABS.includes(tab));
   const [almoxOpen,setAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
   const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab));
+  const [sasGroupOpen,setSasGroupOpen]=useState(SAS_TABS.includes(tab));
 
   const areaTecAtiva = AREA_TEC_TABS.includes(tab);
   const servicosAtiva = SERVICOS_TABS.includes(tab);
   const adminAtiva = ADMIN_TABS.includes(tab);
   const almoxAtiva = ALMOX_TABS.includes(tab);
   const comercialAtiva = COMERCIAL_TABS.includes(tab);
+  const sasGroupAtiva = SAS_TABS.includes(tab);
 
   const canSee=(tipo)=>{
     if(tipo==="comercial") return user.acessoComercial||user.id==="manuela"||user.id==="gustavo";
@@ -1695,7 +1698,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       {ToggleBtn}
       <div style={{position:"fixed",left:0,top:56,width:60,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
         <GroupIcon icon="🛠️" title="Área Técnica" ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
-        <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
+        <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
+        {!user?.semSas&&<GroupIcon icon="📄" title="SAS" ativa={sasGroupAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setSasGroupOpen(true);}}/>}
         <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
         <GroupIcon icon="📦" title="Almoxarifado" ativa={almoxAtiva} badgeCount={empAlerta} onClick={()=>{setCollapsed(false);setAlmoxOpen(true);}}/>
         <GroupIcon icon="💼" title="Comercial" ativa={comercialAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setComercialOpen(true);}}/>
@@ -1732,16 +1736,23 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="operacoes" l="🏢 Operações"/>
       </div>}
 
-      {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos, SAS) */}
-      <GroupHeader label="Serviços" icon="🧾" open={servicosOpen} setOpen={setServicosOpen} ativa={servicosAtiva} badgeCount={bdg("sas")}/>
+      {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos) */}
+      <GroupHeader label="Serviços" icon="🧾" open={servicosOpen} setOpen={setServicosOpen} ativa={servicosAtiva} badgeCount={0}/>
       {servicosOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
         <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
         <SubBtn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
         <SubBtn k="dashboard_processos" l="📊 Dash Processos"/>
-        {!user?.semSas&&<SubBtn k="sas" l="📄 SAS"/>}
-        {!user?.semSas&&<SubBtn k="sas_pecas" l="🔧 Solicitação de Peças"/>}
       </div>}
+
+      {/* SAS - CATEGORIA PRÓPRIA (fora de Serviços) */}
+      {!user?.semSas&&<>
+        <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
+        {sasGroupOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+          <SubBtn k="sas" l="📄 SAS"/>
+          <SubBtn k="sas_pecas" l="🔧 Solicitação de Peças"/>
+        </div>}
+      </>}
 
       {/* ADMINISTRATIVO - ACORDEÃO (Uber, Financeiro) */}
       <GroupHeader label="Administrativo" icon="🗂️" open={adminOpen} setOpen={setAdminOpen} ativa={adminAtiva} badgeCount={0}/>
@@ -1964,6 +1975,7 @@ export default function App(){
   const [agOfiYear,setAgOfiYear]=useState(TODAY.getFullYear());
   const [agOfiTech,setAgOfiTech]=useState("todos");
   const [showFiltrosAgOfi,setShowFiltrosAgOfi]=useState(false);
+  const [showNovoAgOfi,setShowNovoAgOfi]=useState(false);
   const [agOfiServico,setAgOfiServico]=useState("todos");
   const [agOfiStatus,setAgOfiStatus]=useState("todos");
   const [agOfiEmpresa,setAgOfiEmpresa]=useState("");
@@ -2894,13 +2906,13 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"10px 14px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:900,fontSize:18,color:"#FFF"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:11,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
+              <div style={{padding:"10px 14px",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:18,color:"#1A1A1A"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:11,color:"#B45309",marginTop:2,fontWeight:700}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#DC2626",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir ({qtdSelecionados})</button>}
-                  <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
+                  <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E5E7EB",background:showArqApon?"#1A1A1A":"#FFF",color:showArqApon?"#FFF":"#475569",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <div style={{position:"relative"}}>
-                    <button onClick={()=>setShowFerramentasApon(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid rgba(255,255,255,.2)",background:showFerramentasApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>⚙️ Ferramentas <span style={{fontSize:8}}>{showFerramentasApon?"▲":"▼"}</span></button>
+                    <button onClick={()=>setShowFerramentasApon(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E5E7EB",background:showFerramentasApon?"#1A1A1A":"#FFF",color:showFerramentasApon?"#FFF":"#475569",fontSize:11,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>⚙️ Ferramentas <span style={{fontSize:8}}>{showFerramentasApon?"▲":"▼"}</span></button>
                     {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
@@ -3125,7 +3137,9 @@ export default function App(){
                 <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 {(agOfiTech!=="todos"||agOfiServico!=="todos")&&<button onClick={()=>{setAgOfiTech("todos");setAgOfiServico("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
-              {!isReadOnlyAgenda(user)&&(
+              {!isReadOnlyAgenda(user)&&(<>
+              <button onClick={()=>setShowNovoAgOfi(p=>!p)} className="btn btn-primary" style={{marginBottom:showNovoAgOfi?12:18}}>{showNovoAgOfi?"✕ Fechar":"+ Novo Atendimento"}</button>
+              {showNovoAgOfi&&
               <div className="card" style={{padding:16,marginBottom:18}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:12}}>➕ Novo Atendimento</div>
                 <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
@@ -3140,10 +3154,10 @@ export default function App(){
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Nº Requisição</label><input type="text" placeholder="—" value={agOfiRequisicao} onChange={e=>setAgOfiRequisicao(e.target.value)} style={{width:110}}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Nº Relatório</label><input type="text" placeholder="—" value={agOfiRelatorio||""} onChange={e=>setAgOfiRelatorio(e.target.value)} style={{width:100}}/></div>
                   <div style={{flex:1,minWidth:140}}><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Obs</label><input type="text" placeholder="Obs..." value={agOfiObs} onChange={e=>setAgOfiObs(e.target.value)} style={{width:"100%",boxSizing:"border-box"}}/></div>
-                  <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
+                  <BtnY onClick={()=>{addAtendOfi();setShowNovoAgOfi(false);}}>Adicionar</BtnY>
                 </div>
-              </div>
-              )}
+              </div>}
+              </>)}
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
