@@ -1593,7 +1593,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   };
 
   if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_processos" l="📊 Dash Processos"/>
@@ -1601,12 +1601,12 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.acessoSas&&!user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="sas" l="📄 SAS"/>
     </div>
   );
   if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_processos" l="📊 Dash Processos"/>
@@ -1614,7 +1614,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.apenasAgenda) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_prev","🗓 Agenda"],["dashboard","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1622,7 +1622,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.apenasAgenda150) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda 150"],["dashboard_ofi_150","📊 Dashboard 150"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1630,7 +1630,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.apenasOficina) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi","🗓 Agenda"],["apontamentos_oficina","📝 Apontamentos"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_ofi","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1638,7 +1638,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.apenasOficina150) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.15)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:13,fontWeight:isActive?700:500,cursor:"pointer",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",textAlign:"left",transition:"all .15s"}}>{l}</button>;
@@ -1646,7 +1646,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </div>
   );
   if(user.apenasOfi150) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
@@ -1657,19 +1657,19 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const Btn=({k,l,badge})=>{
     const isActive=tab===k;
     const count=badge!==undefined?badge:bdg(k);
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#475569",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
       {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700,minWidth:18,textAlign:"center"}}>{count}</span>}
     </button>);
   };
   const SubBtn=({k,l,badge})=>{
     const isActive=tab===k;
     const count=badge!==undefined?badge:bdg(k);
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"rgba(245,194,0,.08)":"transparent",color:isActive?"#F5C200":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
       {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
     </button>);
   };
   const GroupHeader=({label,icon,open,setOpen,ativa,badgeCount})=>(
-    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:ativa?"rgba(245,194,0,.12)":"transparent",color:ativa?"#F5C200":"#94A3B8",fontSize:12,fontWeight:ativa?700:600,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#475569",fontSize:12,fontWeight:ativa?700:600,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
       <span>{icon} {label}</span>
       <div style={{display:"flex",alignItems:"center",gap:5}}>
         {badgeCount>0&&!open&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{badgeCount}</span>}
@@ -1679,7 +1679,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
 
   const GroupIcon=({icon,ativa,badgeCount,onClick,title})=>(
-    <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"rgba(245,194,0,.15)":"transparent",color:ativa?"#F5C200":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
+    <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
       {icon}
       {badgeCount>0&&<span style={{position:"absolute",top:8,right:16,background:"#EF4444",color:"#FFF",borderRadius:8,minWidth:14,height:14,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{badgeCount}</span>}
     </button>
@@ -1687,13 +1687,13 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
   const W = collapsed?60:196;
   const ToggleBtn = (
-    <button onClick={()=>setCollapsed(p=>!p)} title={collapsed?"Expandir menu":"Recolher menu"} style={{position:"fixed",left:W-13,top:66,width:26,height:26,borderRadius:"50%",border:"2px solid #0F172A",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(0,0,0,.35)",zIndex:60,transition:"left .18s ease",fontFamily:"inherit"}}>{collapsed?"›":"‹"}</button>
+    <button onClick={()=>setCollapsed(p=>!p)} title={collapsed?"Expandir menu":"Recolher menu"} style={{position:"fixed",left:W-13,top:66,width:26,height:26,borderRadius:"50%",border:"2px solid #FFF",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(0,0,0,.2)",zIndex:60,transition:"left .18s ease",fontFamily:"inherit"}}>{collapsed?"›":"‹"}</button>
   );
 
   if(collapsed) return(
     <>
       {ToggleBtn}
-      <div style={{position:"fixed",left:0,top:56,width:60,background:"#0F172A",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <div style={{position:"fixed",left:0,top:56,width:60,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
         <GroupIcon icon="🛠️" title="Área Técnica" ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
         <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
         <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
@@ -1707,7 +1707,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   return(
     <>
     {ToggleBtn}
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#0F172A",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {/* ÁREA TÉCNICA - GRUPO ÚNICO (sem sub-abas: Técnicos Externos e Oficinas viram apenas seções listadas) */}
       <GroupHeader label="Área Técnica" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_hebert")+bdg("pendencias_matheus")+bdg("pendencias_frota")}/>
       {areaTecOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
