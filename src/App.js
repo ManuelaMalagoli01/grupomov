@@ -3102,37 +3102,39 @@ export default function App(){
             setAgOfiEmpresa("");setAgOfiPat("");setAgOfiEntrada("");setAgOfiSaida("");setAgOfiObs("");setAgOfiRelatorio("");
             notify("✅ Atendimento Oficina salvo!");
           };
+          const AGOFI_STATUS_SOLID={agendada:"#1D4E89",em_andamento:"#B45309",aguardando_aprovacao:"#8E44AD",aguardando_diretoria:"#5D4037",concluida:"#14532D",cancelada:"#7C2D2D",remarcada:"#616161"};
+          const AGOFI_STATUS_LABEL={agendada:"Agendada",em_andamento:"Em Andamento",aguardando_aprovacao:"Aguardando Aprovação",aguardando_diretoria:"Aguardando Diretoria",concluida:"Concluída",cancelada:"Cancelada",remarcada:"Remarcada"};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>🗓 Agenda Oficina</div><div style={{fontSize:13,color:"#888"}}>Agenda mensal dos técnicos de oficina — {MESES[agOfiMonth]} {agOfiYear}</div></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🗓 Agenda Oficina</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>Agenda mensal dos técnicos de oficina — {MESES[agOfiMonth]} {agOfiYear}</div></div>
                 <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <select value={agOfiTech} onChange={e=>setAgOfiTech(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <select value={agOfiServico} onChange={e=>setAgOfiServico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-                  <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                  <select value={agOfiTech} onChange={e=>setAgOfiTech(e.target.value)}><option value="todos">Todos os técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                  <select value={agOfiServico} onChange={e=>setAgOfiServico(e.target.value)}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
+                  <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                  <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
                 </div>
               </div>
               {!isReadOnlyAgenda(user)&&(
-<div className="card" style={{padding:14,marginBottom:18}}>
-                <div style={{fontSize:12,fontWeight:800,color:"#555",marginBottom:10}}>➕ Novo atendimento</div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                  <select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)} style={{fontSize:12,padding:"7px 8px"}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                  <input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)} style={{fontSize:12,padding:"6px 8px"}}/>
-                  <input type="text" placeholder="Empresa/Serviço" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 8px",flex:1,minWidth:140}}/>
-                  <input type="text" placeholder="Horímetro" value={agOfiHorimetro||""} onChange={e=>setAgOfiHorimetro(e.target.value)} style={{fontSize:12,padding:"7px 8px",width:100}}/>
-                  <input type="text" placeholder="Patrimônio" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
-                  <select value={agOfiServSel} onChange={e=>setAgOfiServSel(e.target.value)} style={{fontSize:12,padding:"7px 8px",fontWeight:600,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>Início</span><input type="date" value={agOfiDataInicio} onChange={e=>setAgOfiDataInicio(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",whiteSpace:"nowrap"}}>Fim</span><input type="date" value={agOfiDataFim} onChange={e=>setAgOfiDataFim(e.target.value)} style={{fontSize:12,padding:"6px 6px"}}/></div>
-                  <input type="text" placeholder="Nº Requisição" value={agOfiRequisicao} onChange={e=>setAgOfiRequisicao(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:110}}/>
-                  <input type="text" placeholder="Obs..." value={agOfiObs} onChange={e=>setAgOfiObs(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:120}}/>
-                  <input type="text" placeholder="Nº Relatório" value={agOfiRelatorio||""} onChange={e=>setAgOfiRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 8px",minWidth:100}}/>
+              <div className="card" style={{padding:16,marginBottom:18}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:12}}>➕ Novo Atendimento</div>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Técnico</label><select value={agOfiTechSel} onChange={e=>setAgOfiTechSel(e.target.value)}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data</label><input type="date" value={agOfiDate||`${ym}-01`} onChange={e=>setAgOfiDate(e.target.value)}/></div>
+                  <div style={{flex:1,minWidth:160}}><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Empresa</label><input type="text" placeholder="Empresa" value={agOfiEmpresa} onChange={e=>setAgOfiEmpresa(e.target.value)} style={{width:"100%",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Horímetro</label><input type="text" placeholder="—" value={agOfiHorimetro||""} onChange={e=>setAgOfiHorimetro(e.target.value)} style={{width:100}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Patrimônio</label><input type="text" placeholder="—" value={agOfiPat} onChange={e=>setAgOfiPat(e.target.value)} style={{width:100}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={agOfiServSel} onChange={e=>setAgOfiServSel(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Início</label><input type="date" value={agOfiDataInicio} onChange={e=>setAgOfiDataInicio(e.target.value)}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Fim</label><input type="date" value={agOfiDataFim} onChange={e=>setAgOfiDataFim(e.target.value)}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Nº Requisição</label><input type="text" placeholder="—" value={agOfiRequisicao} onChange={e=>setAgOfiRequisicao(e.target.value)} style={{width:110}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Nº Relatório</label><input type="text" placeholder="—" value={agOfiRelatorio||""} onChange={e=>setAgOfiRelatorio(e.target.value)} style={{width:100}}/></div>
+                  <div style={{flex:1,minWidth:140}}><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Obs</label><input type="text" placeholder="Obs..." value={agOfiObs} onChange={e=>setAgOfiObs(e.target.value)} style={{width:"100%",boxSizing:"border-box"}}/></div>
                   <BtnY onClick={addAtendOfi}>Adicionar</BtnY>
                 </div>
               </div>
               )}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {techsList.map(tech=>{
                   const color=techColor(tech);
                   const entries=[];
@@ -3146,43 +3148,35 @@ export default function App(){
                   });
                   entries.sort((a,b)=>a.date.localeCompare(b.date));
                   return(
-                    <div key={tech} className="card" style={{borderTop:`4px solid ${color}`,overflow:"hidden",transition:"transform .2s",cursor:"default"}}>
-                      <div style={{padding:"8px 10px",borderBottom:"1px solid #F4F4F4"}}>
-                        <div style={{fontWeight:700,fontSize:14}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:color,marginRight:6}}/>{tech}</div>
-                        <div style={{fontSize:11,color:"#AAA",marginTop:2}}>{entries.length} atendimento(s) · {MESES[agOfiMonth]}</div>
+                    <div key={tech} className="card" style={{padding:0,overflow:"hidden"}}>
+                      <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A",display:"flex",alignItems:"center",gap:6}}><span style={{width:9,height:9,borderRadius:"50%",background:color,flexShrink:0}}/>{tech}</div>
+                        <span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>{entries.length} atend.</span>
                       </div>
-                      <div style={{padding:"8px 14px"}}>
-                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"8px 0"}}>Sem atendimentos</div>}
-                        {entries.map((e,ix)=>{const dia=e.date.slice(8,10);return(
-                          <div key={ix} style={{padding:"8px 0",borderBottom:"1px solid #F8F8F8"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                              <span style={{fontSize:11,fontWeight:800,color:"#fff",background:color,borderRadius:6,padding:"1px 7px"}}>Dia {dia}</span>
-                              <span style={{fontSize:12,fontWeight:700,color:"#222",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
-                              {!isReadOnlyAgenda(user)&&(<><button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi"});setEditSlotForm({...e.s});}} style={{background:"none",border:"none",color:"#1565C0",cursor:"pointer",fontSize:13,marginRight:2}}>✏️</button><button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi(e.key,arr);}}} style={{background:"none",border:"none",color:"#D33",cursor:"pointer",fontSize:13}}>✕</button></>)}
+                      <div style={{padding:"8px 14px",display:"flex",flexDirection:"column"}}>
+                        {entries.length===0&&<div style={{fontSize:12,color:"#CCC",textAlign:"center",padding:"16px 0"}}>Sem atendimentos</div>}
+                        {entries.map((e,ix)=>{const dia=e.date.slice(8,10);const stSolid=AGOFI_STATUS_SOLID[e.s.status||"agendada"]||AGOFI_STATUS_SOLID.agendada;return(
+                          <div key={ix} style={{padding:"10px 0",borderBottom:ix<entries.length-1?"1px solid #F1F5F9":"none",display:"flex",flexDirection:"column",gap:8}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <span style={{fontSize:10,fontWeight:800,color:"#FFF",background:color,borderRadius:6,padding:"2px 8px",flexShrink:0}}>Dia {dia}</span>
+                              <span style={{fontSize:13,fontWeight:700,color:"#1A1A1A",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.s.client}</span>
+                              {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:4,flexShrink:0}}>
+                                <button onClick={()=>{setEditSlot({key:e.key,si:e.si,slot:e.s,tipo:"ofi"});setEditSlotForm({...e.s});}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>✏️</button>
+                                <button onClick={()=>{if(window.confirm("Remover?")){const arr=(agendaOfi[e.key]||[]).filter((_,j)=>j!==e.si);saveAgendaOfi(e.key,arr);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>✕</button>
+                              </div>)}
                             </div>
-                            <div style={{fontSize:11,color:"#888",marginBottom:4}}>🏷️ {e.s.patrimonio||"—"} · <b style={{color:"#1565C0"}}>{e.s.servico||"—"}</b></div>
-                            <div style={{marginBottom:4}}>
-                              <input type="text" value={e.s.relatorio||""} placeholder="Nº Relatório" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
+                            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:8}}>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Patrimônio</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{e.s.patrimonio||"—"}</div></div>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Serviço</div><div style={{fontSize:11,fontWeight:600,color:"#1565C0"}}>{e.s.servico||"—"}</div></div>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Relatório</div><input type="text" value={e.s.relatorio||""} placeholder="—" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,relatorio:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:11,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Requisição</div><input type="text" value={e.s.requisicao||""} placeholder="—" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,requisicao:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:11,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Início</div><input type="date" value={e.s.dataInicio||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataInicio:v};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:11,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                              <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Fim</div><input type="date" value={e.s.dataFim||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataFim:v};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:11,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                             </div>
-                            <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
-                              <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:9,color:"#888",fontWeight:700}}>INÍCIO</span><input type="date" value={e.s.dataInicio||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataInicio:v};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5}}/></div>
-                              <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{fontSize:9,color:"#888",fontWeight:700}}>FIM</span><input type="date" value={e.s.dataFim||""} onChange={ev=>{const v=ev.target.value;const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,dataFim:v};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 4px",border:"1px solid #E0E0E0",borderRadius:5}}/></div>
-                            </div>
-                            <div style={{marginBottom:4}}>
-                              <input type="text" value={e.s.requisicao||""} placeholder="Nº Requisição" onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,requisicao:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{width:"100%",fontSize:10,padding:"3px 6px",borderRadius:5,border:"1px solid #E0E0E0"}}/>
-                            </div>
-                            {e.s.obs&&<div style={{fontSize:10,color:"#888",fontStyle:"italic"}}>{e.s.obs}</div>}
-                            <div style={{marginTop:4}}>
-                              <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,padding:"2px 5px",fontWeight:700,borderRadius:6,border:"1px solid #E0E0E0",width:"100%"}}>
-                                <option value="agendada">Agendada</option>
-                                <option value="em_andamento">Em Andamento</option>
-                                <option value="aguardando_aprovacao">Aguardando Aprovação</option>
-                                <option value="aguardando_diretoria">Aguardando Diretoria</option>
-                                <option value="concluida">Concluída</option>
-                                <option value="cancelada">Cancelada</option>
-                                <option value="remarcada">Remarcada</option>
-                              </select>
-                            </div>
+                            {e.s.obs&&<div style={{fontSize:10.5,color:"#64748B",fontStyle:"italic"}}>{e.s.obs}</div>}
+                            <select value={e.s.status||"agendada"} onChange={ev=>{const arr=[...(agendaOfi[e.key]||[])];arr[e.si]={...e.s,status:ev.target.value};saveAgendaOfi(e.key,arr);}} style={{fontSize:10,fontWeight:700,padding:"3px 9px",borderRadius:20,border:"none",color:"#FFF",background:stSolid,width:"100%",cursor:"pointer"}}>
+                              {Object.keys(AGOFI_STATUS_LABEL).map(k=><option key={k} value={k}>{AGOFI_STATUS_LABEL[k]}</option>)}
+                            </select>
                           </div>
                         );})}
                       </div>
