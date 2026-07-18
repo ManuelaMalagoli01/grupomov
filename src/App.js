@@ -4467,13 +4467,13 @@ export default function App(){
 
               {/* Calendário mensal (estilo Google Agenda) */}
               <div className="card" style={{padding:0,overflow:"hidden"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#1A1A1A"}}>
-                  <button onClick={()=>{let m=agpMonth-1,y=agpYear;if(m<0){m=11;y--;}setAgpMonth(m);setAgpYear(y);}} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"#F5C200",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>‹</button>
-                  <div style={{fontSize:15,fontWeight:800,color:"#F5C200"}}>{MESES[agpMonth]} {agpYear}</div>
-                  <button onClick={()=>{let m=agpMonth+1,y=agpYear;if(m>11){m=0;y++;}setAgpMonth(m);setAgpYear(y);}} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"#F5C200",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>›</button>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#FFFBEB",borderBottom:"1px solid #FDE68A"}}>
+                  <button onClick={()=>{let m=agpMonth-1,y=agpYear;if(m<0){m=11;y--;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,color:"#92400E",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>‹</button>
+                  <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A"}}>{MESES[agpMonth]} {agpYear}</div>
+                  <button onClick={()=>{let m=agpMonth+1,y=agpYear;if(m>11){m=0;y++;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,color:"#92400E",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>›</button>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"#1E293B"}}>
-                  {"Dom Seg Ter Qua Qui Sex Sáb".split(" ").map(d=><div key={d} style={{textAlign:"center",padding:"6px 2px",fontSize:10,fontWeight:700,color:"#94A3B8"}}>{d}</div>)}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4"}}>
+                  {"Dom Seg Ter Qua Qui Sex Sáb".split(" ").map(d=><div key={d} style={{textAlign:"center",padding:"6px 2px",fontSize:10,fontWeight:700,color:"#64748B"}}>{d}</div>)}
                 </div>
                 {(()=>{
                   const firstDow=new Date(agpYear,agpMonth,1).getDay();
