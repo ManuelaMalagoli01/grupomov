@@ -513,9 +513,10 @@ function LoginScreen({onLogin, users=USERS}){
 
         {err&&<div style={{background:"#FFF0F0",border:"1.5px solid #FFCDD2",borderRadius:10,padding:"7px 10px",fontSize:12,color:"#C62828",marginBottom:18,fontWeight:700,display:"flex",alignItems:"center",gap:6,animation:"slideUp .3s ease"}}><span>⚠️</span>{err}</div>}
 
-        <button onClick={handle} disabled={loading} className="btn btn-primary" style={{width:"100%",padding:"14px",fontSize:14,opacity:loading?.6:1}}>
+        <button onClick={handle} disabled={loading} style={{width:"100%",padding:"14px",fontSize:14,fontWeight:700,borderRadius:10,border:"none",background:"#F5C200",color:"#1A1A1A",cursor:loading?"not-allowed":"pointer",opacity:loading?.6:1,fontFamily:"'Inter',sans-serif",boxShadow:"0 1px 2px rgba(0,0,0,.08)"}}>
           {loading?"Entrando...":"Entrar →"}
         </button>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');`}</style>
 
         <div style={{textAlign:"center",marginTop:24,fontSize:11,color:"#94A3B8"}}>Grupo MOV © {new Date().getFullYear()}</div>
       </div>
