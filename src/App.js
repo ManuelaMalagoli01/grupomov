@@ -363,7 +363,7 @@ const gerarPDFCard = async (titulo, campos, subtitulo)=>{
     doc.setTextColor(245,194,0); doc.setFontSize(16); doc.setFont(undefined,"bold");
     doc.text("GRUPO MOV",14,14);
     doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,"normal");
-    doc.text("Gestão de Manutenção",14,20);
+    doc.text("Gestão: Manutenção-Comercial-Serviços",14,20);
     doc.setTextColor(26,26,26); doc.setFontSize(14); doc.setFont(undefined,"bold");
     doc.text(String(titulo||"Documento"),14,36);
     let y=44;
@@ -493,7 +493,7 @@ function LoginScreen({onLogin, users=USERS}){
           <div style={{width:170,margin:"0 auto 16px"}}>
             <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{width:"100%",height:"auto",display:"block"}}/>
           </div>
-          <div style={{fontSize:12,color:"#94A3B8",marginTop:4,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Sistema de Gestão de Manutenção</div>
+          <div style={{fontSize:12,color:"#94A3B8",marginTop:4,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Gestão: Manutenção-Comercial-Serviços</div>
         </div>
 
         <div style={{marginBottom:18}}>
@@ -1533,21 +1533,21 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 
 function AppTopBar({user, setUser, setModalUsers}){
   return(
-    <div style={{background:"#0F172A",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 1px 3px rgba(0,0,0,.2)",borderBottom:"1px solid rgba(255,255,255,.06)",overflowX:"auto",overflowY:"hidden",gap:16,scrollbarWidth:"thin",scrollbarColor:"#475569 #0F172A"}} className="app-topbar-scroll">
+    <div style={{background:"#FFFFFF",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 1px 3px rgba(15,23,42,.08)",borderBottom:"1px solid #EEF1F4",borderTop:"4px solid #F5C200",overflowX:"auto",overflowY:"hidden",gap:16,scrollbarWidth:"thin",scrollbarColor:"#CBD5E1 #FFFFFF"}} className="app-topbar-scroll">
       <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-        <img src={LOGO_MOV} alt="Grupo MOV" style={{height:30,width:"auto",display:"block",flexShrink:0}}/>
+        <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{height:28,width:"auto",display:"block",flexShrink:0}}/>
         <div style={{whiteSpace:"nowrap"}}>
-          <div style={{fontSize:13,fontWeight:800,color:"#FFF"}}>Grupo MOV</div>
-          <div style={{fontSize:9,color:"#94A3B8",letterSpacing:1,textTransform:"uppercase"}}>Gestão de Manutenção</div>
+          <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>Grupo MOV</div>
+          <div style={{fontSize:9,color:"#94A3B8",letterSpacing:1,textTransform:"uppercase"}}>Gestão: Manutenção-Comercial-Serviços</div>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
           <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A",flexShrink:0}}>{user.name[0]}</div>
-          <div style={{fontSize:12,fontWeight:700,color:"#FFF"}}>{user.name}</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{user.name}</div>
         </div>
         {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"#F5C200",border:"none",color:"#1A1A1A",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>👤 Usuários</button>}
-        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.14)",color:"#E2E8F0",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
+        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"#F8FAFC",border:"1px solid #E5E7EB",color:"#475569",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
       </div>
     </div>
   );
