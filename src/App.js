@@ -1988,6 +1988,7 @@ export default function App(){
   const [ofiNovaServ,setOfiNovaServ]=useState("todos");
   const [ofiNovaSetor,setOfiNovaSetor]=useState("todos");
   const [aponSelecionados,setAponSelecionados]=useState({});
+  const [showFerramentasApon,setShowFerramentasApon]=useState(false);
   const [ofiNovaFrom,setOfiNovaFrom]=useState("");
   const [ofiNovaTo,setOfiNovaTo]=useState("");
   const [apontamentos,setApontamentos]=useState([]);
@@ -2890,88 +2891,96 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"7px 10px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                  {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #EF4444",background:"#EF4444",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir Selecionados ({qtdSelecionados})</button>}
-                  <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
-                  <button onClick={()=>{
-                    const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
-                    if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo, Matheus, Hebert, Guilherme) foi encontrado.");return;}
-                    if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
-                      alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
-                      notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
-                    }
-                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"transparent",color:"#F5C200",fontSize:11,cursor:"pointer",fontWeight:600}}>🪄 Preencher Serviços por Técnico</button>
-                  <button onClick={()=>{
-                    const semServico=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico);
-                    if(semServico.length===0){alert("Nenhum apontamento sem serviço encontrado.");return;}
-                    if(window.confirm(`Excluir ${semServico.length} apontamento(s) sem serviço preenchido? Essa ação não pode ser desfeita.`)){
-                      semServico.forEach(a=>delApon(a.id));
-                      notify(`🧹 ${semServico.length} apontamento(s) sem serviço excluído(s)!`);
-                    }
-                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62828",background:"transparent",color:"#F87171",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir sem Serviço</button>
-                  <button onClick={()=>{
-                    const comDetalhamento=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&a.servico&&!SERVICOS_OFICINA.includes(a.servico));
-                    if(comDetalhamento.length===0){alert("Nenhum apontamento com descrição detalhada (fora das categorias do sistema) encontrado.");return;}
-                    if(window.confirm(`Mover a descrição para Observações e deixar o Serviço em branco em ${comDetalhamento.length} apontamento(s)? Nenhum registro será excluído — só o texto muda de campo.`)){
-                      comDetalhamento.forEach(a=>{
-                        const novaObs=a.obs?`${a.servico} | ${a.obs}`:a.servico;
-                        updateApon(a.id,{obs:novaObs,servico:""});
-                      });
-                      notify(`🔄 ${comDetalhamento.length} apontamento(s) atualizado(s) — descrição movida para Observações!`);
-                    }
-                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1565C0",background:"transparent",color:"#60A5FA",fontSize:11,cursor:"pointer",fontWeight:600}}>🔄 Mover Descrição p/ Observação</button>
-                  <button onClick={()=>{
-                    const seen={};
-                    const dups=[];
-                    (apontamentos||[]).forEach(a=>{
-                      if(!a||a.oficina==="150")return;
-                      if(seen[a.id]){dups.push(a);}else{seen[a.id]=true;}
-                    });
-                    if(dups.length===0){alert("Nenhum ID duplicado encontrado.");return;}
-                    if(window.confirm(`Encontrados ${dups.length} apontamento(s) com ID duplicado (provavelmente da importação). Corrigir gerando um novo ID único para cada um, sem apagar nenhum dado?`)){
-                      setApontamentos(prev=>{
-                        const seen2={};
-                        return (prev||[]).map(a=>{
-                          if(!a||a.oficina==="150")return a;
-                          if(seen2[a.id]){
-                            const novoId=`APO${Date.now()}_${Math.floor(Math.random()*999999)}`;
-                            const novo={...a,id:novoId};
-                            db.save("apontamentos_oficina",novoId,novo);
-                            return novo;
-                          }
-                          seen2[a.id]=true;
-                          return a;
-                        });
-                      });
-                      notify(`✅ ${dups.length} ID(s) duplicado(s) corrigido(s)!`);
-                    }
-                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E67E00",background:"transparent",color:"#F5A623",fontSize:11,cursor:"pointer",fontWeight:600}}>🆔 Corrigir IDs Duplicados</button>
-                  <button onClick={()=>{
-                    const chave=a=>[a.os,a.patrimonio,a.data,a.tecnico,a.inicio,a.termino].map(v=>String(v||"").trim().toLowerCase()).join("|");
-                    const grupos={};
-                    (apontamentos||[]).forEach(a=>{
-                      if(!a||a.oficina==="150")return;
-                      const k=chave(a);
-                      if(!grupos[k])grupos[k]=[];
-                      grupos[k].push(a);
-                    });
-                    const paraExcluir=[];
-                    Object.values(grupos).forEach(grupo=>{
-                      if(grupo.length<2)return;
-                      // mantém o que tiver Serviço preenchido (ou o primeiro, se nenhum tiver); exclui o restante
-                      const ordenado=[...grupo].sort((a,b)=>(b.servico?1:0)-(a.servico?1:0));
-                      paraExcluir.push(...ordenado.slice(1));
-                    });
-                    if(paraExcluir.length===0){alert("Nenhum apontamento duplicado (mesma OS/PAT/data/técnico/horário) encontrado.");return;}
-                    if(window.confirm(`Encontrados ${paraExcluir.length} apontamento(s) duplicado(s) (mesma OS, PAT, data, técnico e horário). Excluir as cópias repetidas, mantendo apenas 1 de cada?`)){
-                      paraExcluir.forEach(a=>delApon(a.id));
-                      notify(`🧹 ${paraExcluir.length} apontamento(s) duplicado(s) excluído(s)!`);
-                    }
-                  }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62828",background:"transparent",color:"#F87171",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir Duplicados</button>
+              <div style={{padding:"10px 14px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:18,color:"#FFF"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:11,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                  {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#DC2626",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir ({qtdSelecionados})</button>}
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
-                  <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
+                  <div style={{position:"relative"}}>
+                    <button onClick={()=>setShowFerramentasApon(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid rgba(255,255,255,.2)",background:showFerramentasApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>⚙️ Ferramentas <span style={{fontSize:8}}>{showFerramentasApon?"▲":"▼"}</span></button>
+                    {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
+                      <button onClick={()=>{
+                        setShowFerramentasApon(false);
+                        const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
+                        if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo, Matheus, Hebert, Guilherme) foi encontrado.");return;}
+                        if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
+                          alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
+                          notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
+                        }
+                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🪄 Preencher Serviços por Técnico</button>
+                      <button onClick={()=>{
+                        setShowFerramentasApon(false);
+                        const semServico=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico);
+                        if(semServico.length===0){alert("Nenhum apontamento sem serviço encontrado.");return;}
+                        if(window.confirm(`Excluir ${semServico.length} apontamento(s) sem serviço preenchido? Essa ação não pode ser desfeita.`)){
+                          semServico.forEach(a=>delApon(a.id));
+                          notify(`🧹 ${semServico.length} apontamento(s) sem serviço excluído(s)!`);
+                        }
+                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🧹 Excluir sem Serviço</button>
+                      <button onClick={()=>{
+                        setShowFerramentasApon(false);
+                        const comDetalhamento=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&a.servico&&!SERVICOS_OFICINA.includes(a.servico));
+                        if(comDetalhamento.length===0){alert("Nenhum apontamento com descrição detalhada (fora das categorias do sistema) encontrado.");return;}
+                        if(window.confirm(`Mover a descrição para Observações e deixar o Serviço em branco em ${comDetalhamento.length} apontamento(s)? Nenhum registro será excluído — só o texto muda de campo.`)){
+                          comDetalhamento.forEach(a=>{
+                            const novaObs=a.obs?`${a.servico} | ${a.obs}`:a.servico;
+                            updateApon(a.id,{obs:novaObs,servico:""});
+                          });
+                          notify(`🔄 ${comDetalhamento.length} apontamento(s) atualizado(s) — descrição movida para Observações!`);
+                        }
+                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🔄 Mover Descrição p/ Observação</button>
+                      <button onClick={()=>{
+                        setShowFerramentasApon(false);
+                        const seen={};
+                        const dups=[];
+                        (apontamentos||[]).forEach(a=>{
+                          if(!a||a.oficina==="150")return;
+                          if(seen[a.id]){dups.push(a);}else{seen[a.id]=true;}
+                        });
+                        if(dups.length===0){alert("Nenhum ID duplicado encontrado.");return;}
+                        if(window.confirm(`Encontrados ${dups.length} apontamento(s) com ID duplicado (provavelmente da importação). Corrigir gerando um novo ID único para cada um, sem apagar nenhum dado?`)){
+                          setApontamentos(prev=>{
+                            const seen2={};
+                            return (prev||[]).map(a=>{
+                              if(!a||a.oficina==="150")return a;
+                              if(seen2[a.id]){
+                                const novoId=`APO${Date.now()}_${Math.floor(Math.random()*999999)}`;
+                                const novo={...a,id:novoId};
+                                db.save("apontamentos_oficina",novoId,novo);
+                                return novo;
+                              }
+                              seen2[a.id]=true;
+                              return a;
+                            });
+                          });
+                          notify(`✅ ${dups.length} ID(s) duplicado(s) corrigido(s)!`);
+                        }
+                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🆔 Corrigir IDs Duplicados</button>
+                      <button onClick={()=>{
+                        setShowFerramentasApon(false);
+                        const chave=a=>[a.os,a.patrimonio,a.data,a.tecnico,a.inicio,a.termino].map(v=>String(v||"").trim().toLowerCase()).join("|");
+                        const grupos={};
+                        (apontamentos||[]).forEach(a=>{
+                          if(!a||a.oficina==="150")return;
+                          const k=chave(a);
+                          if(!grupos[k])grupos[k]=[];
+                          grupos[k].push(a);
+                        });
+                        const paraExcluir=[];
+                        Object.values(grupos).forEach(grupo=>{
+                          if(grupo.length<2)return;
+                          const ordenado=[...grupo].sort((a,b)=>(b.servico?1:0)-(a.servico?1:0));
+                          paraExcluir.push(...ordenado.slice(1));
+                        });
+                        if(paraExcluir.length===0){alert("Nenhum apontamento duplicado (mesma OS/PAT/data/técnico/horário) encontrado.");return;}
+                        if(window.confirm(`Encontrados ${paraExcluir.length} apontamento(s) duplicado(s) (mesma OS, PAT, data, técnico e horário). Excluir as cópias repetidas, mantendo apenas 1 de cada?`)){
+                          paraExcluir.forEach(a=>delApon(a.id));
+                          notify(`🧹 ${paraExcluir.length} apontamento(s) duplicado(s) excluído(s)!`);
+                        }
+                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🧹 Excluir Duplicados</button>
+                    </div>}
+                  </div>
+                  <label style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#8B5CF6",fontSize:11,cursor:"pointer",color:"#FFF",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
                     📄 Ler PDF
                     <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
                       const file=e.target.files[0];if(!file)return;
@@ -2993,6 +3002,7 @@ export default function App(){
                   </label>
                   <BtnImport onClick={()=>setModalImportApon(true)}/>
                   <BtnExcel onClick={()=>exportCSV(lista,"apontamentos_oficina",[{key:"data",label:"Data"},{key:"os",label:"OS"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"tecnico",label:"Técnico"},{key:"_servicoEmBranco",label:"Serviço"},{key:"inicio",label:"Início"},{key:"termino",label:"Término"},{key:"total",label:"Total"},{key:"obs",label:"Obs"}])}/>
+                  <BtnY onClick={()=>{setEditingAponId(null);setAponNovaData(TODAY_STR);setAponNovaOS("");setAponNovaPat("");setAponNovaTech(OFICINA_TECHS[0]);setAponNovaServ("");setAponNovaInicio("");setAponNovaTermino("");setAponNovaObs("");setShowNovoApon(true);}}>+ Novo Apontamento</BtnY>
                 </div>
               </div>
               {showNovoApon&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{setShowNovoApon(false);setEditingAponId(null);}}>
