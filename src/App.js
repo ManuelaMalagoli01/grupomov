@@ -407,6 +407,7 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
     campo("Modelo SAS", p.modeloSAS);
     campo("Bateria", p.bateria==="litio"?"Lítio":"Chumbo");
     campo("Modelo da Bateria", p.modeloBateria);
+    campo("Carregador", p.carregador);
     if((p.bateria||"chumbo")==="chumbo"){
       const acs=[]; if(p.acessorios?.estrado)acs.push("Estrado"); if(p.acessorios?.suporte)acs.push("Suporte");
       campo("Acessórios", acs.join(", ")+(p.acessorios?.modelo?` (${p.acessorios.modelo})`:""));
@@ -415,10 +416,14 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
     campo("Data Conf. Fábrica", fmtDataBR(p.dataConfFabrica));
     campo("Previsão Chegada Cliente", fmtDataBR(p.previsaoChegadaCliente));
     campo("Nota Fiscal", p.notaFiscalNum);
-    campo("Entrega Técnica - Data", fmtDataBR(p.entregaTecnica?.data));
-    campo("Entrega Técnica - Relatório", p.entregaTecnica?.relatorio);
-    campo("Entrega Técnica - Documentação SAS", p.entregaTecnica?.documentacaoSas);
-    campo("Entrega Técnica - Status", {pendente:"Pendente",em_andamento:"Em Andamento",finalizado:"Finalizado"}[p.entregaTecnica?.status||"pendente"]);
+    const etPreenchida = p.entregaTecnica && (p.entregaTecnica.data||p.entregaTecnica.relatorio||p.entregaTecnica.documentacaoSas||(p.entregaTecnica.status&&p.entregaTecnica.status!=="pendente"));
+    if(etPreenchida){
+      if(p.entregaTecnica?.data)campo("Entrega Técnica - Data", fmtDataBR(p.entregaTecnica.data));
+      if(p.entregaTecnica?.relatorio)campo("Entrega Técnica - Relatório", p.entregaTecnica.relatorio);
+      if(p.entregaTecnica?.documentacaoSas)campo("Entrega Técnica - Documentação SAS", p.entregaTecnica.documentacaoSas);
+      campo("Entrega Técnica - Status", {pendente:"Pendente",em_andamento:"Em Andamento",finalizado:"Finalizado"}[p.entregaTecnica?.status||"pendente"]);
+    }
+    if(p.observacao)campo("Observação", p.observacao);
     y+=4;
     doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(90,90,90);
     doc.text("Documentação anexada:",14,y); y+=7;
@@ -427,7 +432,7 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
     anexosList.forEach(([label,anexo])=>{
       if(y>280){doc.addPage();y=20;}
       doc.setTextColor(anexo?.url?20:170,anexo?.url?20:170,anexo?.url?20:170);
-      doc.text(`${anexo?.url?"✓":"—"} ${label}`,18,y); y+=6;
+      doc.text(`${anexo?.url?"[Anexado]":"—"} ${label}`,18,y); y+=6;
     });
     doc.setFontSize(8); doc.setTextColor(160,160,160);
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} por ${autor||"—"}`,14,292);
@@ -2813,9 +2818,15 @@ export default function App(){
                       </div>
                     </div>
                   </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:10}}>
-                    <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Modelo da Bateria</label>
-                    <input type="text" placeholder="Modelo da bateria..." value={sasVendEdit?.modeloBateria||""} onChange={e=>setSasVendEdit(p=>({...p,modeloBateria:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:10}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Modelo da Bateria</label>
+                      <input type="text" placeholder="Modelo da bateria..." value={sasVendEdit?.modeloBateria||""} onChange={e=>setSasVendEdit(p=>({...p,modeloBateria:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                      <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Carregador</label>
+                      <input type="text" placeholder="Modelo do carregador..." value={sasVendEdit?.carregador||""} onChange={e=>setSasVendEdit(p=>({...p,carregador:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                    </div>
                   </div>
                   {(sasVendEdit?.bateria||"chumbo")==="chumbo"&&(
                     <div style={{background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:10,padding:12}}>
@@ -2861,6 +2872,12 @@ export default function App(){
                       </select>
                     </div>
                   </div>
+                </div>
+
+                {/* Observação */}
+                <div>
+                  <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Observação</label>
+                  <textarea value={sasVendEdit?.observacao||""} onChange={e=>setSasVendEdit(p=>({...p,observacao:e.target.value}))} placeholder="Observações adicionais..." rows={2} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box",fontFamily:"inherit"}}/>
                 </div>
 
                 {/* Documentação (anexos) */}
@@ -2917,6 +2934,7 @@ export default function App(){
         )}
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);db.saveBatch("oficina",stamp);setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);db.saveBatch("sas",stamp);setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
+        {modalImportSasVend&&<ImportExcelModal onClose={()=>setModalImportSasVend(false)} onImport={novos=>{const ano=new Date().getFullYear();let seq=(sasVendas||[]).filter(x=>x&&x.numero&&x.numero.endsWith("/"+ano)).length;const stamp=novos.map(d=>{seq++;return{...d,id:d.id||"SASV"+Date.now()+Math.random().toString(36).slice(2,6),numero:d.numero||`${String(seq).padStart(4,"0")}/${ano}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aberta",arquivado:false};});setSasVendas(p=>[...stamp,...(p||[])]);db.saveBatch("sas_vendas",stamp);setModalImportSasVend(false);notify(`✅ ${stamp.length} proposta(s) importada(s)!`);}}/>}
         {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);db.saveBatch("processos_mu",stamp);setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
         {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);db.saveBatch("processos_af",stamp);setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
         {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);db.saveBatch("relatorios",stamp);setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
@@ -6714,7 +6732,49 @@ export default function App(){
               <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 SAS Vendas</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} proposta(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} aberta(s)</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqSasVend(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSasVend?"#1A1A1A":"#FFF",color:showArqSasVend?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSasVend?"Ocultar":"Arquivadas"}</button>
-                <BtnY onClick={()=>{setSasVendEdit({cliente:"",cnpj:"",contatos:[{nome:"",tel:"",email:""}],modeloSAS:"",bateria:"chumbo",modeloBateria:"",acessorios:{estrado:false,suporte:false,modelo:""},prazoEntregaInicial:"",dataConfFabrica:"",previsaoChegadaCliente:"",notaFiscalNum:"",entregaTecnica:{data:"",relatorio:"",documentacaoSas:"",status:"pendente"}});setSasVendModal(true);}}>+ Nova Proposta</BtnY>
+                <BtnImport onClick={()=>setModalImportSasVend(true)}/>
+                <BtnExcel onClick={()=>exportCSV(listaFil,"sas_vendas_propostas",[{key:"numero",label:"Nº Proposta"},{key:"cliente",label:"Cliente"},{key:"cnpj",label:"CNPJ"},{key:"modeloSAS",label:"Modelo SAS"},{key:"bateria",label:"Bateria"},{key:"modeloBateria",label:"Modelo Bateria"},{key:"carregador",label:"Carregador"},{key:"prazoEntregaInicial",label:"Prazo Entrega Inicial"},{key:"dataConfFabrica",label:"Data Conf. Fábrica"},{key:"previsaoChegadaCliente",label:"Previsão Chegada"},{key:"notaFiscalNum",label:"NF"},{key:"status",label:"Status"},{key:"registradoPor",label:"Aberto por"}])}/>
+                <button onClick={async()=>{
+                  if(listaFil.length===0){alert("Nenhuma proposta para exportar.");return;}
+                  const jsPDF=await loadJsPDF();
+                  const doc=new jsPDF();
+                  listaFil.forEach((p,idx)=>{
+                    if(idx>0)doc.addPage();
+                    doc.setFillColor(26,26,26); doc.rect(0,0,210,26,"F");
+                    doc.addImage(LOGO_MOV_LIGHT,"PNG",14,4,28,18);
+                    doc.addImage(LOGO_SAS_NOBLELIFT,"PNG",168,3,28,20);
+                    doc.setTextColor(245,194,0); doc.setFontSize(13); doc.setFont(undefined,"bold");
+                    doc.text(`Proposta ${p.numero||""}`,75,15);
+                    doc.setTextColor(26,26,26); doc.setFontSize(14); doc.setFont(undefined,"bold");
+                    doc.text("Proposta Comercial SAS Vendas",14,36);
+                    let y=46;
+                    const campo=(label,valor)=>{
+                      if(y>280){doc.addPage();y=20;}
+                      doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(90,90,90);
+                      doc.text(label+":",14,y);
+                      doc.setFont(undefined,"normal"); doc.setTextColor(20,20,20);
+                      const lines=doc.splitTextToSize(String(valor===undefined||valor===null||valor===""?"—":valor),120);
+                      doc.text(lines,68,y);
+                      y+=6*Math.max(1,lines.length)+2;
+                    };
+                    campo("Cliente", p.cliente);
+                    campo("CNPJ", p.cnpj);
+                    campo("Modelo SAS", p.modeloSAS);
+                    campo("Bateria", p.bateria==="litio"?"Lítio":"Chumbo");
+                    campo("Carregador", p.carregador);
+                    campo("Prazo Entrega Inicial", fmtDataBR(p.prazoEntregaInicial));
+                    campo("Previsão Chegada Cliente", fmtDataBR(p.previsaoChegadaCliente));
+                    campo("Nota Fiscal", p.notaFiscalNum);
+                    campo("Status", p.status==="concluida"?"Concluída":"Aberta");
+                    if(p.observacao)campo("Observação", p.observacao);
+                    doc.setFontSize(8); doc.setTextColor(160,160,160);
+                    doc.text(`Aberto por ${p.registradoPor||"—"}`,14,292);
+                  });
+                  doc.setFontSize(8); doc.setTextColor(160,160,160);
+                  doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} por ${user.name}`,14,297>290?290:290);
+                  doc.save(`SAS_Vendas_Propostas_${new Date().toISOString().slice(0,10)}.pdf`);
+                }} style={{padding:"9px 16px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",color:"#475569",fontSize:12,cursor:"pointer",fontWeight:600}}>📄 Exportar Tudo (PDF)</button>
+                <BtnY onClick={()=>{setSasVendEdit({cliente:"",cnpj:"",contatos:[{nome:"",tel:"",email:""}],modeloSAS:"",bateria:"chumbo",modeloBateria:"",carregador:"",acessorios:{estrado:false,suporte:false,modelo:""},prazoEntregaInicial:"",dataConfFabrica:"",previsaoChegadaCliente:"",notaFiscalNum:"",observacao:"",entregaTecnica:{data:"",relatorio:"",documentacaoSas:"",status:"pendente"}});setSasVendModal(true);}}>+ Nova Proposta</BtnY>
               </div>
             </div>
 
@@ -6758,14 +6818,21 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:6}}>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{s.cliente||<span style={{color:"#CCC"}}>Cliente</span>}</div>
-                      <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Máquina</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{findCategoria(s.modeloSAS)||"—"}</div></div>
-                      <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Modelo</div><div style={{fontSize:11,fontWeight:600,color:"#1565C0"}}>{s.modeloSAS||"—"}</div></div>
-                      <div style={{display:"flex",justifyContent:"space-between"}}>
-                        <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Bateria</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A",textTransform:"capitalize"}}>{s.bateria||"—"}</div></div>
-                        <div style={{textAlign:"right"}}><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Previsão Entrega</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{fmtDataBR(s.previsaoChegadaCliente)||"—"}</div></div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{s.cliente||<span style={{color:"#CCC"}}>Cliente</span>}</div>
+                        <div style={{fontSize:10,color:"#94A3B8",fontWeight:600}}>{fmtDataBR((s.registradoEm||"").slice(0,10))||"—"}</div>
                       </div>
-                      <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"2px 9px",alignSelf:"flex-start",marginTop:2}}>{ok?"Concluída":"Aberta"}</span>
+                      <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Máquina</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{findCategoria(s.modeloSAS)||"—"}{s.modeloSAS?` · ${s.modeloSAS}`:""}</div></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Bateria</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A",textTransform:"capitalize"}}>{s.bateria||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Carregador</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{s.carregador||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>Previsão Entrega</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{fmtDataBR(s.previsaoChegadaCliente)||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8.5,fontWeight:700,textTransform:"uppercase"}}>NF</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{s.notaFiscalNum||"—"}</div></div>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
+                        <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"2px 9px"}}>{ok?"Concluída":"Aberta"}</span>
+                        <span style={{fontSize:9,color:"#94A3B8"}}>{s.registradoPor||"—"}</span>
+                      </div>
                     </div>
                   </div>);
                 })}
