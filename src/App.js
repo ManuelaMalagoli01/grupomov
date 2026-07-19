@@ -359,6 +359,44 @@ const loadXLSX = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar leitor de Excel"));
   document.body.appendChild(sc);
 });
+// Gera a Planilha de Comissão SAS no mesmo formato enviado ao fabricante (3 secoes: Venda, Entrega Tecnica, Final de Garantia)
+const gerarPlanilhaComissaoSas = async (registros, mes, ano, nomeRepresentante)=>{
+  const XLSX = await loadXLSX();
+  const parseVal=v=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+  const noMes=(data)=>data && data.slice(0,7)===`${ano}-${mes}`;
+  const secaoVenda = registros.filter(s=>noMes(s.envioFaturamento));
+  const secaoEntrega = registros.filter(s=>noMes(s.dataRealizacao));
+  const secaoGarantia = registros.filter(s=>noMes(s.dataGarantia));
+
+  const aoa = [];
+  aoa.push([`${nomeRepresentante||""} - ${mes}/${ano}`]);
+  aoa.push(["VENDA"]);
+  aoa.push(["CLIENTE","DATA FATURAMENTO","Nº NF-E","EQUIPAMENTO","QTD","VALOR UNITÁRIO","VALOR TOTAL","%","VALOR DA COMISSÃO"]);
+  let totV=0, totComV=0;
+  secaoVenda.forEach(s=>{const v=parseVal(s.valor);totV+=v;totComV+=v*0.01;aoa.push([s.cliente||s.nome||"",fmtDataBR(s.envioFaturamento),s.nfNum||"",s.equipamento||"",1,v,v,"1%",v*0.01]);});
+  aoa.push(["TOTAL","","","",secaoVenda.length,"",totV,"-",totComV]);
+  aoa.push([]);
+  aoa.push(["ENTREGA TÉCNICA"]);
+  aoa.push(["CLIENTE","DATA ENTREGA TÉCNICA","Nº NF-E","EQUIPAMENTO","QTD","VALOR UNITÁRIO","VALOR TOTAL","%","VALOR DA COMISSÃO"]);
+  let totE=0, totComE=0;
+  secaoEntrega.forEach(s=>{const v=parseVal(s.valor);totE+=v;totComE+=v*0.01;aoa.push([s.cliente||s.nome||"",fmtDataBR(s.dataRealizacao),s.nfNum||"",s.equipamento||"",1,v,v,"1%",v*0.01]);});
+  aoa.push(["TOTAL","","","",secaoEntrega.length,"",totE,"-",totComE]);
+  aoa.push([]);
+  aoa.push(["FINAL DE GARANTIA"]);
+  aoa.push(["CLIENTE","DATA FINAL DA GARANTIA","Nº NF-E","EQUIPAMENTO","QTD","VALOR UNITÁRIO","VALOR TOTAL","%","VALOR DA COMISSÃO"]);
+  let totG=0, totComG=0;
+  secaoGarantia.forEach(s=>{const v=parseVal(s.valor);totG+=v;totComG+=v*0.01;aoa.push([s.cliente||s.nome||"",fmtDataBR(s.dataGarantia),s.nfNum||"",s.equipamento||"",1,v,v,"1%",v*0.01]);});
+  aoa.push(["TOTAL","","","",secaoGarantia.length,"",totG,"-",totComG]);
+  aoa.push([]);
+  aoa.push(["","","","","","","VALOR TOTAL DAS COMISSÕES","",totComV+totComE+totComG]);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"]=[{wch:26},{wch:16},{wch:12},{wch:22},{wch:6},{wch:14},{wch:14},{wch:6},{wch:16}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Comissão");
+  XLSX.writeFile(wb, `Comissao_SAS_${mes}-${ano}.xlsx`);
+  return {totV,totE,totG,totComV,totComE,totComG,total:totComV+totComE+totComG,qtdVenda:secaoVenda.length,qtdEntrega:secaoEntrega.length,qtdGarantia:secaoGarantia.length};
+};
 // Upload de arquivo (PDF) para o Supabase Storage — usado pelos anexos da Nova Proposta (SAS Vendas)
 const uploadArquivoSupabase = async (file, pastaId, campo) => {
   const path = `${pastaId}/${campo}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
@@ -1673,7 +1711,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
-  const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro"];
+  const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -1885,6 +1923,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="sas" l="📄 SAS Financeiro"/>
           <SubBtn k="dashboard_sas_financeiro" l="📊 Dashboard Financeiro"/>
+          <SubBtn k="planilha_comissao_sas" l="🧮 Planilha de Comissão"/>
+          <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
           <SubBtn k="sas_manutencao" l="🔧 SAS Manutenção"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2218,6 +2258,9 @@ export default function App(){
   const [sasVendEdit,setSasVendEdit]=useState(null);
   const [sasVendModal,setSasVendModal]=useState(false);
   const [modalImportSasVend,setModalImportSasVend]=useState(false);
+  const [documentosSas,setDocumentosSas]=useState([]);
+  const [comissaoMes,setComissaoMes]=useState(String(new Date().getMonth()+1).padStart(2,"0"));
+  const [comissaoAno,setComissaoAno]=useState(String(new Date().getFullYear()));
 
   // Modais
   const [modalReport,setModalReport]=useState(false);
@@ -2314,12 +2357,12 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows, comRows, sasManutRows, sasVendRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows, comRows, sasManutRows, sasVendRows, docSasRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
         safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas"), safeGet("comercial"), safeGet("sas_manutencao"), safeGet("sas_vendas")
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas"), safeGet("comercial"), safeGet("sas_manutencao"), safeGet("sas_vendas"), safeGet("documentos_sas")
       ]);
       if(rels.length>0) setReports(rels);
       if(comRows.length>0) setComercial(comRows);
@@ -2351,6 +2394,7 @@ export default function App(){
       if(sasRows.length>0) setSas(sasRows);
       if(sasManutRows.length>0) setSasManutencao(sasManutRows);
       if(sasVendRows.length>0) setSasVendas(sasVendRows);
+      if(docSasRows.length>0) setDocumentosSas(docSasRows);
       if(carrosRows.length>0) setCarros(carrosRows);
       if(opRows && opRows.length>0) setOperacoes(opRows);
       if(execMURows && execMURows.length>0) setExecMauUso(execMURows);
@@ -2762,6 +2806,16 @@ export default function App(){
                       <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório MOV do Retrabalho</label><input type="text" value={sasEdit?.retrabalho?.relatorioMov||""} onChange={e=>setSasEdit(p=>({...p,retrabalho:{...(p.retrabalho||{}),relatorioMov:e.target.value}}))} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>📎 Documentação</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <AnexoPDF label="Nota Fiscal" value={sasEdit?.anexoNF} onChange={v=>setSasEdit(p=>({...p,anexoNF:v}))} pastaId={sasEdit?.id||"temp"} campo="nota_fiscal"/>
+                    <AnexoPDF label="Certificado Entrega Técnica" value={sasEdit?.anexoEntregaTecnica} onChange={v=>setSasEdit(p=>({...p,anexoEntregaTecnica:v}))} pastaId={sasEdit?.id||"temp"} campo="entrega_tecnica"/>
+                    <AnexoPDF label="Certificado Bateria" value={sasEdit?.anexoCertBateria} onChange={v=>setSasEdit(p=>({...p,anexoCertBateria:v}))} pastaId={sasEdit?.id||"temp"} campo="cert_bateria"/>
+                    <AnexoPDF label="Certificado Carregador" value={sasEdit?.anexoCertCarregador} onChange={v=>setSasEdit(p=>({...p,anexoCertCarregador:v}))} pastaId={sasEdit?.id||"temp"} campo="cert_carregador"/>
+                  </div>
                 </div>
 
                 <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
@@ -6573,6 +6627,7 @@ export default function App(){
                         <div style={{gridColumn:"span 2"}}><span style={{color:"#94A3B8"}}>Placa/Téc.: </span><b style={{color:"#1A1A1A"}}>{s.placa||"—"}{s.tecnico?` · ${s.tecnico}`:""}</b></div>
                         {s.retrabalho?.houve&&<div><span style={{color:"#C62828",fontWeight:700}}>🔁 Retrab.</span></div>}
                       </div>
+                      {(()=>{const docs=[s.anexoNF,s.anexoEntregaTecnica,s.anexoCertBateria,s.anexoCertCarregador].filter(a=>a?.url).length;return docs>0&&<div style={{fontSize:9.5,color:"#1A7A3C",fontWeight:700}}>📎 {docs}/4 documentos anexados</div>;})()}
                       <div style={{fontSize:9.5,color:"#CBD5E1",textAlign:"right"}}>{s.registradoPor||""}</div>
                     </div>
                   </div>);
@@ -6641,6 +6696,95 @@ export default function App(){
                 }} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:"#F0F0F0"}},y:{grid:{display:false},ticks:{font:{size:9}}}}}}/>}
               </div>
             </div>
+          </div>);
+        })()}
+
+        {tab==="planilha_comissao_sas"&&(()=>{
+          const MESES_NUM=["01","02","03","04","05","06","07","08","09","10","11","12"];
+          const MESES_NOME=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+          const noMes=(data)=>data && data.slice(0,7)===`${comissaoAno}-${comissaoMes}`;
+          const secaoVenda=(sas||[]).filter(s=>s&&noMes(s.envioFaturamento));
+          const secaoEntrega=(sas||[]).filter(s=>s&&noMes(s.dataRealizacao));
+          const secaoGarantia=(sas||[]).filter(s=>s&&noMes(s.dataGarantia));
+          const parseVal=v=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const totComV=secaoVenda.reduce((a,s)=>a+parseVal(s.valor)*0.01,0);
+          const totComE=secaoEntrega.reduce((a,s)=>a+parseVal(s.valor)*0.01,0);
+          const totComG=secaoGarantia.reduce((a,s)=>a+parseVal(s.valor)*0.01,0);
+          const historico=(documentosSas||[]).filter(d=>d&&d.categoria==="comissao").sort((a,b)=>(b.registradoEm||"").localeCompare(a.registradoEm||""));
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🧮 Planilha de Comissão SAS</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>Gera a planilha no formato enviado ao fabricante, com base nos dados do SAS Financeiro</div></div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <select value={comissaoMes} onChange={e=>setComissaoMes(e.target.value)}>{MESES_NUM.map((m,i)=><option key={m} value={m}>{MESES_NOME[i]}</option>)}</select>
+                <select value={comissaoAno} onChange={e=>setComissaoAno(e.target.value)}>{["2025","2026","2027","2028"].map(y=><option key={y}>{y}</option>)}</select>
+                <BtnY onClick={async()=>{
+                  const r=await gerarPlanilhaComissaoSas(sas||[],comissaoMes,comissaoAno,user.name);
+                  const row={id:`DOCSAS${Date.now()}`,categoria:"comissao",nome:`Comissao_SAS_${comissaoMes}-${comissaoAno}.xlsx`,mes:comissaoMes,ano:comissaoAno,resumo:r,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                  setDocumentosSas(p=>[row,...(p||[])]);
+                  db.save("documentos_sas",row.id,row);
+                  notify("✅ Planilha gerada e baixada!");
+                }}>📥 Gerar e Baixar Excel</BtnY>
+              </div>
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
+              <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #1565C0"}}><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Venda ({secaoVenda.length})</div><div style={{fontSize:18,fontWeight:900,color:"#1565C0",marginTop:2}}>{fmtR(totComV)}</div></div>
+              <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #1A7A3C"}}><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Entrega Técnica ({secaoEntrega.length})</div><div style={{fontSize:18,fontWeight:900,color:"#1A7A3C",marginTop:2}}>{fmtR(totComE)}</div></div>
+              <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #B45309"}}><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Final de Garantia ({secaoGarantia.length})</div><div style={{fontSize:18,fontWeight:900,color:"#B45309",marginTop:2}}>{fmtR(totComG)}</div></div>
+              <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #14532D"}}><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Total do Mês</div><div style={{fontSize:18,fontWeight:900,color:"#14532D",marginTop:2}}>{fmtR(totComV+totComE+totComG)}</div></div>
+            </div>
+
+            <div className="card" style={{padding:16,marginBottom:20}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:10}}>📜 Histórico de Planilhas Geradas</div>
+              {historico.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Nenhuma planilha gerada ainda</div>:
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {historico.map(d=>(
+                    <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"#F8FAFC",borderRadius:8,fontSize:12}}>
+                      <div><b>{d.nome}</b> <span style={{color:"#94A3B8"}}>· gerado em {new Date(d.registradoEm).toLocaleString("pt-BR")} por {d.registradoPor}</span></div>
+                      <div style={{fontWeight:700,color:"#14532D"}}>{d.resumo?fmtR(d.resumo.total):""}</div>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+          </div>);
+        })()}
+
+        {tab==="documentos_obrigatorios_sas"&&(()=>{
+          const docs=(documentosSas||[]).filter(d=>d&&d.categoria==="obrigatorio");
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📚 Documentos Obrigatórios SAS</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>Modelos oficiais do fabricante (certificados, termos de garantia) — referência para toda a equipe</div></div>
+              <label style={{padding:"9px 16px",borderRadius:8,border:"none",background:"#F5C200",fontSize:12,cursor:"pointer",color:"#1A1A1A",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:6}}>
+                📎 Anexar Documento
+                <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" style={{display:"none"}} onChange={async e=>{
+                  const file=e.target.files[0]; if(!file)return;
+                  try{
+                    const up=await uploadArquivoSupabase(file,"obrigatorios",file.name.replace(/\.[^.]+$/,""));
+                    const row={id:`DOCSAS${Date.now()}`,categoria:"obrigatorio",nome:file.name,url:up.url,path:up.path,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                    setDocumentosSas(p=>[row,...(p||[])]);
+                    db.save("documentos_sas",row.id,row);
+                    notify("✅ Documento anexado!");
+                  }catch(err){alert("Erro ao enviar arquivo: "+(err?.message||err));}
+                  e.target.value="";
+                }}/>
+              </label>
+            </div>
+            {docs.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📚</div><div style={{fontSize:12,fontWeight:600}}>Nenhum documento anexado ainda</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
+                {docs.map(d=>(
+                  <div key={d.id} className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📄 {d.nome}</div>
+                    <div style={{fontSize:10,color:"#94A3B8"}}>Anexado em {new Date(d.registradoEm).toLocaleDateString("pt-BR")} por {d.registradoPor}</div>
+                    <div style={{display:"flex",gap:8}}>
+                      <a href={d.url} target="_blank" rel="noreferrer" style={{flex:1,textAlign:"center",padding:"6px 10px",borderRadius:6,background:"#1565C0",color:"#FFF",fontSize:11,fontWeight:700,textDecoration:"none"}}>Abrir</a>
+                      <button onClick={()=>{if(window.confirm("Excluir este documento?")){setDocumentosSas(p=>p.filter(x=>x.id!==d.id));db.delete("documentos_sas",d.id);}}} style={{padding:"6px 10px",borderRadius:6,background:"#DC2626",color:"#FFF",border:"none",cursor:"pointer",fontSize:11,fontWeight:700}}>✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>);
         })()}
 
