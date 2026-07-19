@@ -172,7 +172,9 @@ const parseMin=h=>{
 const SETOR_150_TECHS=["matheus","pedro souza","pedro pimente"];
 
 // ── COMERCIAL: opções de dropdown extraídas da planilha modelo da usuária ──
-const COM_TERMOMETRO = ["Em Análise","Em Análise 25%","Em Análise 70%","Declinada","Conversão OK"];
+const COM_TERMOMETRO = ["Em Análise","25% em Análise","50% em Análise","75% em Análise"];
+const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","25% em Análise":"#FBBF24","50% em Análise":"#F97316","75% em Análise":"#EF4444"};
+const COM_STATUS_VENDA = {em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluida:{l:"Venda Concluída",c:"#1A7A3C",bg:"#F0FFF5"},nao_convertida:{l:"Venda Não Convertida",c:"#C62828",bg:"#FFF0F0"}};
 const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
 const COM_EQUIPAMENTO = ["Empilhadeira a Combustão Diesel","Empilhadeira a Combustão GLP","Empilhadeira Contrapeso - Bateria Lítio","Empilhadeira Contrapeso Elétrica","Empilhadeira Patolada","Empilhadeira Patolada Manual","Empilhadeira Patolada Semi-Elétrica","Empilhadeira Retrátil","Empilhadeira Retrátil - Bateria Lítio","Paleteira Lítio","Paleteira","Paleteira com Balança e Impressora","Paleteira com Balança","Plataforma Elevatória","Rebocador","Transpaleteira Elétrica Operador a Bordo","Transpaleteira Elétrica Operador a Bordo - Bateria Lítio","Transpaleteira Elétrica Operador a Pé","Transpaleteira Elétrica Operador a Pé - Bateria Lítio","Transpaleteira Pantográfica","Lavadora de Piso","Selecionadora de Pedidos"];
 const COM_MARCA = ["SAS","MOV"];
@@ -181,7 +183,6 @@ const COM_TIPO_SERVICO = ["Locação","Venda"];
 const COM_NOVO_SEMINOVO = ["Novo","Seminovo"];
 const COM_MOTIVO_PERDA = ["Cliente em Novo Projeto Comercial","Condição de Pagamento","Perdida por Preço","Perdido por Prazo de Entrega","Perdido por Indisponibilidade de Estoque"];
 const fmtBRL=(v)=>{const n=parseFloat(v);if(isNaN(n))return "R$ 0,00";return "R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});};
-const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","Em Análise 25%":"#F59E0B","Em Análise 70%":"#F97316","Declinada":"#EF4444","Conversão OK":"#22C55E"};
 const classificarSetor=(tecnico)=>{
   const n=normalizeTec(tecnico);
   if(!n)return "1340";
@@ -2403,6 +2404,7 @@ export default function App(){
   const [showArqComercial,setShowArqComercial]=useState(false);
   const [comSelecionados,setComSelecionados]=useState({});
   const [modalComercial,setModalComercial]=useState(false);
+  const [comHistObsTexto,setComHistObsTexto]=useState("");
   const [editComercial,setEditComercial]=useState(null);
   const [modalImportComercial,setModalImportComercial]=useState(false);
   const [dashComVendedor,setDashComVendedor]=useState("todos");
@@ -7128,9 +7130,10 @@ export default function App(){
               return updated;
             });
           };
-          const COM_FORM_EMPTY={termometro:"Em Análise",considerarR:"Sim",numeroProposta:"",data:TODAY_STR,origemLead:COM_ORIGEM_LEAD[0],nomeCliente:"",cnpj:"",cidade:"",telefone:"",email:"",nomeContato:"",vendedor:"",qtd:"",equipamento:COM_EQUIPAMENTO[0],marca:COM_MARCA[0],modelo:"",capacidadeKg:"",bateria:"",valor:"",tipoServico:COM_TIPO_SERVICO[0],qtdMeses:"",novoSeminovo:COM_NOVO_SEMINOVO[0],prazoEntregaDias:"",obs:"",motivoPerda:"",followUp:""};
+          const COM_FORM_EMPTY={termometro:"Em Análise",historicoNegociacao:[],statusVenda:"em_andamento",considerarR:"Sim",numeroProposta:"",data:TODAY_STR,origemLead:COM_ORIGEM_LEAD[0],nomeCliente:"",cnpj:"",cidade:"",telefone:"",email:"",nomeContato:"",vendedor:"",qtd:"",equipamento:COM_EQUIPAMENTO[0],marca:COM_MARCA[0],modelo:"",capacidadeKg:"",bateria:"",valor:"",tipoServico:COM_TIPO_SERVICO[0],qtdMeses:"",novoSeminovo:COM_NOVO_SEMINOVO[0],prazoEntregaDias:"",obs:"",motivoPerda:"",followUp:""};
           const salvarProposta=()=>{
-            const f=editComercial||COM_FORM_EMPTY;
+            const fRaw=editComercial||COM_FORM_EMPTY;
+            const {_proximoTermometro,...f}=fRaw;
             if(!f.nomeCliente){alert("Preencha o Nome do Cliente.");return;}
             if(f.id){
               updateComercial(f.id,f);
@@ -7190,7 +7193,7 @@ export default function App(){
                     {key:"obs",label:"Obs"},{key:"motivoPerda",label:"Motivo da Perda"},{key:"followUp",label:"Follow-up"}
                   ])}/>
                   <button onClick={()=>setShowArqComercial(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E5E7EB",background:showArqComercial?"#1A1A1A":"#FFF",color:showArqComercial?"#FFF":"#555",fontSize:12,fontWeight:700,cursor:"pointer"}}>{showArqComercial?"✓ ":""}Concluído/Arquivado</button>
-                  <button onClick={()=>{setEditComercial(null);setModalComercial(true);}} className="btn btn-primary">+ Nova Proposta</button>
+                  <button onClick={()=>{setEditComercial(null);setComHistObsTexto("");setModalComercial(true);}} className="btn btn-primary">+ Nova Proposta</button>
                 </div>
               </div>
 
@@ -7251,7 +7254,7 @@ export default function App(){
                           <td style={{padding:"10px 12px",fontWeight:800,color:"#1A7A3C",whiteSpace:"nowrap"}}>{fmtBRL(c.valor)}</td>
                           <td style={{padding:"10px 12px",fontSize:11}}>{c.tipoServico||"—"}</td>
                           <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:6}}>
-                            <button onClick={()=>{setEditComercial(c);setModalComercial(true);}} title="Editar" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:12}}>✏️</button>
+                            <button onClick={()=>{setEditComercial(c);setComHistObsTexto("");setModalComercial(true);}} title="Editar" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:12}}>✏️</button>
                             <button onClick={()=>{updateComercial(c.id,{arquivado:!c.arquivado});}} title={c.arquivado?"Reabrir":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{c.arquivado?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm(`Excluir permanentemente a proposta de ${c.nomeCliente}?`)){setComercial(p=>(p||[]).filter(x=>x.id!==c.id));db.delete("comercial",c.id);}}} title="Excluir" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
                           </div></td>
@@ -7273,7 +7276,40 @@ export default function App(){
                         <button onClick={()=>{setModalComercial(false);setEditComercial(null);}} style={{background:"transparent",border:"none",color:"#FFF",fontSize:18,cursor:"pointer"}}>✕</button>
                       </div>
                       <div style={{padding:22,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                        <div><label style={lblSt}>Termômetro da Negociação</label><select value={f.termometro} onChange={e=>set("termometro",e.target.value)} style={inpSt}>{COM_TERMOMETRO.map(t=><option key={t}>{t}</option>)}</select></div>
+                        <div style={{gridColumn:"span 2",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:12,padding:16}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                            <label style={lblSt}>Termômetro da Negociação</label>
+                            <span style={{fontSize:11,fontWeight:800,padding:"3px 12px",borderRadius:20,background:(COM_TERMOMETRO_COR[f.termometro]||"#888")+"22",color:COM_TERMOMETRO_COR[f.termometro]||"#888"}}>{f.termometro}</span>
+                          </div>
+                          {(f.historicoNegociacao||[]).length>0&&<div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
+                            {(f.historicoNegociacao||[]).map((h,hi)=>(
+                              <div key={hi} style={{background:"#FFF",border:"1px solid #EEF1F4",borderRadius:8,padding:"8px 10px"}}>
+                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                                  <span style={{fontSize:10,fontWeight:800,color:COM_TERMOMETRO_COR[h.percentual]||"#888"}}>{h.percentual}</span>
+                                  <span style={{fontSize:9,color:"#94A3B8"}}>{fmtDataBR(h.data)} · {h.autor}</span>
+                                </div>
+                                <div style={{fontSize:11,color:"#334155"}}>{h.observacao}</div>
+                              </div>
+                            ))}
+                          </div>}
+                          {COM_TERMOMETRO.filter(t=>t!==f.termometro).length>0&&f.statusVenda!=="concluida"&&f.statusVenda!=="nao_convertida"&&<div>
+                            <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:6}}>Registrar avanço da negociação</div>
+                            <div style={{display:"flex",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+                              {COM_TERMOMETRO.filter(t=>t!==f.termometro).map(t=>(
+                                <button key={t} onClick={()=>set("_proximoTermometro",t)} style={{padding:"5px 12px",borderRadius:20,border:f._proximoTermometro===t?`2px solid ${COM_TERMOMETRO_COR[t]}`:"1px solid #E0E0E0",background:f._proximoTermometro===t?(COM_TERMOMETRO_COR[t]+"22"):"#FFF",color:COM_TERMOMETRO_COR[t],fontSize:11,fontWeight:700,cursor:"pointer"}}>{t}</button>
+                              ))}
+                            </div>
+                            {f._proximoTermometro&&<>
+                              <textarea value={comHistObsTexto} onChange={e=>setComHistObsTexto(e.target.value)} placeholder="Obrigatório: o que foi negociado com o cliente (valores, condições, informações)..." rows={2} style={{...inpSt,resize:"vertical",width:"100%",boxSizing:"border-box",marginBottom:8}}/>
+                              <button onClick={()=>{
+                                if(!comHistObsTexto.trim()){alert("Preciso que descreva o que foi negociado antes de avançar o termômetro.");return;}
+                                const novoHist=[...(f.historicoNegociacao||[]),{percentual:f._proximoTermometro,data:TODAY_STR,observacao:comHistObsTexto.trim(),autor:user.name}];
+                                setEditComercial({...f,termometro:f._proximoTermometro,historicoNegociacao:novoHist,_proximoTermometro:null});
+                                setComHistObsTexto("");
+                              }} style={{padding:"7px 16px",borderRadius:8,border:"none",background:"#F5C200",color:"#1A1A1A",fontWeight:700,fontSize:12,cursor:"pointer"}}>Confirmar Avanço</button>
+                            </>}
+                          </div>}
+                        </div>
                         <div><label style={lblSt}>Considerar R$</label><select value={f.considerarR} onChange={e=>set("considerarR",e.target.value)} style={inpSt}><option>Sim</option><option>Não</option></select></div>
                         <div><label style={lblSt}>Nº da Proposta</label><input type="text" value={f.numeroProposta||""} onChange={e=>set("numeroProposta",e.target.value)} style={inpSt}/></div>
                         <div><label style={lblSt}>Data</label><input type="date" value={f.data||""} onChange={e=>set("data",e.target.value)} style={inpSt}/></div>
@@ -7296,7 +7332,8 @@ export default function App(){
                         <div><label style={lblSt}>Qtd. Meses</label><input type="number" value={f.qtdMeses||""} onChange={e=>set("qtdMeses",e.target.value)} style={inpSt}/></div>
                         <div><label style={lblSt}>Novo/Seminovo</label><select value={f.novoSeminovo} onChange={e=>set("novoSeminovo",e.target.value)} style={inpSt}>{COM_NOVO_SEMINOVO.map(o=><option key={o}>{o}</option>)}</select></div>
                         <div><label style={lblSt}>Prazo de Entrega (dias)</label><input type="number" value={f.prazoEntregaDias||""} onChange={e=>set("prazoEntregaDias",e.target.value)} style={inpSt}/></div>
-                        <div><label style={lblSt}>Motivo da Perda</label><select value={f.motivoPerda||""} onChange={e=>set("motivoPerda",e.target.value)} style={inpSt}><option value="">—</option>{COM_MOTIVO_PERDA.map(o=><option key={o}>{o}</option>)}</select></div>
+                        <div><label style={lblSt}>Status da Venda</label><select value={f.statusVenda||"em_andamento"} onChange={e=>set("statusVenda",e.target.value)} style={{...inpSt,fontWeight:700,color:(COM_STATUS_VENDA[f.statusVenda||"em_andamento"]||{}).c,background:(COM_STATUS_VENDA[f.statusVenda||"em_andamento"]||{}).bg}}>{Object.entries(COM_STATUS_VENDA).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select></div>
+                        {f.statusVenda==="nao_convertida"&&<div><label style={lblSt}>Motivo da Perda</label><select value={f.motivoPerda||""} onChange={e=>set("motivoPerda",e.target.value)} style={inpSt}><option value="">—</option>{COM_MOTIVO_PERDA.map(o=><option key={o}>{o}</option>)}</select></div>}
                         <div style={{gridColumn:"span 2"}}><label style={lblSt}>Follow-up</label><input type="text" value={f.followUp||""} onChange={e=>set("followUp",e.target.value)} style={inpSt}/></div>
                         <div style={{gridColumn:"span 2"}}><label style={lblSt}>Observações</label><textarea value={f.obs||""} onChange={e=>set("obs",e.target.value)} rows={2} style={{...inpSt,resize:"vertical"}}/></div>
                       </div>
@@ -7324,9 +7361,11 @@ export default function App(){
           });
           const vendedoresList=[...new Set((comercial||[]).map(c=>c.vendedor).filter(Boolean))].sort();
           const valorTotal=lista.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
-          const convertidas=lista.filter(c=>c.termometro==="Conversão OK");
+          const convertidas=lista.filter(c=>c.statusVenda==="concluida");
           const valorConvertido=convertidas.reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
           const taxaConv=lista.length>0?((convertidas.length/lista.length)*100).toFixed(1):"0.0";
+          const valorVenda=lista.filter(c=>c.tipoServico==="Venda").reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
+          const valorLocacao=lista.filter(c=>c.tipoServico==="Locação").reduce((s,c)=>s+(parseFloat(c.valor)||0),0);
 
           const porTermometro=COM_TERMOMETRO.map(t=>lista.filter(c=>c.termometro===t).length);
           const chartFunil={labels:COM_TERMOMETRO,datasets:[{label:"Propostas",data:porTermometro,backgroundColor:COM_TERMOMETRO.map(t=>COM_TERMOMETRO_COR[t]),borderRadius:6}]};
@@ -7338,8 +7377,11 @@ export default function App(){
           const vendedoresOrdenados=[...vendedoresList].sort((a,b)=>porVendedor[b]-porVendedor[a]);
           const chartVendedor={labels:vendedoresOrdenados,datasets:[{label:"Valor (R$)",data:vendedoresOrdenados.map(v=>porVendedor[v]),backgroundColor:"#1565C0",borderRadius:6}]};
 
-          const motivosAtivos=[...new Set(lista.filter(c=>c.termometro==="Declinada").map(c=>c.motivoPerda).filter(Boolean))];
-          const chartMotivo={labels:motivosAtivos,datasets:[{label:"Perdas",data:motivosAtivos.map(m=>lista.filter(c=>c.motivoPerda===m).length),backgroundColor:"#EF4444",borderRadius:6}]};
+          const perdidas=lista.filter(c=>c.statusVenda==="nao_convertida");
+          const motivosAtivos=[...new Set(perdidas.map(c=>c.motivoPerda).filter(Boolean))];
+          const chartMotivo={labels:motivosAtivos,datasets:[{label:"Perdas",data:motivosAtivos.map(m=>perdidas.filter(c=>c.motivoPerda===m).length),backgroundColor:"#EF4444",borderRadius:6}]};
+
+          const chartVendaLocacao={labels:["Venda","Locação"],datasets:[{data:[valorVenda,valorLocacao],backgroundColor:["#1565C0","#F97316"],borderRadius:6}]};
 
           const chartOptsBase={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}};
           const chartOptsPie={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:10}}},animation:{duration:600}};
@@ -7359,12 +7401,14 @@ export default function App(){
                 </div>
               </div>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:14,marginBottom:24}}>
                 {[
                   {icon:"📋",l:"Total Propostas",v:lista.length,c:"#1A1A1A"},
                   {icon:"💰",l:"Valor Total",v:fmtBRL(valorTotal),c:"#1565C0"},
                   {icon:"✅",l:"Valor Convertido",v:fmtBRL(valorConvertido),c:"#22C55E"},
                   {icon:"📈",l:"Taxa de Conversão",v:taxaConv+"%",c:"#C47D00"},
+                  {icon:"🛒",l:"Valor Venda",v:fmtBRL(valorVenda),c:"#1565C0"},
+                  {icon:"🏗️",l:"Valor Locação",v:fmtBRL(valorLocacao),c:"#F97316"},
                 ].map((s,i)=>(
                   <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
                     <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
@@ -7391,8 +7435,13 @@ export default function App(){
                 </div>
                 <div className="card" style={{padding:18}}>
                   <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>❌ Motivo da Perda</div>
-                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Somente propostas declinadas</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Somente propostas não convertidas</div>
                   {motivosAtivos.length>0?<ChartCanvas type="bar" data={chartMotivo} options={chartOptsBase} height={220}/>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem perdas registradas</div>}
+                </div>
+                <div className="card" style={{padding:18}}>
+                  <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🛒 Venda × Locação</div>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor total por tipo de serviço</div>
+                  <ChartCanvas type="doughnut" data={chartVendaLocacao} options={chartOptsPie} height={220}/>
                 </div>
               </div>
             </div>
