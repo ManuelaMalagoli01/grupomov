@@ -301,13 +301,19 @@ const ESCALA_STATUS = {
   preventiva_concluida:      {l:"Preventiva concluída",      c:"#1A7A3C", bg:"#F0FFF5"},
   corretiva_concluida:       {l:"Corretiva concluída",       c:"#1A7A3C", bg:"#F0FFF5"},
   corretiva_pendente_pecas:  {l:"Corretiva pendente peças",  c:"#E67E00", bg:"#FFF8F0"},
+  corretiva_pendente_servicos: {l:"Corretiva pendente serviços", c:"#E67E00", bg:"#FFF8F0"},
   preventiva_pendente_pecas: {l:"Preventiva pendente peças", c:"#E67E00", bg:"#FFF8F0"},
   preventiva_reagendada:     {l:"Preventiva reagendada",     c:"#8E44AD", bg:"#F6F0FB"},
+  corretiva_reagendada:      {l:"Corretiva reagendada",      c:"#8E44AD", bg:"#F6F0FB"},
   cancelada:                 {l:"Cancelada",                 c:"#C62828", bg:"#FFF0F0"},
+  preventiva_cancelada:      {l:"Preventiva cancelada",      c:"#C62828", bg:"#FFF0F0"},
+  corretiva_cancelada_cliente: {l:"Corretiva cancelada pelo cliente", c:"#C62828", bg:"#FFF0F0"},
   mau_uso:                   {l:"Mau Uso",                   c:"#C47D00", bg:"#FFFBF0"},
   a_faturar:                 {l:"A Faturar",                 c:"#00838F", bg:"#E0F7FA"},
   ferias:                    {l:"Férias",                    c:"#5C6BC0", bg:"#EEF0FB"},
   folga:                     {l:"Folga",                     c:"#607D8B", bg:"#ECEFF1"},
+  folga_aniversario:         {l:"Folga aniversário",         c:"#607D8B", bg:"#ECEFF1"},
+  folga_banco_horas:         {l:"Folga banco de horas",      c:"#607D8B", bg:"#ECEFF1"},
   entrega_tecnica:           {l:"Entrega Técnica",           c:"#7B1FA2", bg:"#F6EAFB"},
 };
 const ESCALA_STATUS_KEYS = Object.keys(ESCALA_STATUS);
@@ -1663,6 +1669,39 @@ function ChartCanvas({type,data,options,height=240}){
 // ── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 
 // ── MODAL EDIÇÃO DE SLOT DE AGENDA ───────────────────────────────────────────
+// ── CARD DE ATENDIMENTO NO DETALHE DO DIA (com botao Salvar explicito) ──────
+function AgendaDiaCardEdit({tech,s,dt,tipoC,color,readOnly,onEditar,onRemover,onSalvar}){
+  const [data,setData]=useState(dt);
+  const [status,setStatus]=useState(s.status||"agendada");
+  const dirty = status!==(s.status||"agendada") || data!==dt;
+  return(
+    <div style={{background:"#FFF",border:`1.5px solid ${tipoC}33`,borderLeft:`4px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{width:9,height:9,borderRadius:"50%",background:color,display:"inline-block"}}/>
+          <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
+          <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"15",borderRadius:20,padding:"2px 8px"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
+        </div>
+        {!readOnly&&(<div style={{display:"flex",gap:2,flexShrink:0}}>
+          <button onClick={onEditar} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",fontSize:12,padding:"3px 6px"}}>✏️</button>
+          <button onClick={onRemover} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
+        </div>)}
+      </div>
+      <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A",marginBottom:4}}>{s.client}</div>
+      <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
+        {s.patrimonio&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
+        {s.cidade&&<span style={{fontSize:9,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
+        {s.relatorio&&<span style={{fontSize:9,background:"#F1F5F9",color:"#334155",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📋 Rel. {s.relatorio}</span>}
+      </div>
+      <input type="date" value={data} onChange={e=>setData(e.target.value)} disabled={readOnly} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,width:"100%",marginBottom:5,boxSizing:"border-box",background:readOnly?"#F5F5F5":"#FAFAFA"}}/>
+      <select value={status} onChange={e=>setStatus(e.target.value)} disabled={readOnly} style={{fontSize:11,padding:"5px 6px",border:"1.5px solid #E0E0E0",borderRadius:20,width:"100%",fontWeight:700,color:(ESCALA_STATUS[status]||{}).c,background:(ESCALA_STATUS[status]||{}).bg,cursor:readOnly?"default":"pointer",marginBottom:8}}>
+        {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
+      </select>
+      {!readOnly&&<button onClick={()=>onSalvar({data,status})} disabled={!dirty} style={{width:"100%",padding:"7px 0",borderRadius:8,border:"none",background:dirty?"#F5C200":"#F1F5F9",color:dirty?"#1A1A1A":"#94A3B8",fontWeight:700,fontSize:12,cursor:dirty?"pointer":"default",fontFamily:"inherit"}}>{dirty?"💾 Salvar":"✓ Salvo"}</button>}
+    </div>
+  );
+}
+
 function EditSlotModal({slot,tipo,onClose,onSave}){
   const [form,setForm]=useState({...slot});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
@@ -1681,18 +1720,18 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Patrimônio</label><input value={form.patrimonio||""} onChange={e=>upd("patrimonio",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
-            <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horímetro</label><input value={form.horimetro||""} onChange={e=>upd("horimetro",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
+            {(tipo==="ofi"||tipo==="ofi150")&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horímetro</label><input value={form.horimetro||""} onChange={e=>upd("horimetro",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>}
           </div>
           {tipo==="tecnico"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Nº Relatório</label><input value={form.relatorio||""} onChange={e=>upd("relatorio",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Tipo</label><select value={form.type||"preventivo"} onChange={e=>upd("type",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
           </div>}
           {(tipo==="ofi"||tipo==="ofi150")&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Serviço</label><select value={form.servico||SERVICOS_OFICINA[0]} onChange={e=>upd("servico",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:600}}>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+          {(tipo==="ofi"||tipo==="ofi150")&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Entrada</label><input type="time" value={form.horaEntrada||""} onChange={e=>upd("horaEntrada",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Saída</label><input type="time" value={form.horaSaida||""} onChange={e=>upd("horaSaida",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Horas</label><div style={{fontSize:14,fontWeight:800,color:"#1A7A3C",padding:"8px 10px",borderRadius:8,background:"#F0FFF5"}}>{horas||"--:--"}</div></div>
-          </div>
+          </div>}
           <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Status</label><select value={form.status||"agendada"} onChange={e=>upd("status",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
           <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:8}}>
             <button onClick={onClose} style={{padding:"8px 18px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
@@ -4771,8 +4810,8 @@ export default function App(){
             const dataFinal=agDate||`${ym}-01`;
             if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada||"",horaSaida:agSaida||"",horasTrabalhadas:calcHoras(agEntrada,agSaida)||""}]);
-            setAgEmpresa("");setAgCidade("");setAgPat("");setAgObs("");setAgEntrada("");setAgSaida("");
+            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada||"",horaSaida:agSaida||"",horasTrabalhadas:calcHoras(agEntrada,agSaida)||""}]);
+            setAgEmpresa("");setAgCidade("");setAgPat("");setAgRelatorio("");setAgObs("");setAgEntrada("");setAgSaida("");
             notify("✅ Atendimento salvo!");
           };
           return(
@@ -4884,6 +4923,7 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><select value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:140}}><option value="">Selecione...</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="Nº Relatório" value={agRelatorio} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:110}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
@@ -4946,11 +4986,11 @@ export default function App(){
                                   <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer",flexShrink:0}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
                                       <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
-                                      <span title={st.l} style={{width:8,height:8,borderRadius:"50%",background:st.c,flexShrink:0}}/>
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
                                     <div style={{fontSize:9,fontWeight:800,color:(it.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{(it.s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</div>
+                                    <div style={{display:"inline-block",fontSize:9,fontWeight:700,color:"#FFF",background:st.c,borderRadius:8,padding:"1px 7px",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{st.l}</div>
                                     {it.s.relatorio&&<div style={{color:"#334155",fontSize:9.5,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Rel. {it.s.relatorio}</div>}
                                   </div>
                                 );
@@ -4985,46 +5025,27 @@ export default function App(){
                       <div style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
                         {items.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Nenhum atendimento neste dia.</div>:items.map((it,idx)=>{
                           const {tech,key,si,s}=it;
-                          const st=escSt(s.status);
                           const tipoC=getTipoCor(s.type);
                           const color=techColor(tech);
-                          const updateSlot=(changes)=>{
-                            const arr=[...(schedule[key]||[])];
-                            arr[si]={...arr[si],...changes};
-                            saveSched(key,arr);
-                          };
                           return(
-                            <div key={idx} style={{background:"#FFF",border:`1.5px solid ${tipoC}33`,borderLeft:`4px solid ${tipoC}`,borderRadius:10,padding:"10px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-                                <div style={{display:"flex",alignItems:"center",gap:6}}>
-                                  <span style={{width:9,height:9,borderRadius:"50%",background:color,display:"inline-block"}}/>
-                                  <span style={{fontWeight:800,fontSize:13,color:"#1A1A1A"}}>{tech}</span>
-                                  <span style={{fontSize:9,fontWeight:800,color:tipoC,background:tipoC+"15",borderRadius:20,padding:"2px 8px"}}>{(s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</span>
-                                </div>
-                                {!isReadOnlyAgenda(user)&&(<div style={{display:"flex",gap:2,flexShrink:0}}>
-                                  <button onClick={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}} title="Editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",fontSize:12,padding:"3px 6px"}}>✏️</button>
-                                  <button onClick={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
-                                </div>)}
-                              </div>
-                              <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A",marginBottom:4}}>{s.client}</div>
-                              <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
-                                {s.patrimonio&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
-                                {s.cidade&&<span style={{fontSize:9,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
-                              </div>
-                              <input type="date" defaultValue={dt} onBlur={e=>{
-                                if(isReadOnlyAgenda(user))return;
-                                if(e.target.value&&e.target.value!==dt){
-                                  const newKey=`${tech}__${e.target.value}`;
+                            <AgendaDiaCardEdit key={idx} tech={tech} s={s} dt={dt} tipoC={tipoC} color={color}
+                              readOnly={isReadOnlyAgenda(user)}
+                              onEditar={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}}
+                              onRemover={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}}
+                              onSalvar={(changes)=>{
+                                if(changes.data&&changes.data!==dt){
+                                  const newKey=`${tech}__${changes.data}`;
                                   const oldArr=(schedule[key]||[]).filter((_,j)=>j!==si);
                                   saveSched(key,oldArr);
-                                  saveSched(newKey,[...(schedule[newKey]||[]),s]);
+                                  saveSched(newKey,[...(schedule[newKey]||[]),{...s,status:changes.status}]);
                                   setAgpSelectedDay(null);
+                                } else {
+                                  const arr=[...(schedule[key]||[])];
+                                  arr[si]={...arr[si],status:changes.status};
+                                  saveSched(key,arr);
+                                  notify("✅ Salvo!");
                                 }
-                              }} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,width:"100%",marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                              <select value={s.status||"agendada"} onChange={e=>updateSlot({status:e.target.value})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"5px 6px",border:"none",borderRadius:20,width:"100%",fontWeight:700,color:st.color,background:st.bg,cursor:isReadOnlyAgenda(user)?"default":"pointer"}}>
-                                {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
-                              </select>
-                            </div>
+                              }}/>
                           );
                         })}
                       </div>
