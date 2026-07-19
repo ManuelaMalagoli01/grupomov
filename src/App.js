@@ -1673,7 +1673,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
-  const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas"];
+  const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -1884,6 +1884,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="sas" l="📄 SAS Financeiro"/>
+          <SubBtn k="dashboard_sas_financeiro" l="📊 Dashboard Financeiro"/>
           <SubBtn k="sas_manutencao" l="🔧 SAS Manutenção"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2732,11 +2733,38 @@ export default function App(){
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setSasModal(false);setSasEdit(null);}}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{sasEdit?.id?"✏️ Editar":"📄 Novo"} SAS Financeiro</div><button onClick={()=>{setSasModal(false);setSasEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
-              <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                {[["dataSolicitacao","Dt Solicitação","date"],["email","Email","email"],["nfNum","NF","text"],["cliente","Cliente","text"],["nome","Nome","text"],["equipamento","Equipamento","text"],["relatorioMov","Rel. MOV","text"],["valor","Valor","text"],["dataRealizacao","Dt Realização","date"],["envioFaturamento","Envio Faturamento","date"]].map(([k,l,t])=>(
-                  <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={sasEdit?.[k]||""} onChange={e=>setSasEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-                ))}
-                <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:16}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  {[["dataSolicitacao","Dt Solicitação","date"],["email","Email","email"],["nfNum","NF","text"],["cliente","Cliente","text"],["nome","Nome","text"],["equipamento","Equipamento","text"],["relatorioMov","Rel. MOV","text"],["valor","Valor","text"],["dataRealizacao","Dt Realização","date"],["envioFaturamento","Envio Faturamento","date"],["dataGarantia","Fim da Garantia (6 meses)","date"]].map(([k,l,t])=>(
+                    <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={sasEdit?.[k]||""} onChange={e=>setSasEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                  ))}
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    <label style={{fontSize:10,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase"}}>Comissão (1%)</label>
+                    <div style={{fontSize:14,fontWeight:800,color:"#1A7A3C",padding:"9px 12px",borderRadius:10,border:"1.5px solid #BBF7D0",background:"#F0FFF5"}}>R$ {((parseFloat((sasEdit?.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."))||0)*0.01).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>🚗 Deslocamento e Custo</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12}}>
+                    {[["placa","Placa","text"],["tecnico","Técnico","text"],["distanciaKm","Distância (KM)","text"],["horasTrabalhadasSas","Horas Trabalhadas","text"],["combustivel","Gasto Combustível (R$)","text"]].map(([k,l,t])=>(
+                      <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>{l}</label><input type={t} value={sasEdit?.[k]||""} onChange={e=>setSasEdit(p=>({...p,[k]:e.target.value}))} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>🔁 Retrabalho</div>
+                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",marginBottom:8}}><input type="checkbox" checked={!!sasEdit?.retrabalho?.houve} onChange={e=>setSasEdit(p=>({...p,retrabalho:{...(p.retrabalho||{}),houve:e.target.checked}}))}/> Houve retrabalho neste atendimento</label>
+                  {sasEdit?.retrabalho?.houve&&(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Data do Retrabalho</label><input type="date" value={sasEdit?.retrabalho?.data||""} onChange={e=>setSasEdit(p=>({...p,retrabalho:{...(p.retrabalho||{}),data:e.target.value}}))} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Relatório MOV do Retrabalho</label><input type="text" value={sasEdit?.retrabalho?.relatorioMov||""} onChange={e=>setSasEdit(p=>({...p,retrabalho:{...(p.retrabalho||{}),relatorioMov:e.target.value}}))} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
                   <BtnG onClick={()=>{setSasModal(false);setSasEdit(null);}}>Cancelar</BtnG>
                   <BtnY onClick={()=>{const d=sasEdit;if(!d?.cliente&&!d?.nome){alert("Informe o cliente.");return;}if(d?.id){updateSas(d.id,d);}else{const row={...d,id:`SAS${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),status:"pendente",arquivado:false};setSas(p=>[row,...p]);db.save("sas",row.id,row);}notify("✅ Salvo!");setSasModal(false);setSasEdit(null);}}>Salvar</BtnY>
                 </div>
@@ -6508,39 +6536,6 @@ export default function App(){
               <select value={sasAno} onChange={e=>setSasAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(sasSearch||sasFrom||sasTo||sasMes||sasAno)&&<button onClick={()=>{setSasSearch('');setSasFrom('');setSasTo('');setSasMes('');setSasAno('');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
-            {/* ── SAS DASHBOARD ── */}
-            {(()=>{
-              const total=listaFil.length;
-              const pendentes=listaFil.filter(s=>s.status==="pendente"||!s.status).length;
-              const realizados=listaFil.filter(s=>s.status==="realizado").length;
-              const faturados=listaFil.filter(s=>s.status==="faturado").length;
-              const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
-              const totalVal=listaFil.reduce((acc,s)=>acc+parseVal(s.valor),0);
-              const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-              const MESES_S=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-              const getMesS=d=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-              const mesesS=[...new Set(listaFil.map(s=>getMesS(s.dataSolicitacao)).filter(Boolean))].sort().slice(-6);
-              const chartSasData={labels:mesesS.map(m=>{const[y,mo]=m.split("-");return`${MESES_S[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[{label:"Solicitações",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataSolicitacao)===m).length),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},{label:"Realizadas",data:mesesS.map(m=>listaFil.filter(s=>getMesS(s.dataRealizacao)===m).length),backgroundColor:"#1A7A3C",borderRadius:5,borderSkipped:false}]};
-              const barSasOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-              const cliMapS={};listaFil.forEach(s=>{if(s.cliente)cliMapS[s.cliente]=(cliMapS[s.cliente]||0)+parseVal(s.valor);});
-              const topCliS=Object.entries(cliMapS).sort((a,b)=>b[1]-a[1]).slice(0,5);
-              const donutSasData={labels:["Pendente","Realizado","Faturado"],datasets:[{data:[pendentes,realizados,faturados],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:4}]};
-              return(<>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:16}}>
-                  {[{l:"Total",v:total,c:"#1A1A1A",bg:"#FFF",i:"📄"},{l:"Pendentes",v:pendentes,c:"#E67E00",bg:"#FFF8F0",i:"⏳"},{l:"Realizados",v:realizados,c:"#1565C0",bg:"#EFF6FF",i:"🔧"},{l:"Faturados",v:faturados,c:"#1A7A3C",bg:"#F0FFF5",i:"💰"},{l:"Valor Total",v:fmtR(totalVal),c:"#6A1B9A",bg:"#F3E5F5",i:"💵"}].map((k,i)=>(
-                    <div key={i} className="card" style={{padding:"5px 8px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                      <div style={{fontSize:9,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{k.i} {k.l}</div>
-                      <div style={{fontSize:typeof k.v==="string"?13:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1fr",gap:12,marginBottom:16}}>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:9,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>📈 Solicitações vs Realizações por Mês</div>{mesesS.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:<ChartCanvas type="bar" data={chartSasData} options={barSasOpts} height={160}/>}</div>
-                  <div className="card" style={{padding:14}}><div style={{fontSize:9,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:6}}>🍕 Status</div><ChartCanvas type="doughnut" data={donutSasData} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8}}}}} height={160}/></div>
-                  <div className="card" style={{padding:14,display:"flex",flexDirection:"column",gap:7}}><div style={{fontSize:9,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>🏆 Top Clientes</div>{topCliS.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:16}}>Sem dados</div>:topCliS.map(([cli,val],i)=>(<div key={i} style={{display:"flex",flexDirection:"column",gap:3}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:9,fontWeight:700,color:"#333",maxWidth:110,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {cli}</span><span style={{fontSize:9,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span></div><div style={{background:"#F0F0F0",borderRadius:4,height:5}}><div style={{background:`hsl(${210+i*20},70%,45%)`,height:5,borderRadius:4,width:`${topCliS[0][1]>0?(val/topCliS[0][1])*100:0}%`,transition:"width .5s"}}/></div></div>))}</div>
-                </div>
-              </>);
-            })()}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro SAS</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
                 {listaFil.map(s=>{
@@ -6556,7 +6551,7 @@ export default function App(){
                         <select value={s.status||"pendente"} onChange={e=>updateSas(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:"#FFF",background:stSolidSas,cursor:"pointer"}}>
                           <option value="pendente">Pendente</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
                         </select>
-                        {_gc&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:_gc,borderRadius:20,padding:"3px 10px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</span>}
+                        {_gc&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:_gc,borderRadius:20,padding:"3px 10px"}}>{"🛡️ "+(_gd<=30?"+1% em "+_gd+"d":"Gar. "+_gd+"d")}</span>}
                       </div>
                       <div style={{display:"flex",gap:6}}>
                         <button onClick={()=>gerarPDFCard(`SAS - ${s.cliente||s.nome||"Sem Cliente"}`,[["Cliente",s.cliente],["Nome",s.nome],["E-mail",s.email],["NF",s.nfNum],["Equipamento",s.equipamento],["Serviço",serv.l],["Data Solicitação",fmtDataBR(s.dataSolicitacao)],["Data Realização",fmtDataBR(s.dataRealizacao)],["Relatório MOV",s.relatorioMov],["Deslocamento",s.deslocamento],["Valor",s.valor?`R$ ${s.valor}`:""],["Status",s.status||"pendente"],["Observação",s.observacao]],`${s.nfNum?`NF ${s.nfNum} · `:""}${fmtDataBR(s.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"5px 9px",fontSize:11}}>📄</button>
@@ -6565,24 +6560,86 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir?"))delSas(s.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+                    <div style={{padding:"9px 12px",display:"flex",flexDirection:"column",gap:6}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(s.dataSolicitacao)}{s.nfNum?` · NF ${s.nfNum}`:""}</div></div>
-                        {s.valor&&<div style={{fontSize:16,fontWeight:900,color:"#14532D"}}>R$ {s.valor}</div>}
+                        <div><div style={{fontSize:12.5,fontWeight:800,color:"#1A1A1A"}}>{s.cliente||s.nome||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(s.dataSolicitacao)}{s.nfNum?` · NF ${s.nfNum}`:""}</div></div>
+                        {s.valor&&<div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:"#14532D"}}>R$ {s.valor}</div><div style={{fontSize:9,color:"#1A7A3C",fontWeight:700}}>+1%: R$ {((parseFloat((s.valor||"0").replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."))||0)*0.01).toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>}
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Equipamento</div><input type="text" value={s.equipamento||""} onChange={e=>updateSas(s.id,{equipamento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Rel. MOV</div><input type="text" value={s.relatorioMov||""} onChange={e=>updateSas(s.id,{relatorioMov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        {s.deslocamento&&<div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Deslocamento</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>R$ {s.deslocamento}</div></div>}
-                        {s.envioFaturamento&&<div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Faturamento</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{s.envioFaturamento}</div></div>}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:5,columnGap:8,paddingTop:6,borderTop:"1px solid #F1F5F9",fontSize:10.5}}>
+                        <div><span style={{color:"#94A3B8"}}>KM: </span><b style={{color:"#1A1A1A"}}>{s.distanciaKm||"—"}</b></div>
+                        <div><span style={{color:"#94A3B8"}}>Horas: </span><b style={{color:"#1A1A1A"}}>{s.horasTrabalhadasSas||"—"}</b></div>
+                        <div><span style={{color:"#94A3B8"}}>Comb.: </span><b style={{color:"#1A1A1A"}}>{s.combustivel?`R$ ${s.combustivel}`:"—"}</b></div>
+                        <div style={{gridColumn:"span 2"}}><span style={{color:"#94A3B8"}}>Placa/Téc.: </span><b style={{color:"#1A1A1A"}}>{s.placa||"—"}{s.tecnico?` · ${s.tecnico}`:""}</b></div>
+                        {s.retrabalho?.houve&&<div><span style={{color:"#C62828",fontWeight:700}}>🔁 Retrab.</span></div>}
                       </div>
-                      {s.observacao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{s.observacao}</div>}
-                      <div style={{fontSize:10,color:"#CBD5E1",textAlign:"right"}}>{s.registradoPor||""}</div>
+                      <div style={{fontSize:9.5,color:"#CBD5E1",textAlign:"right"}}>{s.registradoPor||""}</div>
                     </div>
                   </div>);
                 })}
               </div>
             )}
+          </div>);
+        })()}
+
+        {tab==="dashboard_sas_financeiro"&&(()=>{
+          const lista=(sas||[]).filter(s=>s);
+          const parseVal=v=>{const n=parseFloat((v||"0").replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const totalValor=lista.reduce((a,s)=>a+parseVal(s.valor),0);
+          const totalComissao=totalValor*0.01;
+          const totalCombustivel=lista.reduce((a,s)=>a+parseVal(s.combustivel),0);
+          const totalHoras=lista.reduce((a,s)=>a+parseVal(s.horasTrabalhadasSas),0);
+          const retrabalhos=lista.filter(s=>s.retrabalho?.houve);
+          const custoRetrabalho=retrabalhos.reduce((a,s)=>a+parseVal(s.valor),0);
+          const porTecnico={};
+          lista.forEach(s=>{
+            const t=s.tecnico||"—";
+            if(!porTecnico[t])porTecnico[t]={km:0,horas:0,combustivel:0};
+            porTecnico[t].km+=parseVal(s.distanciaKm);
+            porTecnico[t].horas+=parseVal(s.horasTrabalhadasSas);
+            porTecnico[t].combustivel+=parseVal(s.combustivel);
+          });
+          const tecnicos=Object.keys(porTecnico).filter(t=>t!=="—");
+          const fmtR=v=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{marginBottom:20}}>
+              <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📊 Dashboard Financeiro SAS</div>
+              <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>Acompanhamento de valores, deslocamento e retrabalho — SAS Financeiro</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:18}}>
+              {[
+                {l:"Total Vendido",v:fmtR(totalValor),c:"#1565C0"},
+                {l:"Comissão (1%)",v:fmtR(totalComissao),c:"#1A7A3C"},
+                {l:"Gasto Combustível",v:fmtR(totalCombustivel),c:"#B45309"},
+                {l:"Horas Trabalhadas",v:totalHoras.toLocaleString("pt-BR"),c:"#334155"},
+                {l:"Retrabalhos",v:`${retrabalhos.length} · ${fmtR(custoRetrabalho)}`,c:"#C62828"},
+              ].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:16,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:14,marginBottom:14}}>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🚗 Por Técnico — KM / Horas / Combustível (R$)</div>
+                {tecnicos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem dados</div>:
+                <ChartCanvas type="bar" height={220} data={{
+                  labels:tecnicos,
+                  datasets:[
+                    {label:"KM",data:tecnicos.map(t=>porTecnico[t].km),backgroundColor:"#1565C0"},
+                    {label:"Horas",data:tecnicos.map(t=>porTecnico[t].horas),backgroundColor:"#B45309"},
+                    {label:"Combustível (R$)",data:tecnicos.map(t=>porTecnico[t].combustivel),backgroundColor:"#1A7A3C"},
+                  ]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10}}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#F0F0F0"}}}}}/>}
+              </div>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🔁 Retrabalho — Valor Envolvido</div>
+                {retrabalhos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30}}>Sem retrabalhos registrados</div>:
+                <ChartCanvas type="bar" height={220} data={{
+                  labels:retrabalhos.map(s=>s.cliente||s.nome||"—"),
+                  datasets:[{label:"Valor (R$)",data:retrabalhos.map(s=>parseVal(s.valor)),backgroundColor:"#C62828"}]
+                }} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:"#F0F0F0"}},y:{grid:{display:false},ticks:{font:{size:9}}}}}}/>}
+              </div>
+            </div>
           </div>);
         })()}
 
@@ -6682,7 +6739,7 @@ export default function App(){
                         <select value={s.status||"pendente"} onChange={e=>updateSasManut(s.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"3px 10px",borderRadius:20,border:"none",color:"#FFF",background:stSolidSas,cursor:"pointer"}}>
                           <option value="pendente">Pendente</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
                         </select>
-                        {_gc&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:_gc,borderRadius:20,padding:"3px 10px"}}>{"🛡️ "+(_gd<=30?"EXPIRA "+_gd+"d":"Gar. "+_gd+"d")}</span>}
+                        {_gc&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:_gc,borderRadius:20,padding:"3px 10px"}}>{"🛡️ "+(_gd<=30?"+1% em "+_gd+"d":"Gar. "+_gd+"d")}</span>}
                       </div>
                       <div style={{display:"flex",gap:6}}>
                         <button onClick={()=>gerarPDFCard(`SAS - ${s.cliente||s.nome||"Sem Cliente"}`,[["Cliente",s.cliente],["Nome",s.nome],["E-mail",s.email],["NF",s.nfNum],["Equipamento",s.equipamento],["Serviço",serv.l],["Data Solicitação",fmtDataBR(s.dataSolicitacao)],["Data Realização",fmtDataBR(s.dataRealizacao)],["Relatório MOV",s.relatorioMov],["Deslocamento",s.deslocamento],["Valor",s.valor?`R$ ${s.valor}`:""],["Status",s.status||"pendente"],["Observação",s.observacao]],`${s.nfNum?`NF ${s.nfNum} · `:""}${fmtDataBR(s.dataSolicitacao)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"5px 9px",fontSize:11}}>📄</button>
