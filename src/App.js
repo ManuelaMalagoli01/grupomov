@@ -4884,12 +4884,9 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><select value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:140}}><option value="">Selecione...</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Patrimônio</label><input type="text" placeholder="PAT-001" value={agPat} onChange={e=>setAgPat(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:90}}/></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="Nº Relatório" value={agRelatorio} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:110}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={agEntrada||""} onChange={e=>setAgEntrada(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={agSaida||""} onChange={e=>setAgSaida(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,flex:1,minWidth:180}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Observação</label><input type="text" placeholder="Obs..." value={agObs||""} onChange={e=>setAgObs(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:"100%"}}/></div>
                    <BtnY onClick={()=>{addAtend();setShowNovoAtend(false);}}>Adicionar</BtnY>
                 </div>
               </div>
@@ -4902,17 +4899,19 @@ export default function App(){
                   <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A"}}>{MESES[agpMonth]} {agpYear}</div>
                   <button onClick={()=>{let m=agpMonth+1,y=agpYear;if(m>11){m=0;y++;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,color:"#92400E",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>›</button>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4"}}>
-                  {"Dom Seg Ter Qua Qui Sex Sáb".split(" ").map(d=><div key={d} style={{textAlign:"center",padding:"6px 2px",fontSize:10,fontWeight:700,color:"#64748B"}}>{d}</div>)}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4"}}>
+                  {"Seg Ter Qua Qui Sex".split(" ").map(d=><div key={d} style={{textAlign:"center",padding:"6px 2px",fontSize:10,fontWeight:700,color:"#64748B"}}>{d}</div>)}
                 </div>
                 {(()=>{
-                  const firstDow=new Date(agpYear,agpMonth,1).getDay();
-                  const totalCells=Math.ceil((firstDow+diasNoMes)/7)*7;
-                  const cells=Array.from({length:totalCells},(_,i)=>{
-                    const dayNum=i-firstDow+1;
-                    if(dayNum<1||dayNum>diasNoMes)return null;
-                    return dayNum;
-                  });
+                  // Monta lista de dias úteis (seg-sex) do mês, alinhados nas colunas corretas (0=Seg...4=Sex)
+                  const diasUteis=[];
+                  for(let d=1; d<=diasNoMes; d++){
+                    const dow=new Date(agpYear,agpMonth,d).getDay();
+                    if(dow>=1&&dow<=5) diasUteis.push({dayNum:d,col:dow-1});
+                  }
+                  const leadingPad = diasUteis.length>0 ? diasUteis[0].col : 0;
+                  const cells = [...Array(leadingPad).fill(null), ...diasUteis.map(x=>x.dayNum)];
+                  while(cells.length%5!==0) cells.push(null);
                   // Agrupa atendimentos por dia (todos os técnicos filtrados)
                   const porDia={};
                   cells.forEach(dn=>{
@@ -4926,27 +4925,25 @@ export default function App(){
                     porDia[dn]=items;
                   });
                   return(
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)"}}>
                       {cells.map((dn,i)=>{
                         if(!dn)return<div key={i} style={{minHeight:520,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
                         const items=porDia[dn]||[];
-                        const shown=items.slice(0,6);
-                        const resto=items.length-shown.length;
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{minHeight:520,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent"}}>
-                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                          <div key={i} style={{height:520,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent",display:"flex",flexDirection:"column"}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5,flexShrink:0}}>
                               <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"● ":""}{dn}</div>
                               {ocupado&&<span style={{fontSize:8,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"1px 6px"}}>ocupado</span>}
                             </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                              {shown.map((it,ii)=>{
+                            <div style={{display:"flex",flexDirection:"column",gap:6,overflowY:"auto",flex:1,paddingRight:2}}>
+                              {items.map((it,ii)=>{
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
                                 return(
-                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer"}}>
+                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer",flexShrink:0}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
                                       <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
                                       <span title={st.l} style={{width:8,height:8,borderRadius:"50%",background:st.c,flexShrink:0}}/>
@@ -4958,7 +4955,6 @@ export default function App(){
                                   </div>
                                 );
                               })}
-                              {resto>0&&<div onClick={()=>setAgpSelectedDay(dt)} style={{fontSize:9,color:"#94A3B8",fontWeight:700,paddingLeft:4,cursor:"pointer"}}>+{resto} mais</div>}
                             </div>
                           </div>
                         );
@@ -5014,12 +5010,6 @@ export default function App(){
                               <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
                                 {s.patrimonio&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
                                 {s.cidade&&<span style={{fontSize:9,background:"#EFF6FF",color:"#1565C0",borderRadius:8,padding:"2px 7px",fontWeight:600}}>📍 {s.cidade}</span>}
-                              </div>
-                              <input type="text" defaultValue={s.obs||""} onBlur={e=>updateSlot({obs:e.target.value})} placeholder="📝 Observações..." disabled={isReadOnlyAgenda(user)} style={{width:"100%",fontSize:11,padding:"5px 8px",border:"1px solid #FFE8A0",borderRadius:8,marginBottom:5,boxSizing:"border-box",background:isReadOnlyAgenda(user)?"#F5F5F5":"#FFFBF0"}}/>
-                              <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:5}}>
-                                <input type="time" defaultValue={s.horaEntrada||""} onBlur={e=>updateSlot({horaEntrada:e.target.value,horasTrabalhadas:calcHoras(e.target.value,s.horaSaida)})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
-                                <span style={{fontSize:11,color:"#AAA"}}>→</span>
-                                <input type="time" defaultValue={s.horaSaida||""} onBlur={e=>updateSlot({horaSaida:e.target.value,horasTrabalhadas:calcHoras(s.horaEntrada,e.target.value)})} disabled={isReadOnlyAgenda(user)} style={{fontSize:11,padding:"4px 6px",border:"1.5px solid #E0E0E0",borderRadius:8,flex:1,background:isReadOnlyAgenda(user)?"#F5F5F5":"#FAFAFA"}}/>
                               </div>
                               <input type="date" defaultValue={dt} onBlur={e=>{
                                 if(isReadOnlyAgenda(user))return;
