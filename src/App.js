@@ -300,7 +300,7 @@ const PSSelect=({value,onChange})=>(
 const ESCALA_STATUS = {
   agendada:                  {l:"Agendada",                  c:"#1565C0", bg:"#F0F4FF"},
   preventiva_concluida:      {l:"Preventiva concluída",      c:"#1A7A3C", bg:"#F0FFF5"},
-  corretiva_concluida:       {l:"Corretiva concluída",       c:"#1A7A3C", bg:"#F0FFF5"},
+  corretiva_concluida:       {l:"Corretiva concluída",       c:"#0D9488", bg:"#F0FDFA"},
   corretiva_pendente_pecas:  {l:"Corretiva pendente peças",  c:"#E67E00", bg:"#FFF8F0"},
   corretiva_pendente_servicos: {l:"Corretiva pendente serviços", c:"#E67E00", bg:"#FFF8F0"},
   preventiva_pendente_pecas: {l:"Preventiva pendente peças", c:"#E67E00", bg:"#FFF8F0"},
