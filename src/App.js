@@ -1706,6 +1706,65 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
   const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
+  // ── Agrupamentos por empresa (com Nº do processo) pedidos pelo setor ──
+  const agruparPorEmpresa=(registros)=>{
+    const map={};
+    registros.forEach(p=>{
+      const emp=p.empresa||"Sem Empresa";
+      if(!map[emp])map[emp]={valor:0,qtd:0,numeros:[]};
+      map[emp].valor+=parseVal(p.valor);
+      map[emp].qtd+=1;
+      const num=p.numMauUso||p.numeroProposta||p.ov||"";
+      if(num)map[emp].numeros.push(num);
+    });
+    return Object.entries(map).sort((a,b)=>b[1].valor-a[1].valor);
+  };
+  // Semana atual (segunda a domingo)
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const diaSemana=hoje.getDay(); // 0=dom
+  const segunda=new Date(hoje); segunda.setDate(hoje.getDate()-((diaSemana+6)%7));
+  const domingo=new Date(segunda); domingo.setDate(segunda.getDate()+6);
+  const fmtISO=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const semanaDe=fmtISO(segunda), semanaAte=fmtISO(domingo);
+  const enviadosSemana=(lista||[]).filter(p=>p&&p.processoStatus!=="arquivado"&&p.dataEnvio&&p.dataEnvio>=semanaDe&&p.dataEnvio<=semanaAte);
+  const emNegociacao=all.filter(p=>p.aprovCliente==="em_negociacao");
+  const negados=all.filter(p=>p.aprovCliente==="negado_cliente");
+
+  const grpTotal=agruparPorEmpresa(all);
+  const grpSemana=agruparPorEmpresa(enviadosSemana);
+  const grpNegociacao=agruparPorEmpresa(emNegociacao);
+  const grpNegado=agruparPorEmpresa(negados);
+
+  const PainelEmpresa=({titulo,icone,corSec,grupo,vazio})=>{
+    const totalValor=grupo.reduce((a,[,v])=>a+v.valor,0);
+    const totalQtd=grupo.reduce((a,[,v])=>a+v.qtd,0);
+    return(
+      <div className="card" style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontWeight:700,fontSize:12,color:"#1A1A1A"}}>{icone} {titulo}</div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:13,fontWeight:900,color:corSec}}>{fmtR(totalValor)}</div>
+            <div style={{fontSize:9,color:"#94A3B8"}}>{totalQtd} processo(s)</div>
+          </div>
+        </div>
+        <div style={{padding:"8px 12px",maxHeight:180,overflowY:"auto"}}>
+          {grupo.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:14}}>{vazio}</div>:grupo.map(([emp,v],i)=>(
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"6px 0",borderBottom:i<grupo.length-1?"1px solid #F1F5F9":"none"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#334155",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp}</div>
+                {v.numeros.length>0&&<div style={{fontSize:9,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Nº {v.numeros.join(", ")}</div>}
+              </div>
+              <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
+                <div style={{fontSize:11,fontWeight:800,color:corSec}}>{fmtR(v.valor)}</div>
+                <div style={{fontSize:9,color:"#94A3B8"}}>{v.qtd}x</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
@@ -1802,6 +1861,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
           </div>
         </div>
       ))}
+    </div>
+
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"20px 0 10px"}}>📌 O que o setor precisa ver</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+      <PainelEmpresa titulo="Total de Processos" icone="📋" corSec="#1A1A1A" grupo={grpTotal} vazio="Sem processos"/>
+      <PainelEmpresa titulo={`Enviados na Semana (${fmtDataBR(semanaDe)}–${fmtDataBR(semanaAte)})`} icone="📤" corSec="#1565C0" grupo={grpSemana} vazio="Nenhum enviado nesta semana"/>
+      <PainelEmpresa titulo="Em Negociação" icone="🤝" corSec="#1565C0" grupo={grpNegociacao} vazio="Nenhum em negociação"/>
+      <PainelEmpresa titulo="Negado pelo Cliente" icone="❌" corSec="#C62828" grupo={grpNegado} vazio="Nenhum negado"/>
     </div>
   </div>);
 }
