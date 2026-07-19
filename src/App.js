@@ -420,18 +420,19 @@ const gerarPlanilhaComissaoSas = async (registros, mes, ano, nomeRepresentante)=
   const totComE=secaoEntrega.reduce((a,s)=>a+parseVal(s.valor)*0.01,0);
   const totComG=secaoGarantia.reduce((a,s)=>a+parseVal(s.valor)*0.01,0);
   const excedentes = excV+excE+excG;
-  return {total:totComV+totComE+totComG,qtdVenda:secaoVenda.length,qtdEntrega:secaoEntrega.length,qtdGarantia:secaoGarantia.length,excedentes};
+  return {total:totComV+totComE+totComG,qtdVenda:secaoVenda.length,qtdEntrega:secaoEntrega.length,qtdGarantia:secaoGarantia.length,excedentes,blob};
 };
 // Upload de arquivo (PDF) para o Supabase Storage — usado pelos anexos da Nova Proposta (SAS Vendas)
-const uploadArquivoSupabase = async (file, pastaId, campo) => {
-  const path = `${pastaId}/${campo}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+const uploadArquivoSupabase = async (file, pastaId, campo, nomeOverride) => {
+  const nomeArquivo = nomeOverride || file.name || "arquivo";
+  const path = `${pastaId}/${campo}_${Date.now()}_${nomeArquivo.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
   const res = await fetch(`${SUPA_URL}/storage/v1/object/sas-vendas-anexos/${path}`, {
     method: "POST",
     headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": file.type||"application/pdf"},
     body: file
   });
   if(!res.ok){ const t=await res.text(); throw new Error(`Falha ao enviar arquivo (${res.status}): ${t.slice(0,200)}`); }
-  return { path, url: `${SUPA_URL}/storage/v1/object/public/sas-vendas-anexos/${path}`, nome: file.name };
+  return { path, url: `${SUPA_URL}/storage/v1/object/public/sas-vendas-anexos/${path}`, nome: nomeArquivo };
 };
 
 const loadJsPDF = () => new Promise((resolve,reject)=>{
@@ -6745,13 +6746,19 @@ export default function App(){
                 <select value={comissaoAno} onChange={e=>setComissaoAno(e.target.value)}>{["2025","2026","2027","2028"].map(y=><option key={y}>{y}</option>)}</select>
                 <BtnY onClick={async()=>{
                   const r=await gerarPlanilhaComissaoSas(sas||[],comissaoMes,comissaoAno,user.name);
-                  const row={id:`DOCSAS${Date.now()}`,categoria:"comissao",nome:`Comissao_SAS_${comissaoMes}-${comissaoAno}.xlsx`,mes:comissaoMes,ano:comissaoAno,resumo:r,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                  const nomeArquivo=`Comissao_SAS_${comissaoMes}-${comissaoAno}.xlsx`;
+                  let url=null;
+                  try{
+                    const up=await uploadArquivoSupabase(r.blob,"comissoes",`${comissaoAno}_${comissaoMes}`,nomeArquivo);
+                    url=up.url;
+                  }catch(err){ console.error("Falha ao salvar planilha no Storage:",err); }
+                  const row={id:`DOCSAS${Date.now()}`,categoria:"comissao",nome:nomeArquivo,mes:comissaoMes,ano:comissaoAno,resumo:{total:r.total,qtdVenda:r.qtdVenda,qtdEntrega:r.qtdEntrega,qtdGarantia:r.qtdGarantia,excedentes:r.excedentes},url,registradoPor:user.name,registradoEm:new Date().toISOString()};
                   setDocumentosSas(p=>[row,...(p||[])]);
                   db.save("documentos_sas",row.id,row);
                   if(r.excedentes>0){
                     alert(`⚠️ Atenção: ${r.excedentes} registro(s) não couberam no modelo oficial (limite de linhas do template) e não foram incluídos. Fale comigo se precisar aumentar a capacidade da planilha.`);
                   } else {
-                    notify("✅ Planilha gerada no modelo oficial e baixada!");
+                    notify(url?"✅ Planilha gerada, baixada e salva!":"✅ Planilha gerada e baixada! (não foi possível salvar uma cópia)");
                   }
                 }}>📥 Gerar e Baixar Excel</BtnY>
               </div>
@@ -6771,7 +6778,10 @@ export default function App(){
                   {historico.map(d=>(
                     <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"#F8FAFC",borderRadius:8,fontSize:12}}>
                       <div><b>{d.nome}</b> <span style={{color:"#94A3B8"}}>· gerado em {new Date(d.registradoEm).toLocaleString("pt-BR")} por {d.registradoPor}</span></div>
-                      <div style={{fontWeight:700,color:"#14532D"}}>{d.resumo?fmtR(d.resumo.total):""}</div>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{fontWeight:700,color:"#14532D"}}>{d.resumo?fmtR(d.resumo.total):""}</div>
+                        {d.url&&<a href={d.url} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"#1565C0",color:"#FFF",fontSize:11,fontWeight:700,textDecoration:"none"}}>Baixar</a>}
+                      </div>
                     </div>
                   ))}
                 </div>
