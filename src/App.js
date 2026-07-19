@@ -1678,7 +1678,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const filtrar=(p)=>{
-    const d=p.date||"";
+    const d=p.dataEnvio||p.date||"";
     if(fDe&&d<fDe)return false;
     if(fAte&&d>fAte)return false;
     if(fMes&&d.slice(5,7)!==fMes)return false;
@@ -1700,7 +1700,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     key:k,label:s.l,total:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
     valor:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((acc,p)=>acc+parseVal(p.valor),0),c:s.c,bg:s.bg
   }));
-  const meses=[...new Set(all.map(p=>getMes(p.date)).filter(Boolean))].sort().slice(-6);
+  const meses=[...new Set(all.map(p=>getMes(p.dataEnvio||p.date)).filter(Boolean))].sort().slice(-6);
   const empValMap={};
   all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
   const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -1711,6 +1711,19 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} processo(s) {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
       </div>
       {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Filtros</button>}
+      <button onClick={()=>{
+        const aprovados=all.filter(p=>p.aprovCliente==="aprovado_cliente");
+        if(aprovados.length===0){alert("Nenhum item aprovado no filtro atual (use Mês/De-Até pra selecionar a semana).");return;}
+        const dadosExport=aprovados.map(p=>({...p,_qtd:1,_status:(APROV_STATUS[p.aprovCliente]||{}).l||p.aprovCliente}));
+        exportCSV(dadosExport,`aprovados_${titulo.replace(/\s+/g,"_")}`,[
+          {key:"dataEnvio",label:"Data de Envio"},
+          {key:"empresa",label:"Empresa"},
+          {key:"numMauUso",label:"Nº Mau Uso"},
+          {key:"valor",label:"Valor"},
+          {key:"_qtd",label:"Quantidade"},
+          {key:"_status",label:"Status"},
+        ]);
+      }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Exportar Aprovados (semana)</button>
     </div>
 
     <button onClick={()=>setShowFiltros(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltros?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -1763,7 +1776,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:
         <ChartCanvas type="bar" height={180} data={{
           labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
-          datasets:[{label:titulo,data:meses.map(m=>all.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:cor,borderRadius:6}]
+          datasets:[{label:titulo,data:meses.map(m=>all.filter(p=>getMes(p.dataEnvio||p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:cor,borderRadius:6}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
       </div>
       <div className="card" style={{padding:14}}>
@@ -4420,6 +4433,18 @@ export default function App(){
                       </div>
 
                       {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{p.obs}</div>}
+
+                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Serviço Executado</div>
+                        <select value={p.servicoExecutado||"nao"} onChange={e=>updateMU(p.id,{servicoExecutado:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:p.servicoExecutado==="sim"?"#14532D":"#B45309",background:p.servicoExecutado==="sim"?"#F0FFF5":"#FFF8F0"}}>
+                          <option value="nao">⏳ Pendente</option>
+                          <option value="sim">✅ Executado</option>
+                        </select>
+                        {p.servicoExecutado==="sim"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:8}}>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório de Atendimento</div><input type="text" value={p.relatorioAtendimento||""} onChange={e=>updateMU(p.id,{relatorioAtendimento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data</div><input type="date" value={p.dataServicoExecutado||""} onChange={e=>updateMU(p.id,{dataServicoExecutado:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        </div>}
+                      </div>
 
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
                         <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
