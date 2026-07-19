@@ -1864,6 +1864,20 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"20px 0 10px"}}>📌 O que o setor precisa ver</div>
+
+    <div className="card" style={{padding:14,marginBottom:14}}>
+      <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Comparativo de Valores</div>
+      <ChartCanvas type="bar" height={180} data={{
+        labels:["Total","Enviados na Semana","Em Negociação","Negado"],
+        datasets:[{data:[
+          grpTotal.reduce((a,[,v])=>a+v.valor,0),
+          grpSemana.reduce((a,[,v])=>a+v.valor,0),
+          grpNegociacao.reduce((a,[,v])=>a+v.valor,0),
+          grpNegado.reduce((a,[,v])=>a+v.valor,0),
+        ],backgroundColor:["#1A1A1A","#1565C0","#1565C0","#C62828"],borderRadius:6}]
+      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtR(c.raw)}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
+    </div>
+
     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
       <PainelEmpresa titulo="Total de Processos" icone="📋" corSec="#1A1A1A" grupo={grpTotal} vazio="Sem processos"/>
       <PainelEmpresa titulo={`Enviados na Semana (${fmtDataBR(semanaDe)}–${fmtDataBR(semanaAte)})`} icone="📤" corSec="#1565C0" grupo={grpSemana} vazio="Nenhum enviado nesta semana"/>
