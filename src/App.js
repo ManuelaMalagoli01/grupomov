@@ -1931,6 +1931,7 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:20,display:"flex",flexDirection:"column",gap:12}}>
+          {tipo==="tecnico"&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label><select value={form.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label><input value={form.client||""} onChange={e=>upd("client",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cidade</label><input value={form.cidade||""} onChange={e=>upd("cidade",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
@@ -3014,7 +3015,18 @@ export default function App(){
         tipo={editSlot.tipo}
         onClose={()=>setEditSlot(null)}
         onSave={novo=>{
-          if(editSlot.tipo==="tecnico"){const arr=[...(schedule[editSlot.key]||[])];arr[editSlot.si]=novo;saveSched(editSlot.key,arr);}
+          if(editSlot.tipo==="tecnico"){
+            const {tecnico:novoTecnico,...dadosSemTecnico}=novo;
+            if(novoTecnico&&novoTecnico!==editSlot.tech){
+              const dataPart=editSlot.key.slice(editSlot.key.indexOf("__")+2);
+              const novaKey=`${novoTecnico}__${dataPart}`;
+              const arrAntigo=(schedule[editSlot.key]||[]).filter((_,j)=>j!==editSlot.si);
+              saveSched(editSlot.key,arrAntigo);
+              saveSched(novaKey,[...(schedule[novaKey]||[]),dadosSemTecnico]);
+            } else {
+              const arr=[...(schedule[editSlot.key]||[])];arr[editSlot.si]=dadosSemTecnico;saveSched(editSlot.key,arr);
+            }
+          }
           else if(editSlot.tipo==="ofi"){const arr=[...(agendaOfi[editSlot.key]||[])];arr[editSlot.si]=novo;saveAgendaOfi(editSlot.key,arr);}
           else if(editSlot.tipo==="ofi150"){const arr=[...(agendaOfi150[editSlot.key]||[])];arr[editSlot.si]=novo;saveAgendaOfi150(editSlot.key,arr);}
           notify("✅ Atendimento atualizado!");
@@ -5263,7 +5275,7 @@ export default function App(){
                           return(
                             <AgendaDiaCardEdit key={idx} tech={tech} s={s} dt={dt} tipoC={tipoC} color={color}
                               readOnly={isReadOnlyAgenda(user)}
-                              onEditar={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico"});setEditSlotForm({...s});}}
+                              onEditar={()=>{setEditSlot({key,si,slot:s,tipo:"tecnico",tech});setEditSlotForm({...s,tecnico:tech});}}
                               onRemover={()=>{if(window.confirm("Remover?")){const arr=(schedule[key]||[]).filter((_,j)=>j!==si);saveSched(key,arr);}}}
                               onSalvar={(changes)=>{
                                 if(changes.data&&changes.data!==dt){
