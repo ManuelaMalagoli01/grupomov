@@ -4873,6 +4873,7 @@ export default function App(){
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
+                                    <div style={{fontSize:9,fontWeight:800,color:(it.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{(it.s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</div>
                                     {it.s.relatorio&&<div style={{color:"#334155",fontSize:9.5,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Rel. {it.s.relatorio}</div>}
                                   </div>
                                 );
