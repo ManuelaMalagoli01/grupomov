@@ -125,7 +125,7 @@ const SAS_VENDAS_MODELOS = {
   "Rebocadores Elétricos": ["RE10Li","RE60"],
   "Lavadoras de Piso": ["LPP530","LPE530","LPE810"],
 };
-const CIDADES_TECNICOS = ["BH","Contagem","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba"];
+const CIDADES_TECNICOS = ["BH","Contagem","Santa Luzia","Ribeirão das Neves","Lagoa Santa","Sete Lagoas","Nova Lima","Betim","Lafaiete","Itabirito","Pará de Minas","Divinópolis","Araxá","Tapira","Uberaba","Vespasiano","Caeté","Juatuba"];
 const SERVICOS_RELATORIO = [...SERVICOS_OFICINA,"Serviços Preventivos","Outros"];
 const OFICINAS_UNID = ["1340","150"];
 const REGIONS = {
