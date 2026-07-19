@@ -1718,14 +1718,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       {/* ADMINISTRATIVO - ACORDEÃO (Uber, Financeiro) */}
       <GroupHeader label="Administrativo" icon="🗂️" open={adminOpen} setOpen={setAdminOpen} ativa={adminAtiva} badgeCount={0}/>
-      {adminOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {adminOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="uber" l="🚗 Uber"/>
         <SubBtn k="financeiro" l="💰 Financeiro"/>
       </div>}
 
       {/* ALMOXARIFADO - ACORDEÃO (Empréstimo, Entrada/Saída, Ruptura, Dash Requisições) */}
       <GroupHeader label="Almoxarifado" icon="📦" open={almoxOpen} setOpen={setAlmoxOpen} ativa={almoxAtiva} badgeCount={empAlerta}/>
-      {almoxOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {almoxOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
         <SubBtn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
         {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
@@ -1734,7 +1734,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
       {/* ÁREA TÉCNICA - GRUPO ÚNICO (sem sub-abas: Técnicos Externos e Oficinas viram apenas seções listadas) */}
       <GroupHeader label="Área Técnica" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")}/>
-      {areaTecOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {areaTecOpen&&<div style={{background:"#FFFFFF"}}>
         <div style={{padding:"7px 16px 3px 22px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>👷 Técnicos Externos</div>
         <SubBtn k="agenda_prev" l="🗓 Agenda"/>
         <SubBtn k="dashboard" l="📊 Dashboard"/>
@@ -1757,13 +1757,13 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
       {/* CLIENTES - ACORDEÃO (Operações) */}
       <GroupHeader label="Clientes" icon="🏢" open={clientesOpen} setOpen={setClientesOpen} ativa={clientesAtiva} badgeCount={0}/>
-      {clientesOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {clientesOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="operacoes" l="🏢 Operações"/>
       </div>}
 
       {/* COMERCIAL - ACORDEÃO (Propostas, Dashboard) */}
       <GroupHeader label="Comercial" icon="💼" open={comercialOpen} setOpen={setComercialOpen} ativa={comercialAtiva} badgeCount={0}/>
-      {comercialOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {comercialOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="comercial" l="📋 Propostas"/>
         <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
       </div>}
@@ -1771,7 +1771,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       {/* SAS - CATEGORIA PRÓPRIA */}
       {!user?.semSas&&<>
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
-        {sasGroupOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+        {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="sas" l="📄 SAS Financeiro"/>
           <SubBtn k="sas_manutencao" l="🔧 SAS Manutenção"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
@@ -1781,7 +1781,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
       {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos) */}
       <GroupHeader label="Serviços" icon="🧾" open={servicosOpen} setOpen={setServicosOpen} ativa={servicosAtiva} badgeCount={0}/>
-      {servicosOpen&&<div style={{background:"rgba(0,0,0,.1)"}}>
+      {servicosOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
         <SubBtn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
