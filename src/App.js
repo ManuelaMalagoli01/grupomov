@@ -1670,6 +1670,128 @@ function ChartCanvas({type,data,options,height=240}){
 
 // ── MODAL EDIÇÃO DE SLOT DE AGENDA ───────────────────────────────────────────
 // ── CARD DE ATENDIMENTO NO DETALHE DO DIA (com botao Salvar explicito) ──────
+// ── DASHBOARD SIMPLIFICADO DE UM SO TIPO DE PROCESSO (Mau Uso OU A Faturar) ──
+function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
+  const {fMes,setFMes,fAno,setFAno,fDe,setFDe,fAte,setFAte,fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
+  const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+  const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+  const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const filtrar=(p)=>{
+    const d=p.date||"";
+    if(fDe&&d<fDe)return false;
+    if(fAte&&d>fAte)return false;
+    if(fMes&&d.slice(5,7)!==fMes)return false;
+    if(fAno&&!d.startsWith(fAno))return false;
+    if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
+    if(fStatus!=="todos"&&p.processoStatus!==fStatus)return false;
+    if(fAprov!=="todos"&&(p.aprovCliente||"aguardando_retorno")!==fAprov)return false;
+    return true;
+  };
+  const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fStatus!=="todos"||fAprov!=="todos";
+  const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
+  const all=(lista||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
+  const valTotal=all.reduce((acc,p)=>acc+parseVal(p.valor),0);
+  const valAprov=all.filter(p=>p.aprovCliente==="aprovado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
+  const mesAtualStr=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+  const valFaturado=all.filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).reduce((acc,p)=>acc+parseVal(p.valor),0);
+  const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
+    key:k,label:s.l,total:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
+    valor:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((acc,p)=>acc+parseVal(p.valor),0),c:s.c,bg:s.bg
+  }));
+  const meses=[...new Set(all.map(p=>getMes(p.date)).filter(Boolean))].sort().slice(-6);
+  const empValMap={};
+  all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
+  const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  return(<div style={{animation:"fadeIn .3s ease"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+      <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} processo(s) {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
+      </div>
+      {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Filtros</button>}
+    </div>
+
+    <button onClick={()=>setShowFiltros(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltros?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+      <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+      <span style={{fontSize:8,color:"#94A3B8",marginLeft:4}}>{showFiltros?"▲":"▼"}</span>
+    </button>
+    {showFiltros&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+      <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Todos os meses</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+      <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Todos os anos</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
+      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fAte} onChange={e=>setFAte(e.target.value)}/></div>
+      <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
+      <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option></select>
+    </div>}
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:20}}>
+      <div className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${cor}`}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Total de Processos</div>
+        <div style={{fontSize:26,fontWeight:900,color:cor,marginTop:2}}>{all.length}</div>
+      </div>
+      <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #1D4E89"}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Valor Total</div>
+        <div style={{fontSize:20,fontWeight:900,color:"#1D4E89",marginTop:2}}>{fmtR(valTotal)}</div>
+      </div>
+      <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #14532D"}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Faturado no Mês</div>
+        <div style={{fontSize:20,fontWeight:900,color:"#14532D",marginTop:2}}>{fmtR(valFaturado)}</div>
+      </div>
+    </div>
+
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20}}>
+      <div style={{padding:"10px 16px",borderBottom:"1px solid #EEF1F4"}}>
+        <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente</div>
+      </div>
+      <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+        {aprovCounts.map((a,i)=>(
+          <div key={i} style={{background:a.bg,borderRadius:10,padding:"12px 14px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}}
+            onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+            <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
+            <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
+            <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Evolução de Valores por Mês</div>
+        {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:
+        <ChartCanvas type="bar" height={180} data={{
+          labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
+          datasets:[{label:titulo,data:meses.map(m=>all.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:cor,borderRadius:6}]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
+      </div>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Status dos Processos</div>
+        <ChartCanvas type="doughnut" height={180} data={{
+          labels:["Pendente","Em Andamento","Concluído"],
+          datasets:[{data:[all.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length,all.filter(p=>p.processoStatus==="em_andamento").length,all.filter(p=>p.processoStatus==="concluido").length],backgroundColor:["#B45309","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:6}]
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}}}}/>
+      </div>
+    </div>
+
+    <div className="card" style={{padding:16}}>
+      <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
+      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
+        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span>
+            <span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span>
+          </div>
+          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}>
+            <div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>);
+}
+
 function AgendaDiaCardEdit({tech,s,dt,tipoC,color,readOnly,onEditar,onRemover,onSalvar}){
   const [data,setData]=useState(dt);
   const [status,setStatus]=useState(s.status||"agendada");
@@ -1771,7 +1893,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const bdg=(k)=>badges[k]||0;
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_processos"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
@@ -1816,7 +1938,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
+      <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
+      <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
@@ -1829,7 +1952,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_processos" l="📊 Dash Processos"/>
+      <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
+      <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
@@ -1867,7 +1991,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_processos","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 Dashboard"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -2002,7 +2126,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
         <SubBtn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
-        <SubBtn k="dashboard_processos" l="📊 Dash Processos"/>
+        <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
+        <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       </div>}
     </div>
     </>
@@ -2025,8 +2150,8 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["sas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_processos"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"]:["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas"]) :
+      user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
       null;
@@ -3111,8 +3236,8 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_processos"]:["mau_uso","a_faturar","dashboard_processos","sas"]) :
-      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_tech","dashboard_processos"] :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"]:["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas"]) :
+      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_tech","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
       null;
@@ -6135,451 +6260,45 @@ export default function App(){
         })()}
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
-        {tab==="dashboard_processos"&&(()=>{
-          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
-          const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
-          const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-          const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-          // Filtros (estados no nível componente)
-          const fMes=dashProcFMes,setFMes=setDashProcFMes;
-          const fAno=dashProcFAno,setFAno=setDashProcFAno;
-          const fDe=dashProcFDe,setFDe=setDashProcFDe;
-          const fAte=dashProcFAte,setFAte=setDashProcFAte;
-          const fEmpresa=dashProcFEmpresa,setFEmpresa=setDashProcFEmpresa;
-          const fPat=dashProcFPat,setFPat=setDashProcFPat;
-          const fNumMU=dashProcFNumMU,setFNumMU=setDashProcFNumMU;
-          const fStatus=dashProcFStatus,setFStatus=setDashProcFStatus;
-          const fAprov=dashProcFAprov,setFAprov=setDashProcFAprov;
-          const fTipo=dashProcFTipo,setFTipo=setDashProcFTipo;
-          const filtrar=(p,dateField="date")=>{
-            const d=p[dateField]||"";
-            if(fDe&&d<fDe)return false;
-            if(fAte&&d>fAte)return false;
-            if(fMes&&d.slice(5,7)!==fMes)return false;
-            if(fAno&&!d.startsWith(fAno))return false;
-            if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
-            if(fPat&&!(p.patrimonio||"").toLowerCase().includes(fPat.toLowerCase()))return false;
-            if(fNumMU&&!(p.numMauUso||"").toLowerCase().includes(fNumMU.toLowerCase()))return false;
-            if(fStatus!=="todos"&&p.processoStatus!==fStatus)return false;
-            if(fAprov!=="todos"&&(p.aprovCliente||"aguardando_retorno")!==fAprov)return false;
-            return true;
-          };
-          const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fPat||fNumMU||fStatus!=="todos"||fAprov!=="todos"||fTipo!=="todos";
-          const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFPat("");setFNumMU("");setFStatus("todos");setFAprov("todos");setFTipo("todos");};
-          const allMU=(processosMU||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
-          const allAF=(processosAF||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
-          const allProc=[...allMU.map(p=>({...p,_tipo:"mu"})),...allAF.map(p=>({...p,_tipo:"af"}))];
-          const listaTipo=fTipo==="mu"?allMU:fTipo==="af"?allAF:allProc;
-          // Valores
-          const valMU=allMU.reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const valAF=allAF.reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const valTotal=valMU+valAF;
-          const valAprov=[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const mesAtualStr=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-          const valFaturado=[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).reduce((acc,p)=>acc+parseVal(p.valor),0);
-          const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
-          // Counts por aprovCliente
-          const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
-            label:s.l,total:[...allMU,...allAF].filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
-            valor:[...allMU,...allAF].filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((acc,p)=>acc+parseVal(p.valor),0),c:s.c,bg:s.bg
-          }));
-          // Evolução mensal
-          const meses=[...new Set(allProc.map(p=>getMes(p.date)).filter(Boolean))].sort().slice(-6);
-          const chartEvolData={labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),datasets:[
-            {label:"Mau Uso",data:meses.map(m=>allMU.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:"#C62828",borderRadius:5,borderSkipped:false},
-            {label:"A Faturar",data:meses.map(m=>allAF.filter(p=>getMes(p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},
-          ]};
-          const barOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#F0F0F0"}}},animation:{duration:400}};
-          // Top empresas
-          const empValMap={};
-          allProc.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
-          const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-          return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📊 Dashboard de Processos</div>
-                <div style={{fontSize:13,color:"#888",marginTop:2}}>{allMU.length+allAF.length} processo(s) {hasFilter&&<span style={{color:"#1565C0",fontWeight:700}}>· filtro ativo</span>}</div>
-              </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                {hasFilter&&<button onClick={clearFilter} style={{padding:"8px 16px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar Filtros</button>}
-              </div>
-            </div>
+        {tab==="dashboard_mau_uso"&&(
+          <DashboardProcessoSimples
+            lista={processosMU}
+            titulo="Mau Uso"
+            icone="⚠️"
+            cor="#C62828"
+            corBg="#FFF0F0"
+            filtros={{
+              fMes:dashProcFMes,setFMes:setDashProcFMes,
+              fAno:dashProcFAno,setFAno:setDashProcFAno,
+              fDe:dashProcFDe,setFDe:setDashProcFDe,
+              fAte:dashProcFAte,setFAte:setDashProcFAte,
+              fEmpresa:dashProcFEmpresa,setFEmpresa:setDashProcFEmpresa,
+              fAprov:dashProcFAprov,setFAprov:setDashProcFAprov,
+              fStatus:dashProcFStatus,setFStatus:setDashProcFStatus,
+              showFiltros:showFiltrosDP,setShowFiltros:setShowFiltrosDP,
+            }}
+          />
+        )}
 
-            {/* ── Filtros ── */}
-            <button onClick={()=>setShowFiltrosDP(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDP?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:10,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-              <span style={{fontSize:12}}>🔍</span>
-              <span style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-              <span style={{fontSize:9,color:"#94A3B8",marginLeft:4}}>{showFiltrosDP?"▲":"▼"}</span>
-            </button>
-            {showFiltrosDP&&<div style={{background:"#FFF",borderRadius:12,padding:"10px 14px",marginBottom:10,border:"1.5px solid #E2E8F0",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-              <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",marginBottom:12}}>🔍 Filtros</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Tipo</label>
-                  <select value={fTipo} onChange={e=>setFTipo(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                    <option value="todos">Todos</option><option value="mu">⚠️ Mau Uso</option><option value="af">💰 A Faturar</option>
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Mês</label>
-                  <select value={fMes} onChange={e=>setFMes(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                    <option value="">Todos os meses</option>
-                    {MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Ano</label>
-                  <select value={fAno} onChange={e=>setFAno(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                    <option value="">Todos</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Aprovação Cliente</label>
-                  <select value={fAprov} onChange={e=>setFAprov(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                    <option value="todos">Todos os status</option>
-                    {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Status Processo</label>
-                  <select value={fStatus} onChange={e=>setFStatus(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}>
-                    <option value="todos">Todos</option><option value="pendente">⏳ Pendente</option><option value="em_andamento">🔄 Em Andamento</option><option value="concluido">✅ Concluído</option>
-                  </select>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>De</label>
-                  <input type="date" value={fDe} onChange={e=>setFDe(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Até</label>
-                  <input type="date" value={fAte} onChange={e=>setFAte(e.target.value)} style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Empresa</label>
-                  <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Patrimônio</label>
-                  <input type="text" value={fPat} onChange={e=>setFPat(e.target.value)} placeholder="PAT..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                  <label style={{fontSize:9,fontWeight:700,color:"#AAA",textTransform:"uppercase"}}>Nº Mau Uso</label>
-                  <input type="text" value={fNumMU} onChange={e=>setFNumMU(e.target.value)} placeholder="Nº MU..." style={{fontSize:11,padding:"5px 8px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                </div>
-              </div>
-            </div>}
-
-            {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #1A1A1A"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📋 Total Processos</div>
-                <div style={{fontSize:32,fontWeight:900,color:"#1A1A1A"}}>{allMU.length+allAF.length}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {allMU.length} · AF: {allAF.length}</div>
-              </div>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #E67E00",background:"#FFF8F0"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💵 Valor Total</div>
-                <div style={{fontSize:18,fontWeight:900,color:"#E67E00"}}>{fmtR(valTotal)}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>MU: {fmtR(valMU)} · AF: {fmtR(valAF)}</div>
-              </div>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #0D9488",background:"#F0FDFA"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>✅ Aprovado / Aguard. Faturamento</div>
-                <div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{fmtR(valAprov)}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length} processo(s)</div>
-              </div>
-              <div className="card" style={{padding:"8px 12px",borderLeft:"4px solid #6A1B9A",background:"#F3E5F5"}}>
-                <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>💰 Faturado / Concluído (no mês)</div>
-                <div style={{fontSize:18,fontWeight:900,color:"#6A1B9A"}}>{fmtR(valFaturado)}</div>
-                <div style={{fontSize:11,color:"#888",marginTop:4}}>{[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).length} processo(s) · zera no início do mês</div>
-              </div>
-            </div>
-
-            {/* Painel Aprovação */}
-            <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20,borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"14px 20px",background:"#1A1A1A",display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:18}}>🤝</span>
-                <div><div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>Painel de Aprovação pelo Cliente</div><div style={{fontSize:11,color:"#94A3B8",marginTop:2}}>Situação de cada processo junto ao cliente</div></div>
-              </div>
-              <div style={{padding:"8px 12px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                {aprovCounts.map((a,i)=>(
-                  <div key={i} style={{background:a.bg,borderRadius:12,padding:"14px 16px",border:`1.5px solid ${a.c}33`,display:"flex",flexDirection:"column",gap:6,cursor:"pointer",outline:fAprov===Object.keys(APROV_STATUS)[i]?`2px solid ${a.c}`:"none"}}
-                    onClick={()=>setFAprov(fAprov===Object.keys(APROV_STATUS)[i]?"todos":Object.keys(APROV_STATUS)[i])}>
-                    <div style={{fontSize:11,fontWeight:800,color:a.c}}>{a.label}</div>
-                    <div style={{fontSize:17,fontWeight:800,color:a.c,lineHeight:1}}>{a.total}</div>
-                    <div style={{fontSize:13,fontWeight:700,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
-                    <div style={{background:"rgba(0,0,0,.08)",borderRadius:4,height:5}}>
-                      <div style={{background:a.c,height:5,borderRadius:4,width:`${valTotal>0?Math.min(100,(a.valor/valTotal)*100):0}%`,transition:"width .5s"}}/>
-                    </div>
-                    <div style={{fontSize:9,color:a.c,opacity:.6,fontWeight:600}}>{valTotal>0?`${((a.valor/valTotal)*100).toFixed(0)}% do total`:"0%"}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── ROW 1: Evolução linha + Donut status ── */}
-            <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>📈 Evolução Mensal — Quantidade de Processos</div>
-                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:<ChartCanvas type="line" data={{
-                  labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
-                  datasets:[
-                    {label:"Mau Uso",data:meses.map(m=>allMU.filter(p=>getMes(p.date)===m).length),borderColor:"#C62828",backgroundColor:"#C6282818",fill:true,tension:.4,pointRadius:5,pointBackgroundColor:"#C62828"},
-                    {label:"A Faturar",data:meses.map(m=>allAF.filter(p=>getMes(p.date)===m).length),borderColor:"#1565C0",backgroundColor:"#1565C018",fill:true,tension:.4,pointRadius:5,pointBackgroundColor:"#1565C0"},
-                  ]
-                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}},animation:{duration:400}}} height={180}/>}
-              </div>
-              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🍕 Status dos Processos</div>
-                <ChartCanvas type="doughnut" data={{
-                  labels:["Pendente","Em Andamento","Concluído"],
-                  datasets:[{data:[
-                    [...allMU,...allAF].filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length,
-                    [...allMU,...allAF].filter(p=>p.processoStatus==="em_andamento").length,
-                    [...allMU,...allAF].filter(p=>p.processoStatus==="concluido").length,
-                  ],backgroundColor:["#E67E00","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:6}]
-                }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}}}} height={180}/>
-              </div>
-            </div>
-
-            {/* ── ROW 2: Evolução valores + Top empresas ── */}
-            <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>💵 Evolução de Valores por Mês</div>
-                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:<ChartCanvas type="bar" data={chartEvolData} options={barOpts} height={180}/>}
-              </div>
-              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:8}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:4}}>🏆 Top Empresas por Valor</div>
-                {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.slice(0,8).map(([emp,val],i)=>(
-                  <div key={i} style={{display:"flex",flexDirection:"column",gap:3}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:11,fontWeight:700,color:"#333",maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{i+1}. {emp}</span>
-                      <span style={{fontSize:11,fontWeight:800,color:"#1565C0"}}>{fmtR(val)}</span>
-                    </div>
-                    <div style={{background:"#F0F0F0",borderRadius:4,height:5}}>
-                      <div style={{background:`hsl(${210+i*15},70%,${45-i*3}%)`,height:5,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-
-            {/* ── ROW 3: Funil aprovação + Termômetro meta + Mapa calor ── */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:20}}>
-              {/* Funil */}
-              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:14}}>🔽 Funil de Aprovação</div>
-                {(()=>{
-                  const funnelSteps=[
-                    {l:"Em Aberto",v:[...allMU,...allAF].length,c:"#1565C0"},
-                    {l:"Aguard. Retorno",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="aguardando_retorno"||!p.aprovCliente).length,c:"#E67E00"},
-                    {l:"Em Negociação",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="em_negociacao").length,c:"#8E44AD"},
-                    {l:"Aprovado",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="aprovado_cliente").length,c:"#1A7A3C"},
-                    {l:"Faturado",v:[...allMU,...allAF].filter(p=>p.aprovCliente==="cobrado_faturado").length,c:"#6A1B9A"},
-                  ];
-                  const max=funnelSteps[0].v||1;
-                  return(<div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {funnelSteps.map((s,i)=>(
-                      <div key={i} style={{display:"flex",flexDirection:"column",gap:3,alignItems:"center"}}>
-                        <div style={{width:`${Math.max(30,100-i*12)}%`,background:s.c,borderRadius:6,padding:"6px 10px",textAlign:"center",transition:"width .5s"}}>
-                          <div style={{fontSize:10,fontWeight:700,color:"#FFF",opacity:.9}}>{s.l}</div>
-                          <div style={{fontSize:16,fontWeight:900,color:"#FFF"}}>{s.v}</div>
-                        </div>
-                        {i<funnelSteps.length-1&&<div style={{fontSize:14,color:"#CCC"}}>▼</div>}
-                      </div>
-                    ))}
-                  </div>);
-                })()}
-              </div>
-
-              {/* Termômetro de meta */}
-              <div className="card" style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B"}}>🎯 Meta de Recebimento</div>
-                {(()=>{
-                  const meta=50000;
-                  const recebido=valFaturado;
-                  const pct=Math.min(100,(recebido/meta)*100);
-                  const cor=pct>=100?"#1A7A3C":pct>=60?"#E67E00":"#C62828";
-                  return(<>
-                    <div style={{textAlign:"center"}}>
-                      <div style={{fontSize:11,color:"#AAA",marginBottom:4}}>Faturado vs Meta</div>
-                      <div style={{fontSize:18,fontWeight:800,color:cor}}>{pct.toFixed(0)}%</div>
-                      <div style={{fontSize:12,color:"#888"}}>{fmtR(recebido)} de {fmtR(meta)}</div>
-                    </div>
-                    {/* Gauge visual */}
-                    <div style={{position:"relative",height:120,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      <svg viewBox="0 0 200 110" style={{width:"100%",maxWidth:200}}>
-                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F0F0F0" strokeWidth="16" strokeLinecap="round"/>
-                        <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={cor} strokeWidth="16" strokeLinecap="round"
-                          strokeDasharray={`${(pct/100)*251.2} 251.2`} style={{transition:"stroke-dasharray .8s ease"}}/>
-                        <text x="100" y="95" textAnchor="middle" fontSize="13" fontWeight="800" fill={cor}>{fmtR(recebido)}</text>
-                        <text x="20" y="115" textAnchor="middle" fontSize="9" fill="#AAA">R$0</text>
-                        <text x="180" y="115" textAnchor="middle" fontSize="9" fill="#AAA">{fmtR(meta)}</text>
-                      </svg>
-                    </div>
-                    <div style={{background:cor+"18",borderRadius:8,padding:"8px 12px",textAlign:"center",border:`1px solid ${cor}33`}}>
-                      <div style={{fontSize:10,fontWeight:700,color:cor}}>{pct>=100?"🎉 Meta atingida!":pct>=60?"⚡ Em bom caminho":"🔴 Abaixo da meta"}</div>
-                      <div style={{fontSize:11,color:"#888",marginTop:2}}>Falta {fmtR(Math.max(0,meta-recebido))}</div>
-                    </div>
-                  </>);
-                })()}
-              </div>
-
-              {/* Mapa de calor por dia da semana */}
-              <div style={{background:"#FFF",borderRadius:14,padding:"8px 12px",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#1E293B",marginBottom:12}}>🗓️ Processos por Dia da Semana</div>
-                {(()=>{
-                  const dias=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-                  const counts=Array(7).fill(0);
-                  [...allMU,...allAF].forEach(p=>{if(p.date){const d=new Date(p.date);if(!isNaN(d))counts[d.getDay()]++;}});
-                  const maxCount=Math.max(...counts,1);
-                  return(<div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {dias.map((dia,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
-                        <span style={{fontSize:11,fontWeight:600,color:"#555",width:28,textAlign:"right"}}>{dia}</span>
-                        <div style={{flex:1,background:"#F0F0F0",borderRadius:6,height:22,overflow:"hidden"}}>
-                          <div style={{height:"100%",borderRadius:6,background:counts[i]>0?`hsl(${200+i*20},70%,${50-Math.floor((counts[i]/maxCount)*20)}%)`:"transparent",width:`${(counts[i]/maxCount)*100}%`,transition:"width .5s",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                            {counts[i]>0&&<span style={{fontSize:10,fontWeight:700,color:"#FFF"}}>{counts[i]}</span>}
-                          </div>
-                        </div>
-                        <span style={{fontSize:10,color:"#AAA",width:20,textAlign:"right"}}>{counts[i]}</span>
-                      </div>
-                    ))}
-                  </div>);
-                })()}
-              </div>
-            </div>
-
-            {/* Breakdown MU vs AF */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-              {[[allMU,"⚠️ Mau Uso","#C62828"],[allAF,"💰 A Faturar","#1565C0"]].map(([list,titulo,cor],ti)=>(
-                <div key={ti} className="card" style={{padding:0,overflow:"hidden"}}>
-                  <div style={{padding:"6px 10px",background:cor,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{fontWeight:800,fontSize:14,color:"#FFF"}}>{titulo}</div>
-                    <div style={{fontWeight:900,fontSize:16,color:"#FFF"}}>{fmtR(list.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
-                  </div>
-                  <div style={{padding:"6px 10px",display:"flex",flexDirection:"column",gap:6}}>
-                    {Object.entries(APROV_STATUS).map(([k,s])=>{
-                      const items=list.filter(p=>(p.aprovCliente||"aguardando_retorno")===k);
-                      if(items.length===0)return null;
-                      return(<div key={k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 10px",background:s.bg,borderRadius:8,border:`1px solid ${s.c}22`}}>
-                        <span style={{fontSize:11,fontWeight:700,color:s.c}}>{s.l}</span>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontSize:12,fontWeight:800,color:s.c}}>{fmtR(items.reduce((acc,p)=>acc+parseVal(p.valor),0))}</div>
-                          <div style={{fontSize:9,color:"#AAA"}}>{items.length} processo(s)</div>
-                        </div>
-                      </div>);
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── Mau Uso por Empresa ── */}
-            {(()=>{
-              const muAll=allMU;
-              const hoje=new Date();const semanaAtras=new Date(hoje);semanaAtras.setDate(hoje.getDate()-7);
-              const temFiltroEnvio=muEnvioDe||muEnvioAte;
-              const inPeriodo=d0=>{if(!d0)return false;const d=new Date(d0);if(isNaN(d))return false;if(temFiltroEnvio){if(muEnvioDe&&d0<muEnvioDe)return false;if(muEnvioAte&&d0>muEnvioAte)return false;return true;}return d>=semanaAtras;};
-              const enviadoNoPeriodo=p=>inPeriodo(p.dataEnvio||p.date);
-              const aprovadoNoPeriodo=p=>(p.aprovCliente||"")==="aprovado_cliente"&&inPeriodo(p.dataAprovacao);
-              const muSemana=muAll.filter(p=>{
-                if(muFiltroModo==="aprovacao")return aprovadoNoPeriodo(p);
-                if(muFiltroModo==="envio")return enviadoNoPeriodo(p);
-                return enviadoNoPeriodo(p)||aprovadoNoPeriodo(p);
-              }).sort((a,b)=>((b.dataAprovacao||b.dataEnvio||b.date||"")).localeCompare(a.dataAprovacao||a.dataEnvio||a.date||""));
-              const valorSemana=muSemana.reduce((a,p)=>a+parseVal(p.valor),0);
-              const empData={};muAll.forEach(p=>{const emp=p.empresa||"Sem empresa";if(!empData[emp])empData[emp]={qtd:0,valor:0,mus:[],tickets:[]};empData[emp].qtd++;empData[emp].valor+=parseVal(p.valor);empData[emp].mus.push(p.numMauUso||"—");if(p.ticket)empData[emp].tickets.push(p.ticket);});
-              const empList=Object.entries(empData).sort((a,b)=>b[1].qtd-a[1].qtd).slice(0,10);
-              const statusData=Object.entries(APROV_STATUS).map(([k,s])=>({k,l:s.l,c:s.c,bg:s.bg,qtd:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,valor:muAll.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((a,p)=>a+parseVal(p.valor),0)})).filter(s=>s.qtd>0);
-              return(
-                <div style={{marginTop:16}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}><div style={{width:4,height:24,background:"#F43F5E",borderRadius:2}}/><div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>Mau Uso por Empresa</div></div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
-                    <div style={{background:"linear-gradient(135deg,#1E293B,#334155)",borderRadius:12,padding:"8px 12px"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Total Mau Uso</div>
-                      <div style={{fontSize:19,fontWeight:900,color:"#F43F5E"}}>{muAll.length}</div>
-                    </div>
-                    <div style={{background:"linear-gradient(135deg,#FEF2F2,#FECACA)",borderRadius:12,padding:"8px 12px"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>{muFiltroModo==="aprovacao"?"Aprovados":"Enviados p/ Aprovação"} {temFiltroEnvio?"(período)":"na Semana"}</div>
-                      <div style={{fontSize:19,fontWeight:900,color:"#DC2626"}}>{muSemana.length}</div>
-                      <div style={{fontSize:9,color:"#64748B",marginTop:2}}>{temFiltroEnvio?"filtro de data ativo":"últimos 7 dias"} · por data de {muFiltroModo==="aprovacao"?"aprovação":"envio"}</div>
-                    </div>
-                    <div style={{background:"#FFF",borderRadius:12,padding:"8px 12px",borderBottom:"3px solid #F43F5E",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Valor Total</div>
-                      <div style={{fontSize:16,fontWeight:900,color:"#1E293B"}}>{fmtR(muAll.reduce((a,p)=>a+parseVal(p.valor),0))}</div>
-                    </div>
-                  </div>
-                  <div className="card" style={{padding:12,marginBottom:14}}>
-                    <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>💰 Valor Total por Status de Aprovação</div>
-                    {statusData.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:12,fontSize:11}}>Sem dados</div>:(
-                      <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(statusData.length,4)},1fr)`,gap:8}}>
-                        {statusData.map(s=>(
-                          <div key={s.k} style={{background:s.bg,borderRadius:8,padding:"7px 9px",border:`1px solid ${s.c}33`}}>
-                            <div style={{fontSize:9,fontWeight:700,color:s.c}}>{s.l}</div>
-                            <div style={{fontSize:14,fontWeight:900,color:s.c}}>{fmtR(s.valor)}</div>
-                            <div style={{fontSize:8,color:s.c,opacity:.75}}>{s.qtd} processo(s)</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="card" style={{padding:12,marginBottom:14}}>
-                    <div style={{fontSize:12,fontWeight:800,color:"#1E293B",marginBottom:10}}>🏢 Detalhamento por Empresa</div>
-                    <div style={{maxHeight:280,overflowY:"auto"}}>
-                      {empList.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:20,fontSize:11}}>Sem dados</div>:empList.map(([emp,d],i)=>(
-                        <div key={i} style={{padding:"7px 8px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <div>
-                            <div style={{fontSize:11,fontWeight:700,color:"#1E293B"}}>{emp}</div>
-                            <div style={{fontSize:9,color:"#94A3B8"}}>{d.qtd} processo(s) · MU: {d.mus.slice(0,3).join(", ")}</div>
-                            {d.tickets.length>0&&<div style={{fontSize:9,color:"#6A1B9A",fontWeight:600}}>🎫 Ticket: {d.tickets.slice(0,3).join(", ")}</div>}
-                          </div>
-                          <div style={{fontSize:11,fontWeight:800,color:"#F43F5E"}}>{fmtR(d.valor)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Enviados/Aprovados: empresa + nº MU + data de envio + data de aprovação + valor + nota débito + ticket + status — filtro por data, tudo editável */}
-                  <div className="card" style={{padding:0,overflow:"visible",borderRadius:14}}>
-                    <div style={{padding:"7px 10px",background:"#1E293B",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                        <div style={{fontSize:12,fontWeight:800,color:"#FFF"}}>📅 Mau Uso</div>
-                        <div style={{display:"flex",borderRadius:20,overflow:"hidden",border:"1px solid #334155"}}>
-                          <button onClick={()=>setMuFiltroModo("envio")} style={{fontSize:9,fontWeight:700,padding:"3px 10px",border:"none",cursor:"pointer",background:muFiltroModo==="envio"?"#F43F5E":"transparent",color:"#FFF"}}>Por Envio</button>
-                          <button onClick={()=>setMuFiltroModo("aprovacao")} style={{fontSize:9,fontWeight:700,padding:"3px 10px",border:"none",cursor:"pointer",background:muFiltroModo==="aprovacao"?"#F43F5E":"transparent",color:"#FFF"}}>Por Aprovação</button>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-                        <span style={{fontSize:9,color:"#94A3B8"}}>🗓</span>
-                        <input type="date" value={muEnvioDe} onChange={e=>setMuEnvioDe(e.target.value)} style={{fontSize:10,padding:"3px 6px",borderRadius:6,border:"1px solid #334155",background:"#0F172A",color:"#FFF"}}/>
-                        <span style={{fontSize:9,color:"#94A3B8"}}>até</span>
-                        <input type="date" value={muEnvioAte} onChange={e=>setMuEnvioAte(e.target.value)} style={{fontSize:10,padding:"3px 6px",borderRadius:6,border:"1px solid #334155",background:"#0F172A",color:"#FFF"}}/>
-                        {temFiltroEnvio&&<button onClick={()=>{setMuEnvioDe("");setMuEnvioAte("");}} style={{fontSize:9,padding:"3px 8px",borderRadius:20,background:"#F43F5E",color:"#FFF",border:"none",cursor:"pointer",fontWeight:700}}>✕</button>}
-                        <div style={{fontSize:11,fontWeight:700,color:"#F43F5E",background:"#FFF",borderRadius:20,padding:"2px 10px"}}>{muSemana.length} · {fmtR(valorSemana)}</div>
-                      </div>
-                    </div>
-                    {muSemana.length===0?(<div style={{padding:20,textAlign:"center",color:"#CBD5E1",fontSize:11}}>Nenhum registro no período</div>):(
-                      <div className="tbl-wrap"><table className="compact-table" style={{minWidth:500,tableLayout:"fixed"}}>
-                        <thead><tr><th style={{width:78}}>Empresa</th><th style={{width:50}}>Nº MU</th><th style={{width:50}}>Envio</th><th style={{width:50}}>Aprov.</th><th style={{width:50}}>Valor</th><th style={{width:36}}>N.Déb.</th><th style={{width:32}}>Ticket</th><th style={{width:50}}>Env.Tkt</th><th style={{width:95}}>Status</th></tr></thead>
-                        <tbody>{muSemana.map(p=>{const as=APROV_STATUS[p.aprovCliente||"aguardando_retorno"];return(
-                          <tr key={p.id}>
-                            <td><input type="text" defaultValue={p.empresa||""} onBlur={e=>updateMU(p.id,{empresa:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
-                            <td><input type="text" defaultValue={p.numMauUso||""} onBlur={e=>updateMU(p.id,{numMauUso:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
-                            <td><input type="date" defaultValue={p.dataEnvio||p.date||""} onBlur={e=>updateMU(p.id,{dataEnvio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
-                            <td><input type="date" defaultValue={p.dataAprovacao||""} onBlur={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",color:"#1A7A3C",fontWeight:700}}/></td>
-                            <td><input type="text" defaultValue={p.valor||""} onBlur={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{fontSize:11,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
-                            <td><input type="text" defaultValue={p.ov||""} onBlur={e=>updateMU(p.id,{ov:e.target.value})} placeholder="ND-000" style={{fontSize:11,border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
-                            <td><input type="text" defaultValue={p.ticket||""} onBlur={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" style={{fontSize:11,fontWeight:700,color:"#6A1B9A",border:"none",background:"transparent",width:"100%",outline:"none"}}/></td>
-                            <td><input type="date" defaultValue={p.dataEnvioTicket||""} onBlur={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{fontSize:11,fontWeight:600,color:"#6A1B9A",border:"none",background:"transparent",outline:"none"}}/></td>
-                            <td><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{fontSize:7.5,fontWeight:700,color:as?.c||"#888",background:as?.bg||"#F5F5F5",borderRadius:6,padding:"2px 2px",border:"none",cursor:"pointer",width:"100%",maxWidth:98}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
-                          </tr>
-                        );})}</tbody>
-                      </table></div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>);
-        })()}
+        {tab==="dashboard_a_faturar"&&(
+          <DashboardProcessoSimples
+            lista={processosAF}
+            titulo="A Faturar"
+            icone="💰"
+            cor="#1565C0"
+            corBg="#EFF6FF"
+            filtros={{
+              fMes:dashProcFMes,setFMes:setDashProcFMes,
+              fAno:dashProcFAno,setFAno:setDashProcFAno,
+              fDe:dashProcFDe,setFDe:setDashProcFDe,
+              fAte:dashProcFAte,setFAte:setDashProcFAte,
+              fEmpresa:dashProcFEmpresa,setFEmpresa:setDashProcFEmpresa,
+              fAprov:dashProcFAprov,setFAprov:setDashProcFAprov,
+              fStatus:dashProcFStatus,setFStatus:setDashProcFStatus,
+              showFiltros:showFiltrosDP,setShowFiltros:setShowFiltrosDP,
+            }}
+          />
+        )}
 
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
@@ -8396,7 +8115,8 @@ export default function App(){
     relatorios: (reports||[]).filter(r=>r&&!r.arquivado&&r.statusFinal==="Pendente").length,
     mau_uso: (processosMU||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
     a_faturar: (processosAF||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
-    dashboard_processos: (processosMU||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length+(processosAF||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    dashboard_mau_uso: (processosMU||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
+    dashboard_a_faturar: (processosAF||[]).filter(p=>p&&!p.arquivado&&(p.processoStatus==="pendente"||p.status==="pendente")).length,
     emprestimos: (emprestimos||[]).filter(e=>e&&!e.arquivado&&(e.statusEmp==="pendente"||e.status==="pendente")).length,
     saida_entrada: (saidaEntrada||[]).filter(s=>s&&!s.arquivado&&(s.statusFinal==="pendente"||s.status==="pendente")).length,
     ruptura_almox: (rupturas||[]).filter(r=>r&&!r.arquivado&&r.status!=="liberado_almox").length,
