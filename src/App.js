@@ -1904,6 +1904,7 @@ function AgendaDiaCardEdit({tech,s,dt,tipoC,color,readOnly,onEditar,onRemover,on
           <button onClick={onRemover} title="Remover" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",fontSize:11,fontWeight:700,padding:"3px 6px"}}>✕</button>
         </div>)}
       </div>
+      {(s.tecnicosAdicionais||[]).length>0&&<div style={{fontSize:10,color:"#64748B",marginBottom:6}}>👥 Junto com: {s.tecnicosAdicionais.join(", ")}</div>}
       <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A",marginBottom:4}}>{s.client}</div>
       <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
         {s.patrimonio&&<span style={{fontSize:9,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"2px 7px",fontWeight:600}}>🏷️ {s.patrimonio}</span>}
@@ -1931,7 +1932,24 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
           <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{padding:20,display:"flex",flexDirection:"column",gap:12}}>
-          {tipo==="tecnico"&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico</label><select value={form.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>}
+          {tipo==="tecnico"&&<div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnico Principal</label><select value={form.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0",fontWeight:700}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>}
+          {tipo==="tecnico"&&<div style={{display:"flex",flexDirection:"column",gap:4}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Técnicos Adicionais (opcional)</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,padding:"8px 10px",border:"1px solid #E0E0E0",borderRadius:8,maxHeight:120,overflowY:"auto"}}>
+              {ALL_TECHS.filter(t=>t!==form.tecnico).map(t=>{
+                const marcado=(form.tecnicosAdicionais||[]).includes(t);
+                return(
+                  <label key={t} style={{display:"flex",alignItems:"center",gap:4,fontSize:11,padding:"3px 8px",borderRadius:14,background:marcado?"#EFF6FF":"#F8FAFC",color:marcado?"#1565C0":"#64748B",fontWeight:marcado?700:500,cursor:"pointer",border:marcado?"1px solid #BFDBFE":"1px solid transparent"}}>
+                    <input type="checkbox" checked={marcado} onChange={()=>{
+                      const atual=form.tecnicosAdicionais||[];
+                      upd("tecnicosAdicionais", marcado?atual.filter(x=>x!==t):[...atual,t]);
+                    }} style={{display:"none"}}/>
+                    {marcado?"✓ ":""}{t}
+                  </label>
+                );
+              })}
+            </div>
+          </div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Empresa</label><input value={form.client||""} onChange={e=>upd("client",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
             <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase"}}>Cidade</label><input value={form.cidade||""} onChange={e=>upd("cidade",e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:8,border:"1px solid #E0E0E0"}}/></div>
@@ -5231,6 +5249,7 @@ export default function App(){
                                   <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer",flexShrink:0}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
                                       <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
+                                      {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px",flexShrink:0}}>+{it.s.tecnicosAdicionais.length}</span>}
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
