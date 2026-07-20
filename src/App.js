@@ -159,6 +159,8 @@ const SETOR_150_TECHS=["matheus","pedro souza","pedro pimente"];
 const COM_TERMOMETRO = ["Em Análise","25% em Análise","50% em Análise","75% em Análise"];
 const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","25% em Análise":"#FBBF24","50% em Análise":"#F97316","75% em Análise":"#EF4444"};
 const COM_STATUS_VENDA = {em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluida:{l:"Venda Concluída",c:"#1A7A3C",bg:"#F0FFF5"},nao_convertida:{l:"Venda Não Convertida",c:"#C62828",bg:"#FFF0F0"}};
+const VALE_TEC_STATUS = {vale_autorizado:{l:"Vale Autorizado",c:"#B45309",bg:"#FFF8F0"},enviado_conserto:{l:"Enviado para Conserto",c:"#1565C0",bg:"#EFF6FF"},instalado_maquina:{l:"Instalado na Máquina",c:"#1A7A3C",bg:"#F0FFF5"}};
+const VALE_TEC_AUTORIZACAO = ["Gustavo","Gilberto"];
 const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
 const COM_EQUIPAMENTO = ["Empilhadeira a Combustão Diesel","Empilhadeira a Combustão GLP","Empilhadeira Contrapeso - Bateria Lítio","Empilhadeira Contrapeso Elétrica","Empilhadeira Patolada","Empilhadeira Patolada Manual","Empilhadeira Patolada Semi-Elétrica","Empilhadeira Retrátil","Empilhadeira Retrátil - Bateria Lítio","Paleteira Lítio","Paleteira","Paleteira com Balança e Impressora","Paleteira com Balança","Plataforma Elevatória","Rebocador","Transpaleteira Elétrica Operador a Bordo","Transpaleteira Elétrica Operador a Bordo - Bateria Lítio","Transpaleteira Elétrica Operador a Pé","Transpaleteira Elétrica Operador a Pé - Bateria Lítio","Transpaleteira Pantográfica","Lavadora de Piso","Selecionadora de Pedidos"];
 const COM_MARCA = ["SAS","MOV"];
@@ -2099,7 +2101,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota"];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -2260,6 +2262,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         </>}
 
         <SubBtn k="pendencias_frota" l="🚜 Pendências Frota"/>
+        <SubBtn k="vale_tecnico_maquinas" l="🎫 Vale Técnico Máquinas"/>
       </div>}
 
       <Btn k="carros" l="🚙 Carros"/>
@@ -2621,6 +2624,13 @@ export default function App(){
   const [sasVendModal,setSasVendModal]=useState(false);
   const [modalImportSasVend,setModalImportSasVend]=useState(false);
   const [documentosSas,setDocumentosSas]=useState([]);
+  const [valeTecnico,setValeTecnico]=useState([]);
+  const [showArqValeTec,setShowArqValeTec]=useState(false);
+  const [valeTecEdit,setValeTecEdit]=useState(null);
+  const [valeTecModal,setValeTecModal]=useState(false);
+  const [modalImportValeTec,setModalImportValeTec]=useState(false);
+  const [showFiltrosValeTec,setShowFiltrosValeTec]=useState(false);
+  const [valeTecSearch,setValeTecSearch]=useState(""); const [valeTecFrom,setValeTecFrom]=useState(""); const [valeTecTo,setValeTecTo]=useState(""); const [valeTecStatus,setValeTecStatus]=useState("todos");
   const [comissaoMes,setComissaoMes]=useState(String(new Date().getMonth()+1).padStart(2,"0"));
   const [comissaoAno,setComissaoAno]=useState(String(new Date().getFullYear()));
 
@@ -2719,12 +2729,12 @@ export default function App(){
   useEffect(()=>{
     const load = async () => {
       const safeGet = async (t) => { try { return await db.get(t); } catch(e) { return []; } };
-      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows, comRows, sasManutRows, sasVendRows, docSasRows] = await Promise.all([
+      const [rels, mus, afs, emps, saidas, reqs, ubers, escRows, usrs, fins, fros, pris, rhs, ofis, agOfiRows, hebRows, apRows, sasRows, carrosRows, pendManRows, ap150Rows, agOfi150Rows, matRows, rupRows, opRows, execMURows, sasPecasRows, comRows, sasManutRows, sasVendRows, docSasRows, valeTecRows] = await Promise.all([
         safeGet("relatorios"), safeGet("processos_mu"), safeGet("processos_af"),
         safeGet("emprestimos"), safeGet("saida_entrada"), safeGet("requisicoes"),
         safeGet("uber_pedidos"), safeGet("escala"), safeGet("usuarios"), safeGet("financeiro"),
         safeGet("pendencias_frota"), safeGet("prioridades_clientes"), safeGet("rh_fiscal"), safeGet("oficina"),
-        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas"), safeGet("comercial"), safeGet("sas_manutencao"), safeGet("sas_vendas"), safeGet("documentos_sas")
+        safeGet("agenda_oficina"), safeGet("pendencias_hebert"), safeGet("apontamentos_oficina"), safeGet("sas"), safeGet("carros"), safeGet("pendencias_manuela"), safeGet("apontamentos_150"), safeGet("agenda_ofi_150"), safeGet("pendencias_matheus"), safeGet("rupturas_alm"), safeGet("operacoes"), safeGet("execucao_mau_uso"), safeGet("sas_pecas"), safeGet("comercial"), safeGet("sas_manutencao"), safeGet("sas_vendas"), safeGet("documentos_sas"), safeGet("vale_tecnico_maquinas")
       ]);
       if(rels.length>0) setReports(rels);
       if(comRows.length>0) setComercial(comRows);
@@ -2757,6 +2767,7 @@ export default function App(){
       if(sasManutRows.length>0) setSasManutencao(sasManutRows);
       if(sasVendRows.length>0) setSasVendas(sasVendRows);
       if(docSasRows.length>0) setDocumentosSas(docSasRows);
+      if(valeTecRows.length>0) setValeTecnico(valeTecRows);
       if(carrosRows.length>0) setCarros(carrosRows);
       if(opRows && opRows.length>0) setOperacoes(opRows);
       if(execMURows && execMURows.length>0) setExecMauUso(execMURows);
@@ -2898,6 +2909,8 @@ export default function App(){
   const delSasManut=(id)=>{ setSasManutencao(p=>p.filter(x=>x.id!==id)); db.delete("sas_manutencao",id); };
   const updateSasVend=(id,changes)=>{ setSasVendas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("sas_vendas",id,row); return np; }); };
   const delSasVend=(id)=>{ setSasVendas(p=>p.filter(x=>x.id!==id)); db.delete("sas_vendas",id); };
+  const updateValeTec=(id,changes)=>{ setValeTecnico(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("vale_tecnico_maquinas",id,row); return np; }); };
+  const delValeTec=(id)=>{ setValeTecnico(p=>p.filter(x=>x.id!==id)); db.delete("vale_tecnico_maquinas",id); };
   const addSas=()=>{ const row={id:`SAS${Date.now()}`,registradoPor:user.name,registradoEm:new Date().toISOString(),dataSolicitacao:TODAY_STR,email:"",nfNum:"",equipamento:"",cliente:"",nome:"",tel:"",emailContato:"",servico:"entrega_tecnica",dataRealizacao:"",relatorioMov:"",envioFaturamento:"",valor:"",status:"pendente",dataEnvioSas:""}; setSas(p=>[row,...p]); db.save("sas",row.id,row); notify("✅ SAS criado!"); };
   const delSas=(id)=>{ setSas(p=>p.filter(x=>x.id!==id)); db.delete("sas",id); };
 
@@ -3371,6 +3384,61 @@ export default function App(){
             </div>
           </div>
         )}
+        {valeTecModal&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setValeTecModal(false);setValeTecEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{valeTecEdit?.id?"✏️ Editar":"🎫 Novo"} Vale Técnico Máquinas</div><button onClick={()=>{setValeTecModal(false);setValeTecEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                <div>
+                  <label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Status</label>
+                  <select value={valeTecEdit?.status||"vale_autorizado"} onChange={e=>setValeTecEdit(p=>({...p,status:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",fontWeight:700,color:(VALE_TEC_STATUS[valeTecEdit?.status]||{}).c}}>
+                    {Object.entries(VALE_TEC_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}
+                  </select>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>OS</label><input type="text" value={valeTecEdit?.os||""} onChange={e=>setValeTecEdit(p=>({...p,os:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Data</label><input type="date" value={valeTecEdit?.data||""} onChange={e=>setValeTecEdit(p=>({...p,data:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Técnico</label><select value={valeTecEdit?.tecnico||""} onChange={e=>setValeTecEdit(p=>({...p,tecnico:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0"}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>PAT Retirado</label><input type="text" value={valeTecEdit?.patRetirado||""} onChange={e=>setValeTecEdit(p=>({...p,patRetirado:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Peça</label><input type="text" value={valeTecEdit?.peca||""} onChange={e=>setValeTecEdit(p=>({...p,peca:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Quantidade</label><input type="number" min="1" value={valeTecEdit?.quantidade||"1"} onChange={e=>setValeTecEdit(p=>({...p,quantidade:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Autorização</label><select value={valeTecEdit?.autorizacao||""} onChange={e=>setValeTecEdit(p=>({...p,autorizacao:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0"}}>{VALE_TEC_AUTORIZACAO.map(a=><option key={a}>{a}</option>)}</select></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>REQ de Ruptura</label><input type="text" value={valeTecEdit?.reqRuptura||""} onChange={e=>setValeTecEdit(p=>({...p,reqRuptura:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  <div><label style={{fontSize:10,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>REL de Aplicação</label><input type="text" value={valeTecEdit?.relAplicacao||""} onChange={e=>setValeTecEdit(p=>({...p,relAplicacao:e.target.value}))} style={{width:"100%",fontSize:13,padding:"9px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                </div>
+
+                <div style={{background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:10,padding:12}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",marginBottom:8,fontWeight:700}}><input type="checkbox" checked={valeTecEdit?.envioConserto==="sim"} onChange={e=>setValeTecEdit(p=>({...p,envioConserto:e.target.checked?"sim":"nao"}))}/> Enviado para conserto</label>
+                  {valeTecEdit?.envioConserto==="sim"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>OS ou REQ de Envio</label><input type="text" value={valeTecEdit?.osReqEnvio||""} onChange={e=>setValeTecEdit(p=>({...p,osReqEnvio:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Data Devolução</label><input type="date" value={valeTecEdit?.dataDevolucao||""} onChange={e=>setValeTecEdit(p=>({...p,dataDevolucao:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>
+                  </div>}
+                </div>
+
+                <div style={{background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:10,padding:12}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",marginBottom:8,fontWeight:700}}><input type="checkbox" checked={valeTecEdit?.instaladoMaquina==="sim"} onChange={e=>setValeTecEdit(p=>({...p,instaladoMaquina:e.target.checked?"sim":"nao"}))}/> Instalado na máquina</label>
+                  {valeTecEdit?.instaladoMaquina==="sim"&&<div><label style={{fontSize:9,fontWeight:700,color:"#999",textTransform:"uppercase",display:"block",marginBottom:4}}>Data</label><input type="date" value={valeTecEdit?.dataInstalacao||""} onChange={e=>setValeTecEdit(p=>({...p,dataInstalacao:e.target.value}))} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:8,border:"1.5px solid #E0E0E0",boxSizing:"border-box"}}/></div>}
+                </div>
+
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
+                  <BtnG onClick={()=>{setValeTecModal(false);setValeTecEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={()=>{
+                    const d=valeTecEdit;
+                    if(!d?.os){alert("Informe a OS.");return;}
+                    if(d?.id){updateValeTec(d.id,d);}
+                    else{const row={...d,id:`VALE${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false};setValeTecnico(p=>[row,...p]);db.save("vale_tecnico_maquinas",row.id,row);}
+                    notify("✅ Vale salvo!");
+                    setValeTecModal(false);setValeTecEdit(null);
+                  }}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {froModal&&(
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFroModal(false);setFroEdit(null);}}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
@@ -3393,6 +3461,7 @@ export default function App(){
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);db.saveBatch("oficina",stamp);setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);db.saveBatch("sas",stamp);setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
         {modalImportSasVend&&<ImportExcelModal onClose={()=>setModalImportSasVend(false)} onImport={novos=>{const ano=new Date().getFullYear();let seq=(sasVendas||[]).filter(x=>x&&x.numero&&x.numero.endsWith("/"+ano)).length;const stamp=novos.map(d=>{seq++;return{...d,id:d.id||"SASV"+Date.now()+Math.random().toString(36).slice(2,6),numero:d.numero||`${String(seq).padStart(4,"0")}/${ano}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aberta",arquivado:false};});setSasVendas(p=>[...stamp,...(p||[])]);db.saveBatch("sas_vendas",stamp);setModalImportSasVend(false);notify(`✅ ${stamp.length} proposta(s) importada(s)!`);}}/>}
+        {modalImportValeTec&&<ImportExcelModal onClose={()=>setModalImportValeTec(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"VALE"+Date.now()+Math.random().toString(36).slice(2,6),status:d.status||"vale_autorizado",registradoPor:d.registradoPor||user.name}));setValeTecnico(p=>[...stamp,...(p||[])]);db.saveBatch("vale_tecnico_maquinas",stamp);setModalImportValeTec(false);notify(`✅ ${stamp.length} vale(s) importado(s)!`);}}/>}
         {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);db.saveBatch("processos_mu",stamp);setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
         {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);db.saveBatch("processos_af",stamp);setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
         {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);db.saveBatch("relatorios",stamp);setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
@@ -5778,6 +5847,92 @@ export default function App(){
                         {ok&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px",gridColumn:"span 2"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Novo PAT · Rel. Entrega</div><div style={{fontSize:12,fontWeight:700,color:"#1A7A3C"}}>{r.novoPat||"—"} {r.relEntrega&&<span style={{fontSize:10,color:"#888"}}>· {r.relEntrega}</span>}</div></div>}
                       </div>
                       <div style={{fontSize:10,color:"#AAA",textAlign:"right"}}>{r.registradoPor||""}</div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
+
+        {/* ── VALE TÉCNICO MÁQUINAS ── */}
+        {tab==="vale_tecnico_maquinas"&&(()=>{
+          const lista=(valeTecnico||[]).filter(v=>v&&(showArqValeTec?v.arquivado:!v.arquivado));
+          const filtrada=lista.filter(v=>{
+            if(valeTecStatus!=="todos"&&v.status!==valeTecStatus)return false;
+            if(valeTecFrom&&(!v.data||v.data<valeTecFrom))return false;
+            if(valeTecTo&&(!v.data||v.data>valeTecTo))return false;
+            if(valeTecSearch){
+              const q=valeTecSearch.toLowerCase();
+              if(!((v.os||"").toLowerCase().includes(q)||(v.tecnico||"").toLowerCase().includes(q)||(v.peca||"").toLowerCase().includes(q)||(v.patRetirado||"").toLowerCase().includes(q)))return false;
+            }
+            return true;
+          });
+          const hasFilter=valeTecStatus!=="todos"||valeTecFrom||valeTecTo||valeTecSearch;
+          const pendentes=lista.filter(v=>v.status!=="instalado_maquina").length;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🎫 Vale Técnico Máquinas</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#B45309",fontWeight:700}}>{pendentes} em aberto</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <BtnImport onClick={()=>setModalImportValeTec(true)}/>
+                <button onClick={()=>setShowArqValeTec(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqValeTec?"#1A1A1A":"#FFF",color:showArqValeTec?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqValeTec?"Ocultar":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(filtrada,"vale_tecnico_maquinas",[{key:"status",label:"Status"},{key:"os",label:"OS"},{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"patRetirado",label:"PAT Retirado"},{key:"peca",label:"Peça"},{key:"quantidade",label:"Quantidade"},{key:"autorizacao",label:"Autorização"},{key:"reqRuptura",label:"REQ Ruptura"},{key:"relAplicacao",label:"REL Aplicação"},{key:"envioConserto",label:"Envio p/ Conserto"},{key:"osReqEnvio",label:"OS/REQ Envio"},{key:"dataDevolucao",label:"Data Devolução"},{key:"instaladoMaquina",label:"Instalado na Máquina"},{key:"dataInstalacao",label:"Data Instalação"}])}/>
+                <BtnY onClick={()=>{setValeTecEdit({status:"vale_autorizado",os:"",data:TODAY_STR,tecnico:ALL_TECHS[0],patRetirado:"",peca:"",quantidade:"1",autorizacao:VALE_TEC_AUTORIZACAO[0],reqRuptura:"",relAplicacao:"",envioConserto:"nao",osReqEnvio:"",dataDevolucao:"",instaladoMaquina:"nao",dataInstalacao:""});setValeTecModal(true);}}>+ Novo Vale</BtnY>
+              </div>
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+              {Object.entries(VALE_TEC_STATUS).map(([k,s])=>(
+                <div key={k} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{s.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:s.c,marginTop:2}}>{lista.filter(v=>v.status===k).length}</div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={()=>setShowFiltrosValeTec(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosValeTec?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {hasFilter&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosValeTec?"▲":"▼"}</span>
+            </button>
+            {showFiltrosValeTec&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={valeTecSearch} onChange={e=>setValeTecSearch(e.target.value)} placeholder="OS, técnico, peça, PAT..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <select value={valeTecStatus} onChange={e=>setValeTecStatus(e.target.value)}><option value="todos">Todos status</option>{Object.entries(VALE_TEC_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={valeTecFrom} onChange={e=>setValeTecFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={valeTecTo} onChange={e=>setValeTecTo(e.target.value)}/></div>
+              {hasFilter&&<button onClick={()=>{setValeTecSearch("");setValeTecFrom("");setValeTecTo("");setValeTecStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>}
+
+            {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🎫</div><div style={{fontSize:12,fontWeight:600}}>Nenhum vale registrado</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
+                {filtrada.map(v=>{
+                  const st=VALE_TEC_STATUS[v.status]||VALE_TEC_STATUS.vale_autorizado;
+                  return(<div key={v.id} className="card" style={{padding:0,overflow:"hidden",opacity:v.arquivado?0.55:1}}>
+                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:st.c,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>{setValeTecEdit(v);setValeTecModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>updateValeTec(v.id,{arquivado:!v.arquivado})} title={v.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{v.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delValeTec(v.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A"}}>OS {v.os||"—"}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(v.data)} · {v.tecnico||"—"}</div></div>
+                        <span style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"3px 10px"}}>Aut.: {v.autorizacao||"—"}</span>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>PAT Retirado</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{v.patRetirado||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Peça / Qtd</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{v.peca||"—"} ({v.quantidade||"1"})</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>REQ Ruptura</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{v.reqRuptura||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>REL Aplicação</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{v.relAplicacao||"—"}</div></div>
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <span style={{fontSize:10,fontWeight:700,color:v.envioConserto==="sim"?"#1A7A3C":"#94A3B8",background:v.envioConserto==="sim"?"#F0FFF5":"#F1F5F9",borderRadius:20,padding:"3px 10px"}}>Envio Conserto: {v.envioConserto==="sim"?"Sim":"Não"}</span>
+                        <span style={{fontSize:10,fontWeight:700,color:v.instaladoMaquina==="sim"?"#1A7A3C":"#94A3B8",background:v.instaladoMaquina==="sim"?"#F0FFF5":"#F1F5F9",borderRadius:20,padding:"3px 10px"}}>Instalado: {v.instaladoMaquina==="sim"?"Sim":"Não"}</span>
+                      </div>
+                      {v.envioConserto==="sim"&&<div style={{fontSize:11,color:"#64748B"}}>OS/REQ Envio: <b style={{color:"#1A1A1A"}}>{v.osReqEnvio||"—"}</b>{v.dataDevolucao&&<> · Devolução: <b style={{color:"#1A1A1A"}}>{fmtDataBR(v.dataDevolucao)}</b></>}</div>}
+                      {v.instaladoMaquina==="sim"&&v.dataInstalacao&&<div style={{fontSize:11,color:"#64748B"}}>Instalado em: <b style={{color:"#1A1A1A"}}>{fmtDataBR(v.dataInstalacao)}</b></div>}
                     </div>
                   </div>);
                 })}
