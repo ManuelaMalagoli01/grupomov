@@ -2020,21 +2020,21 @@ function EditSlotModal({slot,tipo,onClose,onSave}){
 
 function AppTopBar({user, setUser, setModalUsers}){
   return(
-    <div style={{background:"#FFFFFF",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 1px 3px rgba(15,23,42,.08)",borderBottom:"1px solid #EEF1F4",borderTop:"4px solid #F5C200",overflowX:"auto",overflowY:"hidden",gap:16,scrollbarWidth:"thin",scrollbarColor:"#CBD5E1 #FFFFFF"}} className="app-topbar-scroll">
+    <div style={{background:"#1A1A1A",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",position:"sticky",top:0,zIndex:200,boxShadow:"0 1px 3px rgba(0,0,0,.3)",borderBottom:"1px solid rgba(255,255,255,.08)",borderTop:"4px solid #F5C200",overflowX:"auto",overflowY:"hidden",gap:16,scrollbarWidth:"thin",scrollbarColor:"#475569 #1A1A1A"}} className="app-topbar-scroll">
       <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
         <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{height:28,width:"auto",display:"block",flexShrink:0}}/>
         <div style={{whiteSpace:"nowrap"}}>
-          <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>Grupo MOV</div>
+          <div style={{fontSize:13,fontWeight:800,color:"#FFFFFF"}}>Grupo MOV</div>
           <div style={{fontSize:9,color:"#94A3B8",letterSpacing:1,textTransform:"uppercase"}}>Gestão: Manutenção-Comercial-Serviços</div>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
           <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A",flexShrink:0}}>{user.name[0]}</div>
-          <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{user.name}</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#FFFFFF"}}>{user.name}</div>
         </div>
         {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"#F5C200",border:"none",color:"#1A1A1A",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>👤 Usuários</button>}
-        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"#F8FAFC",border:"1px solid #E5E7EB",color:"#475569",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
+        <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",color:"#E2E8F0",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
       </div>
     </div>
   );
