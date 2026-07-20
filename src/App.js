@@ -87,30 +87,14 @@ const db = {
 
 
 const USERS = [
-  { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:true },
+  { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:false },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
-  { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
-  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
-  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
-  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"SAS",                     password:"mov2026", canDelete:false, acessoSas:true },
-  { id:"dilson",       username:"dilson.silva",      name:"Dilson Silva",     role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"rafael_g",     username:"rafael.gustavo",    name:"Rafael Gustavo",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"helbert_f",    username:"helbert.figueredo", name:"Helbert Figueredo",role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"anderson_s",   username:"anderson.silva",    name:"Anderson Silva",   role:"Técnico",                 password:"mov2026", canDelete:false, apenasAgenda:true },
-  { id:"matheus_m",    username:"matheus.menezes",   name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:false, apenasOficina150:true },
-  { id:"hebert_s",     username:"hebert.santos",     name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:false, apenasOficina:true },
-  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true },
-  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"mov2026", canDelete:false, acessoComercial:true, semSas:true },
-  { id:"hebert_s",   username:"hebert.oficina",    name:"Hebert Oficina",   role:"Oficina",                 password:"ofi2026", canDelete:true, apenasOficina:true },
-  { id:"matheus_m",  username:"matheus.oficina",   name:"Matheus",          role:"Oficina150",              password:"mat2026", canDelete:true, apenasOfi150:true },
-  { id:"rafael",       username:"rafael.tecnico",    name:"Rafael",           role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"helbert",      username:"helbert.tecnico",   name:"Helbert",          role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"dilson",       username:"dilson.tecnico",    name:"Dilson",           role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"anderson",     username:"anderson.tecnico",  name:"Anderson",         role:"Líder Metropolitana BH",  password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"bruno",        username:"bruno.tecnico",     name:"Bruno",            role:"Líder Centro Oeste",      password:"mov2026", canDelete:true, apenasAgenda:true },
-  { id:"pedro_pimentel",username:"pedro.tecnico",   name:"Pedro Pimentel",   role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda150:true },
-  { id:"pedro_souza_v", username:"pedro_souza.tecnico", name:"Pedro Souza",  role:"Técnico",                 password:"mov2026", canDelete:true, apenasAgenda150:true },
+  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"Comercial2026", canDelete:true, acessoComercial:true },
+  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"Ldias2026", canDelete:true, acessoComercial:true },
+  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"SAS/Comercial",           password:"Fteixeira2026", canDelete:true, acessoComercial:true },
+  { id:"matheus_m",    username:"matheus_m",         name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:true, apenasOficina150:true },
+  { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem","Bateria e Mecânica"];
@@ -2103,25 +2087,27 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Serviços</div>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
+      <Btn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
-      {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
+      {!user.semSas&&<>
+        <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
+        <Btn k="sas" l="📄 SAS Financeiro"/>
+        <Btn k="sas_manutencao" l="🔧 SAS Manutenção"/>
+        <Btn k="sas_vendas" l="💰 SAS Vendas"/>
+        <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
+      </>}
+      <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Comercial</div>
+      <Btn k="comercial" l="📋 Propostas"/>
+      <Btn k="dashboard_comercial" l="📊 Dashboard"/>
     </div>
   );
   if(user.acessoSas&&!user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="sas" l="📄 SAS"/>
-    </div>
-  );
-  if(user.acessoComercial) return(
-    <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="mau_uso" l="⚠️ Mau Uso"/>
-      <Btn k="a_faturar" l="💰 A Faturar"/>
-      <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
-      <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
-      {!user.semSas&&<Btn k="sas" l="📄 SAS"/>}
     </div>
   );
   if(user.apenasAgenda) return(
@@ -2317,7 +2303,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["sas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"]:["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas","sas_manutencao","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3418,7 +3404,7 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"]:["mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas"]) :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas","sas_manutencao","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
       user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_tech","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
