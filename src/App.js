@@ -1622,12 +1622,30 @@ function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
     const u={id:novo.id.trim(),name:novo.name.trim(),password:novo.password,canDelete:!!novo.canDelete,role:novo.canDelete?"Gestora":"Assistente"};
     onSaveUser(u); setRows(p=>[...p,u]); setNovo({name:"",id:"",password:"",canDelete:false});
   };
+  const removerDuplicados=()=>{
+    const vistos={};
+    const paraExcluir=[];
+    rows.forEach(r=>{
+      const chave=(r.name||"").trim().toLowerCase();
+      if(!chave)return;
+      if(vistos[chave]){paraExcluir.push(r.id);}
+      else{vistos[chave]=true;}
+    });
+    if(paraExcluir.length===0){alert("Nenhum usuário duplicado encontrado (comparando pelo nome).");return;}
+    if(window.confirm(`Encontrados ${paraExcluir.length} usuário(s) duplicado(s) pelo nome. Excluir as cópias repetidas, mantendo a primeira de cada?`)){
+      paraExcluir.forEach(id=>onDeleteUser(id));
+      setRows(p=>p.filter(r=>!paraExcluir.includes(r.id)));
+    }
+  };
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
       <div style={{background:"#FFF",borderRadius:16,width:720,maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{fontWeight:800,fontSize:17,color:"#F5C200"}}>👤 Gerenciar Usuários</div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <button onClick={removerDuplicados} style={{background:"#8E44AD",border:"none",color:"#FFF",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>🧹 Remover Duplicados</button>
+            <button onClick={onClose} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
+          </div>
         </div>
         <div style={{padding:22}}>
           <div style={{background:"#FFF8F0",border:"1px solid #FFE8A0",borderRadius:8,padding:"8px 12px",fontSize:11,color:"#C47D00",marginBottom:16}}>
