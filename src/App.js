@@ -2024,14 +2024,14 @@ function AppTopBar({user, setUser, setModalUsers}){
       <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
         <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{height:28,width:"auto",display:"block",flexShrink:0}}/>
         <div style={{whiteSpace:"nowrap"}}>
-          <div style={{fontSize:13,fontWeight:800,color:"#FFFFFF"}}>Grupo MOV</div>
-          <div style={{fontSize:9,color:"#94A3B8",letterSpacing:1,textTransform:"uppercase"}}>Gestão: Manutenção-Comercial-Serviços</div>
+          <div style={{fontSize:15,fontWeight:900,color:"#FFFFFF",letterSpacing:.3}}>Grupo MOV</div>
+          <div style={{fontSize:10,color:"#F5C200",letterSpacing:1.2,textTransform:"uppercase",fontWeight:800}}>Gestão: Manutenção-Comercial-Serviços</div>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:8,padding:"5px 10px",whiteSpace:"nowrap"}}>
           <div style={{width:26,height:26,borderRadius:"50%",background:"#F5C200",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#1A1A1A",flexShrink:0}}>{user.name[0]}</div>
-          <div style={{fontSize:12,fontWeight:700,color:"#FFFFFF"}}>{user.name}</div>
+          <div style={{fontSize:13,fontWeight:800,color:"#FFFFFF"}}>{user.name}</div>
         </div>
         {user.id==="manuela"&&<button onClick={()=>setModalUsers(true)} style={{background:"#F5C200",border:"none",color:"#1A1A1A",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>👤 Usuários</button>}
         <button onClick={()=>{try{localStorage.removeItem("grupomov_user");}catch(e){}setUser(null);}} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",color:"#E2E8F0",borderRadius:7,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>Sair</button>
