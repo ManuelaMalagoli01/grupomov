@@ -861,6 +861,18 @@ function ImportExcelModal({onClose,onImport}){
       }
       return str;
     };
+    // Duração (Total de horas trabalhadas) — NUNCA é fração de dia; 1:00 = 60 minutos sempre.
+    const toDuracao=(str)=>{
+      if(!str)return "";
+      str=String(str).trim();
+      let m=str.match(/^(\d{1,3}):(\d{2})(?::\d{2})?$/);
+      if(m)return `${String(parseInt(m[1])).padStart(2,"0")}:${m[2]}`;
+      if(/^\d+(\.\d+)?$/.test(str.replace(",","."))){
+        const totalMin=Math.round(parseFloat(str.replace(",","."))*60);
+        return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;
+      }
+      return str;
+    };
     const novos=rows.map((o,i)=>{
       const horaInicio=toTime(pick("Início hora")(o)||pick("Inicio hora")(o)||pick("Início")(o)||pick("Entrada")(o));
       const horaFim=toTime(pick("Fim da hora")(o)||pick("Fim hora")(o)||pick("Fim")(o)||pick("Saida")(o));
@@ -888,7 +900,7 @@ function ImportExcelModal({onClose,onImport}){
         relatorio:String(pick("Relatório")(o)||pick("Relatorio")(o)||""),
         chamado:String(pick("Chamado")(o)||""),numChamado:String(pick("Chamado")(o)||""),
         horaInicio,horaFim,
-        horasTrabalhadas:String(pick("Total hora trabalhada")(o)||pick("Total hora")(o)||pick("Trabalhada")(o)||"")||calcHoras(horaInicio,horaFim),
+        horasTrabalhadas:toDuracao(String(pick("Total hora trabalhada")(o)||pick("Total hora")(o)||pick("Trabalhada")(o)||""))||calcHoras(horaInicio,horaFim),
         servicos:[], // deixado em branco propositalmente — inserção manual posterior
         status:"agendada",
         obs:"", // deixado em branco propositalmente — inserção manual posterior
@@ -1389,12 +1401,26 @@ function ImportAponModal({onClose,onImport,label,oficina}){
           if(m[3]){const ap=m[3].toLowerCase();if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;}
           return `${String(h).padStart(2,"0")}:${mi}`;
         }
-        if(/^\d+(\.\d+)?$/.test(str)){ // fração de dia do Excel (ex: 0.5 = 12:00)
+        if(/^\d+(\.\d+)?$/.test(str)){ // fração de dia do Excel (ex: 0.5 = 12:00) — usado só p/ horário de relógio (entrada/saída)
           const frac=parseFloat(str);
           if(frac>=0&&frac<1){
             const totalMin=Math.round(frac*24*60);
             return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;
           }
+        }
+        return str;
+      };
+      // Duração (Total de horas trabalhadas) — NUNCA é fração de dia, é sempre horas decimais diretas.
+      // 1:00 = 60 minutos. 0,5 = 30 minutos (nao 12:00, que seria o erro se usássemos toTime aqui).
+      const toDuracao=(str)=>{
+        if(!str)return "";
+        str=String(str).trim();
+        let m=str.match(/^(\d{1,3}):(\d{2})(?::\d{2})?$/);
+        if(m)return `${String(parseInt(m[1])).padStart(2,"0")}:${m[2]}`;
+        if(/^\d+(\.\d+)?$/.test(str.replace(",","."))){
+          const horasDecimais=parseFloat(str.replace(",","."));
+          const totalMin=Math.round(horasDecimais*60);
+          return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;
         }
         return str;
       };
@@ -1417,7 +1443,7 @@ function ImportAponModal({onClose,onImport,label,oficina}){
       servico:autoServico(tecnicoVal), // preenchido automaticamente p/ técnicos mapeados (Oficina 1340); demais ficam em branco p/ inserção manual
       inicio:inicioT,
       termino:terminoT,
-      total:toTime(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
+      total:toDuracao(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
       obs:String(pick("obsevação")(o)||pick("observação")(o)||pick("obs")(o)||pick("observ")(o)||""),
     };}).filter(r=>r.tecnico||r.os||r.patrimonio); // ignora linhas totalmente vazias (ex: linhas de fórmula/template no final da planilha)
     onImport(mapped);
@@ -1453,6 +1479,33 @@ function ImportAgendaModal({onClose,onImport}){
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
   const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const toTime=(str)=>{
+    if(!str)return "";
+    str=String(str).trim();
+    let m=str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|am|pm)?$/);
+    if(m){
+      let h=parseInt(m[1]),mi=m[2];
+      if(m[3]){const ap=m[3].toLowerCase();if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;}
+      return `${String(h).padStart(2,"0")}:${mi}`;
+    }
+    if(/^\d+(\.\d+)?$/.test(str)){ // fração de dia do Excel (horário de relógio, ex: 0.5 = 12:00)
+      const frac=parseFloat(str);
+      if(frac>=0&&frac<1){const totalMin=Math.round(frac*24*60);return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;}
+    }
+    return str;
+  };
+  // Duração (Total de horas trabalhadas) — NUNCA é fração de dia; 1:00 = 60 minutos sempre.
+  const toDuracao=(str)=>{
+    if(!str)return "";
+    str=String(str).trim();
+    let m=str.match(/^(\d{1,3}):(\d{2})(?::\d{2})?$/);
+    if(m)return `${String(parseInt(m[1])).padStart(2,"0")}:${m[2]}`;
+    if(/^\d+(\.\d+)?$/.test(str.replace(",","."))){
+      const totalMin=Math.round(parseFloat(str.replace(",","."))*60);
+      return `${String(Math.floor(totalMin/60)).padStart(2,"0")}:${String(totalMin%60).padStart(2,"0")}`;
+    }
+    return str;
+  };
   const onFile=async(f)=>{
     if(!f)return;setErr("");setLoading(true);setRows(null);
     try{
@@ -1478,9 +1531,9 @@ function ImportAgendaModal({onClose,onImport}){
       cidade:String(pick("cidade")(o)||pick("city")(o)||""),
       patrimonio:String(pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
       horimetro:String(pick("horímetro")(o)||pick("horimetro")(o)||""),
-      horaEntrada:String(pick("entrada")(o)||pick("início")(o)||pick("inicio")(o)||""),
-      horaSaida:String(pick("saída")(o)||pick("saida")(o)||pick("término")(o)||pick("termino")(o)||""),
-      horasTrabalhadas:String(pick("horas")(o)||pick("total")(o)||""),
+      horaEntrada:toTime(String(pick("entrada")(o)||pick("início")(o)||pick("inicio")(o)||"")),
+      horaSaida:toTime(String(pick("saída")(o)||pick("saida")(o)||pick("término")(o)||pick("termino")(o)||"")),
+      horasTrabalhadas:toDuracao(String(pick("horas")(o)||pick("total")(o)||"")),
       relatorio:String(pick("relatório")(o)||pick("relatorio")(o)||pick("nº relatório")(o)||pick("os")(o)||""),
       obs:String(pick("obs")(o)||pick("observ")(o)||""),
       servico:String(pick("tipo")(o)||pick("serviço")(o)||pick("servico")(o)||"corretiva"),
