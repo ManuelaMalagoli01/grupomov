@@ -5325,13 +5325,15 @@ export default function App(){
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard de Atendimentos</div>
-            <div style={{fontSize:11,color:"#94A3B8",marginBottom:20}}>Fonte de dados: Conferência de Relatórios (Técnicos Externos)</div>
+            <div style={{fontSize:11,color:"#94A3B8",marginBottom:20}}>Fonte de dados: Conferência de Relatórios (Técnicos Externos) — mostra somente atendimentos <b>concluídos</b> (inclui Mau Uso e A Faturar). A quantidade inicial/em aberto fica na aba Conferência de Relatórios</div>
 
             {(()=>{
               const chartTitle={fontSize:11,fontWeight:700,color:"#888",marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.data||d.data<dashFrom))return false; if(dashTo&&(!d.data||d.data>dashTo))return false; return true; };
               const baseReports=(reports||[]);
+              const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar";
               const dashReports=baseReports.filter(d=>{
+                if(!isConcluido(d))return false;
                 const region=techRegionMap[d.tecnico]||"";
                 if(!((dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d)))return false;
                 if(dashServico!=="todos"&&!(d.servicos||[]).includes(dashServico))return false;
@@ -5350,10 +5352,8 @@ export default function App(){
               const regCorr=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="corretivo").length);
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
-              const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar";
               const totalMauUso=dashReports.filter(r=>r.status==="mau_uso").length;
               const totalAFaturar=dashReports.filter(r=>r.status==="a_faturar").length;
-              const concluidas=dashReports.filter(isConcluido).length;
               const techHorasPrev=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="preventivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const techHorasCorr=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t&&r.atendimento==="corretivo").reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
               const BLU="#2563EB",RED="#EF4444",TEA="#0D9488",PUR="#7C3AED";
@@ -5412,7 +5412,7 @@ export default function App(){
                       {l:"Corretivas",v:corr,c:"#C62828",i:"🔧"},
                       {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#B45309",i:"⏱"},
                       {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",i:"👷"},
-                      {l:"Concluídas",v:concluidas,c:"#0369A1",i:"✅"},
+                      {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#7E22CE",i:"📐"},
                     ].map((k,i)=>(
                       <div key={i} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`}}>
                         <div style={{fontSize:8,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,marginBottom:2}}>{k.i} {k.l}</div>
