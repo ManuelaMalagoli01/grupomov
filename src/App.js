@@ -3017,6 +3017,9 @@ export default function App(){
   select:hover{border-color:#CBD5E1;}
   select:focus{border-color:#F5C200;box-shadow:0 0 0 3px rgba(245,194,0,.15);}
 
+  .total-cell-amarelo{background:#F5C200;color:#1A1A1A;transition:all .15s;}
+  .total-cell-amarelo:hover{background:#FFFFFF;color:#1A1A1A;box-shadow:0 0 0 2px #F5C200 inset;}
+
   input[type=text],input[type=password],input[type=date],input[type=time],textarea{
     background:#FFFFFF;color:#1A1A1A;
     border:1.5px solid #E5E7EB;border-radius:10px;
@@ -3842,7 +3845,7 @@ export default function App(){
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
-                        <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
+                        <td style={{padding:"10px 12px",textAlign:"center"}}><span className="total-cell-amarelo" style={{fontSize:13,fontWeight:900,borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap",display:"inline-block"}}>{a.total||"—"}</span></td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:8}}>
@@ -7724,7 +7727,7 @@ export default function App(){
                         <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={e=>updateApon150(a.id,{servico:e.target.value})} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
-                        <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#C47D00",background:"#FFFBF0",border:"2px solid #FFE8A0",borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap"}}>{a.total||"—"}</span></td>
+                        <td style={{padding:"10px 12px",textAlign:"center"}}><span className="total-cell-amarelo" style={{fontSize:13,fontWeight:900,borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap",display:"inline-block"}}>{a.total||"—"}</span></td>
                         <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:4}}>
