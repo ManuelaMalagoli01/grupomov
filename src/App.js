@@ -2060,6 +2060,37 @@ function AppTopBar({user, setUser, setModalUsers}){
 
 function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, setCollapsed=()=>{}}){
   const bdg=(k)=>badges[k]||0;
+  const Btn=({k,l,badge})=>{
+    const isActive=tab===k;
+    const count=badge!==undefined?badge:bdg(k);
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#475569",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700,minWidth:18,textAlign:"center"}}>{count}</span>}
+    </button>);
+  };
+  const SubBtn=({k,l,badge})=>{
+    const isActive=tab===k;
+    const count=badge!==undefined?badge:bdg(k);
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
+    </button>);
+  };
+  const GroupHeader=({label,icon,open,setOpen,ativa,badgeCount})=>(
+    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#475569",fontSize:12,fontWeight:ativa?700:600,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+      <span>{icon} {label}</span>
+      <div style={{display:"flex",alignItems:"center",gap:5}}>
+        {badgeCount>0&&!open&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{badgeCount}</span>}
+        <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:open?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+      </div>
+    </button>
+  );
+
+  const GroupIcon=({icon,ativa,badgeCount,onClick,title})=>(
+    <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
+      {icon}
+      {badgeCount>0&&<span style={{position:"absolute",top:8,right:16,background:"#EF4444",color:"#FFF",borderRadius:8,minWidth:14,height:14,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{badgeCount}</span>}
+    </button>
+  );
+
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
   const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"];
@@ -2167,37 +2198,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
     </div>
-  );
-
-  const Btn=({k,l,badge})=>{
-    const isActive=tab===k;
-    const count=badge!==undefined?badge:bdg(k);
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#475569",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 6px",fontSize:10,fontWeight:700,minWidth:18,textAlign:"center"}}>{count}</span>}
-    </button>);
-  };
-  const SubBtn=({k,l,badge})=>{
-    const isActive=tab===k;
-    const count=badge!==undefined?badge:bdg(k);
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
-    </button>);
-  };
-  const GroupHeader=({label,icon,open,setOpen,ativa,badgeCount})=>(
-    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"9px 16px",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#475569",fontSize:12,fontWeight:ativa?700:600,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
-      <span>{icon} {label}</span>
-      <div style={{display:"flex",alignItems:"center",gap:5}}>
-        {badgeCount>0&&!open&&<span style={{background:"#EF4444",color:"#FFF",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{badgeCount}</span>}
-        <span style={{fontSize:9,transition:"transform .2s",display:"inline-block",transform:open?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
-      </div>
-    </button>
-  );
-
-  const GroupIcon=({icon,ativa,badgeCount,onClick,title})=>(
-    <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
-      {icon}
-      {badgeCount>0&&<span style={{position:"absolute",top:8,right:16,background:"#EF4444",color:"#FFF",borderRadius:8,minWidth:14,height:14,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{badgeCount}</span>}
-    </button>
   );
 
   const W = collapsed?60:196;
