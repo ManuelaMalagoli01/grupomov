@@ -5367,6 +5367,7 @@ export default function App(){
               const sTH=SVC.map(sv=>dashReports.filter(s=>s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+horasDe(s2),0));
               const sDS2={labels:SVC.map(s=>s.length>10?s.slice(0,10)+"…":s),datasets:[{label:"Qtd Atendimentos",data:sTQ,backgroundColor:"#3B82F6",borderRadius:8},{label:"Horas",data:sTH,backgroundColor:"rgba(59,130,246,0.35)",borderRadius:8}]};
               const qDS={labels:techsWith,datasets:SVC.map((sv,si)=>({label:sv,data:techsWith.map(t=>dashReports.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).length),backgroundColor:SCOL[si%SCOL.length],borderRadius:4}))};
+              const hDS={labels:techsWith,datasets:SVC.map((sv,si)=>({label:sv,data:techsWith.map(t=>+dashReports.filter(s=>s.tecnico===t&&s.servicos&&s.servicos.includes(sv)).reduce((a2,s2)=>a2+horasDe(s2),0).toFixed(1)),backgroundColor:SCOL[si%SCOL.length],borderRadius:4}))};
 
               // Alerta de retrabalho (corretiva repetida em ≤30 dias no mesmo patrimônio)
               const porPat={};
@@ -5467,10 +5468,16 @@ export default function App(){
                         options={{indexAxis:"y",maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0F172A",titleFont:{size:12,weight:"bold"},bodyFont:{size:11},padding:12,cornerRadius:10}},scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F1F5F9"}},y:{grid:{display:false},ticks:{font:{size:10,weight:"600"}}}}}}/>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"14px 16px",gridColumn:"span 2"}}>
-                      <div style={chartTitle}>Serviços por Técnico (o que cada um fez)</div>
+                      <div style={chartTitle}>Serviços por Técnico — Quantidade</div>
                       {techsWith.length?<div style={{overflowX:"auto"}}><div style={{minWidth:Math.max(600,techsWith.length*90)}}><ChartCanvas type="bar" height={280}
                         data={qDS}
                         options={{indexAxis:"x",maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:10,padding:10,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12},bodyFont:{size:11},padding:10,cornerRadius:8}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10,weight:"600"}}},y:{stacked:true,beginAtZero:true,ticks:{precision:0},grid:{color:"#F1F5F9"}}}}}/></div></div>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
+                    </div>
+                    <div className="card" style={{padding:"14px 16px",gridColumn:"span 2"}}>
+                      <div style={chartTitle}>Serviços por Técnico — Horas</div>
+                      {techsWith.length?<div style={{overflowX:"auto"}}><div style={{minWidth:Math.max(600,techsWith.length*90)}}><ChartCanvas type="bar" height={280}
+                        data={hDS}
+                        options={{indexAxis:"x",maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:10,padding:10,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",titleFont:{size:12},bodyFont:{size:11},padding:10,cornerRadius:8,callbacks:{label:c=>`${c.dataset.label}: ${c.raw}h`}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10,weight:"600"}}},y:{stacked:true,beginAtZero:true,ticks:{callback:v=>`${v}h`},grid:{color:"#F1F5F9"}}}}}/></div></div>:<div style={{color:"#CCC",fontSize:13,padding:"30px 0",textAlign:"center"}}>Sem dados no filtro.</div>}
                     </div>
                     <div className="card" style={{padding:"14px 16px",gridColumn:(totalMauUso>0||totalAFaturar>0)?"span 1":"span 2"}}>
                       <div style={chartTitle}>Serviços Realizados — Quantidade e Horas</div>
