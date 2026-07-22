@@ -1730,6 +1730,110 @@ function ChartCanvas({type,data,options,height=240}){
 // ── MODAL EDIÇÃO DE SLOT DE AGENDA ───────────────────────────────────────────
 // ── CARD DE ATENDIMENTO NO DETALHE DO DIA (com botao Salvar explicito) ──────
 // ── DASHBOARD SIMPLIFICADO DE UM SO TIPO DE PROCESSO (Mau Uso OU A Faturar) ──
+// ── IMPORTADOR DA PLANILHA DE REQUISICOES (Codigo Requisicao / Data Emissao / Natureza / Requerente / Item / Situacao / Centro de Resultado / Qtd) ──
+function ImportSaidaEntradaModal({onClose,onImport}){
+  const [rows,setRows]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const pick=k=>o=>{const f=Object.keys(o).find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
+  const toISO=(str)=>{
+    if(!str)return "";
+    str=String(str).trim().split(" ")[0];
+    if(/^\d{4}-\d{2}-\d{2}$/.test(str))return str;
+    let m=str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if(m){let[,a,b,y]=m;if(y.length===2)y="20"+y;return `${y}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`;}
+    if(/^\d+(\.\d+)?$/.test(str)){
+      const dt=new Date(Math.round((parseFloat(str)-25569)*86400*1000));
+      if(!isNaN(dt))return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
+    }
+    return "";
+  };
+  // "30000000000429 - PNEU AUTO TRAVANTE" => {cod:"30000000000429", desc:"PNEU AUTO TRAVANTE"}
+  const splitCod=(v)=>{
+    const s=String(v||"").trim();
+    const m=s.match(/^([^\s-]+)\s*-\s*([\s\S]+)$/);
+    return m?{cod:m[1].trim(),desc:m[2].trim()}:{cod:"",desc:s};
+  };
+  const onFile=async(f)=>{
+    if(!f)return; setErr(""); setLoading(true); setRows(null);
+    try{
+      const XLSX=await loadXLSX();
+      const buf=await f.arrayBuffer();
+      const wb=XLSX.read(buf,{type:"array"});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false}).filter(o=>String(pick("Código Requisição")(o)||pick("Codigo Requisi")(o)||"").trim());
+      if(!data.length){setErr("Não encontrei linhas com Código Requisição nesta planilha.");}
+      else setRows(data);
+    }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx, .xls ou .csv.");}
+    setLoading(false);
+  };
+  const mapear=(o)=>{
+    const item=splitCod(pick("Item")(o));
+    const req=splitCod(pick("Requerente")(o));
+    const centro=splitCod(pick("Centro de Resultado")(o));
+    const natureza=splitCod(pick("Natureza")(o)).desc||String(pick("Natureza")(o)||"");
+    const situacao=splitCod(pick("Situação Item")(o)||pick("Situacao Item")(o)).desc||String(pick("Situação Item")(o)||pick("Situacao Item")(o)||"");
+    const sLow=situacao.toLowerCase();
+    const statusReq=/atend/.test(sLow)?"atendido":/ruptur/.test(sLow)?"ruptura":"";
+    const patMatch=(centro.desc||"").match(/PAT\s*\d+/i);
+    return {
+      data:toISO(pick("Data Emiss")(o)),
+      req:String(pick("Código Requisição")(o)||pick("Codigo Requisi")(o)||"").trim(),
+      natureza,
+      situacaoItem:situacao,
+      requerente:req.desc,
+      empresa:req.desc,
+      codigo:item.cod,
+      peca:item.desc,
+      patrimonio:patMatch?patMatch[0].toUpperCase().replace(/\s+/g,""):(centro.desc||""),
+      quantidade:String(pick("Quantidade Solicitada")(o)||pick("Quantidade")(o)||"").trim(),
+      statusReq,
+      obs:[natureza&&`Natureza: ${natureza}`,situacao&&`Situação: ${situacao}`].filter(Boolean).join(" · "),
+      relSolicitacao:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",
+      statusFinal:statusReq==="atendido"?"concluido":"pendente",
+      processoStatus:"em_andamento",
+    };
+  };
+  const preview=rows?rows.slice(0,5).map(mapear):[];
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:820,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}>
+          <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>📥 Importar Planilha de Requisições</div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+        </div>
+        <div style={{padding:20}}>
+          <div style={{fontSize:12,color:"#64748B",marginBottom:12,background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:10,padding:12}}>
+            Leio automaticamente as colunas <b>Código Requisição</b>, <b>Data Emissão</b>, <b>Natureza Operação</b>, <b>Requerente</b>, <b>Item</b>, <b>Situação Item</b>, <b>Centro de Resultado Item</b> e <b>Quantidade Solicitada</b>. O código e a descrição da peça são separados automaticamente, e o PAT é extraído do Centro de Resultado.
+          </div>
+          <input type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{fontSize:13,marginBottom:12}}/>
+          {loading&&<div style={{fontSize:13,color:"#64748B"}}>Lendo planilha…</div>}
+          {err&&<div style={{fontSize:13,color:"#C62828",background:"#FFF0F0",borderRadius:8,padding:10,marginBottom:12}}>{err}</div>}
+          {rows&&<>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{rows.length} linha(s) encontrada(s) — prévia das 5 primeiras:</div>
+            <div style={{overflowX:"auto",border:"1px solid #EEF1F4",borderRadius:10,marginBottom:14}}>
+              <table style={{fontSize:11,minWidth:760}}>
+                <thead><tr><th>Data</th><th>REQ</th><th>Requerente</th><th>Código</th><th>Peça</th><th>PAT</th><th>Qtd</th><th>Situação</th></tr></thead>
+                <tbody>{preview.map((p,i)=>(
+                  <tr key={i}>
+                    <td>{fmtDataBR(p.data)||"—"}</td><td>{p.req}</td><td style={{maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.requerente}</td>
+                    <td>{p.codigo}</td><td style={{maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.peca}</td>
+                    <td>{p.patrimonio||"—"}</td><td>{p.quantidade}</td><td>{p.situacaoItem}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <BtnG onClick={onClose}>Cancelar</BtnG>
+              <BtnY onClick={()=>onImport(rows.map(mapear))}>Importar {rows.length} registro(s)</BtnY>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const {fMes,setFMes,fAno,setFAno,fDe,setFDe,fAte,setFAte,fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
   const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
@@ -2349,6 +2453,7 @@ export default function App(){
   const [rupturaForm,setRupturaForm]=useState({solicitacao:"sem_estoque",data:"",ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
+  const [modalImportSE,setModalImportSE]=useState(false);
   const [requisicoes,setRequisicoes]=useState([]);
   const [agendaItems,setAgendaItems]=useState({});
   const [schedule,setSchedule]=useState({});
@@ -3462,6 +3567,13 @@ export default function App(){
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);db.saveBatch("oficina",stamp);setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);db.saveBatch("sas",stamp);setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
         {modalImportSasVend&&<ImportExcelModal onClose={()=>setModalImportSasVend(false)} onImport={novos=>{const ano=new Date().getFullYear();let seq=(sasVendas||[]).filter(x=>x&&x.numero&&x.numero.endsWith("/"+ano)).length;const stamp=novos.map(d=>{seq++;return{...d,id:d.id||"SASV"+Date.now()+Math.random().toString(36).slice(2,6),numero:d.numero||`${String(seq).padStart(4,"0")}/${ano}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aberta",arquivado:false};});setSasVendas(p=>[...stamp,...(p||[])]);db.saveBatch("sas_vendas",stamp);setModalImportSasVend(false);notify(`✅ ${stamp.length} proposta(s) importada(s)!`);}}/>}
+        {modalImportSE&&<ImportSaidaEntradaModal onClose={()=>setModalImportSE(false)} onImport={novos=>{
+          const stamp=novos.map((d,i)=>({...d,id:`SAI${Date.now()}_${i}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString()}));
+          setSaidaEntrada(p=>[...stamp,...(p||[])]);
+          db.saveBatch("saida_entrada",stamp);
+          setModalImportSE(false);
+          notify(`✅ ${stamp.length} registro(s) importado(s)!`);
+        }}/>}
         {modalImportValeTec&&<ImportExcelModal onClose={()=>setModalImportValeTec(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"VALE"+Date.now()+Math.random().toString(36).slice(2,6),status:d.status||"vale_autorizado",registradoPor:d.registradoPor||user.name}));setValeTecnico(p=>[...stamp,...(p||[])]);db.saveBatch("vale_tecnico_maquinas",stamp);setModalImportValeTec(false);notify(`✅ ${stamp.length} vale(s) importado(s)!`);}}/>}
         {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);db.saveBatch("processos_mu",stamp);setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
         {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);db.saveBatch("processos_af",stamp);setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
@@ -5122,6 +5234,7 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <BtnImport onClick={()=>setModalImportSE(true)}/>
                 <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
                 <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Novo Registro</BtnY>
