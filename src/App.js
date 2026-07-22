@@ -1774,7 +1774,8 @@ function ImportSaidaEntradaModal({onClose,onImport}){
     const natureza=splitCod(pick("Natureza")(o)).desc||String(pick("Natureza")(o)||"");
     const situacao=splitCod(pick("Situação Item")(o)||pick("Situacao Item")(o)).desc||String(pick("Situação Item")(o)||pick("Situacao Item")(o)||"");
     const sLow=situacao.toLowerCase();
-    const statusReq=/atend/.test(sLow)?"atendido":/ruptur/.test(sLow)?"ruptura":"";
+    const parcial=/parcial/.test(sLow);
+    const statusReq=/ruptur/.test(sLow)?"ruptura":(!parcial&&/atend/.test(sLow))?"atendido":"";
     const patMatch=(centro.desc||"").match(/PAT\s*\d+/i);
     return {
       data:toISO(pick("Data Emiss")(o)),
