@@ -1841,8 +1841,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
   const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const dataAbertura=(p)=>p.date||p.dataEnvio||"";
   const filtrar=(p)=>{
-    const d=p.dataEnvio||p.date||"";
+    const d=dataAbertura(p);
     if(fDe&&d<fDe)return false;
     if(fAte&&d>fAte)return false;
     if(fMes&&d.slice(5,7)!==fMes)return false;
@@ -1856,135 +1858,153 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
   const all=(lista||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
   const valTotal=all.reduce((acc,p)=>acc+parseVal(p.valor),0);
-  const valAprov=all.filter(p=>p.aprovCliente==="aprovado_cliente").reduce((acc,p)=>acc+parseVal(p.valor),0);
+
+  // ── Janela de tempo (mês selecionado, ou mês atual se nenhum filtro) ──
   const mesAtualStr=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-  const valFaturado=all.filter(p=>p.aprovCliente==="cobrado_faturado"&&(p.dataAprovacao||p.date||"").startsWith(mesAtualStr)).reduce((acc,p)=>acc+parseVal(p.valor),0);
-  const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const anoRef=fAno||String(TODAY.getFullYear());
+  const mesRef=fMes||PAD(TODAY.getMonth()+1);
+  const janelaStr=`${anoRef}-${mesRef}`;
+  const noMes=(d)=>d&&d.startsWith(janelaStr);
+
+  // ── Semana (segunda a domingo) — usa De/Até se preenchidos, senão semana atual ──
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const diaSemana=hoje.getDay();
+  const segunda=new Date(hoje); segunda.setDate(hoje.getDate()-((diaSemana+6)%7));
+  const domingo=new Date(segunda); domingo.setDate(segunda.getDate()+6);
+  const fmtISO=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const semanaDe=fDe||fmtISO(segunda), semanaAte=fAte||fmtISO(domingo);
+
+  // ── Grupos por status de aprovacao (sobre 'all', ja filtrado) ──
+  const concluidosMes=all.filter(p=>p.processoStatus==="concluido"&&noMes(p.dataConclusao||dataAbertura(p)));
+  const faturadosMes=all.filter(p=>p.aprovCliente==="cobrado_faturado"&&noMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p)));
+  const enviadosFatMes=all.filter(p=>p.aprovCliente==="aprovado_cliente"&&noMes(p.dataAprovacao||dataAbertura(p)));
+  const abertosMes=all.filter(p=>noMes(dataAbertura(p)));
+  const pendentes=all.filter(p=>(p.aprovCliente||"aguardando_retorno")==="aguardando_retorno");
+  const emNegociacao=all.filter(p=>p.aprovCliente==="em_negociacao");
+  const negados=all.filter(p=>p.aprovCliente==="negado_cliente");
+  const aprovados=all.filter(p=>p.aprovCliente==="aprovado_cliente");
+
+  const soma=(arr)=>arr.reduce((a,p)=>a+parseVal(p.valor),0);
+
   const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
     key:k,label:s.l,total:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
-    valor:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).reduce((acc,p)=>acc+parseVal(p.valor),0),c:s.c,bg:s.bg
+    valor:soma(all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k)),c:s.c,bg:s.bg
   }));
-  const meses=[...new Set(all.map(p=>getMes(p.dataEnvio||p.date)).filter(Boolean))].sort().slice(-6);
+  const meses=[...new Set(all.map(p=>getMes(dataAbertura(p))).filter(Boolean))].sort().slice(-6);
   const empValMap={};
   all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
   const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
-  // ── Agrupamentos por empresa (com Nº do processo) pedidos pelo setor ──
-  const agruparPorEmpresa=(registros)=>{
-    const map={};
-    registros.forEach(p=>{
-      const emp=p.empresa||"Sem Empresa";
-      if(!map[emp])map[emp]={valor:0,qtd:0,numeros:[]};
-      map[emp].valor+=parseVal(p.valor);
-      map[emp].qtd+=1;
-      const num=p.numMauUso||p.numeroProposta||p.ov||"";
-      if(num)map[emp].numeros.push(num);
-    });
-    return Object.entries(map).sort((a,b)=>b[1].valor-a[1].valor);
-  };
-  // Semana atual (segunda a domingo)
-  const hoje=new Date(); hoje.setHours(0,0,0,0);
-  const diaSemana=hoje.getDay(); // 0=dom
-  const segunda=new Date(hoje); segunda.setDate(hoje.getDate()-((diaSemana+6)%7));
-  const domingo=new Date(segunda); domingo.setDate(segunda.getDate()+6);
-  const fmtISO=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  const semanaDe=fmtISO(segunda), semanaAte=fmtISO(domingo);
-  const enviadosSemana=(lista||[]).filter(p=>p&&p.processoStatus!=="arquivado"&&p.dataEnvio&&p.dataEnvio>=semanaDe&&p.dataEnvio<=semanaAte);
-  const emNegociacao=all.filter(p=>p.aprovCliente==="em_negociacao");
-  const negados=all.filter(p=>p.aprovCliente==="negado_cliente");
+  const diasAberto=(p)=>{const d=dataAbertura(p);if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.max(0,Math.round((hoje-dt)/86400000));};
 
-  const grpTotal=agruparPorEmpresa(all);
-  const grpSemana=agruparPorEmpresa(enviadosSemana);
-  const grpNegociacao=agruparPorEmpresa(emNegociacao);
-  const grpNegado=agruparPorEmpresa(negados);
-
-  const PainelEmpresa=({titulo,icone,corSec,grupo,vazio})=>{
-    const totalValor=grupo.reduce((a,[,v])=>a+v.valor,0);
-    const totalQtd=grupo.reduce((a,[,v])=>a+v.qtd,0);
-    return(
-      <div className="card" style={{padding:0,overflow:"hidden"}}>
-        <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"#1A1A1A"}}>{icone} {titulo}</div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:13,fontWeight:900,color:corSec}}>{fmtR(totalValor)}</div>
-            <div style={{fontSize:9,color:"#94A3B8"}}>{totalQtd} processo(s)</div>
-          </div>
-        </div>
-        <div style={{padding:"8px 12px",maxHeight:180,overflowY:"auto"}}>
-          {grupo.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:14}}>{vazio}</div>:grupo.map(([emp,v],i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"6px 0",borderBottom:i<grupo.length-1?"1px solid #F1F5F9":"none"}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#334155",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp}</div>
-                {v.numeros.length>0&&<div style={{fontSize:9,color:"#94A3B8",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Nº {v.numeros.join(", ")}</div>}
-              </div>
-              <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
-                <div style={{fontSize:11,fontWeight:800,color:corSec}}>{fmtR(v.valor)}</div>
-                <div style={{fontSize:9,color:"#94A3B8"}}>{v.qtd}x</div>
-              </div>
-            </div>
-          ))}
-        </div>
+  // ── Tabela MICRO detalhada (pra diretoria) ──
+  const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
+      <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",background:corSec+"0D"}}>
+        <div style={{fontWeight:800,fontSize:13,color:corSec}}>{icone} {titulo}</div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#94A3B8"}}>{registros.length} mau uso</div></div>
       </div>
-    );
-  };
+      {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
+      <div style={{overflowX:"auto"}}>
+        <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:11}}>
+          <thead><tr style={{background:"#F8FAFC"}}>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Nº Mau Uso</th>
+            <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Valor</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Abertura</th>
+            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Conclusão</th>}
+            {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Tempo</th>}
+          </tr></thead>
+          <tbody>
+            {registros.map((p,i)=>{const dias=diasAberto(p);return(
+              <tr key={i} style={{borderBottom:"1px solid #F1F5F9"}}>
+                <td style={{padding:"6px 10px",fontWeight:600,color:"#334155"}}>{p.empresa||"—"}</td>
+                <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
+                <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(dataAbertura(p))||"—"}</td>
+                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(p.dataFaturamento||p.dataConclusao||p.dataAprovacao)||"—"}</td>}
+                {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
+              </tr>
+            );})}
+          </tbody>
+        </table>
+      </div>}
+    </div>
+  );
 
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} processo(s) {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · janela {MESES[parseInt(mesRef)-1]}/{anoRef} {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
       </div>
-      {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Filtros</button>}
-      <button onClick={()=>{
-        const aprovados=all.filter(p=>p.aprovCliente==="aprovado_cliente");
-        if(aprovados.length===0){alert("Nenhum item aprovado no filtro atual (use Mês/De-Até pra selecionar a semana).");return;}
-        const dadosExport=aprovados.map(p=>({...p,_qtd:1,_status:(APROV_STATUS[p.aprovCliente]||{}).l||p.aprovCliente}));
-        exportCSV(dadosExport,`aprovados_${titulo.replace(/\s+/g,"_")}`,[
-          {key:"dataEnvio",label:"Data de Envio"},
-          {key:"empresa",label:"Empresa"},
-          {key:"numMauUso",label:"Nº Mau Uso"},
-          {key:"valor",label:"Valor"},
-          {key:"_qtd",label:"Quantidade"},
-          {key:"_status",label:"Status"},
-        ]);
-      }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Exportar Aprovados (semana)</button>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+        <button onClick={()=>{
+          const semana=all.filter(p=>{const d=dataAbertura(p);return d>=semanaDe&&d<=semanaAte;});
+          if(semana.length===0){alert("Nenhum mau uso no período (defina De/Até nos filtros pra escolher a semana).");return;}
+          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(p.dataFaturamento||p.dataConclusao||"")}));
+          exportCSV(dados,`farol_semanal_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
+        }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Farol Semanal (Excel)</button>
+      </div>
     </div>
 
     <button onClick={()=>setShowFiltros(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltros?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-      <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+      <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros (mês, semana via De/Até, empresa, status)</span>
       <span style={{fontSize:8,color:"#94A3B8",marginLeft:4}}>{showFiltros?"▲":"▼"}</span>
     </button>
     {showFiltros&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-      <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Todos os meses</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-      <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Todos os anos</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
+      <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Mês (atual)</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+      <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Ano (atual)</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Semana De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
       <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fAte} onChange={e=>setFAte(e.target.value)}/></div>
       <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
       <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option></select>
     </div>}
 
-    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:20}}>
-      <div className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${cor}`}}>
-        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Total de Processos</div>
-        <div style={{fontSize:26,fontWeight:900,color:cor,marginTop:2}}>{all.length}</div>
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:8}}>📊 Macro — Visão Geral</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:18}}>
+      {[
+        {l:"Total Mau Uso",v:all.length,sub:fmtR(valTotal),c:cor},
+        {l:`Concluídos no Mês`,v:concluidosMes.length,sub:fmtR(soma(concluidosMes)),c:"#1A7A3C"},
+        {l:`Faturados no Mês`,v:faturadosMes.length,sub:fmtR(soma(faturadosMes)),c:"#6A1B9A"},
+        {l:`Enviados p/ Fatur. no Mês`,v:enviadosFatMes.length,sub:fmtR(soma(enviadosFatMes)),c:"#0D9488"},
+        {l:`Abertos no Mês`,v:abertosMes.length,sub:fmtR(soma(abertosMes)),c:"#1565C0"},
+        {l:"Pendentes",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
+      ].map((k,i)=>(
+        <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
+          <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2,lineHeight:1}}>{k.v}</div>
+          <div style={{fontSize:11,fontWeight:700,color:k.c,opacity:.8,marginTop:2}}>{k.sub}</div>
+        </div>
+      ))}
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Valor Concluído/Faturado por Mês</div>
+        {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+        <ChartCanvas type="bar" height={200} data={{
+          labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
+          datasets:[
+            {label:"Concluído",data:meses.map(m=>soma(all.filter(p=>p.processoStatus==="concluido"&&getMes(p.dataConclusao||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
+            {label:"Faturado",data:meses.map(m=>soma(all.filter(p=>p.aprovCliente==="cobrado_faturado"&&getMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p))===m))),backgroundColor:"#6A1B9A",borderRadius:6},
+          ]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
       </div>
-      <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #1D4E89"}}>
-        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Valor Total</div>
-        <div style={{fontSize:20,fontWeight:900,color:"#1D4E89",marginTop:2}}>{fmtR(valTotal)}</div>
-      </div>
-      <div className="card" style={{padding:"14px 16px",borderLeft:"4px solid #14532D"}}>
-        <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Faturado no Mês</div>
-        <div style={{fontSize:20,fontWeight:900,color:"#14532D",marginTop:2}}>{fmtR(valFaturado)}</div>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Distribuição por Aprovação (valor)</div>
+        <ChartCanvas type="doughnut" height={200} data={{
+          labels:aprovCounts.map(a=>a.label.replace(/^[^ ]+ /,"")),
+          datasets:[{data:aprovCounts.map(a=>a.valor),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
       </div>
     </div>
 
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20}}>
-      <div style={{padding:"10px 16px",borderBottom:"1px solid #EEF1F4"}}>
-        <div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente</div>
-      </div>
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:18}}>
+      <div style={{padding:"10px 16px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
       <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
         {aprovCounts.map((a,i)=>(
-          <div key={i} style={{background:a.bg,borderRadius:10,padding:"12px 14px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}}
-            onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+          <div key={i} style={{background:a.bg,borderRadius:10,padding:"12px 14px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
             <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
             <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
             <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
@@ -1993,59 +2013,20 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:14,marginBottom:14}}>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Evolução de Valores por Mês</div>
-        {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados no período</div>:
-        <ChartCanvas type="bar" height={180} data={{
-          labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
-          datasets:[{label:titulo,data:meses.map(m=>all.filter(p=>getMes(p.dataEnvio||p.date)===m).reduce((acc,p)=>acc+parseVal(p.valor),0)),backgroundColor:cor,borderRadius:6}]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
-      </div>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Status dos Processos</div>
-        <ChartCanvas type="doughnut" height={180} data={{
-          labels:["Pendente","Em Andamento","Concluído"],
-          datasets:[{data:[all.filter(p=>p.processoStatus==="pendente"||!p.processoStatus).length,all.filter(p=>p.processoStatus==="em_andamento").length,all.filter(p=>p.processoStatus==="concluido").length],backgroundColor:["#B45309","#1565C0","#1A7A3C"],borderWidth:0,borderRadius:6}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}}}}/>
-      </div>
-    </div>
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"6px 0 10px"}}>🔬 Micro — Detalhado (para Diretoria)</div>
+    <TabelaMicro titulo="Encaminhado para Faturamento" icone="📤" corSec="#0D9488" registros={aprovados} vazio="Nenhum encaminhado" mostrarConclusao={true}/>
+    <TabelaMicro titulo="Pendente" icone="⏳" corSec="#E67E00" registros={pendentes} vazio="Nenhum pendente" mostrarTempo={true}/>
+    <TabelaMicro titulo="Em Negociação" icone="🤝" corSec="#1565C0" registros={emNegociacao} vazio="Nenhum em negociação" mostrarTempo={true}/>
+    <TabelaMicro titulo="Recusado / Negado" icone="❌" corSec="#C62828" registros={negados} vazio="Nenhum recusado"/>
 
-    <div className="card" style={{padding:16}}>
+    <div className="card" style={{padding:16,marginTop:4}}>
       <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
       {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
         <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span>
-            <span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span>
-          </div>
-          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}>
-            <div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/>
-          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span></div>
+          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/></div>
         </div>
       ))}
-    </div>
-
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"20px 0 10px"}}>📌 O que o setor precisa ver</div>
-
-    <div className="card" style={{padding:14,marginBottom:14}}>
-      <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Comparativo de Valores</div>
-      <ChartCanvas type="bar" height={180} data={{
-        labels:["Total","Enviados na Semana","Em Negociação","Negado"],
-        datasets:[{data:[
-          grpTotal.reduce((a,[,v])=>a+v.valor,0),
-          grpSemana.reduce((a,[,v])=>a+v.valor,0),
-          grpNegociacao.reduce((a,[,v])=>a+v.valor,0),
-          grpNegado.reduce((a,[,v])=>a+v.valor,0),
-        ],backgroundColor:["#1A1A1A","#1565C0","#1565C0","#C62828"],borderRadius:6}]
-      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtR(c.raw)}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
-    </div>
-
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-      <PainelEmpresa titulo="Total de Processos" icone="📋" corSec="#1A1A1A" grupo={grpTotal} vazio="Sem processos"/>
-      <PainelEmpresa titulo={`Enviados na Semana (${fmtDataBR(semanaDe)}–${fmtDataBR(semanaAte)})`} icone="📤" corSec="#1565C0" grupo={grpSemana} vazio="Nenhum enviado nesta semana"/>
-      <PainelEmpresa titulo="Em Negociação" icone="🤝" corSec="#1565C0" grupo={grpNegociacao} vazio="Nenhum em negociação"/>
-      <PainelEmpresa titulo="Negado pelo Cliente" icone="❌" corSec="#C62828" grupo={grpNegado} vazio="Nenhum negado"/>
     </div>
   </div>);
 }
@@ -4803,12 +4784,28 @@ export default function App(){
                       </div>
 
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateMU(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
+                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{
+                          const nv=e.target.value;
+                          const ch={aprovCliente:nv};
+                          if(nv==="aprovado_cliente"&&!p.dataAprovacao)ch.dataAprovacao=TODAY_STR;
+                          if(nv==="negado_cliente"&&!p.dataNegado)ch.dataNegado=TODAY_STR;
+                          if(nv==="cobrado_faturado"&&!p.dataFaturamento)ch.dataFaturamento=TODAY_STR;
+                          updateMU(p.id,ch);
+                        }} style={{width:"100%",fontSize:11,fontWeight:600}}>
                           {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
                         </select>
-                        <select value={p.processoStatus||"pendente"} onChange={e=>updateMU(p.id,{processoStatus:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
+                        <select value={p.processoStatus||"pendente"} onChange={e=>{
+                          const nv=e.target.value;
+                          const ch={processoStatus:nv};
+                          if(nv==="concluido"&&!p.dataConclusao)ch.dataConclusao=TODAY_STR;
+                          updateMU(p.id,ch);
+                        }} style={{width:"100%",fontSize:11,fontWeight:600}}>
                           <option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
                         </select>
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Faturamento</div><input type="date" value={p.dataFaturamento||""} onChange={e=>updateMU(p.id,{dataFaturamento:e.target.value})} style={{width:"100%",fontSize:12,color:"#6A1B9A",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Conclusão</div><input type="date" value={p.dataConclusao||""} onChange={e=>updateMU(p.id,{dataConclusao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A7A3C",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
                     </div>
                   </div>);
