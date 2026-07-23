@@ -2344,7 +2344,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       <GroupHeader label="Almoxarifado" icon="📦" open={almoxOpen} setOpen={setAlmoxOpen} ativa={almoxAtiva} badgeCount={empAlerta}/>
       {almoxOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
-        <SubBtn k="saida_entrada" l="📦 Req. Entrada/Saída"/>
+        <SubBtn k="saida_entrada" l="📋 Requisições Gerais"/>
         {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
         <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
       </div>}
@@ -5222,8 +5222,8 @@ export default function App(){
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
-                    const applyFilter=(r,d=r.data||"")=>{
-            if(saiSearch){const q=saiSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.codigo||"").toLowerCase().includes(q)||(r.req||"").toLowerCase().includes(q)||(r.relSolicitacao||"").toLowerCase().includes(q)||(r.relatorioAplicado||"").toLowerCase().includes(q)))return false;}
+          const applyFilter=(r,d=r.data||"")=>{
+            if(saiSearch){const q=saiSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.requerente||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.codigo||"").toLowerCase().includes(q)||(r.req||"").toLowerCase().includes(q)||(r.relSolicitacao||"").toLowerCase().includes(q)||(r.relatorioAplicado||"").toLowerCase().includes(q)))return false;}
             if(saiFrom&&d<saiFrom)return false;
             if(saiTo&&d>saiTo)return false;
             if(saiMes&&!d.slice(5,7).startsWith(saiMes))return false;
@@ -5231,71 +5231,70 @@ export default function App(){
             return true;
           };
           const listaFil=lista.filter(applyFilter);
+          const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 6px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
+          const th={padding:"8px 8px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.5,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
+          const td={padding:"2px 4px",borderBottom:"1px solid #F1F5F9",verticalAlign:"middle"};
           return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📦 Entrada / Saída</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span></div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>📋 Requisições Gerais</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span> · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportSE(true)}/>
-                <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"saida_entrada_grupomov",[{key:"data",label:"Data"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"req",label:"REQ"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
-                <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,relSolicitacao:"",empresa:"",patrimonio:"",peca:"",codigo:"",quantidade:"1",req:"",statusReq:"",dataAtendimento:"",localPeca:"",dataEntregaTecnico:"",relatorioAplicado:"",obs:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Registro criado!");}}>+ Novo Registro</BtnY>
+                <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"✕ Voltar aos Ativos":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(listaFil,"requisicoes_gerais",[{key:"data",label:"Data"},{key:"req",label:"REQ"},{key:"natureza",label:"Natureza"},{key:"requerente",label:"Requerente"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"codigo",label:"Código"},{key:"peca",label:"Peça"},{key:"quantidade",label:"Qtd"},{key:"situacaoItem",label:"Situação"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"relatorioAplicado",label:"Rel. Aplicado"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,req:"",natureza:"",requerente:"",empresa:"",patrimonio:"",codigo:"",peca:"",quantidade:"1",situacaoItem:"",relSolicitacao:"",relatorioAplicado:"",obs:"",statusReq:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Linha adicionada!");}}>+ Nova Linha</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Rupturas",v:rupturas,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Atendidos",v:atendidos,c:"#1A7A3C",bg:"#F0FFF5",i:"✅"},{l:"Pendentes",v:pend,c:"#E67E00",bg:"#FFF8F0",i:"⏳"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"8px 12px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:32,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Total",v:lista.length,c:"#1A1A1A",i:"📋"},{l:"Rupturas",v:rupturas,c:"#C62828",i:"🔴"},{l:"Atendidos",v:atendidos,c:"#1A7A3C",i:"✅"},{l:"Pendentes",v:pend,c:"#E67E00",i:"⏳"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
                 </div>
               ))}
             </div>
-                        <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={saiSearch} onChange={e=>setSaiSearch(e.target.value)} placeholder="Buscar empresa, PAT, peça, REQ..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={saiSearch} onChange={e=>setSaiSearch(e.target.value)} placeholder="Buscar requerente, empresa, PAT, peça, REQ, código..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={saiFrom} onChange={e=>setSaiFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={saiTo} onChange={e=>setSaiTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
               <select value={saiMes} onChange={e=>setSaiMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
               <select value={saiAno} onChange={e=>setSaiAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
               {(saiSearch||saiFrom||saiTo||saiMes||saiAno)&&<button onClick={()=>{setSaiSearch('');setSaiFrom('');setSaiTo('');setSaiMes('');setSaiAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📦</div><div style={{fontSize:15,fontWeight:600}}>Nenhum registro</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-                {listaFil.map(s=>{
-                  const isRuptura=s.statusReq==="ruptura";
-                  const isAtendido=s.statusReq==="atendido";
-                  const slaRuptura=isRuptura&&s.data?diffDays(s.data):null;
-                  const borderC=isRuptura?"#C62828":isAtendido?"#1A7A3C":"#E0E0E0";
-                  return(<div key={s.id} className="card" style={{borderTop:`4px solid ${borderC}`,padding:0,overflow:"hidden",opacity:s.processoStatus==="arquivado"?0.55:1}}>
-                    <div style={{padding:"7px 10px",background:isRuptura?"#FFF0F0":isAtendido?"#F0FFF5":"#F8F9FA",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})} style={{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,border:"none",color:isRuptura?"#C62828":isAtendido?"#1A7A3C":"#888",background:isRuptura?"#FFE0E0":isAtendido?"#DCFFE4":"#F0F0F0",cursor:"pointer"}}>
-                          <option value="">— Status —</option><option value="atendido">✅ Atendido</option><option value="ruptura">🔴 Ruptura</option>
-                        </select>
-                        {isRuptura&&slaRuptura!==null&&<span style={{fontSize:10,fontWeight:700,color:slaRuptura>5?"#C62828":"#E67E00",background:"#FFF0F0",borderRadius:20,padding:"2px 8px"}}>⏱ {slaRuptura}d</span>}
-                      </div>
-                      <div style={{display:"flex",gap:3}}>
-                        <button onClick={()=>{const row={...s};setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);const nr={...row,id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`};setSaidaEntrada(p=>[nr,...p]);db.save("saida_entrada",nr.id,nr);}} title="Duplicar p/ editar" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
-                      <button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
-                      </div>
-                    </div>
-                    <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{s.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div><div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(s.data)} · {s.empresa||"—"}</div></div>
-                        {s.req&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"2px 7px"}}>{s.req}</span>}
-                      </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>PAT · Cód.</div><input type="text" value={s.patrimonio||""} onChange={e=>updateSaida(s.id,{patrimonio:e.target.value})} placeholder="PAT" style={{width:"100%",fontSize:12,fontWeight:700,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Qtd · Código</div><div style={{fontSize:12,fontWeight:700}}>{s.quantidade||"—"} <span style={{color:"#888",fontWeight:400,fontSize:10}}>{s.codigo?`· ${s.codigo}`:""}</span></div></div>
-                        <div style={{background:"#F8F9FA",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. Solicitação</div><input type="text" value={s.relSolicitacao||""} onChange={e=>updateSaida(s.id,{relSolicitacao:e.target.value})} placeholder="OS_REL" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        {isAtendido&&<div style={{background:"#F0FFF5",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#AAA",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:3}}>Rel. Aplicado</div><input type="text" value={s.relatorioAplicado||""} onChange={e=>updateSaida(s.id,{relatorioAplicado:e.target.value})} placeholder="REL-001" style={{width:"100%",fontSize:12,fontWeight:700,color:"#1A7A3C",border:"none",background:"transparent",outline:"none",padding:0}}/></div>}
-                      </div>
-                      {s.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic",background:"#FFFBF0",borderRadius:8,padding:"6px 10px",borderLeft:"3px solid #F5C200"}}>💬 {s.obs}</div>}
-                      <select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:11,padding:"6px 10px",borderRadius:20,border:"1px solid #E0E0E0",color:s.statusFinal==="concluido"?"#1A7A3C":"#E67E00",background:s.statusFinal==="concluido"?"#F0FFF5":"#FFF8F0",fontWeight:700,cursor:"pointer"}}>
-                        <option value="pendente">⏳ Pendente</option><option value="concluido">✅ Concluído</option>
-                      </select>
-                    </div>
-                  </div>);
-                })}
+            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma requisição</div></div>):(
+              <div className="card" style={{padding:0,overflow:"hidden"}}>
+                <div style={{overflowX:"auto",maxHeight:"calc(100vh - 340px)"}}>
+                  <table style={{borderCollapse:"collapse",width:"100%",minWidth:1500}}>
+                    <thead><tr>
+                      <th style={th}>Data</th><th style={th}>REQ</th><th style={th}>Natureza</th><th style={th}>Requerente</th><th style={th}>Empresa</th><th style={th}>PAT</th><th style={th}>Código</th><th style={th}>Peça</th><th style={th}>Qtd</th><th style={th}>Situação</th><th style={th}>Rel. Sol.</th><th style={th}>Rel. Aplic.</th><th style={th}>Status REQ</th><th style={th}>Final</th><th style={th}>Obs</th><th style={{...th,textAlign:"center"}}>Ações</th>
+                    </tr></thead>
+                    <tbody>
+                      {listaFil.map(s=>{
+                        const isRuptura=s.statusReq==="ruptura", isAtendido=s.statusReq==="atendido";
+                        return(<tr key={s.id} style={{background:isRuptura?"#FFF7F7":isAtendido?"#F7FFF9":"#FFF",opacity:s.processoStatus==="arquivado"?0.5:1}}>
+                          <td style={td}><input type="date" defaultValue={s.data||""} onBlur={e=>e.target.value!==(s.data||"")&&updateSaida(s.id,{data:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.req||""} onBlur={e=>e.target.value!==(s.req||"")&&updateSaida(s.id,{req:e.target.value})} style={{...inp,fontWeight:700,color:"#1565C0",width:80}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.natureza||""} onBlur={e=>e.target.value!==(s.natureza||"")&&updateSaida(s.id,{natureza:e.target.value})} style={{...inp,width:130}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.requerente||""} onBlur={e=>e.target.value!==(s.requerente||"")&&updateSaida(s.id,{requerente:e.target.value})} style={{...inp,width:160}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.empresa||""} onBlur={e=>e.target.value!==(s.empresa||"")&&updateSaida(s.id,{empresa:e.target.value})} style={{...inp,width:130}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.patrimonio||""} onBlur={e=>e.target.value!==(s.patrimonio||"")&&updateSaida(s.id,{patrimonio:e.target.value})} style={{...inp,fontWeight:700,width:90}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.codigo||""} onBlur={e=>e.target.value!==(s.codigo||"")&&updateSaida(s.id,{codigo:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.peca||""} onBlur={e=>e.target.value!==(s.peca||"")&&updateSaida(s.id,{peca:e.target.value})} style={{...inp,width:200}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.quantidade||""} onBlur={e=>e.target.value!==(s.quantidade||"")&&updateSaida(s.id,{quantidade:e.target.value})} style={{...inp,width:50,textAlign:"center"}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.situacaoItem||""} onBlur={e=>e.target.value!==(s.situacaoItem||"")&&updateSaida(s.id,{situacaoItem:e.target.value})} style={{...inp,width:130}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.relSolicitacao||""} onBlur={e=>e.target.value!==(s.relSolicitacao||"")&&updateSaida(s.id,{relSolicitacao:e.target.value})} style={{...inp,color:"#1565C0",fontWeight:700,width:90}}/></td>
+                          <td style={td}><input type="text" defaultValue={s.relatorioAplicado||""} onBlur={e=>e.target.value!==(s.relatorioAplicado||"")&&updateSaida(s.id,{relatorioAplicado:e.target.value})} style={{...inp,color:"#1A7A3C",fontWeight:700,width:90}}/></td>
+                          <td style={td}><select value={s.statusReq||""} onChange={e=>updateSaida(s.id,{statusReq:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",color:isRuptura?"#C62828":isAtendido?"#1A7A3C":"#888",background:isRuptura?"#FFE0E0":isAtendido?"#DCFFE4":"#F0F0F0"}}><option value="">—</option><option value="atendido">✅ Atendido</option><option value="ruptura">🔴 Ruptura</option></select></td>
+                          <td style={td}><select value={s.statusFinal||"pendente"} onChange={e=>updateSaida(s.id,{statusFinal:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",color:s.statusFinal==="concluido"?"#1A7A3C":"#E67E00",background:s.statusFinal==="concluido"?"#DCFFE4":"#FFF3E0"}}><option value="pendente">⏳ Pend.</option><option value="concluido">✅ Concl.</option></select></td>
+                          <td style={td}><input type="text" defaultValue={s.obs||""} onBlur={e=>e.target.value!==(s.obs||"")&&updateSaida(s.id,{obs:e.target.value})} style={{...inp,width:160,fontStyle:"italic",color:"#64748B"}}/></td>
+                          <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>updateSaida(s.id,{processoStatus:s.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={s.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#F1F5F9",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,marginRight:4}}>{s.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta requisição?")){setSaidaEntrada(p=>p.filter(x=>x.id!==s.id));db.delete("saida_entrada",s.id);}}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>);
