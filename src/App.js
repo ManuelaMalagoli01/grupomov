@@ -81,6 +81,24 @@ const db = {
       alert(`⚠️ Importação parcial em "${table}": ${okCount} de ${rows.length} linha(s) salvas no banco.\n${falhouCount} linha(s) falharam ao salvar — tente reimportar (ou repetir só essa parte) depois.`);
     }
     return {ok:falhas.length===0,okCount,failedCount:rows.length-okCount};
+  },
+  // Exclui varias linhas de uma vez (usado pra limpar uma importacao errada). Vai em lotes pra nao sobrecarregar.
+  async deleteBatch(table, ids, chunkSize=100) {
+    if(!ids||ids.length===0)return {ok:true,okCount:0};
+    let okCount=0;
+    for(let i=0;i<ids.length;i+=chunkSize){
+      const chunk=ids.slice(i,i+chunkSize);
+      const lista=chunk.map(id=>`"${String(id).replace(/"/g,'')}"`).join(",");
+      try{
+        const res=await fetch(`${SUPA_URL}/rest/v1/${table}?id=in.(${encodeURIComponent(lista)})`,{
+          method:"DELETE",
+          headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`}
+        });
+        if(res.ok)okCount+=chunk.length;
+        else console.error("DB deleteBatch error:",table,res.status,await res.text());
+      }catch(e){ console.error("DB deleteBatch error:",e); }
+    }
+    return {ok:okCount===ids.length,okCount};
   }
 };
 
@@ -1738,10 +1756,21 @@ function ImportSaidaEntradaModal({onClose,onImport}){
   const pick=k=>o=>{const f=Object.keys(o).find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
   const toISO=(str)=>{
     if(!str)return "";
+    // Data real do Excel (lida com cellDates) — sem ambiguidade de formato
+    if(str instanceof Date && !isNaN(str))
+      return `${str.getFullYear()}-${String(str.getMonth()+1).padStart(2,"0")}-${String(str.getDate()).padStart(2,"0")}`;
     str=String(str).trim().split(" ")[0];
     if(/^\d{4}-\d{2}-\d{2}$/.test(str))return str;
     let m=str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
-    if(m){let[,a,b,y]=m;if(y.length===2)y="20"+y;return `${y}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`;}
+    if(m){
+      let[,a,b,y]=m;
+      if(y.length===2)y="20"+y;
+      let dia=parseInt(a),mes=parseInt(b);
+      // se o primeiro numero nao pode ser dia, e formato americano (mes/dia)
+      if(dia>12&&mes<=12){/* dd/mm ok */}
+      else if(mes>12&&dia<=12){const t=dia;dia=mes;mes=t;}
+      return `${y}-${String(mes).padStart(2,"0")}-${String(dia).padStart(2,"0")}`;
+    }
     if(/^\d+(\.\d+)?$/.test(str)){
       const dt=new Date(Math.round((parseFloat(str)-25569)*86400*1000));
       if(!isNaN(dt))return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;
@@ -1759,9 +1788,9 @@ function ImportSaidaEntradaModal({onClose,onImport}){
     try{
       const XLSX=await loadXLSX();
       const buf=await f.arrayBuffer();
-      const wb=XLSX.read(buf,{type:"array"});
+      const wb=XLSX.read(buf,{type:"array",cellDates:true});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false}).filter(o=>String(pick("Código Requisição")(o)||pick("Codigo Requisi")(o)||"").trim());
+      const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:true}).filter(o=>String(pick("Código Requisição")(o)||pick("Codigo Requisi")(o)||"").trim());
       if(!data.length){setErr("Não encontrei linhas com Código Requisição nesta planilha.");}
       else setRows(data);
     }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx, .xls ou .csv.");}
@@ -5236,6 +5265,15 @@ export default function App(){
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>📋 Requisições Gerais</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#C62828",fontWeight:700}}>{rupturas} rupturas</span> · <span style={{color:"#E67E00",fontWeight:700}}>{pend} pendentes</span></div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportSE(true)}/>
+                <button onClick={async()=>{
+                  if(listaFil.length===0){alert("Nada para excluir no filtro atual.");return;}
+                  if(!window.confirm(`Excluir ${listaFil.length} requisição(ões) que estão sendo exibidas agora?\n\nIsso não pode ser desfeito.`))return;
+                  const ids=listaFil.map(x=>x.id);
+                  const idSet=new Set(ids);
+                  setSaidaEntrada(p=>p.filter(x=>!idSet.has(x.id)));
+                  const r=await db.deleteBatch("saida_entrada",ids);
+                  notify(r.ok?`✅ ${r.okCount} requisição(ões) excluída(s).`:`⚠️ ${r.okCount} de ${ids.length} excluída(s) — recarregue e tente de novo.`);
+                }} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #FCA5A5",background:"#FFF0F0",color:"#C62828",fontSize:12,cursor:"pointer",fontWeight:700}}>🗑️ Excluir Filtrados</button>
                 <button onClick={()=>setShowArqSaida(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSaida?"#1A1A1A":"#FFF",color:showArqSaida?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqSaida?"✕ Voltar aos Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(listaFil,"requisicoes_gerais",[{key:"data",label:"Data"},{key:"req",label:"REQ"},{key:"natureza",label:"Natureza"},{key:"requerente",label:"Requerente"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"codigo",label:"Código"},{key:"peca",label:"Peça"},{key:"quantidade",label:"Qtd"},{key:"situacaoItem",label:"Situação"},{key:"relSolicitacao",label:"Rel. Sol."},{key:"relatorioAplicado",label:"Rel. Aplicado"},{key:"statusReq",label:"Status REQ"},{key:"statusFinal",label:"Status Final"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>{const row={id:`SAI${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,req:"",natureza:"",requerente:"",empresa:"",patrimonio:"",codigo:"",peca:"",quantidade:"1",situacaoItem:"",relSolicitacao:"",relatorioAplicado:"",obs:"",statusReq:"",statusFinal:"pendente",processoStatus:"em_andamento"};setSaidaEntrada(p=>[row,...p]);db.save("saida_entrada",row.id,row);notify("✅ Linha adicionada!");}}>+ Nova Linha</BtnY>
