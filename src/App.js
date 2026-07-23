@@ -179,6 +179,16 @@ const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","25% em Análise":"#FBBF24",
 const COM_STATUS_VENDA = {em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluida:{l:"Venda Concluída",c:"#1A7A3C",bg:"#F0FFF5"},nao_convertida:{l:"Venda Não Convertida",c:"#C62828",bg:"#FFF0F0"}};
 const VALE_TEC_STATUS = {vale_autorizado:{l:"Vale Autorizado",c:"#B45309",bg:"#FFF8F0"},enviado_conserto:{l:"Enviado para Conserto",c:"#1565C0",bg:"#EFF6FF"},instalado_maquina:{l:"Instalado na Máquina",c:"#1A7A3C",bg:"#F0FFF5"}};
 const VALE_TEC_AUTORIZACAO = ["Gustavo","Gilberto"];
+// ── A FATURAR / PROSPECÇÕES (baseado no Farol OV Revenda) ──
+const AF_STATUS = {
+  aguardando_aprovacao:{l:"Aguardando aprovação",c:"#E67E00",bg:"#FFF8F0"},
+  aprovado_pend_conclusao:{l:"Aprovado - Pend. Conclusão",c:"#1565C0",bg:"#EFF6FF"},
+  env_faturamento:{l:"Env. Faturamento",c:"#1A7A3C",bg:"#F0FFF5"},
+  nao_aprovado:{l:"Não aprovado",c:"#C62828",bg:"#FFF0F0"},
+};
+const AF_TIPO = ["Venda","Serviço"];
+const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
+const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
 const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
 const COM_EQUIPAMENTO = ["Empilhadeira a Combustão Diesel","Empilhadeira a Combustão GLP","Empilhadeira Contrapeso - Bateria Lítio","Empilhadeira Contrapeso Elétrica","Empilhadeira Patolada","Empilhadeira Patolada Manual","Empilhadeira Patolada Semi-Elétrica","Empilhadeira Retrátil","Empilhadeira Retrátil - Bateria Lítio","Paleteira Lítio","Paleteira","Paleteira com Balança e Impressora","Paleteira com Balança","Plataforma Elevatória","Rebocador","Transpaleteira Elétrica Operador a Bordo","Transpaleteira Elétrica Operador a Bordo - Bateria Lítio","Transpaleteira Elétrica Operador a Pé","Transpaleteira Elétrica Operador a Pé - Bateria Lítio","Transpaleteira Pantográfica","Lavadora de Piso","Selecionadora de Pedidos"];
 const COM_MARCA = ["SAS","MOV"];
@@ -1749,6 +1759,113 @@ function ChartCanvas({type,data,options,height=240}){
 // ── CARD DE ATENDIMENTO NO DETALHE DO DIA (com botao Salvar explicito) ──────
 // ── DASHBOARD SIMPLIFICADO DE UM SO TIPO DE PROCESSO (Mau Uso OU A Faturar) ──
 // ── IMPORTADOR DA PLANILHA DE REQUISICOES (Codigo Requisicao / Data Emissao / Natureza / Requerente / Item / Situacao / Centro de Resultado / Qtd) ──
+// ── IMPORTADOR DA ABA "Prospecções" DO FAROL OV REVENDA (cabecalho na linha 15) ──
+function ImportAFModal({onClose,onImport}){
+  const [rows,setRows]=useState(null); const [err,setErr]=useState(""); const [loading,setLoading]=useState(false);
+  const toISO=(v)=>{
+    if(!v)return "";
+    if(v instanceof Date&&!isNaN(v))return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,"0")}-${String(v.getDate()).padStart(2,"0")}`;
+    const s=String(v).trim().split(" ")[0];
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+    const m=s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if(m){let[,a,b,y]=m;if(y.length===2)y="20"+y;let d=parseInt(a),mo=parseInt(b);if(mo>12&&d<=12){const t=d;d=mo;mo=t;}return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;}
+    return "";
+  };
+  const mapStatus=(s)=>{
+    const t=String(s||"").toLowerCase();
+    if(t.includes("env")&&t.includes("fatur"))return "env_faturamento";
+    if(t.includes("aprovado")&&t.includes("pend"))return "aprovado_pend_conclusao";
+    if(t.includes("não aprovado")||t.includes("nao aprovado"))return "nao_aprovado";
+    return "aguardando_aprovacao";
+  };
+  const limpaCliente=(v)=>{const s=String(v||"").trim();const m=s.match(/^\d[\d.\/-]*\s*-\s*(.+)$/);return m?m[1].trim():s;};
+  const onFile=async(f)=>{
+    if(!f)return; setErr(""); setLoading(true); setRows(null);
+    try{
+      const XLSX=await loadXLSX();
+      const wb=XLSX.read(await f.arrayBuffer(),{type:"array",cellDates:true});
+      const nome=wb.SheetNames.find(n=>n.toLowerCase().includes("prospec"))||wb.SheetNames[0];
+      const ws=wb.Sheets[nome];
+      const grade=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:true,blankrows:false});
+      // acha a linha de cabecalho (a que tem OV e Cliente)
+      let hi=grade.findIndex(r=>r.some(c=>String(c).trim().toUpperCase()==="OV")&&r.some(c=>String(c).toLowerCase().includes("cliente")));
+      if(hi<0){setErr("Não encontrei o cabeçalho (linha com OV e Cliente) nesta planilha.");setLoading(false);return;}
+      const hdr=grade[hi].map(x=>String(x).trim().toLowerCase());
+      const col=(...alvos)=>{for(const a of alvos){const i=hdr.findIndex(h=>h.includes(a));if(i>=0)return i;}return -1;};
+      const iRel=0,iDataRel=col("data do relat"),iReceb=col("recebido"),iNovo=col("novos clientes"),iVend=col("vendedor"),
+        iOV=hdr.findIndex(h=>h==="ov"),iEmis=col("emissão","emissao"),iCli=col("cliente / forn","cliente /"),
+        iVal=col("total da nota"),iTipo=hdr.findIndex(h=>h==="tipo"),iEmp=hdr.findIndex(h=>h==="empresa"),
+        iSt=col("status"),iTk=col("ticket"),iDtFat=col("data  envio","data envio"),iDesc=col("descrição","descricao");
+      const out=[];
+      for(let r=hi+1;r<grade.length;r++){
+        const L=grade[r];
+        const ov=iOV>=0?String(L[iOV]||"").trim():"";
+        const cli=iCli>=0?String(L[iCli]||"").trim():"";
+        if(!ov&&!cli)continue;
+        out.push({
+          emissao:toISO(iEmis>=0?L[iEmis]:""), ov, cliente:limpaCliente(cli),
+          valor:String(iVal>=0?(L[iVal]??""):"").trim(),
+          tipo:(()=>{const t=String(iTipo>=0?L[iTipo]:"").trim().toLowerCase();return t.startsWith("venda")?"Venda":t.startsWith("serv")?"Serviço":"";})(),
+          vendedor:String(iVend>=0?L[iVend]:"").trim().toUpperCase().replace(/\s+$/,""),
+          statusAF:mapStatus(iSt>=0?L[iSt]:""),
+          relatorio:String(L[iRel]||"").trim(),
+          dataRelatorio:toISO(iDataRel>=0?L[iDataRel]:""),
+          recebidoManut:toISO(iReceb>=0?L[iReceb]:""),
+          novoCliente:String(iNovo>=0?L[iNovo]:"").trim().toUpperCase()==="SIM"?"SIM":"",
+          ticket:String(iTk>=0?L[iTk]:"").trim(),
+          dataEnvioFat:toISO(iDtFat>=0?L[iDtFat]:""),
+          empresaGrupo:(()=>{const e=String(iEmp>=0?L[iEmp]:"").trim().toLowerCase();
+            if(e.includes("serv"))return "Mov Service";
+            if(e.includes("com"))return "Mov Com";
+            if(e.includes("lo"))return "Mov Loc"; // cobre "loc" e o erro de digitacao "lov"
+            return String(iEmp>=0?L[iEmp]:"").trim();})(),
+          descricao:String(iDesc>=0?L[iDesc]:"").trim(),
+          processoStatus:"pendente",
+        });
+      }
+      if(!out.length)setErr("Não encontrei linhas de dados abaixo do cabeçalho.");
+      else setRows(out);
+    }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx, .xls ou .csv.");}
+    setLoading(false);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:900,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+        <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}>
+          <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>📥 Importar Prospecções (Farol OV Revenda)</div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+        </div>
+        <div style={{padding:20}}>
+          <div style={{fontSize:12,color:"#64748B",marginBottom:12,background:"#F8FAFC",border:"1px solid #EEF1F4",borderRadius:10,padding:12}}>
+            Procuro automaticamente a aba <b>Prospecções</b> e o cabeçalho (mesmo que não esteja na primeira linha). Leio Emissão, OV, Cliente, Total da Nota Fiscal, Tipo, Vendedor, Status, Relatório, Datas, Ticket, Empresa e Descrição. O código do cliente é removido, ficando só o nome.
+          </div>
+          <input type="file" accept=".xlsx,.xls,.csv" onChange={e=>onFile(e.target.files[0])} style={{fontSize:13,marginBottom:12}}/>
+          {loading&&<div style={{fontSize:13,color:"#64748B"}}>Lendo planilha…</div>}
+          {err&&<div style={{fontSize:13,color:"#C62828",background:"#FFF0F0",borderRadius:8,padding:10,marginBottom:12}}>{err}</div>}
+          {rows&&<>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>{rows.length} linha(s) — prévia das 6 primeiras:</div>
+            <div style={{overflowX:"auto",border:"1px solid #EEF1F4",borderRadius:10,marginBottom:14}}>
+              <table style={{fontSize:11,minWidth:760}}>
+                <thead><tr><th>Emissão</th><th>OV</th><th>Cliente</th><th>Valor</th><th>Tipo</th><th>Vendedor</th><th>Status</th></tr></thead>
+                <tbody>{rows.slice(0,6).map((p,i)=>(
+                  <tr key={i}><td>{fmtDataBR(p.emissao)||"—"}</td><td>{p.ov}</td>
+                    <td style={{maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.cliente}</td>
+                    <td>{p.valor}</td><td>{p.tipo||"—"}</td><td>{p.vendedor||"—"}</td>
+                    <td>{(AF_STATUS[p.statusAF]||{}).l}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <BtnG onClick={onClose}>Cancelar</BtnG>
+              <BtnY onClick={()=>onImport(rows)}>Importar {rows.length} registro(s)</BtnY>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ImportSaidaEntradaModal({onClose,onImport}){
   const [rows,setRows]=useState(null);
   const [err,setErr]=useState("");
@@ -2497,6 +2614,8 @@ export default function App(){
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
   const [modalImportSE,setModalImportSE]=useState(false);
+  const [modalImportAF,setModalImportAF]=useState(false);
+  const [afStatus,setAfStatus]=useState("todos"); const [afTipo,setAfTipo]=useState("todos"); const [afVendedor,setAfVendedor]=useState("todos");
   const [requisicoes,setRequisicoes]=useState([]);
   const [agendaItems,setAgendaItems]=useState({});
   const [schedule,setSchedule]=useState({});
@@ -3610,6 +3729,13 @@ export default function App(){
         {modalImportOfi&&<ImportExcelModal onClose={()=>setModalImportOfi(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setOficina(p=>[...stamp,...p]);db.saveBatch("oficina",stamp);setModalImportOfi(false);notify(`✅ ${stamp.length} importado(s)!`);}}/>}
         {modalImportSas&&<ImportExcelModal onClose={()=>setModalImportSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"S"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setSas(p=>[...stamp,...(p||[])]);db.saveBatch("sas",stamp);setModalImportSas(false);notify(`✅ ${stamp.length} SAS importado(s)!`);}}/>}
         {modalImportSasVend&&<ImportExcelModal onClose={()=>setModalImportSasVend(false)} onImport={novos=>{const ano=new Date().getFullYear();let seq=(sasVendas||[]).filter(x=>x&&x.numero&&x.numero.endsWith("/"+ano)).length;const stamp=novos.map(d=>{seq++;return{...d,id:d.id||"SASV"+Date.now()+Math.random().toString(36).slice(2,6),numero:d.numero||`${String(seq).padStart(4,"0")}/${ano}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aberta",arquivado:false};});setSasVendas(p=>[...stamp,...(p||[])]);db.saveBatch("sas_vendas",stamp);setModalImportSasVend(false);notify(`✅ ${stamp.length} proposta(s) importada(s)!`);}}/>}
+        {modalImportAF&&<ImportAFModal onClose={()=>setModalImportAF(false)} onImport={novos=>{
+          const stamp=novos.map((d,i)=>({...d,id:`AF${Date.now()}_${i}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString()}));
+          setProcessosAF(p=>[...stamp,...(p||[])]);
+          db.saveBatch("processos_af",stamp);
+          setModalImportAF(false);
+          notify(`✅ ${stamp.length} registro(s) importado(s)!`);
+        }}/>}
         {modalImportSE&&<ImportSaidaEntradaModal onClose={()=>setModalImportSE(false)} onImport={novos=>{
           const stamp=novos.map((d,i)=>({...d,id:`SAI${Date.now()}_${i}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString()}));
           setSaidaEntrada(p=>[...stamp,...(p||[])]);
@@ -5097,97 +5223,128 @@ export default function App(){
         })()}
 
         {tab==="a_faturar"&&(()=>{
-          const ST={pendente:{l:"Pendente",c:"#E67E00",bg:"#FFF8F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
           const lista=(processosAF||[]).filter(p=>p&&(showArqAF?p.processoStatus==="arquivado":p.processoStatus!=="arquivado"));
-          const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
-          const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
-          const conc=lista.filter(p=>p.processoStatus==="concluido").length;
-          const aprov=lista.filter(p=>p.aprovado==="sim").length;
-          const applyFilter=(r,d=r.date||"")=>{
-            if(afSearch){const q=afSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)||(r.valor||"").toLowerCase().includes(q)||(r.aprovadoPor||"").toLowerCase().includes(q)))return false;}
+          const val=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,-]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const stDe=(p)=>p.statusAF||"aguardando_aprovacao";
+          // janela: mes e semana atuais
+          const hoje=new Date(); hoje.setHours(0,0,0,0);
+          const dow=hoje.getDay(); const seg=new Date(hoje); seg.setDate(hoje.getDate()-((dow+6)%7));
+          const dom=new Date(seg); dom.setDate(seg.getDate()+6);
+          const iso=(d)=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
+          const semDe=iso(seg), semAte=iso(dom);
+          const mesRef=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+          const filtrada=lista.filter(p=>{
+            if(afStatus!=="todos"&&stDe(p)!==afStatus)return false;
+            if(afTipo!=="todos"&&(p.tipo||"")!==afTipo)return false;
+            if(afVendedor!=="todos"&&(p.vendedor||"")!==afVendedor)return false;
+            const d=p.emissao||p.date||"";
             if(afFrom&&d<afFrom)return false;
             if(afTo&&d>afTo)return false;
-            if(afMes&&!d.slice(5,7).startsWith(afMes))return false;
-            if(afAno&&!d.startsWith(afAno))return false;
-            if(afAprov&&afAprov!=="todos"&&(r.aprovCliente||"aguardando_retorno")!==afAprov)return false;
+            if(afSearch){const q=afSearch.toLowerCase();
+              if(!((p.cliente||p.empresa||"").toLowerCase().includes(q)||(p.ov||"").toLowerCase().includes(q)||(p.relatorio||"").toLowerCase().includes(q)||(p.ticket||"").toLowerCase().includes(q)))return false;}
             return true;
-          };
-          const listaFil=lista.filter(applyFilter);
-          const valorTotal=lista.reduce((acc,p)=>{const v=parseFloat((p.valor||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return acc+(isNaN(v)?0:v);},0);
-          const ST_SOLID={pendente:"#B45309",em_andamento:"#1D4E89",concluido:"#14532D",arquivado:"#616161"};
+          });
+          const hasF=afStatus!=="todos"||afTipo!=="todos"||afVendedor!=="todos"||afFrom||afTo||afSearch;
+          const soma=(arr)=>arr.reduce((a,p)=>a+val(p.valor),0);
+          const noMes=(p)=>(p.emissao||p.date||"").startsWith(mesRef);
+          const naSemana=(p)=>{const d=p.emissao||p.date||"";return d>=semDe&&d<=semAte;};
+          const envFat=(p)=>stDe(p)==="env_faturamento";
+          const prospMes=lista.filter(noMes), prospSem=lista.filter(naSemana);
+          const fatMes=prospMes.filter(envFat), fatSem=prospSem.filter(envFat);
+          const txMes=soma(prospMes)>0?(soma(fatMes)/soma(prospMes)*100):0;
+          const txSem=soma(prospSem)>0?(soma(fatSem)/soma(prospSem)*100):0;
+          const aprovPend=lista.filter(p=>stDe(p)==="aprovado_pend_conclusao");
+          const aprovVenda=aprovPend.filter(p=>(p.tipo||"").toLowerCase().startsWith("venda"));
+          const aprovServ=aprovPend.filter(p=>(p.tipo||"").toLowerCase().startsWith("serv"));
+          const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 6px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
+          const th={padding:"8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
+          const td={padding:"2px 4px",borderBottom:"1px solid #F1F5F9"};
+          const COLS=[{key:"emissao",label:"Emissão",label2:"Data Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"recebidoManut",label:"Receb. Manut."},{key:"novoCliente",label:"Novo Cliente"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}];
           return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 A Faturar {showArqAF&&<span style={{fontSize:11,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{showArqAF?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#B45309",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 A Faturar — Prospecções</div>
+                <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · semana {fmtDataBR(semDe)}–{fmtDataBR(semAte)} {hasF&&<span style={{color:"#1565C0",fontWeight:700}}>· filtro ativo</span>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <BtnImport onClick={()=>setModalImportAF2(true)}/>
-                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"a_faturar_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"aprovado",label:"Aprovado"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
-                <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Processo</BtnY>
+                <BtnImport onClick={()=>setModalImportAF(true)}/>
+                <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}])}/>
+                <BtnY onClick={()=>{const row={id:`AF${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:"",processoStatus:"pendente"};setProcessosAF(p=>[row,...p]);db.save("processos_af",row.id,row);notify("✅ Linha adicionada!");}}>+ Nova Linha</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:18}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A"},{l:"Pendentes",v:pend,c:"#B45309"},{l:"Em Andamento",v:andamento,c:"#1565C0"},{l:"Concluídos",v:conc,c:"#1A7A3C"},{l:"Aprovados",v:aprov,c:"#6A1B9A"}].map((k,i)=>(
+
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
+              {[{l:"Total Prospectado — Mês",v:fmtR(soma(prospMes)),q:`${prospMes.length} OV(s)`,c:"#1A1A1A"},
+                {l:"Env. Faturamento — Mês",v:fmtR(soma(fatMes)),q:`${fatMes.length} OV(s)`,c:"#1A7A3C"},
+                {l:"Taxa de Conversão — Mês",v:`${txMes.toFixed(1)}%`,q:"sobre o valor prospectado",c:"#6A1B9A"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
-                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:20,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                  <div style={{fontSize:10,color:"#94A3B8",marginTop:1}}>{k.q}</div>
                 </div>
               ))}
             </div>
-            {valorTotal>0&&<div className="card" style={{padding:"14px 20px",marginBottom:18,borderLeft:"4px solid #14532D",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{fontSize:24}}>💵</div>
-              <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>Valor Total a Faturar</div><div style={{fontSize:22,fontWeight:900,color:"#14532D"}}>R$ {valorTotal.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div></div>
-            </div>}
-            <div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, OV..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)}/></div>
-              <select value={afMes} onChange={e=>setAfMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={afAno} onChange={e=>setAfAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              <select value={afAprov} onChange={e=>setAfAprov(e.target.value)}><option value="todos">Status Aprovação: Todos</option>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
-              {(afSearch||afFrom||afTo||afMes||afAno||(afAprov&&afAprov!=="todos"))&&<button onClick={()=>{setAfSearch('');setAfFrom('');setAfTo('');setAfMes('');setAfAno('');setAfAprov('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
+              {[{l:"Prospectado — Semana",v:fmtR(soma(prospSem)),q:`${prospSem.length} OV(s)`,c:"#1565C0"},
+                {l:"Env. Faturamento — Semana",v:fmtR(soma(fatSem)),q:`${fatSem.length} OV(s)`,c:"#1A7A3C"},
+                {l:"Taxa de Conversão — Semana",v:`${txSem.toFixed(1)}%`,q:"sobre o valor da semana",c:"#6A1B9A"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
+                  <div style={{fontSize:20,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                  <div style={{fontSize:10,color:"#94A3B8",marginTop:1}}>{k.q}</div>
+                </div>
+              ))}
             </div>
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>💰</div><div style={{fontSize:12,fontWeight:600}}>{afSearch||afFrom||afTo||afMes||afAno?"Nenhum resultado":"Nenhum processo"}</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))",gap:14}}>
-                {listaFil.map(p=>{
-                  const st=ST[p.processoStatus||"pendente"]||ST.pendente;
-                  const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
-                  const slaD=p.date?diffDays(p.date):null;
-                  const urgente=slaD!==null&&slaD>10&&p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
-                  return(<div key={p.id} className="card" style={{padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,border:urgente?"1.5px solid #C62828":undefined,animation:urgente?"pulseUrgente 2s ease-in-out infinite":undefined}}>
-                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-                        <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
-                        {urgente&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
-                      </div>
-                      <div style={{display:"flex",gap:6}}>
-                        <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
-                        <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosAF(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
-                      </div>
-                    </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(p.date)} · PAT {p.patrimonio||"—"}</div></div>
-                        <span style={{fontSize:10,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span>
-                      </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateAF(p.id,{relatorio:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>OV</div><input type="text" value={p.ov||""} onChange={e=>updateAF(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateAF(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Serviço Executado</div><select value={p.servicoExecutado||"nao"} onChange={e=>updateAF(p.id,{servicoExecutado:e.target.value})} style={{fontSize:12,fontWeight:600,color:p.servicoExecutado==="sim"?"#1A7A3C":"#64748B"}}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
-                      </div>
-                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{p.obs}</div>}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>updateAF(p.id,{aprovCliente:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
-                          {Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}
-                        </select>
-                        <select value={p.processoStatus||"pendente"} onChange={e=>updateAF(p.id,{processoStatus:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
-                          <option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>);
-                })}
+            <div className="card" style={{padding:"12px 16px",marginBottom:14,display:"flex",gap:24,flexWrap:"wrap",alignItems:"center",borderLeft:"4px solid #1565C0"}}>
+              <div><div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase"}}>Aprovado — Pend. Conclusão</div><div style={{fontSize:18,fontWeight:900,color:"#1565C0"}}>{fmtR(soma(aprovPend))}</div></div>
+              <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Venda</div><div style={{fontSize:14,fontWeight:800,color:"#334155"}}>{fmtR(soma(aprovVenda))}</div></div>
+              <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Serviço</div><div style={{fontSize:14,fontWeight:800,color:"#334155"}}>{fmtR(soma(aprovServ))}</div></div>
+            </div>
+
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Cliente, OV, relatório, ticket..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <select value={afStatus} onChange={e=>setAfStatus(e.target.value)}><option value="todos">Status: Todos</option>{Object.entries(AF_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select>
+              <select value={afTipo} onChange={e=>setAfTipo(e.target.value)}><option value="todos">Tipo: Todos</option>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select>
+              <select value={afVendedor} onChange={e=>setAfVendedor(e.target.value)}><option value="todos">Vendedor: Todos</option>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select>
+              <button onClick={()=>{setAfFrom(semDe);setAfTo(semAte);}} style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Esta semana</button>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)} style={{fontSize:12}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)} style={{fontSize:12}}/></div>
+              {hasF&&<button onClick={()=>{setAfSearch("");setAfStatus("todos");setAfTipo("todos");setAfVendedor("todos");setAfFrom("");setAfTo("");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>
+
+            {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💰</div><div style={{fontSize:14,fontWeight:600}}>Nenhum registro</div></div>):(
+              <div className="card" style={{padding:0,overflow:"hidden"}}>
+                <div style={{overflowX:"auto",maxHeight:"calc(100vh - 430px)"}}>
+                  <table style={{borderCollapse:"collapse",width:"100%",minWidth:1700}}>
+                    <thead><tr>{COLS.map(c=><th key={c.key} style={th}>{c.label}</th>)}<th style={{...th,textAlign:"center"}}>Ações</th></tr></thead>
+                    <tbody>
+                      {filtrada.map(p=>{
+                        const s=AF_STATUS[stDe(p)]||AF_STATUS.aguardando_aprovacao;
+                        return(<tr key={p.id} style={{background:s.bg,opacity:p.processoStatus==="arquivado"?0.5:1}}>
+                          <td style={td}><input type="date" defaultValue={p.emissao||p.date||""} onBlur={e=>e.target.value!==(p.emissao||"")&&updateAF(p.id,{emissao:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><input type="text" defaultValue={p.ov||""} onBlur={e=>e.target.value!==(p.ov||"")&&updateAF(p.id,{ov:e.target.value})} style={{...inp,fontWeight:800,color:"#1565C0",width:70}}/></td>
+                          <td style={td}><input type="text" defaultValue={p.cliente||p.empresa||""} onBlur={e=>e.target.value!==(p.cliente||"")&&updateAF(p.id,{cliente:e.target.value})} style={{...inp,fontWeight:600,width:190}}/></td>
+                          <td style={td}><input type="text" defaultValue={p.valor||""} onBlur={e=>e.target.value!==(p.valor||"")&&updateAF(p.id,{valor:e.target.value})} style={{...inp,fontWeight:800,color:"#14532D",width:95,textAlign:"right"}}/></td>
+                          <td style={td}><select value={p.tipo||"Serviço"} onChange={e=>updateAF(p.id,{tipo:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F1F5F9",color:"#334155"}}>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select></td>
+                          <td style={td}><select value={p.vendedor||""} onChange={e=>updateAF(p.id,{vendedor:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select></td>
+                          <td style={td}><select value={stDe(p)} onChange={e=>{const nv=e.target.value;const ch={statusAF:nv};if(nv==="env_faturamento"&&!p.dataEnvioFat)ch.dataEnvioFat=TODAY_STR;updateAF(p.id,ch);}} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"none",cursor:"pointer",color:"#FFF",background:s.c}}>{Object.entries(AF_STATUS).map(([k,v])=><option key={k} value={k} style={{background:"#FFF",color:"#1A1A1A"}}>{v.l}</option>)}</select></td>
+                          <td style={td}><input type="text" defaultValue={p.relatorio||""} onBlur={e=>e.target.value!==(p.relatorio||"")&&updateAF(p.id,{relatorio:e.target.value})} style={{...inp,width:110}}/></td>
+                          <td style={td}><input type="date" defaultValue={p.dataRelatorio||""} onBlur={e=>e.target.value!==(p.dataRelatorio||"")&&updateAF(p.id,{dataRelatorio:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><input type="date" defaultValue={p.recebidoManut||""} onBlur={e=>e.target.value!==(p.recebidoManut||"")&&updateAF(p.id,{recebidoManut:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><select value={p.novoCliente||""} onChange={e=>updateAF(p.id,{novoCliente:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:p.novoCliente==="SIM"?"#FFFBEB":"#F8FAFC",color:p.novoCliente==="SIM"?"#B45309":"#94A3B8"}}><option value="">—</option><option value="SIM">SIM</option></select></td>
+                          <td style={td}><input type="text" defaultValue={p.ticket||""} onBlur={e=>e.target.value!==(p.ticket||"")&&updateAF(p.id,{ticket:e.target.value})} style={{...inp,width:90}}/></td>
+                          <td style={td}><input type="date" defaultValue={p.dataEnvioFat||""} onBlur={e=>e.target.value!==(p.dataEnvioFat||"")&&updateAF(p.id,{dataEnvioFat:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><select value={p.empresaGrupo||""} onChange={e=>updateAF(p.id,{empresaGrupo:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_EMPRESAS.map(v=><option key={v}>{v}</option>)}</select></td>
+                          <td style={td}><input type="text" defaultValue={p.descricao||""} onBlur={e=>e.target.value!==(p.descricao||"")&&updateAF(p.id,{descricao:e.target.value})} style={{...inp,width:170,fontStyle:"italic",color:"#64748B"}}/></td>
+                          <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"pendente":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#F1F5F9",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:11,marginRight:4}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir este registro?")){setProcessosAF(pr=>pr.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>);
