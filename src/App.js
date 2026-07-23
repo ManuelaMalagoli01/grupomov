@@ -1879,13 +1879,18 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     if(fMes&&d.slice(5,7)!==fMes)return false;
     if(fAno&&!d.startsWith(fAno))return false;
     if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
-    if(fStatus!=="todos"&&p.processoStatus!==fStatus)return false;
+    if(fStatus!=="todos"){
+      if(fStatus==="concluido"){ if(p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado")return false; }
+      else if(p.processoStatus!==fStatus)return false;
+    }
     if(fAprov!=="todos"&&(p.aprovCliente||"aguardando_retorno")!==fAprov)return false;
     return true;
   };
   const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fStatus!=="todos"||fAprov!=="todos";
   const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
-  const all=(lista||[]).filter(p=>p.processoStatus!=="arquivado"&&filtrar(p));
+  // Arquivado conta como concluido (o setor arquiva justamente quando finaliza)
+  const isConcluido=(p)=>p.processoStatus==="concluido"||p.processoStatus==="arquivado";
+  const all=(lista||[]).filter(p=>filtrar(p));
   const valTotal=all.reduce((acc,p)=>acc+parseVal(p.valor),0);
 
   // ── Janela de tempo (mês selecionado, ou mês atual se nenhum filtro) ──
@@ -1904,7 +1909,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const semanaDe=fDe||fmtISO(segunda), semanaAte=fAte||fmtISO(domingo);
 
   // ── Grupos por status de aprovacao (sobre 'all', ja filtrado) ──
-  const concluidosMes=all.filter(p=>p.processoStatus==="concluido"&&noMes(p.dataConclusao||dataAbertura(p)));
+  const concluidosMes=all.filter(p=>isConcluido(p)&&noMes(p.dataConclusao||dataAbertura(p)));
   const faturadosMes=all.filter(p=>p.aprovCliente==="cobrado_faturado"&&noMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p)));
   const enviadosFatMes=all.filter(p=>p.aprovCliente==="aprovado_cliente"&&noMes(p.dataAprovacao||dataAbertura(p)));
   const abertosMes=all.filter(p=>noMes(dataAbertura(p)));
@@ -2015,7 +2020,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <ChartCanvas type="bar" height={200} data={{
           labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
           datasets:[
-            {label:"Concluído",data:meses.map(m=>soma(all.filter(p=>p.processoStatus==="concluido"&&getMes(p.dataConclusao||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
+            {label:"Concluído",data:meses.map(m=>soma(all.filter(p=>isConcluido(p)&&getMes(p.dataConclusao||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
             {label:"Faturado",data:meses.map(m=>soma(all.filter(p=>p.aprovCliente==="cobrado_faturado"&&getMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p))===m))),backgroundColor:"#6A1B9A",borderRadius:6},
           ]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
