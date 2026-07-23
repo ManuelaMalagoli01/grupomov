@@ -1942,7 +1942,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#94A3B8"}}>{registros.length} mau uso</div></div>
       </div>
       {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
-      <div style={{overflowX:"auto"}}>
+      <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
@@ -2064,6 +2064,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"6px 0 10px"}}>🔬 Micro — Detalhado (para Diretoria)</div>
+    <TabelaMicro titulo="Concluído / Faturado (inclui arquivados)" icone="✅" corSec="#1A7A3C" registros={concluidosTodos} vazio="Nenhum concluído" mostrarConclusao={true}/>
     <TabelaMicro titulo="Encaminhado para Faturamento" icone="📤" corSec="#0D9488" registros={aprovados} vazio="Nenhum encaminhado" mostrarConclusao={true}/>
     <TabelaMicro titulo="Pendente" icone="⏳" corSec="#E67E00" registros={pendentes} vazio="Nenhum pendente" mostrarTempo={true}/>
     <TabelaMicro titulo="Em Negociação" icone="🤝" corSec="#1565C0" registros={emNegociacao} vazio="Nenhum em negociação" mostrarTempo={true}/>
