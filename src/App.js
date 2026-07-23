@@ -1883,13 +1883,16 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       if(fStatus==="concluido"){ if(p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado")return false; }
       else if(p.processoStatus!==fStatus)return false;
     }
-    if(fAprov!=="todos"&&(p.aprovCliente||"aguardando_retorno")!==fAprov)return false;
+    if(fAprov!=="todos"&&(p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.aprovCliente==="cobrado_faturado"?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno"))!==fAprov)return false;
     return true;
   };
   const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fStatus!=="todos"||fAprov!=="todos";
   const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
-  // Arquivado conta como concluido (o setor arquiva justamente quando finaliza)
-  const isConcluido=(p)=>p.processoStatus==="concluido"||p.processoStatus==="arquivado";
+  // Concluido = Faturado = Arquivado (o setor trata os tres como finalizado)
+  const isConcluido=(p)=>p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.aprovCliente==="cobrado_faturado";
+  const dataConclusaoDe=(p)=>p.dataConclusao||p.dataFaturamento||p.dataAprovacao||"";
+  // Tudo que esta arquivado/concluido conta como Faturado, mesmo que o status de aprovacao nao tenha sido marcado
+  const aprovDe=(p)=>isConcluido(p)?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno");
   const all=(lista||[]).filter(p=>filtrar(p));
   const valTotal=all.reduce((acc,p)=>acc+parseVal(p.valor),0);
 
@@ -1909,20 +1912,20 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const semanaDe=fDe||fmtISO(segunda), semanaAte=fAte||fmtISO(domingo);
 
   // ── Grupos por status de aprovacao (sobre 'all', ja filtrado) ──
-  const concluidosMes=all.filter(p=>isConcluido(p)&&noMes(p.dataConclusao||dataAbertura(p)));
-  const faturadosMes=all.filter(p=>p.aprovCliente==="cobrado_faturado"&&noMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p)));
-  const enviadosFatMes=all.filter(p=>p.aprovCliente==="aprovado_cliente"&&noMes(p.dataAprovacao||dataAbertura(p)));
+  const concluidosMes=all.filter(p=>isConcluido(p)&&noMes(dataConclusaoDe(p)||dataAbertura(p)));
+  const concluidosTodos=all.filter(isConcluido);
+  const enviadosFatMes=all.filter(p=>aprovDe(p)==="aprovado_cliente"&&noMes(p.dataAprovacao||dataAbertura(p)));
   const abertosMes=all.filter(p=>noMes(dataAbertura(p)));
-  const pendentes=all.filter(p=>(p.aprovCliente||"aguardando_retorno")==="aguardando_retorno");
-  const emNegociacao=all.filter(p=>p.aprovCliente==="em_negociacao");
-  const negados=all.filter(p=>p.aprovCliente==="negado_cliente");
-  const aprovados=all.filter(p=>p.aprovCliente==="aprovado_cliente");
+  const pendentes=all.filter(p=>aprovDe(p)==="aguardando_retorno");
+  const emNegociacao=all.filter(p=>aprovDe(p)==="em_negociacao");
+  const negados=all.filter(p=>aprovDe(p)==="negado_cliente");
+  const aprovados=all.filter(p=>aprovDe(p)==="aprovado_cliente");
 
   const soma=(arr)=>arr.reduce((a,p)=>a+parseVal(p.valor),0);
 
   const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
-    key:k,label:s.l,total:all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k).length,
-    valor:soma(all.filter(p=>(p.aprovCliente||"aguardando_retorno")===k)),c:s.c,bg:s.bg
+    key:k,label:s.l,total:all.filter(p=>aprovDe(p)===k).length,
+    valor:soma(all.filter(p=>aprovDe(p)===k)),c:s.c,bg:s.bg
   }));
   const meses=[...new Set(all.map(p=>getMes(dataAbertura(p))).filter(Boolean))].sort().slice(-6);
   const empValMap={};
@@ -1976,7 +1979,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <button onClick={()=>{
           const semana=all.filter(p=>{const d=dataAbertura(p);return d>=semanaDe&&d<=semanaAte;});
           if(semana.length===0){alert("Nenhum mau uso no período (defina De/Até nos filtros pra escolher a semana).");return;}
-          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(p.dataFaturamento||p.dataConclusao||"")}));
+          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(p.dataFaturamento||p.dataConclusao||"")}));
           exportCSV(dados,`farol_semanal_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
         }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Farol Semanal (Excel)</button>
       </div>
@@ -1986,23 +1989,36 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros (mês, semana via De/Até, empresa, status)</span>
       <span style={{fontSize:8,color:"#94A3B8",marginLeft:4}}>{showFiltros?"▲":"▼"}</span>
     </button>
-    {showFiltros&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-      <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Mês (atual)</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-      <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Ano (atual)</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Semana De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
-      <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fAte} onChange={e=>setFAte(e.target.value)}/></div>
-      <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
-      <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option></select>
+    {showFiltros&&<div className="card" style={{padding:"10px 12px",marginBottom:14}}>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+        {[
+          {l:"Esta semana",fn:()=>{setFDe(fmtISO(segunda));setFAte(fmtISO(domingo));setFMes("");setFAno("");}},
+          {l:"Semana passada",fn:()=>{const s=new Date(segunda);s.setDate(s.getDate()-7);const d=new Date(s);d.setDate(s.getDate()+6);setFDe(fmtISO(s));setFAte(fmtISO(d));setFMes("");setFAno("");}},
+          {l:"Este mês",fn:()=>{setFDe("");setFAte("");setFMes(PAD(TODAY.getMonth()+1));setFAno(String(TODAY.getFullYear()));}},
+          {l:"Mês passado",fn:()=>{const d=new Date(TODAY.getFullYear(),TODAY.getMonth()-1,1);setFDe("");setFAte("");setFMes(PAD(d.getMonth()+1));setFAno(String(d.getFullYear()));}},
+          {l:"Tudo",fn:clearFilter},
+        ].map((b,i)=>(
+          <button key={i} onClick={b.fn} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",color:"#1E293B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{b.l}</button>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Mês (atual)</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+        <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Ano (atual)</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+        <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
+        <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fAte} onChange={e=>setFAte(e.target.value)}/></div>
+        <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
+        <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído/Faturado</option></select>
+      </div>
     </div>}
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:8}}>📊 Macro — Visão Geral</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:18}}>
       {[
         {l:"Total Mau Uso",v:all.length,sub:fmtR(valTotal),c:cor},
-        {l:`Concluídos no Mês`,v:concluidosMes.length,sub:fmtR(soma(concluidosMes)),c:"#1A7A3C"},
-        {l:`Faturados no Mês`,v:faturadosMes.length,sub:fmtR(soma(faturadosMes)),c:"#6A1B9A"},
-        {l:`Enviados p/ Fatur. no Mês`,v:enviadosFatMes.length,sub:fmtR(soma(enviadosFatMes)),c:"#0D9488"},
-        {l:`Abertos no Mês`,v:abertosMes.length,sub:fmtR(soma(abertosMes)),c:"#1565C0"},
+        {l:"Concluído/Faturado no Mês",v:concluidosMes.length,sub:fmtR(soma(concluidosMes)),c:"#1A7A3C"},
+        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#6A1B9A"},
+        {l:"Enviados p/ Fatur. no Mês",v:enviadosFatMes.length,sub:fmtR(soma(enviadosFatMes)),c:"#0D9488"},
+        {l:"Abertos no Mês",v:abertosMes.length,sub:fmtR(soma(abertosMes)),c:"#1565C0"},
         {l:"Pendentes",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
       ].map((k,i)=>(
         <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
@@ -2015,13 +2031,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
       <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Valor Concluído/Faturado por Mês</div>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Valor Concluído/Faturado × Aberto por Mês</div>
         {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
         <ChartCanvas type="bar" height={200} data={{
           labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
           datasets:[
-            {label:"Concluído",data:meses.map(m=>soma(all.filter(p=>isConcluido(p)&&getMes(p.dataConclusao||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
-            {label:"Faturado",data:meses.map(m=>soma(all.filter(p=>p.aprovCliente==="cobrado_faturado"&&getMes(p.dataFaturamento||p.dataAprovacao||dataAbertura(p))===m))),backgroundColor:"#6A1B9A",borderRadius:6},
+            {label:"Concluído/Faturado (R$)",data:meses.map(m=>soma(all.filter(p=>isConcluido(p)&&getMes(dataConclusaoDe(p)||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
+            {label:"Aberto (R$)",data:meses.map(m=>soma(all.filter(p=>getMes(dataAbertura(p))===m))),backgroundColor:"#CBD5E1",borderRadius:6},
           ]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
       </div>
