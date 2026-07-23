@@ -1880,16 +1880,21 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     if(fAno&&!d.startsWith(fAno))return false;
     if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
     if(fStatus!=="todos"){
-      if(fStatus==="concluido"){ if(p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado")return false; }
+      if(fStatus==="concluido"){ if(p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado"&&p.arquivado!==true&&p.arquivado!=="sim"&&p.aprovCliente!=="cobrado_faturado")return false; }
       else if(p.processoStatus!==fStatus)return false;
     }
-    if(fAprov!=="todos"&&(p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.aprovCliente==="cobrado_faturado"?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno"))!==fAprov)return false;
+    if(fAprov!=="todos"){
+      const ef=(p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.arquivado===true||p.arquivado==="sim"||p.aprovCliente==="cobrado_faturado")?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno");
+      if(ef!==fAprov)return false;
+    }
     return true;
   };
   const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fStatus!=="todos"||fAprov!=="todos";
   const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
-  // Concluido = Faturado = Arquivado (o setor trata os tres como finalizado)
-  const isConcluido=(p)=>p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.aprovCliente==="cobrado_faturado";
+  // Concluido = Faturado = Arquivado (o setor trata os tres como finalizado).
+  // Aceita as duas marcacoes de arquivo que existem na base: processoStatus="arquivado" e o antigo campo arquivado=true.
+  const isArquivado=(p)=>p.processoStatus==="arquivado"||p.arquivado===true||p.arquivado==="sim";
+  const isConcluido=(p)=>isArquivado(p)||p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado";
   const dataConclusaoDe=(p)=>p.dataConclusao||p.dataFaturamento||p.dataAprovacao||"";
   // Tudo que esta arquivado/concluido conta como Faturado, mesmo que o status de aprovacao nao tenha sido marcado
   const aprovDe=(p)=>isConcluido(p)?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno");
@@ -1929,8 +1934,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   }));
   const meses=[...new Set(all.map(p=>getMes(dataAbertura(p))).filter(Boolean))].sort().slice(-6);
   const empValMap={};
-  all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
-  const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  all.forEach(p=>{const e=p.empresa||"Sem Empresa";if(!empValMap[e])empValMap[e]={valor:0,qtd:0,nums:[]};empValMap[e].valor+=parseVal(p.valor);empValMap[e].qtd+=1;const n=p.numMauUso||p.ov||"";if(n)empValMap[e].nums.push(n);});
+  const topEmp=Object.entries(empValMap).sort((a,b)=>b[1].valor-a[1].valor).slice(0,8);
 
   const diasAberto=(p)=>{const d=dataAbertura(p);if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.max(0,Math.round((hoje-dt)/86400000));};
 
@@ -1943,12 +1948,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
       {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
-        <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:11}}>
+        <table style={{borderCollapse:"collapse",width:"100%",minWidth:760,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Nº Mau Uso</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Abertura</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Envio p/ Aprov.</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Faturamento</th>
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Conclusão</th>}
             {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Tempo</th>}
           </tr></thead>
@@ -1959,7 +1966,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
                 <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
                 <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(dataAbertura(p))||"—"}</td>
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(p.dataFaturamento||p.dataConclusao||p.dataAprovacao)||"—"}</td>}
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#0D9488",fontWeight:600}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#6A1B9A",fontWeight:600}}>{fmtDataBR(p.dataFaturamento)||"—"}</td>
+                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(p.dataConclusao||p.dataFaturamento||p.dataAprovacao)||"—"}</td>}
                 {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
               </tr>
             );})}
@@ -1972,15 +1981,15 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · janela {MESES[parseInt(mesRef)-1]}/{anoRef} {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s) incluído(s)</span> · janela {MESES[parseInt(mesRef)-1]}/{anoRef} {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
       </div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
         <button onClick={()=>{
           const semana=all.filter(p=>{const d=dataAbertura(p);return d>=semanaDe&&d<=semanaAte;});
           if(semana.length===0){alert("Nenhum mau uso no período (defina De/Até nos filtros pra escolher a semana).");return;}
-          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(p.dataFaturamento||p.dataConclusao||"")}));
-          exportCSV(dados,`farol_semanal_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
+          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),envio:fmtDataBR(p.dataEnvio),faturamento:fmtDataBR(p.dataFaturamento),conclusao:fmtDataBR(p.dataConclusao||p.dataFaturamento||"")}));
+          exportCSV(dados,`farol_semanal_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"envio",label:"Envio p/ Aprovação"},{key:"faturamento",label:"Data Faturamento"},{key:"conclusao",label:"Data Conclusão"}]);
         }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Farol Semanal (Excel)</button>
       </div>
     </div>
@@ -2072,10 +2081,11 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:16,marginTop:4}}>
       <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
-      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
-        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span></div>
-          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/></div>
+      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,v],i)=>(
+        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:700,color:"#333"}}>{i+1}. {emp} <span style={{fontSize:10,color:"#94A3B8",fontWeight:600}}>({v.qtd} mau uso)</span></span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(v.valor)}</span></div>
+          {v.nums.length>0&&<div style={{fontSize:9.5,color:"#94A3B8"}}>Nº {v.nums.join(", ")}</div>}
+          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1].valor>0?(v.valor/topEmp[0][1].valor)*100:0}%`,transition:"width .6s"}}/></div>
         </div>
       ))}
     </div>
