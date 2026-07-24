@@ -1984,6 +1984,7 @@ function ImportSaidaEntradaModal({onClose,onImport}){
 function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const {fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
   const [periodo,setPeriodo]=useState("mes");   // dia | semana | mes | tudo
+  const [abaMicro,setAbaMicro]=useState("periodo");
   const [refIso,setRefIso]=useState(TODAY_STR); // data de referencia da janela
 
   const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
@@ -2108,6 +2109,15 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
   );
 
+  const ABAS_MICRO=[
+    {k:"periodo",  rotulo:"Concluídos do período", icone:"✅", cor:"#1A7A3C", registros:concluidosJanela, titulo:`Concluído / Faturado no período (${janLabel})`, vazio:"Nenhum concluído neste período", conc:true},
+    {k:"todos",    rotulo:"Concluídos (todos)",    icone:"🗄️", cor:"#6A1B9A", registros:concluidosTodos, titulo:"Concluído / Faturado — TODOS (inclui arquivados)", vazio:"Nenhum concluído", conc:true},
+    {k:"enviados", rotulo:"Enviado p/ Faturamento",icone:"📤", cor:"#0D9488", registros:aprovados,       titulo:"Encaminhado para Faturamento", vazio:"Nenhum encaminhado", conc:true},
+    {k:"pendente", rotulo:"Pendente",              icone:"⏳", cor:"#E67E00", registros:pendentes,       titulo:"Pendente", vazio:"Nenhum pendente", tempo:true},
+    {k:"negocia",  rotulo:"Em Negociação",         icone:"🤝", cor:"#1565C0", registros:emNegociacao,    titulo:"Em Negociação", vazio:"Nenhum em negociação", tempo:true},
+    {k:"negado",   rotulo:"Recusado",              icone:"❌", cor:"#C62828", registros:negados,         titulo:"Recusado / Negado", vazio:"Nenhum recusado"},
+  ];
+
   const btnPer=(k,l)=>(
     <button key={k} onClick={()=>setPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:periodo===k?`2px solid ${cor}`:"1.5px solid #E2E8F0",background:periodo===k?cor+"18":"#FFF",color:periodo===k?cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
   );
@@ -2145,8 +2155,6 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       {[
         {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:cor},
         {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#1A7A3C"},
-        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#6A1B9A"},
-        {l:"Enviados p/ Faturamento",v:enviadosFatJanela.length,sub:fmtR(soma(enviadosFatJanela)),c:"#0D9488"},
         {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1565C0"},
         {l:"Pendentes (hoje)",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
       ].map((k,i)=>(
@@ -2158,7 +2166,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       ))}
     </div>
 
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
+    <div style={{marginBottom:18}}>
       <div className="card" style={{padding:14}}>
         <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
         <ChartCanvas type="bar" height={200} data={{
@@ -2168,13 +2176,6 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#CBD5E1",borderRadius:6},
           ]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
-      </div>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Distribuição por Aprovação (valor)</div>
-        <ChartCanvas type="doughnut" height={200} data={{
-          labels:aprovCounts.map(a=>a.label.replace(/^[^ ]+ /,"")),
-          datasets:[{data:aprovCounts.map(a=>a.valor),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:8,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
       </div>
     </div>
 
@@ -2192,12 +2193,15 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"6px 0 10px"}}>🔬 Micro — Detalhado (para Diretoria)</div>
-    <TabelaMicro titulo={`Concluído / Faturado no período (${janLabel})`} icone="✅" corSec="#1A7A3C" registros={concluidosJanela} vazio="Nenhum concluído neste período" mostrarConclusao={true}/>
-    <TabelaMicro titulo="Concluído / Faturado — TODOS (inclui arquivados)" icone="🗄️" corSec="#6A1B9A" registros={concluidosTodos} vazio="Nenhum concluído" mostrarConclusao={true}/>
-    <TabelaMicro titulo="Encaminhado para Faturamento" icone="📤" corSec="#0D9488" registros={aprovados} vazio="Nenhum encaminhado" mostrarConclusao={true}/>
-    <TabelaMicro titulo="Pendente" icone="⏳" corSec="#E67E00" registros={pendentes} vazio="Nenhum pendente" mostrarTempo={true}/>
-    <TabelaMicro titulo="Em Negociação" icone="🤝" corSec="#1565C0" registros={emNegociacao} vazio="Nenhum em negociação" mostrarTempo={true}/>
-    <TabelaMicro titulo="Recusado / Negado" icone="❌" corSec="#C62828" registros={negados} vazio="Nenhum recusado"/>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+      {ABAS_MICRO.map(a=>(
+        <button key={a.k} onClick={()=>setAbaMicro(a.k)} style={{padding:"6px 13px",borderRadius:20,border:abaMicro===a.k?`2px solid ${a.cor}`:"1.5px solid #E2E8F0",background:abaMicro===a.k?a.cor+"18":"#FFF",color:abaMicro===a.k?a.cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+          {a.icone} {a.rotulo} <span style={{opacity:.7}}>({a.registros.length})</span>
+        </button>
+      ))}
+    </div>
+    {(()=>{const a=ABAS_MICRO.find(x=>x.k===abaMicro)||ABAS_MICRO[0];
+      return <TabelaMicro titulo={a.titulo} icone={a.icone} corSec={a.cor} registros={a.registros} vazio={a.vazio} mostrarConclusao={a.conc} mostrarTempo={a.tempo}/>;})()}
 
     <div className="card" style={{padding:16,marginTop:4}}>
       <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
