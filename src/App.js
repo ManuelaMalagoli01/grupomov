@@ -1984,7 +1984,7 @@ function ImportSaidaEntradaModal({onClose,onImport}){
 function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const {fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
   const [periodo,setPeriodo]=useState("mes");   // dia | semana | mes | tudo
-  const [abaMicro,setAbaMicro]=useState("periodo");
+  const [abaMicro,setAbaMicro]=useState("todos");
   const [refIso,setRefIso]=useState(TODAY_STR); // data de referencia da janela
 
   const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
@@ -2113,7 +2113,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     {k:"periodo",  rotulo:"Concluídos do período", icone:"✅", cor:"#1A7A3C", registros:concluidosJanela, titulo:`Concluído / Faturado no período (${janLabel})`, vazio:"Nenhum concluído neste período", conc:true},
     {k:"todos",    rotulo:"Concluídos (todos)",    icone:"🗄️", cor:"#6A1B9A", registros:concluidosTodos, titulo:"Concluído / Faturado — TODOS (inclui arquivados)", vazio:"Nenhum concluído", conc:true},
     {k:"enviados", rotulo:"Enviado p/ Faturamento",icone:"📤", cor:"#0D9488", registros:aprovados,       titulo:"Encaminhado para Faturamento", vazio:"Nenhum encaminhado", conc:true},
-    {k:"pendente", rotulo:"Pendente",              icone:"⏳", cor:"#E67E00", registros:pendentes,       titulo:"Pendente", vazio:"Nenhum pendente", tempo:true},
+    {k:"pendente", rotulo:"Aguardando Retorno",    icone:"⏳", cor:"#E67E00", registros:pendentes,       titulo:"Aguardando Retorno do Cliente", vazio:"Nenhum aguardando retorno", tempo:true},
     {k:"negocia",  rotulo:"Em Negociação",         icone:"🤝", cor:"#1565C0", registros:emNegociacao,    titulo:"Em Negociação", vazio:"Nenhum em negociação", tempo:true},
     {k:"negado",   rotulo:"Recusado",              icone:"❌", cor:"#C62828", registros:negados,         titulo:"Recusado / Negado", vazio:"Nenhum recusado"},
   ];
@@ -2154,9 +2154,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:18}}>
       {[
         {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:cor},
-        {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#1A7A3C"},
+        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#1A7A3C"},
         {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1565C0"},
-        {l:"Pendentes (hoje)",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
+        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
       ].map((k,i)=>(
         <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
           <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
