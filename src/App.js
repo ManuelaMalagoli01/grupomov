@@ -1982,81 +1982,98 @@ function ImportSaidaEntradaModal({onClose,onImport}){
 }
 
 function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
-  const {fMes,setFMes,fAno,setFAno,fDe,setFDe,fAte,setFAte,fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
+  const {fEmpresa,setFEmpresa,fAprov,setFAprov,fStatus,setFStatus,showFiltros,setShowFiltros}=filtros;
+  const [periodo,setPeriodo]=useState("mes");   // dia | semana | mes | tudo
+  const [refIso,setRefIso]=useState(TODAY_STR); // data de referencia da janela
+
   const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
-  const getMes=(d)=>{if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;};
+  const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+  const iso=(d)=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
   const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+
   const dataAbertura=(p)=>p.date||p.dataEnvio||"";
-  const filtrar=(p)=>{
-    const d=dataAbertura(p);
-    if(fDe&&d<fDe)return false;
-    if(fAte&&d>fAte)return false;
-    if(fMes&&d.slice(5,7)!==fMes)return false;
-    if(fAno&&!d.startsWith(fAno))return false;
-    if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
-    if(fStatus!=="todos"){
-      if(fStatus==="concluido"){ if(p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado"&&p.arquivado!==true&&p.arquivado!=="sim"&&p.aprovCliente!=="cobrado_faturado")return false; }
-      else if(p.processoStatus!==fStatus)return false;
-    }
-    if(fAprov!=="todos"){
-      const ef=(p.processoStatus==="concluido"||p.processoStatus==="arquivado"||p.arquivado===true||p.arquivado==="sim"||p.aprovCliente==="cobrado_faturado")?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno");
-      if(ef!==fAprov)return false;
-    }
-    return true;
-  };
-  const hasFilter=fMes||fAno||fDe||fAte||fEmpresa||fStatus!=="todos"||fAprov!=="todos";
-  const clearFilter=()=>{setFMes("");setFAno("");setFDe("");setFAte("");setFEmpresa("");setFStatus("todos");setFAprov("todos");};
-  // Concluido = Faturado = Arquivado (o setor trata os tres como finalizado).
-  // Aceita as duas marcacoes de arquivo que existem na base: processoStatus="arquivado" e o antigo campo arquivado=true.
   const isArquivado=(p)=>p.processoStatus==="arquivado"||p.arquivado===true||p.arquivado==="sim";
   const isConcluido=(p)=>isArquivado(p)||p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado";
   const dataConclusaoDe=(p)=>p.dataConclusao||p.dataFaturamento||p.dataAprovacao||"";
-  // Tudo que esta arquivado/concluido conta como Faturado, mesmo que o status de aprovacao nao tenha sido marcado
   const aprovDe=(p)=>isConcluido(p)?"cobrado_faturado":(p.aprovCliente||"aguardando_retorno");
-  const all=(lista||[]).filter(p=>filtrar(p));
-  const valTotal=all.reduce((acc,p)=>acc+parseVal(p.valor),0);
 
-  // ── Janela de tempo (mês selecionado, ou mês atual se nenhum filtro) ──
-  const mesAtualStr=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
-  const anoRef=fAno||String(TODAY.getFullYear());
-  const mesRef=fMes||PAD(TODAY.getMonth()+1);
-  const janelaStr=`${anoRef}-${mesRef}`;
-  const noMes=(d)=>d&&d.startsWith(janelaStr);
+  // ── Janela de tempo: Dia / Semana / Mes / Tudo ──────────────────────────
+  const ref=new Date(refIso+"T12:00:00");
+  let janDe="",janAte="",janLabel="";
+  if(periodo==="dia"){ janDe=janAte=iso(ref); janLabel=fmtDataBR(janDe); }
+  else if(periodo==="semana"){
+    const s=new Date(ref); s.setDate(ref.getDate()-((ref.getDay()+6)%7));
+    const e=new Date(s); e.setDate(s.getDate()+6);
+    janDe=iso(s); janAte=iso(e); janLabel=`${fmtDataBR(janDe)} a ${fmtDataBR(janAte)}`;
+  } else if(periodo==="mes"){
+    const s=new Date(ref.getFullYear(),ref.getMonth(),1);
+    const e=new Date(ref.getFullYear(),ref.getMonth()+1,0);
+    janDe=iso(s); janAte=iso(e); janLabel=`${MESES_N[ref.getMonth()]}/${ref.getFullYear()}`;
+  } else { janLabel="Todo o período"; }
+  const naJanela=(d)=>{ if(periodo==="tudo")return true; if(!d)return false; return d>=janDe&&d<=janAte; };
+  const navegar=(dir)=>{
+    const d=new Date(refIso+"T12:00:00");
+    if(periodo==="dia")d.setDate(d.getDate()+dir);
+    else if(periodo==="semana")d.setDate(d.getDate()+7*dir);
+    else if(periodo==="mes")d.setMonth(d.getMonth()+dir);
+    setRefIso(iso(d));
+  };
 
-  // ── Semana (segunda a domingo) — usa De/Até se preenchidos, senão semana atual ──
-  const hoje=new Date(); hoje.setHours(0,0,0,0);
-  const diaSemana=hoje.getDay();
-  const segunda=new Date(hoje); segunda.setDate(hoje.getDate()-((diaSemana+6)%7));
-  const domingo=new Date(segunda); domingo.setDate(segunda.getDate()+6);
-  const fmtISO=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  const semanaDe=fDe||fmtISO(segunda), semanaAte=fAte||fmtISO(domingo);
+  // ── Filtros que NAO dependem de data (empresa / status / aprovacao) ──────
+  const passaFiltro=(p)=>{
+    if(fEmpresa&&!(p.empresa||"").toLowerCase().includes(fEmpresa.toLowerCase()))return false;
+    if(fStatus!=="todos"){
+      if(fStatus==="concluido"){ if(!isConcluido(p))return false; }
+      else if(p.processoStatus!==fStatus)return false;
+    }
+    if(fAprov!=="todos"&&aprovDe(p)!==fAprov)return false;
+    return true;
+  };
+  const all=(lista||[]).filter(passaFiltro);
+  const soma=(arr)=>arr.reduce((a,p)=>a+parseVal(p.valor),0);
+  const hasFilter=fEmpresa||fStatus!=="todos"||fAprov!=="todos";
+  const clearFilter=()=>{setFEmpresa("");setFStatus("todos");setFAprov("todos");};
 
-  // ── Grupos por status de aprovacao (sobre 'all', ja filtrado) ──
-  const concluidosMes=all.filter(p=>isConcluido(p)&&noMes(dataConclusaoDe(p)||dataAbertura(p)));
-  const concluidosTodos=all.filter(isConcluido);
-  const enviadosFatMes=all.filter(p=>aprovDe(p)==="aprovado_cliente"&&noMes(p.dataAprovacao||dataAbertura(p)));
-  const abertosMes=all.filter(p=>noMes(dataAbertura(p)));
+  // ── Grupos: metricas de periodo usam a data propria de cada evento ──────
+  const concluidosTodos=all.filter(isConcluido).sort((a,b)=>(dataConclusaoDe(b)||dataAbertura(b)||"").localeCompare(dataConclusaoDe(a)||dataAbertura(a)||""));
+  const concluidosJanela=all.filter(p=>isConcluido(p)&&naJanela(dataConclusaoDe(p)||dataAbertura(p)));
+  const abertosJanela=all.filter(p=>naJanela(dataAbertura(p)));
+  const enviadosFatJanela=all.filter(p=>aprovDe(p)==="aprovado_cliente"&&naJanela(p.dataAprovacao||dataAbertura(p)));
   const pendentes=all.filter(p=>aprovDe(p)==="aguardando_retorno");
   const emNegociacao=all.filter(p=>aprovDe(p)==="em_negociacao");
   const negados=all.filter(p=>aprovDe(p)==="negado_cliente");
   const aprovados=all.filter(p=>aprovDe(p)==="aprovado_cliente");
 
-  const soma=(arr)=>arr.reduce((a,p)=>a+parseVal(p.valor),0);
-
   const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
     key:k,label:s.l,total:all.filter(p=>aprovDe(p)===k).length,
     valor:soma(all.filter(p=>aprovDe(p)===k)),c:s.c,bg:s.bg
   }));
-  const meses=[...new Set(all.map(p=>getMes(dataAbertura(p))).filter(Boolean))].sort().slice(-6);
-  const empValMap={};
-  all.forEach(p=>{const e=p.empresa||"Sem Empresa";if(!empValMap[e])empValMap[e]={valor:0,qtd:0,nums:[]};empValMap[e].valor+=parseVal(p.valor);empValMap[e].qtd+=1;const n=p.numMauUso||p.ov||"";if(n)empValMap[e].nums.push(n);});
-  const topEmp=Object.entries(empValMap).sort((a,b)=>b[1].valor-a[1].valor).slice(0,8);
 
+  // ── Serie do grafico: ultimos 8 periodos do tipo selecionado ────────────
+  const serie=[];
+  { const modo=periodo==="tudo"?"mes":periodo; const qtd=modo==="dia"?14:8;
+    for(let i=qtd-1;i>=0;i--){
+      const d=new Date(refIso+"T12:00:00");
+      let de,ate,lab;
+      if(modo==="dia"){ d.setDate(d.getDate()-i); de=ate=iso(d); lab=`${PAD(d.getDate())}/${PAD(d.getMonth()+1)}`; }
+      else if(modo==="semana"){ d.setDate(d.getDate()-7*i); const s=new Date(d); s.setDate(d.getDate()-((d.getDay()+6)%7)); const e=new Date(s); e.setDate(s.getDate()+6); de=iso(s); ate=iso(e); lab=`${PAD(s.getDate())}/${PAD(s.getMonth()+1)}`; }
+      else { d.setMonth(d.getMonth()-i); const s=new Date(d.getFullYear(),d.getMonth(),1); const e=new Date(d.getFullYear(),d.getMonth()+1,0); de=iso(s); ate=iso(e); lab=`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`; }
+      const dentro=(x)=>x&&x>=de&&x<=ate;
+      serie.push({lab,
+        concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
+        aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
+      });
+    }
+  }
+
+  const empValMap={};
+  all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
+  const topEmp=Object.entries(empValMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
   const diasAberto=(p)=>{const d=dataAbertura(p);if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.max(0,Math.round((hoje-dt)/86400000));};
 
-  // ── Tabela MICRO detalhada (pra diretoria) ──
   const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
       <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",background:corSec+"0D"}}>
@@ -2065,16 +2082,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
       {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
-        <table style={{borderCollapse:"collapse",width:"100%",minWidth:760,fontSize:11}}>
+        <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Nº Mau Uso</th>
-            <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Valor</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Abertura</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Envio p/ Aprov.</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Faturamento</th>
-            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Conclusão</th>}
-            {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Tempo</th>}
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº Mau Uso</th>
+            <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
+            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Conclusão</th>}
+            {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Tempo</th>}
           </tr></thead>
           <tbody>
             {registros.map((p,i)=>{const dias=diasAberto(p);return(
@@ -2083,9 +2098,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
                 <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
                 <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(dataAbertura(p))||"—"}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#0D9488",fontWeight:600}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#6A1B9A",fontWeight:600}}>{fmtDataBR(p.dataFaturamento)||"—"}</td>
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(p.dataConclusao||p.dataFaturamento||p.dataAprovacao)||"—"}</td>}
+                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
                 {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
               </tr>
             );})}
@@ -2095,57 +2108,47 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
   );
 
+  const btnPer=(k,l)=>(
+    <button key={k} onClick={()=>setPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:periodo===k?`2px solid ${cor}`:"1.5px solid #E2E8F0",background:periodo===k?cor+"18":"#FFF",color:periodo===k?cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+  );
+
   return(<div style={{animation:"fadeIn .3s ease"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s) incluído(s)</span> · janela {MESES[parseInt(mesRef)-1]}/{anoRef} {hasFilter&&<span style={{color:cor,fontWeight:700}}>· filtro ativo</span>}</div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
       </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {hasFilter&&<button onClick={clearFilter} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-        <button onClick={()=>{
-          const semana=all.filter(p=>{const d=dataAbertura(p);return d>=semanaDe&&d<=semanaAte;});
-          if(semana.length===0){alert("Nenhum mau uso no período (defina De/Até nos filtros pra escolher a semana).");return;}
-          const dados=semana.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),envio:fmtDataBR(p.dataEnvio),faturamento:fmtDataBR(p.dataFaturamento),conclusao:fmtDataBR(p.dataConclusao||p.dataFaturamento||"")}));
-          exportCSV(dados,`farol_semanal_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"envio",label:"Envio p/ Aprovação"},{key:"faturamento",label:"Data Faturamento"},{key:"conclusao",label:"Data Conclusão"}]);
-        }} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Farol Semanal (Excel)</button>
+      <button onClick={()=>{
+        const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
+        if(reg.length===0){alert("Nenhum mau uso no período selecionado.");return;}
+        const dados=reg.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(dataConclusaoDe(p))}));
+        exportCSV(dados,`farol_${periodo}_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
+      }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Exportar Farol ({janLabel})</button>
+    </div>
+
+    <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+      <div style={{display:"flex",gap:6}}>{btnPer("dia","Diário")}{btnPer("semana","Semanal")}{btnPer("mes","Mensal")}{btnPer("tudo","Tudo")}</div>
+      {periodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
+        <button onClick={()=>navegar(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+        <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabel}</div>
+        <button onClick={()=>navegar(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+        <button onClick={()=>setRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+      </div>}
+      <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+        <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
+        <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído/Faturado</option></select>
+        {hasFilter&&<button onClick={clearFilter} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
       </div>
     </div>
 
-    <button onClick={()=>setShowFiltros(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltros?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-      <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros (mês, semana via De/Até, empresa, status)</span>
-      <span style={{fontSize:8,color:"#94A3B8",marginLeft:4}}>{showFiltros?"▲":"▼"}</span>
-    </button>
-    {showFiltros&&<div className="card" style={{padding:"10px 12px",marginBottom:14}}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
-        {[
-          {l:"Esta semana",fn:()=>{setFDe(fmtISO(segunda));setFAte(fmtISO(domingo));setFMes("");setFAno("");}},
-          {l:"Semana passada",fn:()=>{const s=new Date(segunda);s.setDate(s.getDate()-7);const d=new Date(s);d.setDate(s.getDate()+6);setFDe(fmtISO(s));setFAte(fmtISO(d));setFMes("");setFAno("");}},
-          {l:"Este mês",fn:()=>{setFDe("");setFAte("");setFMes(PAD(TODAY.getMonth()+1));setFAno(String(TODAY.getFullYear()));}},
-          {l:"Mês passado",fn:()=>{const d=new Date(TODAY.getFullYear(),TODAY.getMonth()-1,1);setFDe("");setFAte("");setFMes(PAD(d.getMonth()+1));setFAno(String(d.getFullYear()));}},
-          {l:"Tudo",fn:clearFilter},
-        ].map((b,i)=>(
-          <button key={i} onClick={b.fn} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",color:"#1E293B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{b.l}</button>
-        ))}
-      </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-        <select value={fMes} onChange={e=>setFMes(e.target.value)}><option value="">Mês (atual)</option>{MESES_N.map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-        <select value={fAno} onChange={e=>setFAno(e.target.value)}><option value="">Ano (atual)</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-        <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fDe} onChange={e=>setFDe(e.target.value)}/></div>
-        <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fAte} onChange={e=>setFAte(e.target.value)}/></div>
-        <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
-        <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído/Faturado</option></select>
-      </div>
-    </div>}
-
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:8}}>📊 Macro — Visão Geral</div>
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:8}}>📊 Macro — {janLabel}</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:18}}>
       {[
-        {l:"Total Mau Uso",v:all.length,sub:fmtR(valTotal),c:cor},
-        {l:"Concluído/Faturado no Mês",v:concluidosMes.length,sub:fmtR(soma(concluidosMes)),c:"#1A7A3C"},
+        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:cor},
+        {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#1A7A3C"},
         {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#6A1B9A"},
-        {l:"Enviados p/ Fatur. no Mês",v:enviadosFatMes.length,sub:fmtR(soma(enviadosFatMes)),c:"#0D9488"},
-        {l:"Abertos no Mês",v:abertosMes.length,sub:fmtR(soma(abertosMes)),c:"#1565C0"},
-        {l:"Pendentes",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
+        {l:"Enviados p/ Faturamento",v:enviadosFatJanela.length,sub:fmtR(soma(enviadosFatJanela)),c:"#0D9488"},
+        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1565C0"},
+        {l:"Pendentes (hoje)",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
       ].map((k,i)=>(
         <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
           <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
@@ -2157,15 +2160,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
       <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Valor Concluído/Faturado × Aberto por Mês</div>
-        {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
         <ChartCanvas type="bar" height={200} data={{
-          labels:meses.map(m=>{const[y,mo]=m.split("-");return`${MESES[parseInt(mo)-1]}/${y.slice(2)}`;}),
+          labels:serie.map(s=>s.lab),
           datasets:[
-            {label:"Concluído/Faturado (R$)",data:meses.map(m=>soma(all.filter(p=>isConcluido(p)&&getMes(dataConclusaoDe(p)||dataAbertura(p))===m))),backgroundColor:"#1A7A3C",borderRadius:6},
-            {label:"Aberto (R$)",data:meses.map(m=>soma(all.filter(p=>getMes(dataAbertura(p))===m))),backgroundColor:"#CBD5E1",borderRadius:6},
+            {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
+            {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#CBD5E1",borderRadius:6},
           ]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
       <div className="card" style={{padding:14}}>
         <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Distribuição por Aprovação (valor)</div>
@@ -2190,7 +2192,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"6px 0 10px"}}>🔬 Micro — Detalhado (para Diretoria)</div>
-    <TabelaMicro titulo="Concluído / Faturado (inclui arquivados)" icone="✅" corSec="#1A7A3C" registros={concluidosTodos} vazio="Nenhum concluído" mostrarConclusao={true}/>
+    <TabelaMicro titulo={`Concluído / Faturado no período (${janLabel})`} icone="✅" corSec="#1A7A3C" registros={concluidosJanela} vazio="Nenhum concluído neste período" mostrarConclusao={true}/>
+    <TabelaMicro titulo="Concluído / Faturado — TODOS (inclui arquivados)" icone="🗄️" corSec="#6A1B9A" registros={concluidosTodos} vazio="Nenhum concluído" mostrarConclusao={true}/>
     <TabelaMicro titulo="Encaminhado para Faturamento" icone="📤" corSec="#0D9488" registros={aprovados} vazio="Nenhum encaminhado" mostrarConclusao={true}/>
     <TabelaMicro titulo="Pendente" icone="⏳" corSec="#E67E00" registros={pendentes} vazio="Nenhum pendente" mostrarTempo={true}/>
     <TabelaMicro titulo="Em Negociação" icone="🤝" corSec="#1565C0" registros={emNegociacao} vazio="Nenhum em negociação" mostrarTempo={true}/>
@@ -2198,11 +2201,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:16,marginTop:4}}>
       <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
-      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,v],i)=>(
-        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:10}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:700,color:"#333"}}>{i+1}. {emp} <span style={{fontSize:10,color:"#94A3B8",fontWeight:600}}>({v.qtd} mau uso)</span></span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(v.valor)}</span></div>
-          {v.nums.length>0&&<div style={{fontSize:9.5,color:"#94A3B8"}}>Nº {v.nums.join(", ")}</div>}
-          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1].valor>0?(v.valor/topEmp[0][1].valor)*100:0}%`,transition:"width .6s"}}/></div>
+      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
+        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span></div>
+          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/></div>
         </div>
       ))}
     </div>
