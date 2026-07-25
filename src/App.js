@@ -3895,6 +3895,28 @@ export default function App(){
                 }} title="Verifica duplicidade entre relatorios ativos e arquivados" style={{padding:"7px 14px",borderRadius:8,border:"1px solid #C62826",background:"transparent",color:"#DC2626",fontSize:11,cursor:"pointer",fontWeight:600}}>🧹 Excluir Duplicados</button>
                 <button onClick={()=>setShowArqRel(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRel?"#1A1A1A":"#FFF",color:showArqRel?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>✅ {showArqRel?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"relatorios_grupomov",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"atendimento",label:"Atendimento"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"modelo",label:"Modelo"},{key:"horimetro",label:"Horímetro"},{key:"relatorio",label:"Relatório"},{key:"chamado",label:"Chamado"},{key:"horaInicio",label:"Início"},{key:"horaFim",label:"Fim"},{key:"horasTrabalhadas",label:"Horas"},{key:"servicos",label:"Serviços"},{key:"status",label:"Status"},{key:"requisicao",label:"REQ"},{key:"relatorioConclusao",label:"Rel. Conclusão"},{key:"obs",label:"Obs"},{key:"pendencias",label:"Pendências"}])}/>
+                <button onClick={async()=>{
+                  const alvo=(reports||[]).filter(r=>{
+                    if(!r)return false;
+                    const cliRegra=clienteDoTecnico(r.tecnico);
+                    const cidPorCli=cidadeDoCliente(cliRegra||r.cliente);
+                    const precisaCliente=cliRegra&&(r.cliente||"")!==cliRegra;
+                    const precisaCidade=cidPorCli&&(r.cidade||"")!==cidPorCli;
+                    return precisaCliente||precisaCidade;
+                  });
+                  if(alvo.length===0){alert("Nenhum relatório para preencher — todos já estão de acordo com as regras.");return;}
+                  if(!window.confirm(`Preencher automaticamente cliente/cidade em ${alvo.length} relatório(s) conforme as regras?\n\n(Roca→Santa Luzia, Farmax→Divinópolis, Metalsider→Vespasiano, Luiz Ribeiro/Arthur Geronimo→Roca)`))return;
+                  const atualizados=alvo.map(r=>{
+                    const cliRegra=clienteDoTecnico(r.tecnico);
+                    const novoCliente=cliRegra||r.cliente;
+                    const novaCidade=cidadeDoCliente(novoCliente)||r.cidade;
+                    return {...r,cliente:novoCliente,cidade:novaCidade};
+                  });
+                  const mapa=Object.fromEntries(atualizados.map(r=>[r.id,r]));
+                  setReports(p=>p.map(x=>mapa[x.id]||x));
+                  await db.saveBatch("relatorios",atualizados);
+                  notify(`✅ ${atualizados.length} relatório(s) preenchido(s)!`);
+                }} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>🏙️ Preencher Cidades</button>
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
