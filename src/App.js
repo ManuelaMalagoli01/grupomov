@@ -725,8 +725,18 @@ function LoginScreen({onLogin, users=USERS}){
     if(!username.trim()){setErr("Informe seu usuário.");return;}
     setLoading(true);
     setTimeout(()=>{
-      const u=list.find(x=>(x.username||x.id)===username.trim().toLowerCase()&&x.password===pass)
-               ||USERS.find(x=>(x.username||x.id)===username.trim().toLowerCase()&&x.password===pass);
+      const uInput=username.trim().toLowerCase();
+      const pInput=(pass||"").trim();
+      const bate=(x)=>{
+        if(!x)return false;
+        const nomes=[x.username,x.id,(x.name||"").toLowerCase().replace(/\s+/g,".")].filter(Boolean).map(s=>String(s).toLowerCase());
+        const okUser=nomes.includes(uInput)||nomes.some(n=>n.split(".")[0]===uInput);
+        if(!okUser)return false;
+        const senha=String(x.password||"");
+        // senha confere exatamente OU ignorando maiuscula/minuscula (mais tolerante)
+        return senha===pInput||senha.toLowerCase()===pInput.toLowerCase();
+      };
+      const u=list.find(bate)||USERS.find(bate);
       if(u)onLogin(u);
       else{setErr("Usuário ou senha incorretos.");setLoading(false);}
     },400);
