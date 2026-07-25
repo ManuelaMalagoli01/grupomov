@@ -173,6 +173,32 @@ const parseMin=h=>{
 };
 const SETOR_150_TECHS=["matheus","pedro souza","pedro pimente"];
 
+// Mapa Cliente -> Cidade (preenche a cidade automaticamente ao digitar o cliente).
+// A chave e comparada por "contem" (sem acento, minusculo), entao "ROCA" casa com "Roca Alimentos" etc.
+const CLIENTE_CIDADE = {
+  "roca":"Santa Luzia",
+  "farmax":"Divinópolis",
+  "metalsider":"Vespasiano",
+};
+// Mapa Tecnico -> Cliente padrao (quando o tecnico esta fixo num cliente). Preenche cliente e, por tabela, a cidade.
+const TECNICO_CLIENTE = {
+  "luiz ribeiro":"Roca",
+  "arthur geronimo":"Roca",
+};
+const semAcento=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const cidadeDoCliente=(cliente)=>{
+  const c=semAcento(cliente);
+  if(!c)return "";
+  const hit=Object.keys(CLIENTE_CIDADE).find(k=>c.includes(k));
+  return hit?CLIENTE_CIDADE[hit]:"";
+};
+const clienteDoTecnico=(tecnico)=>{
+  const t=semAcento(tecnico);
+  if(!t)return "";
+  const hit=Object.keys(TECNICO_CLIENTE).find(k=>t.includes(k));
+  return hit?TECNICO_CLIENTE[hit]:"";
+};
+
 // ── COMERCIAL: opções de dropdown extraídas da planilha modelo da usuária ──
 const COM_TERMOMETRO = ["Em Análise","25% em Análise","50% em Análise","75% em Análise"];
 const COM_TERMOMETRO_COR = {"Em Análise":"#94A3B8","25% em Análise":"#FBBF24","50% em Análise":"#F97316","75% em Análise":"#EF4444"};
@@ -969,7 +995,12 @@ function RelatorioModal({initial,onClose,onSave}){
   const [pdfLoading,setPdfLoading]=useState(false);
   const [pdfErr,setPdfErr]=useState("");
   const [form,setForm]=useState(initial?{...EMPTY,...initial}:EMPTY);
-  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const upd=(k,v)=>setForm(p=>{
+    const next={...p,[k]:v};
+    if(k==="cliente"){ const cid=cidadeDoCliente(v); if(cid)next.cidade=cid; }
+    if(k==="tecnico"){ const cli=clienteDoTecnico(v); if(cli){ next.cliente=cli; const cid=cidadeDoCliente(cli); if(cid)next.cidade=cid; } }
+    return next;
+  });
   const toggleServico=(sv)=>setForm(p=>{const a=p.servicos||[];return{...p,servicos:a.includes(sv)?a.filter(x=>x!==sv):[...a,sv]};});
   const horas=calcHoras(form.horaInicio,form.horaFim);
   const isPendencia=(form.status||"").includes("pendente_pecas");
@@ -1543,7 +1574,7 @@ function ImportAgendaModal({onClose,onImport}){
       tecnico:String(pick("tecnico")(o)||pick("técnico")(o)||""),
       data:String(pick("data")(o)||pick("date")(o)||""),
       client:String(pick("cliente")(o)||pick("empresa")(o)||pick("client")(o)||""),
-      cidade:String(pick("cidade")(o)||pick("city")(o)||""),
+      cidade:String(pick("cidade")(o)||pick("city")(o)||"")||cidadeDoCliente(String(pick("cliente")(o)||pick("empresa")(o)||pick("client")(o)||"")),
       patrimonio:String(pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
       horimetro:String(pick("horímetro")(o)||pick("horimetro")(o)||""),
       horaEntrada:toTime(String(pick("entrada")(o)||pick("início")(o)||pick("inicio")(o)||"")),
