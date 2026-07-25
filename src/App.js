@@ -6494,7 +6494,34 @@ export default function App(){
           const emFerias=(f)=>f.previsaoIni&&f.previsaoFim&&hoje>=f.previsaoIni&&hoje<=f.previsaoFim;
           const proximas=(f)=>{if(!f.previsaoIni||f.previsaoIni<hoje)return false;const d=new Date(f.previsaoIni)-new Date(hoje);return d>0&&d<=30*86400000;};
           const venc=(f)=>f.limite&&f.limite<hoje&&!f.previsaoIni;
-          const emFeriasN=lista.filter(emFerias).length, proximasN=lista.filter(proximas).length, vencN=lista.filter(venc).length;
+          // Situacao de cada colaborador:
+          // ferias  = esta de ferias AGORA (vermelho)
+          // proximo = ferias comecam nos proximos 30 dias (laranja + alerta)
+          // tirou   = ja tirou ferias este ano (ambos periodos ja terminaram) (cinza)
+          // ok      = ferias programadas para o futuro / ainda tem saldo (verde)
+          const jaTirou=(f)=>{
+            const fimP1=f.previsaoFim, fimP2=f.previsao2Fim;
+            const p1Passou=fimP1&&fimP1<hoje;
+            const p2Existe=!!(f.previsao2Ini||f.previsao2Fim);
+            const p2Passou=fimP2&&fimP2<hoje;
+            // ja tirou se o(s) periodo(s) programado(s) ja terminaram
+            if(p2Existe)return p1Passou&&p2Passou;
+            return p1Passou;
+          };
+          const situacaoFerias=(f)=>{
+            if(emFerias(f))return "ferias";
+            if(proximas(f)||(f.previsao2Ini&&f.previsao2Ini>=hoje&&(new Date(f.previsao2Ini)-new Date(hoje))<=30*86400000))return "proximo";
+            if(jaTirou(f))return "tirou";
+            return "ok";
+          };
+          const SIT_FERIAS={
+            ferias: {bg:"#FFEBEE",borda:"#C62828",txt:"#C62828",l:"🌴 De férias agora"},
+            proximo:{bg:"#FFF3E0",borda:"#E67E00",txt:"#E67E00",l:"⚠️ Próximo das férias"},
+            tirou:  {bg:"#F1F5F9",borda:"#94A3B8",txt:"#64748B",l:"✔️ Já tirou este ano"},
+            ok:     {bg:"#F0FFF5",borda:"#1A7A3C",txt:"#1A7A3C",l:"✅ Programada / com saldo"},
+          };
+          const emFeriasN=lista.filter(emFerias).length, proximasN=lista.filter(f=>situacaoFerias(f)==="proximo").length, vencN=lista.filter(venc).length;
+          const tirouN=lista.filter(f=>situacaoFerias(f)==="tirou").length;
           const th={padding:"8px 8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
           const td={padding:"3px 6px",borderBottom:"1px solid #F1F5F9",fontSize:11,verticalAlign:"middle"};
           const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 5px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
@@ -6509,7 +6536,7 @@ export default function App(){
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",i:"👥"},{l:"Em Férias Agora",v:emFeriasN,c:"#1565C0",i:"🏖️"},{l:"Próximas (30 dias)",v:proximasN,c:"#E67E00",i:"📅"},{l:"Vencidas s/ Programar",v:vencN,c:"#C62828",i:"⚠️"}].map((k,i)=>(
+              {[{l:"De Férias Agora",v:emFeriasN,c:"#C62828",i:"🌴"},{l:"Próximo das Férias (30d)",v:proximasN,c:"#E67E00",i:"⚠️"},{l:"Já Tiraram este Ano",v:tirouN,c:"#64748B",i:"✔️"},{l:"Programada / c/ Saldo",v:lista.filter(f=>situacaoFerias(f)==="ok").length,c:"#1A7A3C",i:"✅"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
                   <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.i} {k.l}</div>
                   <div style={{fontSize:24,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
@@ -6529,9 +6556,13 @@ export default function App(){
                     </tr></thead>
                     <tbody>
                       {filtrada.map(f=>{
-                        const destaque=emFerias(f)?"#EFF6FF":venc(f)?"#FFF0F0":"#FFF";
-                        return(<tr key={f.id} style={{background:destaque,opacity:f.arquivado?0.5:1}}>
-                          <td style={{...td,fontWeight:700,color:"#1A1A1A",minWidth:200}}><input type="text" defaultValue={f.nome||""} onBlur={e=>e.target.value!==(f.nome||"")&&updateFerias(f.id,{nome:e.target.value})} style={{...inp,fontWeight:700}}/></td>
+                        const sit=situacaoFerias(f);
+                        const cfg=SIT_FERIAS[sit];
+                        return(<tr key={f.id} style={{background:cfg.bg,opacity:f.arquivado?0.5:1,borderLeft:`4px solid ${cfg.borda}`}}>
+                          <td style={{...td,fontWeight:700,color:"#1A1A1A",minWidth:200,borderLeft:`4px solid ${cfg.borda}`}}>
+                            <input type="text" defaultValue={f.nome||""} onBlur={e=>e.target.value!==(f.nome||"")&&updateFerias(f.id,{nome:e.target.value})} style={{...inp,fontWeight:700}}/>
+                            <div style={{fontSize:9,fontWeight:700,color:cfg.txt,padding:"1px 6px",marginTop:1}}>{cfg.l}</div>
+                          </td>
                           <td style={td}><input type="date" defaultValue={f.admissao||""} onBlur={e=>e.target.value!==(f.admissao||"")&&updateFerias(f.id,{admissao:e.target.value})} style={{...inp,width:130}}/></td>
                           <td style={td}><input type="text" defaultValue={f.depAtual||""} onBlur={e=>e.target.value!==(f.depAtual||"")&&updateFerias(f.id,{depAtual:e.target.value})} style={{...inp,width:120}}/></td>
                           <td style={td}><select value={f.setor||""} onChange={e=>updateFerias(f.id,{setor:e.target.value})} style={{...inp,width:180,cursor:"pointer"}}>{FERIAS_SETORES.map(s=><option key={s} value={s}>{s}</option>)}{f.setor&&!FERIAS_SETORES.includes(f.setor)&&<option value={f.setor}>{f.setor}</option>}</select></td>
