@@ -2714,6 +2714,8 @@ export default function App(){
   const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState(""); const [afAprov,setAfAprov]=useState("todos");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
   const [saiSearch,setSaiSearch]=useState(""); const [saiFrom,setSaiFrom]=useState(""); const [saiTo,setSaiTo]=useState(""); const [saiMes,setSaiMes]=useState(""); const [saiAno,setSaiAno]=useState("");
+  const [showFiltrosSai,setShowFiltrosSai]=useState(false);
+  const [saiFNatureza,setSaiFNatureza]=useState(""); const [saiFSituacao,setSaiFSituacao]=useState(""); const [saiFStatusReq,setSaiFStatusReq]=useState("todos"); const [saiFStatusFinal,setSaiFStatusFinal]=useState("todos"); const [saiFEmpresa,setSaiFEmpresa]=useState(""); const [saiFReq,setSaiFReq]=useState(""); const [saiFPat,setSaiFPat]=useState(""); const [saiFPeca,setSaiFPeca]=useState("");
   const [finSearch,setFinSearch]=useState(""); const [finFrom,setFinFrom]=useState(""); const [finTo,setFinTo]=useState(""); const [finMes,setFinMes]=useState(""); const [finAno,setFinAno]=useState("");
   const [froSearch,setFroSearch]=useState(""); const [froFrom,setFroFrom]=useState(""); const [froTo,setFroTo]=useState(""); const [froMes,setFroMes]=useState(""); const [froAno,setFroAno]=useState("");
   const [rhSearch,setRhSearch]=useState(""); const [rhFrom,setRhFrom]=useState(""); const [rhTo,setRhTo]=useState(""); const [rhMes,setRhMes]=useState(""); const [rhAno,setRhAno]=useState("");
@@ -5443,15 +5445,31 @@ export default function App(){
           const rupturas=lista.filter(s=>s.statusReq==="ruptura").length;
           const atendidos=lista.filter(s=>s.statusReq==="atendido").length;
           const pend=lista.filter(s=>s.statusFinal==="pendente"||!s.statusFinal).length;
+          const inclui=(campo,q)=>String(campo||"").toLowerCase().includes(q.toLowerCase());
           const applyFilter=(r,d=r.data||"")=>{
-            if(saiSearch){const q=saiSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.requerente||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.codigo||"").toLowerCase().includes(q)||(r.req||"").toLowerCase().includes(q)||(r.relSolicitacao||"").toLowerCase().includes(q)||(r.relatorioAplicado||"").toLowerCase().includes(q)))return false;}
+            if(saiSearch){const q=saiSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.requerente||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.peca||"").toLowerCase().includes(q)||(r.codigo||"").toLowerCase().includes(q)||(r.req||"").toLowerCase().includes(q)||(r.natureza||"").toLowerCase().includes(q)||(r.situacaoItem||"").toLowerCase().includes(q)||(r.relSolicitacao||"").toLowerCase().includes(q)||(r.relatorioAplicado||"").toLowerCase().includes(q)||(r.obs||"").toLowerCase().includes(q)))return false;}
             if(saiFrom&&d<saiFrom)return false;
             if(saiTo&&d>saiTo)return false;
             if(saiMes&&!d.slice(5,7).startsWith(saiMes))return false;
             if(saiAno&&!d.startsWith(saiAno))return false;
+            if(saiFNatureza&&!inclui(r.natureza,saiFNatureza))return false;
+            if(saiFSituacao&&!inclui(r.situacaoItem,saiFSituacao))return false;
+            if(saiFStatusReq!=="todos"&&(r.statusReq||"")!==saiFStatusReq)return false;
+            if(saiFStatusFinal!=="todos"&&(r.statusFinal||"pendente")!==saiFStatusFinal)return false;
+            if(saiFEmpresa&&!(inclui(r.empresa,saiFEmpresa)||inclui(r.requerente,saiFEmpresa)))return false;
+            if(saiFReq&&!inclui(r.req,saiFReq))return false;
+            if(saiFPat&&!inclui(r.patrimonio,saiFPat))return false;
+            if(saiFPeca&&!(inclui(r.peca,saiFPeca)||inclui(r.codigo,saiFPeca)))return false;
             return true;
           };
-          const listaFil=lista.filter(applyFilter);
+          // Data das requisicoes: mais recente primeiro (mes atual voltando ao inicial)
+          const listaFil=lista.filter(applyFilter).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const hasFiltroSai=saiSearch||saiFrom||saiTo||saiMes||saiAno||saiFNatureza||saiFSituacao||saiFStatusReq!=="todos"||saiFStatusFinal!=="todos"||saiFEmpresa||saiFReq||saiFPat||saiFPeca;
+          const limparFiltrosSai=()=>{setSaiSearch("");setSaiFrom("");setSaiTo("");setSaiMes("");setSaiAno("");setSaiFNatureza("");setSaiFSituacao("");setSaiFStatusReq("todos");setSaiFStatusFinal("todos");setSaiFEmpresa("");setSaiFReq("");setSaiFPat("");setSaiFPeca("");};
+          const naturezasSai=[...new Set(lista.map(r=>r.natureza).filter(Boolean))].sort();
+          const situacoesSai=[...new Set(lista.map(r=>r.situacaoItem).filter(Boolean))].sort();
+          const fLbl={display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:3};
+          const fInp={width:"100%",fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box",fontFamily:"inherit"};
           const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 6px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
           const th={padding:"8px 8px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.5,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
           const td={padding:"2px 4px",borderBottom:"1px solid #F1F5F9",verticalAlign:"middle"};
@@ -5482,14 +5500,32 @@ export default function App(){
                 </div>
               ))}
             </div>
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={saiSearch} onChange={e=>setSaiSearch(e.target.value)} placeholder="Buscar requerente, empresa, PAT, peça, REQ, código..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={saiFrom} onChange={e=>setSaiFrom(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={saiTo} onChange={e=>setSaiTo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/></div>
-              <select value={saiMes} onChange={e=>setSaiMes(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
-              <select value={saiAno} onChange={e=>setSaiAno(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
-              {(saiSearch||saiFrom||saiTo||saiMes||saiAno)&&<button onClick={()=>{setSaiSearch('');setSaiFrom('');setSaiTo('');setSaiMes('');setSaiAno('');}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
+            <button onClick={()=>setShowFiltrosSai(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosSai?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:13}}>🔍</span><span style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {hasFiltroSai&&<span style={{fontSize:9,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 8px"}}>ativo</span>}
+              <span style={{fontSize:9,color:"#94A3B8",marginLeft:4}}>{showFiltrosSai?"▲":"▼"}</span>
+            </button>
+            {showFiltrosSai&&<div className="card" style={{padding:"12px 14px",marginBottom:14}}>
+              <div style={{position:"relative",marginBottom:10}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={saiSearch} onChange={e=>setSaiSearch(e.target.value)} placeholder="Busca geral (qualquer campo)..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:8}}>
+                <div><label style={fLbl}>Data De</label><input type="date" value={saiFrom} onChange={e=>setSaiFrom(e.target.value)} style={fInp}/></div>
+                <div><label style={fLbl}>Data Até</label><input type="date" value={saiTo} onChange={e=>setSaiTo(e.target.value)} style={fInp}/></div>
+                <div><label style={fLbl}>Mês</label><select value={saiMes} onChange={e=>setSaiMes(e.target.value)} style={fInp}><option value="">Todos</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select></div>
+                <div><label style={fLbl}>Ano</label><select value={saiAno} onChange={e=>setSaiAno(e.target.value)} style={fInp}><option value="">Todos</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select></div>
+                <div><label style={fLbl}>REQ</label><input type="text" value={saiFReq} onChange={e=>setSaiFReq(e.target.value)} placeholder="Nº requisição" style={fInp}/></div>
+                <div><label style={fLbl}>Requerente / Empresa</label><input type="text" value={saiFEmpresa} onChange={e=>setSaiFEmpresa(e.target.value)} placeholder="Nome" style={fInp}/></div>
+                <div><label style={fLbl}>PAT</label><input type="text" value={saiFPat} onChange={e=>setSaiFPat(e.target.value)} placeholder="Patrimônio" style={fInp}/></div>
+                <div><label style={fLbl}>Peça / Código</label><input type="text" value={saiFPeca} onChange={e=>setSaiFPeca(e.target.value)} placeholder="Peça ou código" style={fInp}/></div>
+                <div><label style={fLbl}>Natureza</label><select value={saiFNatureza} onChange={e=>setSaiFNatureza(e.target.value)} style={fInp}><option value="">Todas</option>{naturezasSai.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+                <div><label style={fLbl}>Situação</label><select value={saiFSituacao} onChange={e=>setSaiFSituacao(e.target.value)} style={fInp}><option value="">Todas</option>{situacoesSai.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                <div><label style={fLbl}>Status REQ</label><select value={saiFStatusReq} onChange={e=>setSaiFStatusReq(e.target.value)} style={fInp}><option value="todos">Todos</option><option value="atendido">Atendido</option><option value="ruptura">Ruptura</option><option value="">Sem status</option></select></div>
+                <div><label style={fLbl}>Status Final</label><select value={saiFStatusFinal} onChange={e=>setSaiFStatusFinal(e.target.value)} style={fInp}><option value="todos">Todos</option><option value="pendente">Pendente</option><option value="concluido">Concluído</option></select></div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+                <span style={{fontSize:11,color:"#94A3B8"}}>{listaFil.length} de {lista.length} exibindo</span>
+                {hasFiltroSai&&<button onClick={limparFiltrosSai} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Filtros</button>}
+              </div>
+            </div>}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600}}>Nenhuma requisição</div></div>):(
               <div className="card" style={{padding:0,overflow:"hidden"}}>
                 <div style={{overflowX:"auto",maxHeight:"calc(100vh - 340px)"}}>
