@@ -3899,7 +3899,7 @@ export default function App(){
             </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(360px,1fr))",gap:14}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:10}}>
                 {lista.map(r=>{
                   const isCorr=r.atendimento==="corretivo";
                   const st=escSt(r.status);
@@ -3909,34 +3909,34 @@ export default function App(){
                   const alertColor={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853",neutro:"#94A3B8"}[alerta.level];
                   const urgenteR=alerta.level==="urgente";
                   return(<div key={r.id} className="card" style={{padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1,border:urgenteR?"1.5px solid #C62828":undefined,animation:urgenteR?"pulseUrgente 2s ease-in-out infinite":undefined}}>
-                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                        <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stColor,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
-                        {alerta.label&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:alertColor,borderRadius:20,padding:"3px 10px"}}>{urgenteR?"🔴 ":""}{alerta.label}</span>}
+                    <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:5}}>
+                      <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                        <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stColor,borderRadius:20,padding:"2px 9px"}}>{st.l}</span>
+                        {alerta.label&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:alertColor,borderRadius:20,padding:"2px 8px"}}>{urgenteR?"🔴 ":""}{alerta.label}</span>}
                       </div>
-                      <div style={{display:"flex",gap:4}}>
-                        <button onClick={()=>gerarPDFCard(`Relatório - ${r.cliente||r.empresa||"Sem Cliente"}`,[["Cliente",r.cliente||r.empresa],["Data",fmtDataBR(r.data||r.dataAtendimento)],["Técnico",r.tecnico],["Cidade",r.cidade],["Tipo",isCorr?"Corretivo":"Preventivo"],["PAT",r.patrimonio],["Modelo",r.modelo],["Horímetro",r.horimetro],["Relatório",r.relatorio],["Chamado",r.chamado],["Início",r.horaInicio],["Fim",r.horaFim],["Total",r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)],["Serviços",(r.servicos||[]).join(", ")],["Status",st.l],["Pendências",r.pendencias],["Observação",r.obs]],`PAT ${r.patrimonio||"—"} · ${fmtDataBR(r.data||r.dataAtendimento)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>📄</button>
-                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:600}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:r.atendimento==="corretivo"?"corretiva_concluida":"preventiva_concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>{r.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                      <div style={{display:"flex",gap:3}}>
+                        <button onClick={()=>gerarPDFCard(`Relatório - ${r.cliente||r.empresa||"Sem Cliente"}`,[["Cliente",r.cliente||r.empresa],["Data",fmtDataBR(r.data||r.dataAtendimento)],["Técnico",r.tecnico],["Cidade",r.cidade],["Tipo",isCorr?"Corretivo":"Preventivo"],["PAT",r.patrimonio],["Modelo",r.modelo],["Horímetro",r.horimetro],["Relatório",r.relatorio],["Chamado",r.chamado],["Início",r.horaInicio],["Fim",r.horaFim],["Total",r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)],["Serviços",(r.servicos||[]).join(", ")],["Status",st.l],["Pendências",r.pendencias],["Observação",r.obs]],`PAT ${r.patrimonio||"—"} · ${fmtDataBR(r.data||r.dataAtendimento)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:5,color:"#1A1A1A",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:700}}>📄</button>
+                        <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:600}}>✏️</button>
+                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:r.atendimento==="corretivo"?"corretiva_concluida":"preventiva_concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:700}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
-                      {alerta.achados&&alerta.achados.length>0&&<div title={`Encontrado: ${alerta.achados.join(", ")}`} style={{fontSize:10,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:8,padding:"4px 8px"}}>🔎 {alerta.achados.slice(0,3).join(", ")}</div>}
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{fmtDataBR(r.data||r.dataAtendimento)} · PAT {r.patrimonio||"—"}</div></div>
-                        <span style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap"}}>{isCorr?"🔧 Corretivo":"📋 Preventivo"}</span>
+                    <div style={{padding:"9px 10px",display:"flex",flexDirection:"column",gap:7}}>
+                      {alerta.achados&&alerta.achados.length>0&&<div title={`Encontrado: ${alerta.achados.join(", ")}`} style={{fontSize:9,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:6,padding:"3px 7px"}}>🔎 {alerta.achados.slice(0,3).join(", ")}</div>}
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:1}}>{r.cliente||r.empresa||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(r.data||r.dataAtendimento)} · PAT {r.patrimonio||"—"}</div></div>
+                        <span style={{fontSize:9,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"2px 8px",whiteSpace:"nowrap"}}>{isCorr?"🔧 Corr":"📋 Prev"}</span>
                       </div>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.relatorio||"—"}</div></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Modelo</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.modelo||"—"}</div></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.chamado||"—"}</div></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Horímetro</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.horimetro||"—"}</div></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Técnico</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.tecnico||"—"}</div></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Cidade</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{r.cidade||"—"}</div></div>
-                        <div style={{gridColumn:"span 3"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Horário</div><div style={{fontSize:12,fontWeight:700,color:"#14532D"}}>{r.horaInicio||"—"} → {r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})</div></div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:6,columnGap:8,paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Relatório</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.relatorio||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Modelo</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.modelo||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Chamado</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.chamado||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Horímetro</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.horimetro||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Técnico</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.tecnico||"—"}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Cidade</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A"}}>{r.cidade||"—"}</div></div>
+                        <div style={{gridColumn:"span 3"}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Horário</div><div style={{fontSize:11,fontWeight:700,color:"#14532D"}}>{r.horaInicio||"—"} → {r.horaFim||"—"} ({r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)||"—"})</div></div>
                       </div>
-                      {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:9,padding:"2px 8px",borderRadius:10,background:"#1A1A1A",color:"#F5C200",fontWeight:700}}>{sv}</span>)}</div>}
+                      {(r.servicos||[]).length>0&&<div style={{display:"flex",gap:3,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>{r.servicos.map(sv=><span key={sv} style={{fontSize:8,padding:"2px 7px",borderRadius:10,background:"#1A1A1A",color:"#F5C200",fontWeight:700}}>{sv}</span>)}</div>}
                       <select value={r.status||"agendada"} onChange={e=>updateReport(r.id,{status:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:600}}>
                         {ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}
                       </select>
