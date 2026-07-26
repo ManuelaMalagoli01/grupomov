@@ -7010,6 +7010,7 @@ export default function App(){
           const filtrada=lista.filter(x=>{
             if(entregaFiltro==="retrabalho"&&!x.retrabalho)return false;
             if(entregaFiltro==="garantia_ativa"){const fg=x.fimGarantia;if(!fg||fg<hoje)return false;}
+            if(["pendente100","aguarda500","aguarda1000","completa"].includes(entregaFiltro)&&statusPreventiva(x).k!==entregaFiltro)return false;
             const ds=x.dataSolicitacao||"";
             if(entregaDe&&ds<entregaDe)return false;
             if(entregaAte&&ds>entregaAte)return false;
@@ -7019,6 +7020,13 @@ export default function App(){
           }).sort((a,b)=>String(b.dataSolicitacao||"").localeCompare(String(a.dataSolicitacao||"")));
           // Fim de garantia = 6 meses após a data de entrega técnica
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
+          // Status da preventiva evolui conforme as etapas concluidas
+          const statusPreventiva=(x)=>{
+            if(x.prev1000Aprov)return {k:"completa",l:"🏆 Preventiva de garantia completa",c:"#15803D",bg:"#DCFCE7"};
+            if(x.prev500Aprov)return {k:"aguarda1000",l:"✅ 500h concluída · aguardando 1000h",c:"#0D9488",bg:"#F0FDFA"};
+            if(x.prev100Aprov)return {k:"aguarda500",l:"✅ 100h concluída · aguardando 500h",c:"#1565C0",bg:"#EFF6FF"};
+            return {k:"pendente100",l:"⏳ Pendente marcação preventiva 100h",c:"#E67E00",bg:"#FFF8F0"};
+          };
           // Comissão recebida menos se houver retrabalho
           const comissaoLiquida=(x)=>{let c=pv(x.comissao);if(x.retrabalho)c-=pv(x.valorRetrabalho);return c;};
           // KPIs
@@ -7109,7 +7117,7 @@ export default function App(){
               </div>
               <div style={{position:"relative",marginBottom:10}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#94A3B8",fontSize:15}}>🔍</span><input type="text" value={entregaSearch} onChange={e=>setEntregaSearch(e.target.value)} placeholder="Buscar por cliente, nome, NF, chamado, MOV, e-mail, técnico..." style={{width:"100%",padding:"11px 12px 11px 36px",fontSize:13,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
-                <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Situação</label><select value={entregaFiltro} onChange={e=>setEntregaFiltro(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}><option value="todos">Todas</option><option value="garantia_ativa">🛡️ Em garantia</option><option value="retrabalho">⚠️ Com retrabalho</option></select></div>
+                <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Situação</label><select value={entregaFiltro} onChange={e=>setEntregaFiltro(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}><option value="todos">Todas</option><option value="garantia_ativa">🛡️ Em garantia</option><option value="retrabalho">⚠️ Com retrabalho</option><option disabled>── Preventiva ──</option><option value="pendente100">⏳ Pendente 100h</option><option value="aguarda500">✅ Aguardando 500h</option><option value="aguarda1000">✅ Aguardando 1000h</option><option value="completa">🏆 Garantia completa</option></select></div>
                 <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Data De</label><input type="date" value={entregaDe} onChange={e=>setEntregaDe(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
                 <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Data Até</label><input type="date" value={entregaAte} onChange={e=>setEntregaAte(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
                 <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Mês</label><select value={entregaMes} onChange={e=>setEntregaMes(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}><option value="">Todos</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select></div>
@@ -7121,6 +7129,7 @@ export default function App(){
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:12}}>
                 {filtrada.map(x=>{
                   const garAtiva=x.fimGarantia&&x.fimGarantia>=hoje;
+                  const stPrev=statusPreventiva(x);
                   const comLiq=comissaoLiquida(x);
                   const gasto=pv(x.gastoCombustivel)+pv(x.gastoAlimentacao);
                   return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${x.retrabalho?"#C62828":garAtiva?"#0D9488":"#1565C0"}`}}>
@@ -7133,6 +7142,7 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+                      <div style={{background:stPrev.bg,color:stPrev.c,borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:800,textAlign:"center"}}>{stPrev.l}</div>
                       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                         {garAtiva&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0D9488",borderRadius:10,padding:"2px 9px"}}>🛡️ Garantia até {fmtDataBR(x.fimGarantia)}</span>}
                         {x.retrabalho&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ Retrabalho -{fmtR(pv(x.valorRetrabalho))}</span>}
