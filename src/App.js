@@ -3027,6 +3027,7 @@ export default function App(){
   const [agpStatus,setAgpStatus]=useState("todos");
   const [agpCidade,setAgpCidade]=useState("todas");
   const [agpCliente,setAgpCliente]=useState("");
+  const [agpData,setAgpData]=useState("");
   const [agpMonth,setAgpMonth]=useState(TODAY.getMonth());
   const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
   const [agpSelectedDay,setAgpSelectedDay]=useState(null);
@@ -5760,7 +5761,7 @@ export default function App(){
               <button onClick={()=>setShowFiltrosAgp(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosAgp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
                 <span style={{fontSize:11}}>🔍</span>
                 <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
                 <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosAgp?"▲":"▼"}</span>
               </button>
               {showFiltrosAgp&&<div className="card" style={{padding:"6px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
@@ -5775,9 +5776,10 @@ export default function App(){
                 <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                 <select value={agpCidade} onChange={e=>setAgpCidade(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todas">📍 Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c} value={c}>{c}</option>)}</select>
                 <input type="text" value={agpCliente} onChange={e=>setAgpCliente(e.target.value)} placeholder="🔍 Buscar cliente..." style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",minWidth:160}}/>
+                <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:700}}>📅 Ir para data</span><input type="date" value={agpData} onChange={e=>{const v=e.target.value;setAgpData(v);if(v){const dt=new Date(v+"T12:00:00");setAgpMonth(dt.getMonth());setAgpYear(dt.getFullYear());}}} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}/></div>
                 <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                 <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente)&&<button onClick={()=>{setAgpRegion("todas");setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<button onClick={()=>{setAgpRegion("todas");setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");setAgpData("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
 
               {/* Novo Atendimento */}
@@ -5903,12 +5905,13 @@ export default function App(){
                         if(!dn)return<div key={i} style={{minHeight:520,background:"#FAFAFA",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0"}}/>;
                         const dt=`${ym}-${String(dn).padStart(2,"0")}`;
                         const isToday=dt===TODAY_STR;
+                        const isBuscado=agpData&&dt===agpData;
                         const items=porDia[dn]||[];
                         const ocupado=agpTech!=="todos"&&items.length>0;
                         return(
-                          <div key={i} style={{height:520,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent",display:"flex",flexDirection:"column"}}>
+                          <div key={i} style={{height:520,padding:"6px 7px",borderRight:"1px solid #F0F0F0",borderBottom:"1px solid #F0F0F0",background:isBuscado?"#EFF6FF":isToday?"#FFFDF0":"#FFF",transition:"background .15s",borderLeft:isBuscado?"3px solid #1565C0":isToday?"3px solid #F5C200":ocupado?"3px solid #94A3B8":"3px solid transparent",display:"flex",flexDirection:"column",boxShadow:isBuscado?"inset 0 0 0 2px #1565C0":undefined}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5,flexShrink:0}}>
-                              <div style={{fontSize:12,fontWeight:isToday?900:700,color:isToday?"#C47D00":"#94A3B8"}}>{isToday?"● ":""}{dn}</div>
+                              <div style={{fontSize:12,fontWeight:(isToday||isBuscado)?900:700,color:isBuscado?"#1565C0":isToday?"#C47D00":"#94A3B8"}}>{isBuscado?"🔎 ":isToday?"● ":""}{dn}</div>
                               {ocupado&&<span style={{fontSize:8,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:8,padding:"1px 6px"}}>ocupado</span>}
                             </div>
                             <div style={{display:"flex",flexDirection:"column",gap:6,overflowY:"auto",flex:1,paddingRight:2}}>
