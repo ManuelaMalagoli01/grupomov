@@ -207,7 +207,7 @@ const VALE_TEC_STATUS = {vale_autorizado:{l:"Vale Autorizado",c:"#B45309",bg:"#F
 const VALE_TEC_AUTORIZACAO = ["Gustavo","Gilberto"];
 
 // Setores internos (Dep. Atual / Setor Interno) para o dropdown de Férias
-const FERIAS_SETORES = ["Oficina Externa - Gustavo","Oficina Externa Roca","Centro-Oeste - Gustavo","Oficina Interna - Hebert","Oficina Interna - Matheus","Manutenção","Administrativo","Outro"];
+const FERIAS_SETORES = ["Oficina Externa - Gustavo","Oficina Externa Roca","Centro-Oeste - Gustavo","Oficina Interna - Hebert","Oficina Interna - Matheus","Manutenção ADM","Manutenção","Administrativo","Outro"];
 // Seed inicial de Férias de Colaboradores (base: planilha 2026). Datas em ISO. admissao/limite/previsao.
 const FERIAS_SEED = [
   {nome:"ANDERSON DE ALMEIDA",             admissao:"2004-01-02", depAtual:"MANUTENÇÃO B", setor:"Oficina Externa - Gustavo", aquisitivoIni:"2025-01-02", aquisitivoFim:"2026-01-01", limite:"2026-12-01", saldoDias:"12", previsaoIni:"2026-07-01", previsaoFim:"2026-07-12"},
@@ -224,13 +224,13 @@ const FERIAS_SEED = [
   {nome:"LUCIO MAURO DA SILVA",            admissao:"2025-01-06", depAtual:"MANUTENÇÃO A", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-01-06", aquisitivoFim:"2026-01-05", limite:"2026-12-05", saldoDias:"12", previsaoIni:"2026-05-20", previsaoFim:"2026-05-31"},
   {nome:"LUIZ AUGUSTO SOARES RIBEIRO",     admissao:"2024-07-01", depAtual:"MANUTENÇÃO B", setor:"Oficina Externa Roca", aquisitivoIni:"2024-07-01", aquisitivoFim:"2025-06-30", limite:"2027-05-30", saldoDias:"12", previsaoIni:"2026-08-10", previsaoFim:"2026-08-19"},
   {nome:"LUIZ GUILHERME GOMES PINHEIRO",   admissao:"2025-03-10", depAtual:"MANUTENÇÃO B", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-03-10", aquisitivoFim:"2026-03-09", limite:"2027-02-06", saldoDias:"30", previsaoIni:"2026-06-01", previsaoFim:"2026-06-30"},
-  {nome:"MANUELA PIRES MALAGOLI",          admissao:"2025-03-10", depAtual:"MANUTENÇÃO", setor:"Manutenção", aquisitivoIni:"2025-03-10", aquisitivoFim:"2026-03-09", limite:"2027-02-06", saldoDias:"30", previsaoIni:"2026-10-01", previsaoFim:"2026-10-14", previsao2Ini:"2027-01-04", previsao2Fim:"2027-01-18"},
+  {nome:"MANUELA PIRES MALAGOLI",          admissao:"2025-03-10", depAtual:"MANUTENÇÃO ADM", setor:"Manutenção ADM", aquisitivoIni:"2025-03-10", aquisitivoFim:"2026-03-09", limite:"2027-02-06", saldoDias:"30", previsaoIni:"2026-10-01", previsaoFim:"2026-10-14", previsao2Ini:"2027-01-04", previsao2Fim:"2027-01-18"},
   {nome:"MATHEUS FELIPE MENEZES",          admissao:"2023-02-16", depAtual:"MANUTENÇÃO A", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-02-16", aquisitivoFim:"2026-02-15", limite:"2027-01-15", saldoDias:"12", previsaoIni:"2026-10-01", previsaoFim:"2026-10-12"},
   {nome:"PEDRO HENRIQUE FONSECA SOUZA",    admissao:"2025-09-01", depAtual:"MANUTENÇÃO A", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-09-01", aquisitivoFim:"2026-08-31", limite:"2027-07-31", saldoDias:"30", previsaoIni:"2026-09-01", previsaoFim:"2026-09-30"},
   {nome:"PEDRO HENRIQUE PIMENTEL PINTO",   admissao:"2025-03-10", depAtual:"MANUTENÇÃO B", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-03-10", aquisitivoFim:"2026-03-09", limite:"2027-02-06", saldoDias:"30", previsaoIni:"2026-08-03", previsaoFim:"2026-09-01"},
   {nome:"RAFAEL GUSTAVO FONSECA SANTOS",   admissao:"2024-04-08", depAtual:"MANUTENÇÃO A", setor:"Oficina Externa - Gustavo", aquisitivoIni:"2024-04-08", aquisitivoFim:"2026-04-07", limite:"2027-03-07", saldoDias:"12", previsaoIni:"2026-08-03", previsaoFim:"2026-08-14"},
   {nome:"REGINALDO GONCALVES DE SOUZA",    admissao:"2024-10-01", depAtual:"MANUTENÇÃO B", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-10-01", aquisitivoFim:"2026-09-30", limite:"2027-08-30", saldoDias:"12", previsaoIni:"2026-10-20", previsaoFim:"2026-10-31"},
-  {nome:"RENATO ROCHA",                    admissao:"2026-04-13", depAtual:"MANUTENÇÃO", setor:"Manutenção", aquisitivoIni:"2026-04-13", aquisitivoFim:"2027-04-12", limite:"2028-03-12", saldoDias:"", previsaoIni:"", previsaoFim:""},
+  {nome:"RENATO ROCHA",                    admissao:"2026-04-13", depAtual:"MANUTENÇÃO ADM", setor:"Manutenção ADM", aquisitivoIni:"2026-04-13", aquisitivoFim:"2027-04-12", limite:"2028-03-12", saldoDias:"", previsaoIni:"", previsaoFim:""},
   {nome:"BRENO GOMES",                     admissao:"2026-07-20", depAtual:"MANUTENÇÃO", setor:"Manutenção", aquisitivoIni:"2026-07-20", aquisitivoFim:"2027-07-19", limite:"2028-06-19", saldoDias:"", previsaoIni:"", previsaoFim:""},
 ];
 // ── A FATURAR / PROSPECÇÕES (baseado no Farol OV Revenda) ──
