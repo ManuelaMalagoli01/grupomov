@@ -231,7 +231,7 @@ const FERIAS_SEED = [
   {nome:"RAFAEL GUSTAVO FONSECA SANTOS",   admissao:"2024-04-08", depAtual:"MANUTENÇÃO A", setor:"Oficina Externa - Gustavo", aquisitivoIni:"2024-04-08", aquisitivoFim:"2026-04-07", limite:"2027-03-07", saldoDias:"12", previsaoIni:"2026-08-03", previsaoFim:"2026-08-14"},
   {nome:"REGINALDO GONCALVES DE SOUZA",    admissao:"2024-10-01", depAtual:"MANUTENÇÃO B", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-10-01", aquisitivoFim:"2026-09-30", limite:"2027-08-30", saldoDias:"12", previsaoIni:"2026-10-20", previsaoFim:"2026-10-31"},
   {nome:"RENATO ROCHA",                    admissao:"2026-04-13", depAtual:"MANUTENÇÃO ADM", setor:"Manutenção ADM", aquisitivoIni:"2026-04-13", aquisitivoFim:"2027-04-12", limite:"2028-03-12", saldoDias:"", previsaoIni:"", previsaoFim:""},
-  {nome:"BRENO GOMES",                     admissao:"2026-07-20", depAtual:"MANUTENÇÃO", setor:"Manutenção", aquisitivoIni:"2026-07-20", aquisitivoFim:"2027-07-19", limite:"2028-06-19", saldoDias:"", previsaoIni:"", previsaoFim:""},
+  {nome:"BRENO GOMES",                     admissao:"2026-07-20", depAtual:"MANUTENÇÃO A", setor:"Oficina Interna - Hebert", aquisitivoIni:"2026-07-20", aquisitivoFim:"2027-07-19", limite:"2028-06-19", saldoDias:"", previsaoIni:"", previsaoFim:""},
 ];
 // ── A FATURAR / PROSPECÇÕES (baseado no Farol OV Revenda) ──
 const AF_STATUS = {
