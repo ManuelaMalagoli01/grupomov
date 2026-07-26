@@ -7010,6 +7010,10 @@ export default function App(){
           const filtrada=lista.filter(x=>{
             if(entregaFiltro==="retrabalho"&&!x.retrabalho)return false;
             if(entregaFiltro==="garantia_ativa"){const fg=x.fimGarantia;if(!fg||fg<hoje)return false;}
+            if(entregaFiltro==="pendente100"&&!(!x.prev100Aprov))return false;
+            if(entregaFiltro==="aguarda500"&&!(x.prev100Aprov&&!x.prev500Aprov))return false;
+            if(entregaFiltro==="aguarda1000"&&!(x.prev500Aprov&&!x.prev1000Aprov))return false;
+            if(entregaFiltro==="completa"&&!(x.prev100Aprov&&x.prev500Aprov&&x.prev1000Aprov))return false;
             if(["pendente100","aguarda500","aguarda1000","completa"].includes(entregaFiltro)&&statusPreventiva(x).k!==entregaFiltro)return false;
             const ds=x.dataSolicitacao||"";
             if(entregaDe&&ds<entregaDe)return false;
