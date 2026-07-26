@@ -3796,6 +3796,58 @@ export default function App(){
             </div>
           </div>
         )}
+        {feriasModal&&feriasEdit&&(()=>{
+          const d=feriasEdit;
+          const upd=(k,v)=>setFeriasEdit(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const salvar=()=>{
+            if(!d.nome||!d.nome.trim()){alert("Informe o nome do colaborador.");return;}
+            if(d.id){ updateFerias(d.id,d); }
+            else{ const row={...d,id:`FER${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoEm:new Date().toISOString()}; setFerias(p=>[row,...p]); db.save("ferias_colaboradores",row.id,row); }
+            notify("✅ Colaborador salvo!"); setFeriasModal(false); setFeriasEdit(null);
+          };
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFeriasModal(false);setFeriasEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"🏖️ Novo"} Colaborador — Férias</div><button onClick={()=>{setFeriasModal(false);setFeriasEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                <div><label style={lbl}>Nome do Colaborador *</label><input type="text" value={d.nome||""} onChange={e=>upd("nome",e.target.value)} placeholder="Nome completo" style={inp} autoFocus/></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Data de Admissão</label><input type="date" value={d.admissao||""} onChange={e=>upd("admissao",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Dep. Atual</label><input type="text" value={d.depAtual||""} onChange={e=>upd("depAtual",e.target.value)} placeholder="Ex: MANUTENÇÃO A" style={inp}/></div>
+                </div>
+                <div><label style={lbl}>Setor Interno</label><select value={d.setor||FERIAS_SETORES[0]} onChange={e=>upd("setor",e.target.value)} style={inp}>{FERIAS_SETORES.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Aquisitivo Início</label><input type="date" value={d.aquisitivoIni||""} onChange={e=>upd("aquisitivoIni",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Aquisitivo Fim</label><input type="date" value={d.aquisitivoFim||""} onChange={e=>upd("aquisitivoFim",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Data Limite</label><input type="date" value={d.limite||""} onChange={e=>upd("limite",e.target.value)} style={inp}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:12}}>
+                  <div><label style={lbl}>Saldo (dias)</label><input type="number" value={d.saldoDias||""} onChange={e=>upd("saldoDias",e.target.value)} placeholder="Ex: 30" style={inp}/></div>
+                  <div/>
+                </div>
+                <div style={{background:"#F0F9FF",border:"1px solid #BAE6FD",borderRadius:10,padding:12}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#0369A1",marginBottom:8,textTransform:"uppercase",letterSpacing:.4}}>🏖️ 1ª Parcela de Férias</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Início</label><input type="date" value={d.previsaoIni||""} onChange={e=>upd("previsaoIni",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Fim</label><input type="date" value={d.previsaoFim||""} onChange={e=>upd("previsaoFim",e.target.value)} style={inp}/></div>
+                  </div>
+                </div>
+                <div style={{background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:10,padding:12}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#64748B",marginBottom:8,textTransform:"uppercase",letterSpacing:.4}}>🏖️ 2ª Parcela (opcional)</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Início</label><input type="date" value={d.previsao2Ini||""} onChange={e=>upd("previsao2Ini",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Fim</label><input type="date" value={d.previsao2Fim||""} onChange={e=>upd("previsao2Fim",e.target.value)} style={inp}/></div>
+                  </div>
+                </div>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
+                  <BtnG onClick={()=>{setFeriasModal(false);setFeriasEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>);
+        })()}
         {valeTecModal&&(
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setValeTecModal(false);setValeTecEdit(null);}}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
@@ -6541,7 +6593,7 @@ export default function App(){
                 <select value="2026" disabled style={{fontSize:12,padding:"8px 12px",borderRadius:20,border:"1.5px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontWeight:800,cursor:"default"}}><option>2026</option></select>
                 <button onClick={()=>setShowArqFerias(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFerias?"#1A1A1A":"#FFF",color:showArqFerias?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFerias?"✕ Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada,"ferias_colaboradores_2026",[{key:"nome",label:"Nome"},{key:"admissao",label:"Data Admissão"},{key:"depAtual",label:"Dep. Atual"},{key:"setor",label:"Setor Interno"},{key:"aquisitivoIni",label:"Aquisitivo Início"},{key:"aquisitivoFim",label:"Aquisitivo Fim"},{key:"limite",label:"Data Limite"},{key:"saldoDias",label:"Saldo Dias"},{key:"previsaoIni",label:"Previsão Início"},{key:"previsaoFim",label:"Previsão Fim"},{key:"previsao2Ini",label:"2ª Parcela Início"},{key:"previsao2Fim",label:"2ª Parcela Fim"}])}/>
-                <BtnY onClick={()=>{const row={id:`FER${Date.now()}_${Math.floor(Math.random()*9999)}`,ano:"2026",nome:"",admissao:"",depAtual:"",setor:FERIAS_SETORES[0],aquisitivoIni:"",aquisitivoFim:"",limite:"",saldoDias:"",previsaoIni:"",previsaoFim:"",previsao2Ini:"",previsao2Fim:"",arquivado:false,registradoEm:new Date().toISOString()};setFerias(p=>[row,...p]);db.save("ferias_colaboradores",row.id,row);notify("✅ Colaborador adicionado!");}}>+ Novo Colaborador</BtnY>
+                <BtnY onClick={()=>{setFeriasEdit({id:null,ano:"2026",nome:"",admissao:"",depAtual:"MANUTENÇÃO A",setor:FERIAS_SETORES[0],aquisitivoIni:"",aquisitivoFim:"",limite:"",saldoDias:"",previsaoIni:"",previsaoFim:"",previsao2Ini:"",previsao2Fim:""});setFeriasModal(true);}}>+ Novo Colaborador</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
@@ -6598,6 +6650,7 @@ export default function App(){
                           <td style={{...td,whiteSpace:"nowrap"}}><div style={{display:"flex",alignItems:"center",gap:2}}><input type="date" defaultValue={f.previsaoIni||""} onBlur={e=>e.target.value!==(f.previsaoIni||"")&&updateFerias(f.id,{previsaoIni:e.target.value})} style={{...inp,width:120,background:emFerias(f)?"#DBEAFE":"transparent",fontWeight:700}}/><span style={{color:"#CBD5E1"}}>→</span><input type="date" defaultValue={f.previsaoFim||""} onBlur={e=>e.target.value!==(f.previsaoFim||"")&&updateFerias(f.id,{previsaoFim:e.target.value})} style={{...inp,width:120,background:emFerias(f)?"#DBEAFE":"transparent",fontWeight:700}}/></div></td>
                           <td style={{...td,whiteSpace:"nowrap"}}><div style={{display:"flex",alignItems:"center",gap:2}}><input type="date" defaultValue={f.previsao2Ini||""} onBlur={e=>e.target.value!==(f.previsao2Ini||"")&&updateFerias(f.id,{previsao2Ini:e.target.value})} style={{...inp,width:120}}/><span style={{color:"#CBD5E1"}}>→</span><input type="date" defaultValue={f.previsao2Fim||""} onBlur={e=>e.target.value!==(f.previsao2Fim||"")&&updateFerias(f.id,{previsao2Fim:e.target.value})} style={{...inp,width:120}}/></div></td>
                           <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>{setFeriasEdit({...f});setFeriasModal(true);}} title="Editar em formulário" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 8px",fontSize:11,marginRight:4}}>✏️</button>
                             <button onClick={()=>updateFerias(f.id,{arquivado:!f.arquivado})} title={f.arquivado?"Reabrir":"Arquivar"} style={{background:"#F1F5F9",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,marginRight:4}}>{f.arquivado?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm(`Excluir ${f.nome||"colaborador"}?`))delFerias(f.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
                           </td>
