@@ -304,6 +304,7 @@ const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 const TODOS_TECNICOS = [...new Set([...ALL_TECHS, ...OFICINA_TECHS])].sort();
 const COMPROMISSO_TIPOS = ["Reunião","Treinamento","Conferência (Ferramentas)","Conferência (Vistoria do Carro)","Conferência (Material Técnico)"];
 const COMPROMISSO_LOCAIS = ["Movimenta","MODO"];
+const BANCO_HORAS_STATUS = {pendente:{l:"⏳ Pendente",c:"#E67E00",bg:"#FFF8F0"},agendada:{l:"📅 Compensação Agendada",c:"#1565C0",bg:"#EFF6FF"},compensada:{l:"✅ Compensada",c:"#1A7A3C",bg:"#F0FFF5"}};
 // Ponto Diário — situações possíveis por técnico/dia
 const PONTO_STATUS = {
   presente:{l:"✅ Presente",c:"#1A7A3C",bg:"#F0FFF5"},
@@ -2459,7 +2460,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario"];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -2571,8 +2572,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       <div style={{position:"fixed",left:0,top:56,width:60,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
         <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
         <GroupIcon icon="📦" title="Almoxarifado" ativa={almoxAtiva} badgeCount={empAlerta} onClick={()=>{setCollapsed(false);setAlmoxOpen(true);}}/>
-        <GroupIcon icon="🛠️" title="Área Técnica" ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
-        <GroupIcon icon="🚙" title="Carros" ativa={tab==="carros"} badgeCount={0} onClick={()=>setTab("carros")}/>
+        <GroupIcon icon="🛠️" title="Manutenção" ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
         <GroupIcon icon="🏢" title="Clientes" ativa={clientesAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setClientesOpen(true);}}/>
         <GroupIcon icon="💼" title="Comercial" ativa={comercialAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setComercialOpen(true);}}/>
         {!user?.semSas&&<GroupIcon icon="📄" title="SAS" ativa={sasGroupAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setSasGroupOpen(true);}}/>}
@@ -2609,20 +2609,20 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
 
         {canSee("oficinas")&&canSee("oficina")&&<>
-          <SubBtn k="apontamentos_oficina" l="📊 KPIs Oficina"/>
+          <SubBtn k="apontamentos_oficina" l="📋 OS Oficinas / Apontamento"/>
           <SubBtn k="agenda_ofi" l="🗓 Planejamento Oficina Hebert"/>
           <SubBtn k="agenda_ofi_matheus" l="🗓 Planejamento Oficina Matheus"/>
-          <SubBtn k="dashboard_ofi" l="📊 Dashboard Oficina"/>
+          <SubBtn k="dashboard_ofi" l="📊 KPIs Oficina"/>
         </>}
 
         <SubBtn k="pendencias_frota" l="🔋 Frota - Substituição Bateria, Carregador e Máquina"/>
         <SubBtn k="vale_tecnico_maquinas" l="🎫 Vale Técnico Máquinas"/>
         <SubBtn k="ferias_colaboradores" l="🏖️ Férias Colaboradores"/>
+        <SubBtn k="banco_horas" l="⏱️ Banco de Horas"/>
         <SubBtn k="treinamentos_reunioes" l="📅 Treinamentos e Reuniões"/>
+        <SubBtn k="carros" l="🚙 Carros"/>
         <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
       </div>}
-
-      <Btn k="carros" l="🚙 Carros"/>
 
       {/* CLIENTES - ACORDEÃO (Operações) */}
       <GroupHeader label="Clientes" icon="🏢" open={clientesOpen} setOpen={setClientesOpen} ativa={clientesAtiva} badgeCount={0}/>
@@ -3000,6 +3000,11 @@ export default function App(){
   const [treinEdit,setTreinEdit]=useState(null);
   const [treinModal,setTreinModal]=useState(false);
   const [treinFiltroTipo,setTreinFiltroTipo]=useState("todos"); const [treinFiltroTec,setTreinFiltroTec]=useState("todos");
+  const [bancoHoras,setBancoHoras]=useState([]);
+  const [showArqBanco,setShowArqBanco]=useState(false);
+  const [bancoEdit,setBancoEdit]=useState(null);
+  const [bancoModal,setBancoModal]=useState(false);
+  const [bancoSearch,setBancoSearch]=useState(""); const [bancoFiltroStatus,setBancoFiltroStatus]=useState("todos");
   const [showArqValeTec,setShowArqValeTec]=useState(false);
   const [valeTecEdit,setValeTecEdit]=useState(null);
   const [valeTecModal,setValeTecModal]=useState(false);
@@ -3147,6 +3152,8 @@ export default function App(){
       const feriasRows=await safeGet("ferias_colaboradores");
       const treinRows=await safeGet("treinamentos_reunioes");
       if(treinRows.length>0) setTreinamentos(treinRows);
+      const bancoRows=await safeGet("banco_horas");
+      if(bancoRows.length>0) setBancoHoras(bancoRows);
       const pontoRows=await safeGet("ponto_diario");
       if(pontoRows.length>0) setPontoDiario(pontoRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
@@ -3198,7 +3205,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, ponto_diario:setPontoDiario,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, ponto_diario:setPontoDiario,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3353,6 +3360,19 @@ export default function App(){
   const delFerias=(id)=>{ setFerias(p=>p.filter(x=>x.id!==id)); db.delete("ferias_colaboradores",id); };
   const updateTrein=(id,changes)=>{ setTreinamentos(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("treinamentos_reunioes",id,row); return np; }); };
   const delTrein=(id)=>{ setTreinamentos(p=>p.filter(x=>x.id!==id)); db.delete("treinamentos_reunioes",id); };
+  const updateBanco=(id,changes)=>{ setBancoHoras(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("banco_horas",id,row); return np; }); };
+  const delBanco=(id)=>{ setBancoHoras(p=>p.filter(x=>x.id!==id)); db.delete("banco_horas",id); };
+  // Sincroniza a lista do banco de horas com os colaboradores do calendario de ferias (adiciona quem falta)
+  const sincronizarBancoComFerias=()=>{
+    const nomesFerias=(ferias||[]).filter(f=>f&&!f.arquivado&&f.nome).map(f=>({nome:f.nome,setor:f.setor||""}));
+    const existentes=new Set((bancoHoras||[]).map(b=>String(b.nome||"").trim().toLowerCase()));
+    const novos=nomesFerias.filter(f=>!existentes.has(f.nome.trim().toLowerCase()))
+      .map((f,i)=>({id:`BH${Date.now()}_${i}_${Math.floor(Math.random()*9999)}`,nome:f.nome,setor:f.setor,saldo:"",tipo:"positivo",comoCompensar:"",dataCompensacao:"",status:"pendente",arquivado:false,registradoEm:new Date().toISOString()}));
+    if(novos.length===0){ notify("Todos os colaboradores do calendário de férias já estão no banco de horas."); return; }
+    setBancoHoras(p=>[...novos,...(p||[])]);
+    db.saveBatch("banco_horas",novos);
+    notify(`✅ ${novos.length} colaborador(es) adicionado(s) ao banco de horas.`);
+  };
   // Ponto Diário: registro por técnico+data. id = ponto__<tecnico>__<data>
   const setPonto=(tecnico,data,changes)=>{
     const id=`ponto__${tecnico}__${data}`;
@@ -6870,6 +6890,84 @@ export default function App(){
                 </table>
               </div>
             </div>
+          </div>);
+        })()}
+
+        {/* ── BANCO DE HORAS ── */}
+        {tab==="banco_horas"&&(()=>{
+          const lista=(bancoHoras||[]).filter(b=>b&&(showArqBanco?b.arquivado:!b.arquivado));
+          const filtrada=lista.filter(b=>{
+            if(bancoFiltroStatus!=="todos"&&(b.status||"pendente")!==bancoFiltroStatus)return false;
+            if(bancoSearch){const q=bancoSearch.toLowerCase();if(!((b.nome||"").toLowerCase().includes(q)||(b.setor||"").toLowerCase().includes(q)))return false;}
+            return true;
+          }).sort((a,b)=>String(a.nome||"").localeCompare(String(b.nome||"")));
+          // saldo em minutos a partir de texto "+12:30" / "-4:00" / "8" / "-2,5"
+          const parseSaldo=(s)=>{
+            if(!s)return 0; s=String(s).trim(); let neg=s.startsWith("-"); s=s.replace(/^[+-]/,"");
+            let m=s.match(/^(\d+):(\d{1,2})$/);
+            let min= m ? parseInt(m[1])*60+parseInt(m[2]) : Math.round(parseFloat(s.replace(",","."))*60)||0;
+            return neg?-min:min;
+          };
+          const fmtSaldo=(min)=>{const neg=min<0;const a=Math.abs(min);return `${neg?"-":"+"}${String(Math.floor(a/60)).padStart(2,"0")}:${String(a%60).padStart(2,"0")}`;};
+          const totalMin=lista.reduce((acc,b)=>acc+parseSaldo(b.saldo),0);
+          const positivos=lista.filter(b=>parseSaldo(b.saldo)>0).length;
+          const negativos=lista.filter(b=>parseSaldo(b.saldo)<0).length;
+          const pendentesComp=lista.filter(b=>parseSaldo(b.saldo)!==0&&(b.status||"pendente")!=="compensada").length;
+          const th={padding:"8px 8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
+          const td={padding:"3px 6px",borderBottom:"1px solid #F1F5F9",fontSize:11,verticalAlign:"middle"};
+          const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 5px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⏱️ Banco de Horas</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} colaborador(es) · saldo geral <span style={{color:totalMin>=0?"#1A7A3C":"#C62828",fontWeight:700}}>{fmtSaldo(totalMin)}</span></div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={sincronizarBancoComFerias} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:12,cursor:"pointer",fontWeight:700}}>🔄 Sincronizar com Férias</button>
+                <button onClick={()=>setShowArqBanco(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqBanco?"#1A1A1A":"#FFF",color:showArqBanco?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqBanco?"✕ Ativos":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(filtrada,"banco_de_horas",[{key:"nome",label:"Colaborador"},{key:"setor",label:"Setor"},{key:"saldo",label:"Saldo"},{key:"comoCompensar",label:"Como Compensar"},{key:"dataCompensacao",label:"Data Compensação"},{key:"status",label:"Status"}])}/>
+                <BtnY onClick={()=>{const row={id:`BH${Date.now()}_${Math.floor(Math.random()*9999)}`,nome:"",setor:"",saldo:"",comoCompensar:"",dataCompensacao:"",status:"pendente",arquivado:false,registradoEm:new Date().toISOString()};setBancoHoras(p=>[row,...p]);db.save("banco_horas",row.id,row);notify("✅ Linha adicionada!");}}>+ Colaborador</BtnY>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
+              {[{l:"Saldo Geral",v:fmtSaldo(totalMin),c:totalMin>=0?"#1A7A3C":"#C62828",i:"⏱️"},{l:"Com Saldo Positivo",v:positivos,c:"#1A7A3C",i:"➕"},{l:"Com Saldo Negativo",v:negativos,c:"#C62828",i:"➖"},{l:"Pendente Compensar",v:pendentesComp,c:"#E67E00",i:"⏳"}].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={bancoSearch} onChange={e=>setBancoSearch(e.target.value)} placeholder="Buscar colaborador, setor..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <select value={bancoFiltroStatus} onChange={e=>setBancoFiltroStatus(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos os status</option>{Object.entries(BANCO_HORAS_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select>
+            </div>
+            <div style={{fontSize:11,color:"#94A3B8",marginBottom:8}}>💡 No saldo, use <b>+</b> para horas extras e <b>-</b> para horas negativas. Ex: <b>+12:30</b> (12h30 a favor) ou <b>-04:00</b> (4h em débito). Pode digitar decimal também: <b>-2,5</b>.</div>
+            {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>⏱️</div><div style={{fontSize:14,fontWeight:600}}>Nenhum colaborador — use "🔄 Sincronizar com Férias" para trazer todos</div></div>):(
+              <div className="card" style={{padding:0,overflow:"hidden"}}>
+                <div style={{overflowX:"auto",maxHeight:"calc(100vh - 360px)"}}>
+                  <table style={{borderCollapse:"collapse",width:"100%",minWidth:1100}}>
+                    <thead><tr>
+                      <th style={th}>Colaborador</th><th style={th}>Setor</th><th style={th}>Saldo (+/-)</th><th style={th}>Como Compensar</th><th style={th}>Data Compensação</th><th style={th}>Status</th><th style={{...th,textAlign:"center"}}>Ações</th>
+                    </tr></thead>
+                    <tbody>
+                      {filtrada.map(b=>{
+                        const min=parseSaldo(b.saldo);
+                        const stt=BANCO_HORAS_STATUS[b.status||"pendente"];
+                        return(<tr key={b.id} style={{opacity:b.arquivado?0.5:1}}>
+                          <td style={{...td,fontWeight:700,color:"#1A1A1A",minWidth:190}}><input type="text" defaultValue={b.nome||""} onBlur={e=>e.target.value!==(b.nome||"")&&updateBanco(b.id,{nome:e.target.value})} style={{...inp,fontWeight:700}}/></td>
+                          <td style={td}><input type="text" defaultValue={b.setor||""} onBlur={e=>e.target.value!==(b.setor||"")&&updateBanco(b.id,{setor:e.target.value})} style={{...inp,width:150}}/></td>
+                          <td style={td}><input type="text" defaultValue={b.saldo||""} onBlur={e=>e.target.value!==(b.saldo||"")&&updateBanco(b.id,{saldo:e.target.value})} placeholder="+00:00" style={{...inp,width:90,fontWeight:800,textAlign:"center",color:min>0?"#1A7A3C":min<0?"#C62828":"#64748B"}}/></td>
+                          <td style={td}><input type="text" defaultValue={b.comoCompensar||""} onBlur={e=>e.target.value!==(b.comoCompensar||"")&&updateBanco(b.id,{comoCompensar:e.target.value})} placeholder="Ex: folga, sair mais cedo..." style={{...inp,width:220}}/></td>
+                          <td style={td}><input type="date" defaultValue={b.dataCompensacao||""} onBlur={e=>e.target.value!==(b.dataCompensacao||"")&&updateBanco(b.id,{dataCompensacao:e.target.value})} style={{...inp,width:130}}/></td>
+                          <td style={td}><select value={b.status||"pendente"} onChange={e=>updateBanco(b.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"none",cursor:"pointer",color:stt.c,background:stt.bg}}>{Object.entries(BANCO_HORAS_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select></td>
+                          <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>updateBanco(b.id,{arquivado:!b.arquivado})} title={b.arquivado?"Reabrir":"Arquivar"} style={{background:"#F1F5F9",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12,marginRight:4}}>{b.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm(`Excluir ${b.nome||"colaborador"} do banco de horas?`))delBanco(b.id);}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </td>
+                        </tr>);
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>);
         })()}
 
