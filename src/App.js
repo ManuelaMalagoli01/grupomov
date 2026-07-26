@@ -210,7 +210,6 @@ const VALE_TEC_AUTORIZACAO = ["Gustavo","Gilberto"];
 const FERIAS_SETORES = ["Oficina Externa - Gustavo","Oficina Externa Roca","Centro-Oeste - Gustavo","Oficina Interna - Hebert","Oficina Interna - Matheus","Manutenção","Administrativo","Outro"];
 // Seed inicial de Férias de Colaboradores (base: planilha 2026). Datas em ISO. admissao/limite/previsao.
 const FERIAS_SEED = [
-  {nome:"ALEXANDRE EULALIO BRAZ",          admissao:"2019-01-14", depAtual:"MANUTENÇÃO B", setor:"Oficina Externa - Gustavo", aquisitivoIni:"2025-01-14", aquisitivoFim:"2026-01-13", limite:"2026-12-13", saldoDias:"12", previsaoIni:"2026-10-01", previsaoFim:"2026-10-12"},
   {nome:"ANDERSON DE ALMEIDA",             admissao:"2004-01-02", depAtual:"MANUTENÇÃO B", setor:"Oficina Externa - Gustavo", aquisitivoIni:"2025-01-02", aquisitivoFim:"2026-01-01", limite:"2026-12-01", saldoDias:"12", previsaoIni:"2026-07-01", previsaoFim:"2026-07-12"},
   {nome:"ANDRE FILIPE DA SILVA GOMES RODRIGUES", admissao:"2025-07-02", depAtual:"MANUTENÇÃO A", setor:"Oficina Interna - Hebert", aquisitivoIni:"2025-07-02", aquisitivoFim:"2026-07-01", limite:"2027-05-31", saldoDias:"30", previsaoIni:"2026-08-03", previsaoFim:"2026-09-01"},
   {nome:"ARTHUR CLEUBER DE SOUSA JERONIMO", admissao:"2025-03-10", depAtual:"MANUTENÇÃO A", setor:"Oficina Externa Roca", aquisitivoIni:"2025-03-10", aquisitivoFim:"2026-03-09", limite:"2027-02-06", saldoDias:"30", previsaoIni:"2026-07-01", previsaoFim:"2026-07-30"},
