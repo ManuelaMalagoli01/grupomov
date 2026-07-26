@@ -303,6 +303,7 @@ const ALL_TECHS  = Object.values(REGIONS).flatMap(r=>r.techs);
 // Todos os técnicos (externos + internos de oficina) para a agenda de Treinamentos e Reuniões
 const TODOS_TECNICOS = [...new Set([...ALL_TECHS, ...OFICINA_TECHS])].sort();
 const COMPROMISSO_TIPOS = ["Reunião","Treinamento","Conferência (Ferramentas)","Conferência (Vistoria do Carro)","Conferência (Material Técnico)"];
+const COMPROMISSO_CATEGORIAS = ["Liderança","Manutenção Externa","Manutenção Interna","Geral"];
 const COMPROMISSO_LOCAIS = ["Movimenta","MODO"];
 const BANCO_HORAS_STATUS = {pendente:{l:"⏳ Pendente",c:"#E67E00",bg:"#FFF8F0"},agendada:{l:"📅 Compensação Agendada",c:"#1565C0",bg:"#EFF6FF"},compensada:{l:"✅ Compensada",c:"#1A7A3C",bg:"#F0FFF5"}};
 // Ponto Diário — situações possíveis por técnico/dia
@@ -3873,11 +3874,19 @@ export default function App(){
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"📅 Novo"} Compromisso</div><button onClick={()=>{setTreinModal(false);setTreinEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr",gap:12}}>
                   <div><label style={lbl}>Data</label><input type="date" value={d.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
-                  <div><label style={lbl}>Local</label><select value={d.local||COMPROMISSO_LOCAIS[0]} onChange={e=>upd("local",e.target.value)} style={inp}>{COMPROMISSO_LOCAIS.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+                  <div><label style={lbl}>Início</label><input type="time" value={d.horaIni||""} onChange={e=>upd("horaIni",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Fim</label><input type="time" value={d.horaFim||""} onChange={e=>upd("horaFim",e.target.value)} style={inp}/></div>
                 </div>
-                <div><label style={lbl}>Compromisso</label><select value={d.compromisso||COMPROMISSO_TIPOS[0]} onChange={e=>upd("compromisso",e.target.value)} style={inp}>{COMPROMISSO_TIPOS.map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Compromisso</label><select value={d.compromisso||COMPROMISSO_TIPOS[0]} onChange={e=>upd("compromisso",e.target.value)} style={inp}>{COMPROMISSO_TIPOS.map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+                  <div><label style={lbl}>Categoria</label><select value={d.categoria||COMPROMISSO_CATEGORIAS[0]} onChange={e=>upd("categoria",e.target.value)} style={inp}>{COMPROMISSO_CATEGORIAS.map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Local</label><select value={d.local||COMPROMISSO_LOCAIS[0]} onChange={e=>upd("local",e.target.value)} style={inp}>{COMPROMISSO_LOCAIS.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+                  <div><label style={lbl}>🔔 Avisar antes</label><select value={d.alarmeDias||""} onChange={e=>upd("alarmeDias",e.target.value)} style={inp}><option value="">Sem alarme</option><option value="1">1 dia antes</option><option value="2">2 dias antes</option><option value="3">3 dias antes</option><option value="7">1 semana antes</option><option value="15">15 dias antes</option></select></div>
+                </div>
                 <div>
                   <label style={lbl}>Técnicos ({(d.tecnicos||[]).length} selecionado(s))</label>
                   <div style={{display:"flex",gap:6,marginBottom:8}}>
@@ -6782,52 +6791,88 @@ export default function App(){
             return true;
           }).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const hoje=TODAY_STR;
+          const agora=new Date();
           const futuras=lista.filter(t=>t.data&&t.data>=hoje).length;
           const TIPO_COR={"Reunião":"#1565C0","Treinamento":"#1A7A3C","Conferência (Ferramentas)":"#B45309","Conferência (Vistoria do Carro)":"#7E22CE","Conferência (Material Técnico)":"#0D9488"};
+          const CAT_COR={"Liderança":"#7E22CE","Manutenção Externa":"#1565C0","Manutenção Interna":"#0D9488","Geral":"#B45309"};
+          const calcDur=(ini,fim)=>{if(!ini||!fim)return "";const[h1,m1]=ini.split(":").map(Number),[h2,m2]=fim.split(":").map(Number);let d=(h2*60+m2)-(h1*60+m1);if(isNaN(d)||d<=0)return "";return `${Math.floor(d/60)}h${d%60?String(d%60).padStart(2,"0"):""}`;};
+          // dias até o evento (para alarme). retorna null se sem data
+          const diasAte=(t)=>{if(!t.data)return null;const d=new Date(t.data+"T"+((t.horaIni||"00:00"))+":00");return Math.ceil((d-agora)/86400000);};
+          const alarmeAtivo=(t)=>{if(!t.data||t.data<hoje)return false;const av=parseInt(t.alarmeDias);if(isNaN(av))return false;const dias=diasAte(t);return dias!==null&&dias<=av&&dias>=0;};
+          const comAlarme=lista.filter(alarmeAtivo).sort((a,b)=>String(a.data+a.horaIni).localeCompare(String(b.data+b.horaIni)));
+          // Ordena a agenda: futuros primeiro (mais proximo no topo), depois passados
+          const ordenada=[...filtrada].sort((a,b)=>{
+            const fa=(a.data||"9999")+(a.horaIni||""), fb=(b.data||"9999")+(b.horaIni||"");
+            const ap=(a.data||"")>=hoje, bp=(b.data||"")>=hoje;
+            if(ap&&bp)return fa.localeCompare(fb);
+            if(ap)return -1; if(bp)return 1;
+            return fb.localeCompare(fa);
+          });
+          const DOW=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+          const fmtDiaCal=(iso)=>{if(!iso)return{dia:"--",mes:"",dow:""};const d=new Date(iso+"T12:00:00");return{dia:String(d.getDate()).padStart(2,"0"),mes:["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"][d.getMonth()],dow:DOW[d.getDay()]};};
           return(<div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>📅 Treinamentos e Reuniões</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#1A7A3C",fontWeight:700}}>{futuras} futuros</span></div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>📅 Agenda de Treinamentos e Reuniões</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) · <span style={{color:"#1A7A3C",fontWeight:700}}>{futuras} futuros</span>{comAlarme.length>0&&<span style={{color:"#C62828",fontWeight:700}}> · 🔔 {comAlarme.length} próximo(s)</span>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqTrein(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqTrein?"#1A1A1A":"#FFF",color:showArqTrein?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqTrein?"✕ Ativos":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(filtrada.map(t=>({...t,tecnicos:(t.tecnicos||[]).join(", ")})),"treinamentos_reunioes",[{key:"data",label:"Data"},{key:"compromisso",label:"Compromisso"},{key:"tecnicos",label:"Técnicos"},{key:"local",label:"Local"},{key:"obs",label:"Observação"}])}/>
-                <BtnY onClick={()=>{setTreinEdit({id:null,data:TODAY_STR,compromisso:COMPROMISSO_TIPOS[0],tecnicos:[],local:COMPROMISSO_LOCAIS[0],obs:""});setTreinModal(true);}}>+ Novo Compromisso</BtnY>
+                <BtnExcel onClick={()=>exportCSV(filtrada.map(t=>({...t,tecnicos:(t.tecnicos||[]).join(", ")})),"treinamentos_reunioes",[{key:"data",label:"Data"},{key:"horaIni",label:"Início"},{key:"horaFim",label:"Fim"},{key:"compromisso",label:"Compromisso"},{key:"categoria",label:"Categoria"},{key:"tecnicos",label:"Participantes"},{key:"local",label:"Local"},{key:"obs",label:"Observação"}])}/>
+                <BtnY onClick={()=>{setTreinEdit({id:null,data:TODAY_STR,horaIni:"08:00",horaFim:"09:00",compromisso:COMPROMISSO_TIPOS[0],categoria:COMPROMISSO_CATEGORIAS[0],tecnicos:[],local:COMPROMISSO_LOCAIS[0],alarmeDias:"3",obs:""});setTreinModal(true);}}>+ Novo Compromisso</BtnY>
               </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:16}}>
-              <div className="card" style={{padding:"12px 14px",borderLeft:"4px solid #1565C0"}}><div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>📅 Total</div><div style={{fontSize:24,fontWeight:900,color:"#1565C0",lineHeight:1}}>{lista.length}</div></div>
-              <div className="card" style={{padding:"12px 14px",borderLeft:"4px solid #1A7A3C"}}><div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>🔜 Futuros</div><div style={{fontSize:24,fontWeight:900,color:"#1A7A3C",lineHeight:1}}>{futuras}</div></div>
-            </div>
+            {comAlarme.length>0&&<div className="card" style={{padding:"10px 14px",marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#C2410C",marginBottom:6}}>🔔 Próximos do vencimento</div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                {comAlarme.slice(0,5).map(t=>{const d=diasAte(t);return(<div key={t.id} style={{fontSize:12,color:"#7C2D12",display:"flex",gap:8,alignItems:"center"}}><span style={{fontWeight:800,minWidth:70}}>{d===0?"HOJE":d===1?"Amanhã":`${d} dias`}</span><span style={{fontWeight:700}}>{t.compromisso}</span><span style={{color:"#9A3412"}}>· {fmtDataBR(t.data)} {t.horaIni||""} · 📍{t.local||"—"}</span></div>);})}
+              </div>
+            </div>}
             <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <select value={treinFiltroTipo} onChange={e=>setTreinFiltroTipo(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos os compromissos</option>{COMPROMISSO_TIPOS.map(t=><option key={t} value={t}>{t}</option>)}</select>
-              <select value={treinFiltroTec} onChange={e=>setTreinFiltroTec(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos os técnicos</option>{TODOS_TECNICOS.map(t=><option key={t} value={t}>{t}</option>)}</select>
+              <select value={treinFiltroTec} onChange={e=>setTreinFiltroTec(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos os participantes</option>{TODOS_TECNICOS.map(t=><option key={t} value={t}>{t}</option>)}</select>
               {(treinFiltroTipo!=="todos"||treinFiltroTec!=="todos")&&<button onClick={()=>{setTreinFiltroTipo("todos");setTreinFiltroTec("todos");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:12,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📅</div><div style={{fontSize:14,fontWeight:600}}>Nenhum compromisso registrado</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14}}>
-                {filtrada.map(t=>{
+            {ordenada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>📅</div><div style={{fontSize:14,fontWeight:600}}>Nenhum compromisso na agenda</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
+                {ordenada.map(t=>{
                   const cor=TIPO_COR[t.compromisso]||"#64748B";
+                  const catCor=CAT_COR[t.categoria]||"#94A3B8";
                   const passou=t.data&&t.data<hoje;
-                  return(<div key={t.id} className="card" style={{padding:0,overflow:"hidden",opacity:t.arquivado?0.5:passou?0.72:1,borderLeft:`4px solid ${cor}`}}>
-                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:cor,borderRadius:20,padding:"3px 11px"}}>{t.compromisso}</span>
-                      <div style={{display:"flex",gap:6}}>
-                        <button onClick={()=>{setTreinEdit({...t});setTreinModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>✏️</button>
-                        <button onClick={()=>updateTrein(t.id,{arquivado:!t.arquivado})} title={t.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11}}>{t.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))delTrein(t.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"5px 9px",fontSize:11,fontWeight:700}}>✕</button>
+                  const alarme=alarmeAtivo(t);
+                  const dur=calcDur(t.horaIni,t.horaFim);
+                  const cal=fmtDiaCal(t.data);
+                  return(<div key={t.id} className="card" style={{padding:0,overflow:"hidden",opacity:t.arquivado?0.5:passou?0.68:1,borderLeft:`4px solid ${cor}`,border:alarme?"1.5px solid #FB923C":undefined,boxShadow:alarme?"0 0 0 3px rgba(251,146,60,.15)":undefined}}>
+                    <div style={{display:"flex",alignItems:"stretch"}}>
+                      {/* Bloco data estilo calendario */}
+                      <div style={{background:cor,color:"#FFF",padding:"8px 10px",textAlign:"center",minWidth:54,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                        <div style={{fontSize:9,fontWeight:700,opacity:.9,textTransform:"uppercase"}}>{cal.dow}</div>
+                        <div style={{fontSize:22,fontWeight:900,lineHeight:1}}>{cal.dia}</div>
+                        <div style={{fontSize:9,fontWeight:700,opacity:.9}}>{cal.mes}</div>
                       </div>
-                    </div>
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:8}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A"}}>{fmtDataBR(t.data)}</div>
-                        <span style={{fontSize:11,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"3px 10px"}}>📍 {t.local||"—"}</span>
-                      </div>
-                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Técnicos ({(t.tecnicos||[]).length})</div>
-                        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                          {(t.tecnicos||[]).length>0?t.tecnicos.map(tc=><span key={tc} style={{fontSize:10,fontWeight:600,color:"#1A1A1A",background:"#F1F5F9",borderRadius:10,padding:"2px 8px"}}>{tc}</span>):<span style={{fontSize:11,color:"#CBD5E1"}}>Nenhum técnico</span>}
+                      <div style={{flex:1,padding:"8px 10px",minWidth:0}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                          <div style={{minWidth:0}}>
+                            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:3}}>
+                              <span style={{fontSize:9,fontWeight:800,color:"#FFF",background:cor,borderRadius:10,padding:"1px 8px"}}>{t.compromisso}</span>
+                              {t.categoria&&<span style={{fontSize:9,fontWeight:800,color:catCor,background:catCor+"1A",borderRadius:10,padding:"1px 8px"}}>{t.categoria}</span>}
+                            </div>
+                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>🕐 {t.horaIni||"--:--"}{t.horaFim?` – ${t.horaFim}`:""}{dur&&<span style={{fontSize:10,color:"#94A3B8",fontWeight:600}}> ({dur})</span>}</div>
+                          </div>
+                          <div style={{display:"flex",gap:3,flexShrink:0}}>
+                            <button onClick={()=>{setTreinEdit({...t});setTreinModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>✏️</button>
+                            <button onClick={()=>updateTrein(t.id,{arquivado:!t.arquivado})} title={t.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>{t.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir?"))delTrein(t.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10,fontWeight:700}}>✕</button>
+                          </div>
                         </div>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6,gap:6}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:10,padding:"2px 8px"}}>📍 {t.local||"—"}</span>
+                          <span style={{fontSize:10,color:"#94A3B8",fontWeight:600}}>👥 {(t.tecnicos||[]).length}</span>
+                        </div>
+                        {(t.tecnicos||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:3,marginTop:5}}>
+                          {t.tecnicos.slice(0,4).map(tc=><span key={tc} style={{fontSize:9,fontWeight:600,color:"#475569",background:"#F1F5F9",borderRadius:8,padding:"1px 6px"}}>{tc}</span>)}
+                          {t.tecnicos.length>4&&<span style={{fontSize:9,fontWeight:700,color:"#94A3B8"}}>+{t.tecnicos.length-4}</span>}
+                        </div>}
+                        {alarme&&<div style={{fontSize:10,fontWeight:800,color:"#C2410C",marginTop:5}}>🔔 {diasAte(t)===0?"É hoje!":diasAte(t)===1?"É amanhã":`Faltam ${diasAte(t)} dias`}</div>}
+                        {t.obs&&<div style={{fontSize:10,color:"#64748B",fontStyle:"italic",marginTop:5}}>{t.obs}</div>}
                       </div>
-                      {t.obs&&<div style={{fontSize:12,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{t.obs}</div>}
                     </div>
                   </div>);
                 })}
