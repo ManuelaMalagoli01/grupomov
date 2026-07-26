@@ -2431,8 +2431,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const SubBtn=({k,l,badge})=>{
     const isActive=tab===k;
     const count=badge!==undefined?badge:bdg(k);
-    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 16px 7px 28px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-      {l}{count>0&&<span style={{marginLeft:"auto",background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center"}}>{count}</span>}
+    return(<button onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:6,width:"100%",padding:"7px 12px 7px 26px",border:"none",background:isActive?"#FFFBEB":"transparent",color:isActive?"#1A1A1A":"#64748B",fontSize:11,fontWeight:isActive?700:400,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit",whiteSpace:"normal",lineHeight:1.25,wordBreak:"break-word"}}>
+      <span style={{flex:1}}>{l}</span>{count>0&&<span style={{background:isActive?"#F5C200":"#EF4444",color:isActive?"#1A1A1A":"#FFF",borderRadius:10,padding:"1px 5px",fontSize:9,fontWeight:700,minWidth:16,textAlign:"center",flexShrink:0}}>{count}</span>}
     </button>);
   };
   const GroupHeader=({label,icon,open,setOpen,ativa,badgeCount})=>(
@@ -2538,7 +2538,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
   if(user.apenasOficina) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi","🗓 Agenda"],["apontamentos_oficina","📝 Apontamentos"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_ofi","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi","🗓 Agenda"],["apontamentos_oficina","📋 OS Oficina / Apontamento"],["pendencias_hebert","📋 Serviços Adm"],["dashboard_ofi","📊 KPIs Oficina"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -2546,7 +2546,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
   if(user.apenasOficina150) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📋 OS Oficina / Apontamento"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 KPIs Oficina"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.15)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:13,fontWeight:isActive?700:500,cursor:"pointer",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",textAlign:"left",transition:"all .15s"}}>{l}</button>;
       })}
@@ -2554,7 +2554,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
   if(user.apenasOfi150) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📝 Apontamentos"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 Dashboard"]].map(([k,l])=>{
+      {[["agenda_ofi_150","🗓 Agenda"],["apontamentos_150","📋 OS Oficina / Apontamento"],["pendencias_matheus","📋 Serviços Adm"],["dashboard_ofi_150","📊 KPIs Oficina"]].map(([k,l])=>{
         const isActive=tab===k;
         return <button key={k} onClick={()=>setTab(k)} style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"9px 16px",border:"none",background:isActive?"rgba(245,194,0,.12)":"transparent",color:isActive?"#F5C200":"#94A3B8",fontSize:12,fontWeight:isActive?700:500,cursor:"pointer",textAlign:"left",borderLeft:isActive?"3px solid #F5C200":"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>{l}</button>;
       })}
@@ -4347,7 +4347,7 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
               <div style={{padding:"10px 14px",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:900,fontSize:18,color:"#1A1A1A"}}>📝 Apontamentos — Geral Oficina</div><div style={{fontSize:11,color:"#B45309",marginTop:2,fontWeight:700}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
+                <div><div style={{fontWeight:900,fontSize:18,color:"#1A1A1A"}}>📋 OS Oficina / Apontamento — Hebert</div><div style={{fontSize:11,color:"#B45309",marginTop:2,fontWeight:700}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                   {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#DC2626",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir ({qtdSelecionados})</button>}
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E5E7EB",background:showArqApon?"#1A1A1A":"#FFF",color:showArqApon?"#FFF":"#475569",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
@@ -4732,7 +4732,7 @@ export default function App(){
           {/* Cabeçalho + Filtros */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
             <div>
-              <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📊 Dashboard Geral Oficina</div>
+              <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📊 KPIs Oficina - Hebert</div>
               <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{MESES[agOfiMonth]} {agOfiYear} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <button onClick={()=>setShowFiltrosDashOfi(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDashOfi?"#FFF":"#F8FAFC",cursor:"pointer",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -8842,7 +8842,7 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
               <div style={{padding:"7px 10px",background:"#1A1A1A",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📝 Apontamentos — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
+                <div><div style={{fontWeight:900,fontSize:20,color:"#FFF"}}>📋 OS Oficina / Apontamento — Oficina 150</div><div style={{fontSize:12,color:"#F5C200",marginTop:2}}>{lista.length} registro(s) · ⏱ {totalStr}</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqApon150(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,.2)",background:showArqApon?"rgba(255,255,255,.15)":"transparent",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <label style={{padding:"7px 14px",borderRadius:8,border:"1px solid #8B5CF6",background:"#F5F3FF",fontSize:12,cursor:"pointer",color:"#8B5CF6",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4}}>
@@ -9098,7 +9098,7 @@ export default function App(){
           {/* Cabeçalho + Filtros */}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
             <div>
-              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 Dashboard Oficina 150</div>
+              <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 KPIs Oficina - 150</div>
               <div style={{fontSize:12,color:"#888"}}>{MESES[agOfi150Month]} {agOfi150Year} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
