@@ -2975,6 +2975,7 @@ export default function App(){
   const [feriasEdit,setFeriasEdit]=useState(null);
   const [feriasModal,setFeriasModal]=useState(false);
   const [feriasSearch,setFeriasSearch]=useState(""); const [feriasSetor,setFeriasSetor]=useState("todos");
+  const [feriasColFiltro,setFeriasColFiltro]=useState({});
   const [showArqValeTec,setShowArqValeTec]=useState(false);
   const [valeTecEdit,setValeTecEdit]=useState(null);
   const [valeTecModal,setValeTecModal]=useState(false);
@@ -6484,26 +6485,14 @@ export default function App(){
         {/* ── FÉRIAS COLABORADORES ── */}
         {tab==="ferias_colaboradores"&&(()=>{
           const lista=(ferias||[]).filter(f=>f&&(showArqFerias?f.arquivado:!f.arquivado));
-          const filtrada=lista.filter(f=>{
-            if(feriasSetor!=="todos"&&f.setor!==feriasSetor)return false;
-            if(feriasSearch){const q=feriasSearch.toLowerCase();if(!((f.nome||"").toLowerCase().includes(q)||(f.setor||"").toLowerCase().includes(q)||(f.depAtual||"").toLowerCase().includes(q)))return false;}
-            return true;
-          }).sort((a,b)=>String(a.previsaoIni||"9999").localeCompare(String(b.previsaoIni||"9999")));
           const hoje=TODAY_STR;
           const emFerias=(f)=>f.previsaoIni&&f.previsaoFim&&hoje>=f.previsaoIni&&hoje<=f.previsaoFim;
           const proximas=(f)=>{if(!f.previsaoIni||f.previsaoIni<hoje)return false;const d=new Date(f.previsaoIni)-new Date(hoje);return d>0&&d<=30*86400000;};
           const venc=(f)=>f.limite&&f.limite<hoje&&!f.previsaoIni;
-          // Situacao de cada colaborador:
-          // ferias  = esta de ferias AGORA (vermelho)
-          // proximo = ferias comecam nos proximos 30 dias (laranja + alerta)
-          // tirou   = ja tirou ferias este ano (ambos periodos ja terminaram) (cinza)
-          // ok      = ferias programadas para o futuro / ainda tem saldo (verde)
           const jaTirou=(f)=>{
-            const fimP1=f.previsaoFim, fimP2=f.previsao2Fim;
-            const p1Passou=fimP1&&fimP1<hoje;
+            const p1Passou=f.previsaoFim&&f.previsaoFim<hoje;
             const p2Existe=!!(f.previsao2Ini||f.previsao2Fim);
-            const p2Passou=fimP2&&fimP2<hoje;
-            // ja tirou se o(s) periodo(s) programado(s) ja terminaram
+            const p2Passou=f.previsao2Fim&&f.previsao2Fim<hoje;
             if(p2Existe)return p1Passou&&p2Passou;
             return p1Passou;
           };
@@ -6519,6 +6508,24 @@ export default function App(){
             tirou:  {bg:"#F1F5F9",borda:"#94A3B8",txt:"#64748B",l:"✔️ Já tirou este ano"},
             ok:     {bg:"#F0FFF5",borda:"#1A7A3C",txt:"#1A7A3C",l:"✅ Programada / com saldo"},
           };
+          const cf=feriasColFiltro;
+          const setCF=(k,v)=>setFeriasColFiltro(p=>({...p,[k]:v}));
+          const inclui=(campo,q)=>!q||String(campo||"").toLowerCase().includes(String(q).toLowerCase());
+          const noPeriodo=(ini,fim,q)=>!q||String(ini||"").includes(q)||String(fim||"").includes(q);
+          const filtrada=lista.filter(f=>{
+            if(!inclui(f.nome,cf.nome))return false;
+            if(!inclui(f.admissao,cf.admissao))return false;
+            if(!inclui(f.depAtual,cf.depAtual))return false;
+            if(cf.setor&&f.setor!==cf.setor)return false;
+            if(!noPeriodo(f.aquisitivoIni,f.aquisitivoFim,cf.aquisitivo))return false;
+            if(!inclui(f.limite,cf.limite))return false;
+            if(cf.saldo&&String(f.saldoDias||"")!==cf.saldo)return false;
+            if(!noPeriodo(f.previsaoIni,f.previsaoFim,cf.previsao))return false;
+            if(!noPeriodo(f.previsao2Ini,f.previsao2Fim,cf.previsao2))return false;
+            if(cf.situacao&&situacaoFerias(f)!==cf.situacao)return false;
+            return true;
+          }).sort((a,b)=>String(a.previsaoIni||"9999").localeCompare(String(b.previsaoIni||"9999")));
+          const hasFiltroCol=Object.values(cf).some(v=>v&&v!=="");
           const emFeriasN=lista.filter(emFerias).length, proximasN=lista.filter(f=>situacaoFerias(f)==="proximo").length, vencN=lista.filter(venc).length;
           const tirouN=lista.filter(f=>situacaoFerias(f)==="tirou").length;
           const th={padding:"8px 8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
@@ -6542,17 +6549,34 @@ export default function App(){
                 </div>
               ))}
             </div>
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={feriasSearch} onChange={e=>setFeriasSearch(e.target.value)} placeholder="Buscar nome, setor..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
-              <select value={feriasSetor} onChange={e=>setFeriasSetor(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos os setores</option>{FERIAS_SETORES.map(s=><option key={s} value={s}>{s}</option>)}</select>
+            <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12,flexWrap:"wrap"}}>
+              <div style={{fontSize:11,color:"#94A3B8"}}>Filtre em cada coluna, como numa planilha ↓</div>
+              {hasFiltroCol&&<button onClick={()=>setFeriasColFiltro({})} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar filtros</button>}
+              <span style={{fontSize:11,color:"#94A3B8",marginLeft:"auto"}}>{filtrada.length} de {lista.length}</span>
             </div>
             {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🏖️</div><div style={{fontSize:14,fontWeight:600}}>Nenhum colaborador</div></div>):(
               <div className="card" style={{padding:0,overflow:"hidden"}}>
                 <div style={{overflowX:"auto",maxHeight:"calc(100vh - 320px)"}}>
                   <table style={{borderCollapse:"collapse",width:"100%",minWidth:1400}}>
-                    <thead><tr>
+                    <thead>
+                      <tr>
                       <th style={th}>Nome</th><th style={th}>Admissão</th><th style={th}>Dep. Atual</th><th style={th}>Setor Interno</th><th style={th}>Período Aquisitivo</th><th style={th}>Data Limite</th><th style={th}>Saldo</th><th style={th}>Previsão Férias</th><th style={th}>2ª Parcela</th><th style={{...th,textAlign:"center"}}>Ações</th>
-                    </tr></thead>
+                      </tr>
+                      <tr>
+                        {(()=>{const fc={fontSize:10,padding:"4px 6px",borderRadius:6,border:"1.5px solid #E2E8F0",background:"#FFF",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};const cell={padding:"4px 6px",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:32,zIndex:1};return<>
+                          <td style={cell}><input value={cf.nome||""} onChange={e=>setCF("nome",e.target.value)} placeholder="filtrar..." style={fc}/></td>
+                          <td style={cell}><input value={cf.admissao||""} onChange={e=>setCF("admissao",e.target.value)} placeholder="ano/mês" style={fc}/></td>
+                          <td style={cell}><input value={cf.depAtual||""} onChange={e=>setCF("depAtual",e.target.value)} placeholder="filtrar..." style={fc}/></td>
+                          <td style={cell}><select value={cf.setor||""} onChange={e=>setCF("setor",e.target.value)} style={{...fc,cursor:"pointer"}}><option value="">Todos</option>{FERIAS_SETORES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>
+                          <td style={cell}><input value={cf.aquisitivo||""} onChange={e=>setCF("aquisitivo",e.target.value)} placeholder="data..." style={fc}/></td>
+                          <td style={cell}><input value={cf.limite||""} onChange={e=>setCF("limite",e.target.value)} placeholder="data..." style={fc}/></td>
+                          <td style={cell}><input value={cf.saldo||""} onChange={e=>setCF("saldo",e.target.value)} placeholder="dias" style={fc}/></td>
+                          <td style={cell}><input value={cf.previsao||""} onChange={e=>setCF("previsao",e.target.value)} placeholder="data..." style={fc}/></td>
+                          <td style={cell}><input value={cf.previsao2||""} onChange={e=>setCF("previsao2",e.target.value)} placeholder="data..." style={fc}/></td>
+                          <td style={cell}><select value={cf.situacao||""} onChange={e=>setCF("situacao",e.target.value)} style={{...fc,cursor:"pointer"}}><option value="">Todas</option><option value="ferias">🌴 De férias</option><option value="proximo">⚠️ Próximo</option><option value="tirou">✔️ Já tirou</option><option value="ok">✅ Programada</option></select></td>
+                        </>;})()}
+                      </tr>
+                    </thead>
                     <tbody>
                       {filtrada.map(f=>{
                         const sit=situacaoFerias(f);
