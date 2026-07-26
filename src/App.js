@@ -306,6 +306,8 @@ const COMPROMISSO_TIPOS = ["Reunião","Treinamento","Conferência (Ferramentas)"
 const COMPROMISSO_CATEGORIAS = ["Liderança","Manutenção Externa","Manutenção Interna","Geral"];
 const COMPROMISSO_LOCAIS = ["Movimenta","MODO"];
 const BANCO_HORAS_STATUS = {pendente:{l:"⏳ Pendente",c:"#E67E00",bg:"#FFF8F0"},agendada:{l:"📅 Compensação Agendada",c:"#1565C0",bg:"#EFF6FF"},compensada:{l:"✅ Compensada",c:"#1A7A3C",bg:"#F0FFF5"}};
+const ENTREGA_BATERIA_TIPOS = ["Chumbo","Lítio"];
+const PREVENTIVA_TIPOS = ["100 horas","500 horas","1000 horas"];
 // Ponto Diário — situações possíveis por técnico/dia
 const PONTO_STATUS = {
   presente:{l:"✅ Presente",c:"#1A7A3C",bg:"#F0FFF5"},
@@ -2460,7 +2462,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
-  const SAS_TABS = ["sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
+  const SAS_TABS = ["sas","entrega_tecnica","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros"];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -2643,10 +2645,8 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="sas" l="📄 SAS Financeiro"/>
-          <SubBtn k="dashboard_sas_financeiro" l="📊 Dashboard Financeiro"/>
-          <SubBtn k="planilha_comissao_sas" l="🧮 Planilha de Comissão"/>
+          <SubBtn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
           <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
-          <SubBtn k="sas_manutencao" l="🔧 SAS Manutenção"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
         </div>}
@@ -3006,6 +3006,11 @@ export default function App(){
   const [bancoEdit,setBancoEdit]=useState(null);
   const [bancoModal,setBancoModal]=useState(false);
   const [bancoSearch,setBancoSearch]=useState(""); const [bancoFiltroStatus,setBancoFiltroStatus]=useState("todos");
+  const [entregaTec,setEntregaTec]=useState([]);
+  const [showArqEntrega,setShowArqEntrega]=useState(false);
+  const [entregaEdit,setEntregaEdit]=useState(null);
+  const [entregaModal,setEntregaModal]=useState(false);
+  const [entregaSearch,setEntregaSearch]=useState(""); const [entregaFiltro,setEntregaFiltro]=useState("todos");
   const [showArqValeTec,setShowArqValeTec]=useState(false);
   const [valeTecEdit,setValeTecEdit]=useState(null);
   const [valeTecModal,setValeTecModal]=useState(false);
@@ -3155,6 +3160,8 @@ export default function App(){
       if(treinRows.length>0) setTreinamentos(treinRows);
       const bancoRows=await safeGet("banco_horas");
       if(bancoRows.length>0) setBancoHoras(bancoRows);
+      const entregaRows=await safeGet("entrega_tecnica");
+      if(entregaRows.length>0) setEntregaTec(entregaRows);
       const pontoRows=await safeGet("ponto_diario");
       if(pontoRows.length>0) setPontoDiario(pontoRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
@@ -3206,7 +3213,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, ponto_diario:setPontoDiario,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, ponto_diario:setPontoDiario,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3363,6 +3370,8 @@ export default function App(){
   const delTrein=(id)=>{ setTreinamentos(p=>p.filter(x=>x.id!==id)); db.delete("treinamentos_reunioes",id); };
   const updateBanco=(id,changes)=>{ setBancoHoras(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("banco_horas",id,row); return np; }); };
   const delBanco=(id)=>{ setBancoHoras(p=>p.filter(x=>x.id!==id)); db.delete("banco_horas",id); };
+  const updateEntrega=(id,changes)=>{ setEntregaTec(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("entrega_tecnica",id,row); return np; }); };
+  const delEntrega=(id)=>{ setEntregaTec(p=>p.filter(x=>x.id!==id)); db.delete("entrega_tecnica",id); };
   // Sincroniza a lista do banco de horas com os colaboradores do calendario de ferias (adiciona quem falta)
   const sincronizarBancoComFerias=()=>{
     const nomesFerias=(ferias||[]).filter(f=>f&&!f.arquivado&&f.nome).map(f=>({nome:f.nome,setor:f.setor||""}));
@@ -3857,6 +3866,116 @@ export default function App(){
             </div>
           </div>
         )}
+        {entregaModal&&entregaEdit&&(()=>{
+          const d=entregaEdit;
+          const upd=(k,v)=>setEntregaEdit(p=>({...p,[k]:v}));
+          const pvv=(v)=>{const n=parseFloat(String(v||"0").replace(/[^\d.,-]/g,"").replace(",","."));return isNaN(n)?0:n;};
+          // auto-calcula comissao 1% do valor e fim de garantia (6 meses apos entrega)
+          const setValor=(v)=>{setEntregaEdit(p=>({...p,valor:v,comissao:v?(pvv(v)*0.01).toFixed(2):""}));};
+          const setEntrega=(v)=>{setEntregaEdit(p=>{let fg="";if(v){const dt=new Date(v+"T12:00:00");dt.setMonth(dt.getMonth()+6);fg=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;}return{...p,dataEntrega:v,fimGarantia:fg};});};
+          const lbl={display:"block",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:3};
+          const inp={width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const sec={fontSize:11,fontWeight:800,color:"#1A1A1A",textTransform:"uppercase",letterSpacing:.5,margin:"6px 0 2px",paddingBottom:4,borderBottom:"2px solid #F5C200"};
+          // helpers de lista multipla (max 4)
+          const addItem=(campo,vazio)=>{const arr=[...(d[campo]||[])];if(arr.length<4){arr.push(vazio);upd(campo,arr);}};
+          const setItem=(campo,i,val)=>{const arr=[...(d[campo]||[])];arr[i]=val;upd(campo,arr);};
+          const delItem=(campo,i)=>{const arr=[...(d[campo]||[])];arr.splice(i,1);upd(campo,arr.length?arr:[typeof (d[campo]||[])[0]==="object"?{}:""]);};
+          const salvar=()=>{
+            if(!d.cliente||!d.cliente.trim()){alert("Informe o cliente.");return;}
+            if(d.id){updateEntrega(d.id,d);}else{const row={...d,id:`ET${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoPor:user.name,registradoEm:new Date().toISOString()};setEntregaTec(p=>[row,...p]);db.save("entrega_tecnica",row.id,row);}
+            notify("✅ Entrega técnica salva!");setEntregaModal(false);setEntregaEdit(null);
+          };
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setEntregaModal(false);setEntregaEdit(null);}}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:820,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"🚚 Nova"} Entrega Técnica</div><button onClick={()=>{setEntregaModal(false);setEntregaEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:12}}>
+                <div style={sec}>📄 Solicitação</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Data Solicitação</label><input type="date" value={d.dataSolicitacao||""} onChange={e=>upd("dataSolicitacao",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>NF</label><input type="text" value={d.nf||""} onChange={e=>upd("nf",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Valor (R$)</label><input type="text" value={d.valor||""} onChange={e=>setValor(e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>Comissão 1%</label><input type="text" value={d.comissao||""} onChange={e=>upd("comissao",e.target.value)} placeholder="auto" style={{...inp,background:"#F0FDF4",fontWeight:700,color:"#15803D"}}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Cliente</label><input type="text" value={d.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Empresa" style={inp}/></div>
+                  <div><label style={lbl}>Nome (contato)</label><input type="text" value={d.nome||""} onChange={e=>upd("nome",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>E-mail</label><input type="email" value={d.email||""} onChange={e=>upd("email",e.target.value)} style={inp}/></div>
+                </div>
+
+                <div style={sec}>🔧 Equipamentos, Baterias e Carregadores</div>
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><label style={lbl}>Equipamentos</label>{(d.equipamentos||[]).length<4&&<button onClick={()=>addItem("equipamentos","")} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"2px 10px",cursor:"pointer"}}>+ add</button>}</div>
+                  {(d.equipamentos||[""]).map((eq,i)=>(<div key={i} style={{display:"flex",gap:6,marginBottom:5}}><input type="text" value={eq||""} onChange={e=>setItem("equipamentos",i,e.target.value)} placeholder={`Equipamento ${i+1}`} style={inp}/>{(d.equipamentos||[]).length>1&&<button onClick={()=>delItem("equipamentos",i)} style={{background:"#FFF0F0",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"0 10px",fontWeight:700}}>✕</button>}</div>))}
+                </div>
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><label style={lbl}>Baterias (tipo, modelo, série)</label>{(d.baterias||[]).length<4&&<button onClick={()=>addItem("baterias",{tipo:"Chumbo",modelo:"",serie:""})} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"2px 10px",cursor:"pointer"}}>+ add</button>}</div>
+                  {(d.baterias||[{tipo:"Chumbo",modelo:"",serie:""}]).map((b,i)=>(<div key={i} style={{display:"flex",gap:6,marginBottom:5}}>
+                    <select value={b.tipo||"Chumbo"} onChange={e=>setItem("baterias",i,{...b,tipo:e.target.value})} style={{...inp,maxWidth:110}}>{ENTREGA_BATERIA_TIPOS.map(t=><option key={t} value={t}>{t}</option>)}</select>
+                    <input type="text" value={b.modelo||""} onChange={e=>setItem("baterias",i,{...b,modelo:e.target.value})} placeholder="Modelo" style={inp}/>
+                    <input type="text" value={b.serie||""} onChange={e=>setItem("baterias",i,{...b,serie:e.target.value})} placeholder="Série" style={inp}/>
+                    {(d.baterias||[]).length>1&&<button onClick={()=>delItem("baterias",i)} style={{background:"#FFF0F0",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"0 10px",fontWeight:700}}>✕</button>}
+                  </div>))}
+                </div>
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><label style={lbl}>Carregadores (modelo, série)</label>{(d.carregadores||[]).length<4&&<button onClick={()=>addItem("carregadores",{modelo:"",serie:""})} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"2px 10px",cursor:"pointer"}}>+ add</button>}</div>
+                  {(d.carregadores||[{modelo:"",serie:""}]).map((cg,i)=>(<div key={i} style={{display:"flex",gap:6,marginBottom:5}}>
+                    <input type="text" value={cg.modelo||""} onChange={e=>setItem("carregadores",i,{...cg,modelo:e.target.value})} placeholder="Modelo" style={inp}/>
+                    <input type="text" value={cg.serie||""} onChange={e=>setItem("carregadores",i,{...cg,serie:e.target.value})} placeholder="Série" style={inp}/>
+                    {(d.carregadores||[]).length>1&&<button onClick={()=>delItem("carregadores",i)} style={{background:"#FFF0F0",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"0 10px",fontWeight:700}}>✕</button>}
+                  </div>))}
+                </div>
+
+                <div style={sec}>🚚 Entrega e Garantia</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Data Entrega Técnica</label><input type="date" value={d.dataEntrega||""} onChange={e=>setEntrega(e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>MOV</label><input type="text" value={d.mov||""} onChange={e=>upd("mov",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Chamado</label><input type="text" value={d.chamado||""} onChange={e=>upd("chamado",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Envio Faturamento</label><input type="date" value={d.dataEnvioFat||""} onChange={e=>upd("dataEnvioFat",e.target.value)} style={inp}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Fim Garantia (6 meses)</label><input type="date" value={d.fimGarantia||""} onChange={e=>upd("fimGarantia",e.target.value)} style={{...inp,background:"#F0FDFA",fontWeight:700,color:"#0D9488"}}/></div>
+                  <div><label style={lbl}>Comissão - Valor a Receber</label><input type="text" value={d.comissaoValor||""} onChange={e=>upd("comissaoValor",e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>Comissão - Data Recebimento</label><input type="date" value={d.comissaoRecebData||""} onChange={e=>upd("comissaoRecebData",e.target.value)} style={inp}/></div>
+                </div>
+
+                <div style={sec}>🚗 Deslocamento e Custo</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Placa do Carro</label><input type="text" value={d.placa||""} onChange={e=>upd("placa",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Técnico</label><input type="text" value={d.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} list="tecnicos-et" style={inp}/><datalist id="tecnicos-et">{TODOS_TECNICOS.map(t=><option key={t} value={t}/>)}</datalist></div>
+                  <div><label style={lbl}>Distância (KM)</label><input type="text" value={d.distanciaKm||""} onChange={e=>upd("distanciaKm",e.target.value)} style={inp}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                  <div><label style={lbl}>Horas Trabalhadas</label><input type="text" value={d.horasTrab||""} onChange={e=>upd("horasTrab",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>⛽ Gasto Combustível (R$)</label><input type="text" value={d.gastoCombustivel||""} onChange={e=>upd("gastoCombustivel",e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>🍽️ Gasto Alimentação (R$)</label><input type="text" value={d.gastoAlimentacao||""} onChange={e=>upd("gastoAlimentacao",e.target.value)} placeholder="0,00" style={inp}/></div>
+                </div>
+
+                <div style={sec}>⚠️ Retrabalho</div>
+                <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,cursor:"pointer",fontWeight:600}}><input type="checkbox" checked={!!d.retrabalho} onChange={e=>upd("retrabalho",e.target.checked)}/>Houve retrabalho (novo atendimento)</label>
+                  {d.retrabalho&&<div style={{flex:1,minWidth:180}}><label style={lbl}>Valor a descontar do recebimento (R$)</label><input type="text" value={d.valorRetrabalho||""} onChange={e=>upd("valorRetrabalho",e.target.value)} placeholder="0,00" style={{...inp,borderColor:"#FCA5A5",background:"#FFF5F5"}}/></div>}
+                </div>
+
+                <div style={sec}>🛠️ Preventivas Obrigatórias</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Cliente de entrega técnica tem obrigatoriedade de preventivas pagas. Marque quando aprovadas.</div>
+                {[["100 horas","prev100Aprov","prev100Data","prev100Valor"],["500 horas","prev500Aprov","prev500Data","prev500Valor"],["1000 horas","prev1000Aprov","prev1000Data","prev1000Valor"]].map(([nome,kap,kdt,kvl])=>(
+                  <div key={nome} style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr",gap:10,alignItems:"end",background:d[kap]?"#F0FDF4":"#F8FAFC",borderRadius:10,padding:"8px 10px"}}>
+                    <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",fontWeight:700,paddingBottom:8}}><input type="checkbox" checked={!!d[kap]} onChange={e=>upd(kap,e.target.checked)}/>Prev {nome}</label>
+                    <div><label style={lbl}>Data aprovada</label><input type="date" value={d[kdt]||""} onChange={e=>upd(kdt,e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Valor aprovado (R$)</label><input type="text" value={d[kvl]||""} onChange={e=>upd(kvl,e.target.value)} placeholder="0,00" style={inp}/></div>
+                  </div>
+                ))}
+                <div><label style={lbl}>Último contato sobre preventiva</label><input type="date" value={d.ultimoContatoPrev||""} onChange={e=>upd("ultimoContatoPrev",e.target.value)} style={{...inp,maxWidth:200}}/></div>
+
+                <div><label style={lbl}>Observação</label><textarea value={d.obs||""} onChange={e=>upd("obs",e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></div>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9",position:"sticky",bottom:0,background:"#FFF",paddingBottom:2}}>
+                  <BtnG onClick={()=>{setEntregaModal(false);setEntregaEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>);
+        })()}
         {treinModal&&treinEdit&&(()=>{
           const d=treinEdit;
           const upd=(k,v)=>setTreinEdit(p=>({...p,[k]:v}));
@@ -6872,6 +6991,148 @@ export default function App(){
                         </div>}
                         {alarme&&<div style={{fontSize:10,fontWeight:800,color:"#C2410C",marginTop:5}}>🔔 {diasAte(t)===0?"É hoje!":diasAte(t)===1?"É amanhã":`Faltam ${diasAte(t)} dias`}</div>}
                         {t.obs&&<div style={{fontSize:10,color:"#64748B",fontStyle:"italic",marginTop:5}}>{t.obs}</div>}
+                      </div>
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
+          </div>);
+        })()}
+
+        {/* ── ENTREGA TÉCNICA ── */}
+        {tab==="entrega_tecnica"&&(()=>{
+          const lista=(entregaTec||[]).filter(x=>x&&(showArqEntrega?x.arquivado:!x.arquivado));
+          const pv=(v)=>{const n=parseFloat(String(v||"0").replace(/[^\d.,-]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const hoje=TODAY_STR;
+          const filtrada=lista.filter(x=>{
+            if(entregaFiltro==="retrabalho"&&!x.retrabalho)return false;
+            if(entregaFiltro==="garantia_ativa"){const fg=x.fimGarantia;if(!fg||fg<hoje)return false;}
+            if(entregaSearch){const q=entregaSearch.toLowerCase();if(!((x.cliente||"").toLowerCase().includes(q)||(x.nome||"").toLowerCase().includes(q)||(x.nf||"").toLowerCase().includes(q)||(x.chamado||"").toLowerCase().includes(q)))return false;}
+            return true;
+          }).sort((a,b)=>String(b.dataSolicitacao||"").localeCompare(String(a.dataSolicitacao||"")));
+          // Fim de garantia = 6 meses após a data de entrega técnica
+          const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
+          // Comissão recebida menos se houver retrabalho
+          const comissaoLiquida=(x)=>{let c=pv(x.comissao);if(x.retrabalho)c-=pv(x.valorRetrabalho);return c;};
+          // KPIs
+          const totalReceita=lista.reduce((a,x)=>a+pv(x.valor),0);
+          const totalComissao=lista.reduce((a,x)=>a+comissaoLiquida(x),0);
+          const totalCombustivel=lista.reduce((a,x)=>a+pv(x.gastoCombustivel),0);
+          const totalAlimentacao=lista.reduce((a,x)=>a+pv(x.gastoAlimentacao),0);
+          const totalGastos=totalCombustivel+totalAlimentacao;
+          const mesAtual=hoje.slice(0,7);
+          const doMes=lista.filter(x=>(x.dataSolicitacao||"").startsWith(mesAtual));
+          const garantiaAtiva=lista.filter(x=>x.fimGarantia&&x.fimGarantia>=hoje).length;
+          const comRetrabalho=lista.filter(x=>x.retrabalho).length;
+          // Alertas de preventiva: clientes de entrega tecnica devem fazer preventivas — alerta mensal
+          const alertasPrev=lista.filter(x=>{
+            if(!x.dataEntrega)return false;
+            // se nao tem nenhuma preventiva marcada como aprovada, ou passou 30d do ultimo contato
+            const semPrev=!x.prev100Aprov&&!x.prev500Aprov&&!x.prev1000Aprov;
+            const ultContato=x.ultimoContatoPrev||x.dataEntrega;
+            const diasSemContato=Math.floor((new Date(hoje)-new Date(ultContato))/86400000);
+            return semPrev||diasSemContato>=30;
+          });
+          // Grafico: receita x comissao x gastos por mes (ultimos 6)
+          const meses=[...new Set(lista.map(x=>(x.dataSolicitacao||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
+          const MESN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          const th={padding:"7px 8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#FFF",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",background:"#1A1A1A",position:"sticky",top:0,zIndex:2};
+          const td={padding:"5px 8px",borderBottom:"1px solid #F1F5F9",fontSize:11,verticalAlign:"middle"};
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>🚚 Entrega Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} entrega(s) · {doMes.length} este mês · <span style={{color:"#1A7A3C",fontWeight:700}}>{garantiaAtiva} em garantia</span>{comRetrabalho>0&&<span style={{color:"#C62828",fontWeight:700}}> · {comRetrabalho} c/ retrabalho</span>}</div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
+                <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",retrabalho:false,valorRetrabalho:"",prev100Aprov:false,prev100Data:"",prev100Valor:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
+              </div>
+            </div>
+
+            {alertasPrev.length>0&&<div className="card" style={{padding:"10px 14px",marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#C2410C",marginBottom:6}}>🔔 Contatar cliente sobre preventiva ({alertasPrev.length})</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {alertasPrev.slice(0,8).map(x=><span key={x.id} style={{fontSize:11,fontWeight:700,color:"#7C2D12",background:"#FFEDD5",borderRadius:10,padding:"3px 10px"}}>{x.cliente||x.nome||"Cliente"}</span>)}
+                {alertasPrev.length>8&&<span style={{fontSize:11,color:"#9A3412",fontWeight:700}}>+{alertasPrev.length-8}</span>}
+              </div>
+            </div>}
+
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:16}}>
+              {[
+                {l:"Entregas",v:lista.length,sub:`${doMes.length} este mês`,c:"#1565C0",i:"🚚"},
+                {l:"Receita (NF)",v:fmtR(totalReceita),c:"#1A7A3C",i:"💰"},
+                {l:"Comissão Líquida",v:fmtR(totalComissao),sub:"já desconta retrabalho",c:"#7E22CE",i:"📈"},
+                {l:"⛽ Combustível",v:fmtR(totalCombustivel),c:"#B45309",i:"⛽"},
+                {l:"🍽️ Alimentação",v:fmtR(totalAlimentacao),c:"#E67E00",i:"🍽️"},
+                {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
+              ].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?16:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
+                  {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:2}}>{k.sub}</div>}
+                </div>
+              ))}
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:14,marginBottom:18}}>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Receita × Comissão × Gastos por Mês</div>
+                {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+                <ChartCanvas type="bar" height={200} data={{
+                  labels:meses.map(m=>{const[y,mo]=m.split("-");return `${MESN[parseInt(mo)-1]}/${y.slice(2)}`;}),
+                  datasets:[
+                    {label:"Receita",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+pv(x.valor),0)),backgroundColor:"#1A7A3C",borderRadius:5},
+                    {label:"Comissão",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+comissaoLiquida(x),0)),backgroundColor:"#7E22CE",borderRadius:5},
+                    {label:"Gastos",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+pv(x.gastoCombustivel)+pv(x.gastoAlimentacao),0)),backgroundColor:"#B45309",borderRadius:5},
+                  ]
+                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
+              </div>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Ganhos × Gastos (total)</div>
+                <ChartCanvas type="doughnut" height={200} data={{
+                  labels:["Comissão Líquida","⛽ Combustível","🍽️ Alimentação"],
+                  datasets:[{data:[totalComissao,totalCombustivel,totalAlimentacao],backgroundColor:["#7E22CE","#B45309","#E67E00"],borderWidth:2,borderColor:"#FFF"}]
+                }} options={{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
+                <div style={{textAlign:"center",marginTop:8,fontSize:11}}><span style={{color:"#1A7A3C",fontWeight:800}}>Ganho {fmtR(totalComissao)}</span> · <span style={{color:"#C62828",fontWeight:800}}>Gasto {fmtR(totalGastos)}</span></div>
+              </div>
+            </div>
+
+            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:13}}>🔍</span><input type="text" value={entregaSearch} onChange={e=>setEntregaSearch(e.target.value)} placeholder="Buscar cliente, nome, NF, chamado..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+              <select value={entregaFiltro} onChange={e=>setEntregaFiltro(e.target.value)} style={{fontSize:12,padding:"8px 10px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}><option value="todos">Todos</option><option value="garantia_ativa">🛡️ Em garantia</option><option value="retrabalho">⚠️ Com retrabalho</option></select>
+            </div>
+
+            {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚚</div><div style={{fontSize:14,fontWeight:600}}>Nenhuma entrega técnica — clique em "+ Nova Solicitação"</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:12}}>
+                {filtrada.map(x=>{
+                  const garAtiva=x.fimGarantia&&x.fimGarantia>=hoje;
+                  const comLiq=comissaoLiquida(x);
+                  const gasto=pv(x.gastoCombustivel)+pv(x.gastoAlimentacao);
+                  return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${x.retrabalho?"#C62828":garAtiva?"#0D9488":"#1565C0"}`}}>
+                    <div style={{padding:"9px 12px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
+                      <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.cliente||"Cliente"}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(x.dataSolicitacao)} · NF {x.nf||"—"}</div></div>
+                      <div style={{display:"flex",gap:3,flexShrink:0}}>
+                        <button onClick={()=>{setEntregaEdit({...x});setEntregaModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
+                        <button onClick={()=>updateEntrega(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>{x.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir esta entrega?"))delEntrega(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        {garAtiva&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0D9488",borderRadius:10,padding:"2px 9px"}}>🛡️ Garantia até {fmtDataBR(x.fimGarantia)}</span>}
+                        {x.retrabalho&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ Retrabalho -{fmtR(pv(x.valorRetrabalho))}</span>}
+                      </div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Valor NF</span><div style={{fontWeight:800,color:"#1A7A3C"}}>{fmtR(pv(x.valor))}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Comissão líq.</span><div style={{fontWeight:800,color:"#7E22CE"}}>{fmtR(comLiq)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⛽+🍽️ Gasto</span><div style={{fontWeight:700,color:"#B45309"}}>{fmtR(gasto)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Técnico</span><div style={{fontWeight:600}}>{x.tecnico||"—"}</div></div>
+                      </div>
+                      {(x.equipamentos||[]).filter(Boolean).length>0&&<div style={{fontSize:10,color:"#475569",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>🔧 {(x.equipamentos||[]).filter(Boolean).join(" · ")}</div>}
+                      <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
+                        {[["100h",x.prev100Aprov,x.prev100Data],["500h",x.prev500Aprov,x.prev500Data],["1000h",x.prev1000Aprov,x.prev1000Data]].map(([lbl,ap,dt])=>(
+                          <span key={lbl} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ap?"#DCFCE7":"#F1F5F9",color:ap?"#15803D":"#94A3B8"}}>Prev {lbl} {ap?"✅":"○"}{ap&&dt?` ${fmtDataBR(dt)}`:""}</span>
+                        ))}
                       </div>
                     </div>
                   </div>);
