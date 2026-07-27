@@ -2508,7 +2508,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       {!user.semSas&&<>
         <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
-        <Btn k="sas" l="📄 SAS Financeiro"/>
         <Btn k="sas_manutencao" l="🔧 SAS Manutenção"/>
         <Btn k="sas_vendas" l="💰 SAS Vendas"/>
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2520,7 +2519,10 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   );
   if(user.acessoSas&&!user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      <Btn k="sas" l="📄 SAS"/>
+      <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
+      <Btn k="sas_vendas" l="💰 SAS Vendas"/>
+      <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
+      <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
     </div>
   );
   if(user.apenasAgenda) return(
@@ -2644,7 +2646,6 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       {!user?.semSas&&<>
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
-          <SubBtn k="sas" l="📄 SAS Financeiro"/>
           <SubBtn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
           <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
@@ -3463,7 +3464,7 @@ export default function App(){
   const agendaAtendimentos=[];
   Object.keys(schedule).forEach(k=>{ const i=k.indexOf("__"); if(i<0)return; const t=k.slice(0,i), dt=k.slice(i+2); (schedule[k]||[]).forEach(s=>agendaAtendimentos.push({tecnico:t,date:dt,region:techRegionMap[t]||"",type:s.type||"preventivo",status:s.status,horasTrabalhadas:s.horasTrabalhadas||calcHoras(s.horaEntrada,s.horaSaida),horaEntrada:s.horaEntrada,horaSaida:s.horaSaida,empresa:s.client||"",patrimonio:s.patrimonio||"",relatorio:s.relatorio||""})); });
 
-  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("sas");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
+  if(!user)return<LoginScreen users={users} onLogin={u=>{setUser(u);if(u.acessoSas&&!u.acessoComercial)setTab("entrega_tecnica");else if(u.acessoComercial)setTab("mau_uso");else if(u.apenasAgenda)setTab("agenda_prev");else if(u.apenasOficina)setTab("agenda_ofi");else if(u.apenasOficina150)setTab("agenda_ofi_150");try{localStorage.setItem("grupomov_user",JSON.stringify({id:u.id}));}catch(e){}notify(`Bem-vinda, ${u.name}!`);}}/>;
 
   const CSS=`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
