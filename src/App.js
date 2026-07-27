@@ -3904,8 +3904,28 @@ export default function App(){
                   <div><label style={lbl}>Nome (contato)</label><input type="text" value={d.nome||""} onChange={e=>upd("nome",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>E-mail</label><input type="email" value={d.email||""} onChange={e=>upd("email",e.target.value)} style={inp}/></div>
                 </div>
+                <div style={{border:"1.5px solid #E2E8F0",borderRadius:10,padding:"9px 11px",background:d.nfPdf?"#F0FDF4":"#FAFAFA"}}>
+                  <div style={{fontSize:10,fontWeight:700,color:"#334155",marginBottom:6}}>📄 Anexo da NF (PDF)</div>
+                  {d.nfPdf?(<div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                    <a href={d.nfPdf.url} target="_blank" rel="noreferrer" style={{fontSize:11,fontWeight:700,color:"#15803D",textDecoration:"none",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>✅ {d.nfPdf.nome||"ver PDF"}</a>
+                    <button onClick={()=>upd("nfPdf",null)} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:10,fontWeight:700}}>Remover</button>
+                  </div>):(
+                    <label style={{display:"inline-block",fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"6px 12px",cursor:"pointer"}}>
+                      📎 Anexar PDF da NF
+                      <input type="file" accept="application/pdf,.pdf" style={{display:"none"}} onChange={async e=>{
+                        const file=e.target.files[0]; if(!file)return;
+                        if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){alert("Envie um arquivo PDF.");return;}
+                        const pastaId=d.id||`ET${Date.now()}`;
+                        try{ notify("⏳ Enviando PDF...");
+                          const r=await uploadArquivoSupabase(file,pastaId,"nf",("NF_"+(d.nf||"")+".pdf"));
+                          upd("nfPdf",{url:r.url,nome:file.name,path:r.path});
+                          notify("✅ NF anexada!");
+                        }catch(err){ alert("Falha ao enviar: "+err.message); }
+                      }}/>
+                    </label>
+                  )}
+                </div>
 
-                <div style={sec}>🔧 Equipamentos, Baterias e Carregadores</div>
                 <div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><label style={lbl}>Equipamentos</label>{(d.equipamentos||[]).length<4&&<button onClick={()=>addItem("equipamentos","")} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"2px 10px",cursor:"pointer"}}>+ add</button>}</div>
                   {(d.equipamentos||[""]).map((eq,i)=>(<div key={i} style={{display:"flex",gap:6,marginBottom:5}}><input type="text" value={eq||""} onChange={e=>setItem("equipamentos",i,e.target.value)} placeholder={`Equipamento ${i+1}`} style={inp}/>{(d.equipamentos||[]).length>1&&<button onClick={()=>delItem("equipamentos",i)} style={{background:"#FFF0F0",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"0 10px",fontWeight:700}}>✕</button>}</div>))}
@@ -3935,37 +3955,84 @@ export default function App(){
                   <div><label style={lbl}>Chamado</label><input type="text" value={d.chamado||""} onChange={e=>upd("chamado",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>Envio Faturamento</label><input type="date" value={d.dataEnvioFat||""} onChange={e=>upd("dataEnvioFat",e.target.value)} style={inp}/></div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                  <div><label style={lbl}>Fim Garantia (6 meses)</label><input type="date" value={d.fimGarantia||""} onChange={e=>upd("fimGarantia",e.target.value)} style={{...inp,background:"#F0FDFA",fontWeight:700,color:"#0D9488"}}/></div>
-                  <div><label style={lbl}>Comissão - Valor a Receber</label><input type="text" value={d.comissaoValor||""} onChange={e=>upd("comissaoValor",e.target.value)} placeholder="0,00" style={inp}/></div>
-                  <div><label style={lbl}>Comissão - Data Recebimento</label><input type="date" value={d.comissaoRecebData||""} onChange={e=>upd("comissaoRecebData",e.target.value)} style={inp}/></div>
+                <div style={{background:"#FEFCE8",border:"1.5px solid #FDE68A",borderRadius:10,padding:"10px 12px"}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"#B45309",marginBottom:6}}>💰 Comissão de Fim de Garantia (1%) — recebimento futuro</div>
+                  <div style={{fontSize:10,color:"#92400E",marginBottom:8}}>A comissão de 1% sobre a NF é recebida <b>após o fim da garantia</b> (6 meses da entrega técnica). Valor e data previstos são automáticos.</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                    <div><label style={lbl}>Fim Garantia (6 meses)</label><input type="date" value={d.fimGarantia||""} onChange={e=>upd("fimGarantia",e.target.value)} style={{...inp,background:"#F0FDFA",fontWeight:700,color:"#0D9488"}}/></div>
+                    <div><label style={lbl}>Comissão 1% a Receber</label><input type="text" value={d.comissaoValor||(d.valor?(pvv(d.valor)*0.01).toFixed(2):"")} onChange={e=>upd("comissaoValor",e.target.value)} placeholder="auto 1%" style={{...inp,background:"#FFFBEB",fontWeight:700,color:"#B45309"}}/></div>
+                    <div><label style={lbl}>Previsão Recebimento</label><input type="date" value={d.comissaoRecebPrev||d.fimGarantia||""} onChange={e=>upd("comissaoRecebPrev",e.target.value)} style={{...inp,fontWeight:600}}/></div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",marginTop:10}}>
+                    <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",fontWeight:700}}><input type="checkbox" checked={!!d.comissaoRecebida} onChange={e=>upd("comissaoRecebida",e.target.checked)}/>Já recebido</label>
+                    {d.comissaoRecebida&&<div style={{flex:1,minWidth:160}}><label style={lbl}>Data do Recebimento</label><input type="date" value={d.comissaoRecebData||""} onChange={e=>upd("comissaoRecebData",e.target.value)} style={inp}/></div>}
+                  </div>
                 </div>
 
                 <div style={sec}>🚗 Deslocamento e Custo</div>
+                {(()=>{const km=pvv(d.distanciaKm),kpl=pvv(d.kmPorLitro),pl=pvv(d.precoLitro),hrs=pvv(d.horasTrab);
+                  const gasol=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const repasse=km*3.5;const mo=hrs*280;
+                  const fmt=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+                  return(<>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                   <div><label style={lbl}>Placa do Carro</label><input type="text" value={d.placa||""} onChange={e=>upd("placa",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>Técnico</label><input type="text" value={d.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} list="tecnicos-et" style={inp}/><datalist id="tecnicos-et">{TODOS_TECNICOS.map(t=><option key={t} value={t}/>)}</datalist></div>
                   <div><label style={lbl}>Distância (KM)</label><input type="text" value={d.distanciaKm||""} onChange={e=>upd("distanciaKm",e.target.value)} style={inp}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                  <div><label style={lbl}>Horas Trabalhadas</label><input type="text" value={d.horasTrab||""} onChange={e=>upd("horasTrab",e.target.value)} style={inp}/></div>
-                  <div><label style={lbl}>⛽ Gasto Combustível (R$)</label><input type="text" value={d.gastoCombustivel||""} onChange={e=>upd("gastoCombustivel",e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>Km por litro do carro</label><input type="text" value={d.kmPorLitro||""} onChange={e=>upd("kmPorLitro",e.target.value)} placeholder="ex: 10" style={inp}/></div>
+                  <div><label style={lbl}>Preço do litro (R$)</label><input type="text" value={d.precoLitro||""} onChange={e=>upd("precoLitro",e.target.value)} placeholder="ex: 6,00" style={inp}/></div>
+                  <div><label style={lbl}>Horas Trabalhadas</label><input type="text" value={d.horasTrab||""} onChange={e=>upd("horasTrab",e.target.value)} placeholder="ex: 3" style={inp}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                   <div><label style={lbl}>🍽️ Gasto Alimentação (R$)</label><input type="text" value={d.gastoAlimentacao||""} onChange={e=>upd("gastoAlimentacao",e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>🎫 Nº Ticket</label><input type="text" value={d.ticket||""} onChange={e=>upd("ticket",e.target.value)} placeholder="ticket do gasto" style={inp}/></div>
                 </div>
-
-                <div style={sec}>⚠️ Retrabalho</div>
-                <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,cursor:"pointer",fontWeight:600}}><input type="checkbox" checked={!!d.retrabalho} onChange={e=>upd("retrabalho",e.target.checked)}/>Houve retrabalho (novo atendimento)</label>
-                  {d.retrabalho&&<div style={{flex:1,minWidth:180}}><label style={lbl}>Valor a descontar do recebimento (R$)</label><input type="text" value={d.valorRetrabalho||""} onChange={e=>upd("valorRetrabalho",e.target.value)} placeholder="0,00" style={{...inp,borderColor:"#FCA5A5",background:"#FFF5F5"}}/></div>}
+                <div style={{background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:10,padding:"8px 12px",fontSize:11,color:"#334155"}}>
+                  <div style={{fontWeight:800,color:"#64748B",fontSize:9,textTransform:"uppercase",marginBottom:4}}>Cálculo automático</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
+                    <span>⛽ Gasolina (custo): <b>{fmt(gasol)}</b> <span style={{color:"#94A3B8"}}>({km||0}km ÷ {kpl||0} × {fmt(pl)})</span></span>
+                    <span>🛣️ Repasse km×3,50: <b>{fmt(repasse)}</b></span>
+                    <span>⏱️ Mão de obra (h×280): <b>{fmt(mo)}</b></span>
+                  </div>
                 </div>
+                  </>);})()}
 
-                <div style={sec}>🛠️ Preventivas Obrigatórias</div>
-                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Cliente de entrega técnica tem obrigatoriedade de preventivas pagas. Marque quando aprovadas.</div>
-                {[["100 horas","prev100Aprov","prev100Data","prev100Valor"],["500 horas","prev500Aprov","prev500Data","prev500Valor"],["1000 horas","prev1000Aprov","prev1000Data","prev1000Valor"]].map(([nome,kap,kdt,kvl])=>(
-                  <div key={nome} style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr",gap:10,alignItems:"end",background:d[kap]?"#F0FDF4":"#F8FAFC",borderRadius:10,padding:"8px 10px"}}>
+                <div style={sec}>⚠️ Retrabalhos (até 10)</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. Cada retrabalho é somado como gasto e entra no cálculo de "vale a pena".</div>
+                {(d.retrabalhos||[]).map((r,i)=>{
+                  const km=pvv(r.distanciaKm),kpl=pvv(r.kmPorLitro),pl=pvv(r.precoLitro),hrs=pvv(r.horasTrab);
+                  const gasol=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const tot=gasol+pvv(r.gastoAlimentacao)+hrs*280+km*3.5;
+                  const setR=(k,v)=>{const arr=[...(d.retrabalhos||[])];arr[i]={...arr[i],[k]:v};upd("retrabalhos",arr);};
+                  return(<div key={i} style={{border:"1.5px solid #FCA5A5",borderRadius:10,padding:"10px 12px",background:"#FFF7F7",marginBottom:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontSize:11,fontWeight:800,color:"#C62828"}}>🔁 Retrabalho {i+1} · gasto {`R$ ${tot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`}</div><button onClick={()=>{const arr=[...(d.retrabalhos||[])];arr.splice(i,1);upd("retrabalhos",arr);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 9px",fontSize:10,fontWeight:700}}>Remover</button></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+                      <div><label style={lbl}>Data</label><input type="date" value={r.data||""} onChange={e=>setR("data",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Nº Relatório</label><input type="text" value={r.relatorio||""} onChange={e=>setR("relatorio",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Chamado</label><input type="text" value={r.chamado||""} onChange={e=>setR("chamado",e.target.value)} style={inp}/></div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
+                      <div><label style={lbl}>Distância (KM)</label><input type="text" value={r.distanciaKm||""} onChange={e=>setR("distanciaKm",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Km/litro</label><input type="text" value={r.kmPorLitro||""} onChange={e=>setR("kmPorLitro",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Preço litro (R$)</label><input type="text" value={r.precoLitro||""} onChange={e=>setR("precoLitro",e.target.value)} style={inp}/></div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                      <div><label style={lbl}>Horas Trab.</label><input type="text" value={r.horasTrab||""} onChange={e=>setR("horasTrab",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>🍽️ Alimentação (R$)</label><input type="text" value={r.gastoAlimentacao||""} onChange={e=>setR("gastoAlimentacao",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>🎫 Nº Ticket</label><input type="text" value={r.ticket||""} onChange={e=>setR("ticket",e.target.value)} style={inp}/></div>
+                    </div>
+                  </div>);
+                })}
+                {(d.retrabalhos||[]).length<10&&<button onClick={()=>upd("retrabalhos",[...(d.retrabalhos||[]),{data:"",relatorio:"",chamado:"",distanciaKm:"",kmPorLitro:d.kmPorLitro||"",precoLitro:d.precoLitro||"",horasTrab:"",gastoAlimentacao:"",ticket:""}])} style={{fontSize:11,fontWeight:700,color:"#C62828",background:"#FFF0F0",border:"1.5px solid #FCA5A5",borderRadius:8,padding:"8px 14px",cursor:"pointer"}}>+ Adicionar retrabalho</button>}
+
+                <div style={sec}>🛠️ Preventivas Obrigatórias (receita)</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Valor acordado lançado aqui entra como receita. Informe também o nº do relatório de cada preventiva.</div>
+                {[["100 horas","prev100Aprov","prev100Data","prev100Valor","prev100Rel"],["500 horas","prev500Aprov","prev500Data","prev500Valor","prev500Rel"],["1000 horas","prev1000Aprov","prev1000Data","prev1000Valor","prev1000Rel"]].map(([nome,kap,kdt,kvl,krel])=>(
+                  <div key={nome} style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr",gap:10,alignItems:"end",background:d[kap]?"#F0FDF4":"#F8FAFC",borderRadius:10,padding:"8px 10px"}}>
                     <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer",fontWeight:700,paddingBottom:8}}><input type="checkbox" checked={!!d[kap]} onChange={e=>upd(kap,e.target.checked)}/>Prev {nome}</label>
                     <div><label style={lbl}>Data aprovada</label><input type="date" value={d[kdt]||""} onChange={e=>upd(kdt,e.target.value)} style={inp}/></div>
                     <div><label style={lbl}>Valor aprovado (R$)</label><input type="text" value={d[kvl]||""} onChange={e=>upd(kvl,e.target.value)} placeholder="0,00" style={inp}/></div>
+                    <div><label style={lbl}>Nº Relatório</label><input type="text" value={d[krel]||""} onChange={e=>upd(krel,e.target.value)} style={inp}/></div>
                   </div>
                 ))}
                 <div><label style={lbl}>Último contato sobre preventiva</label><input type="date" value={d.ultimoContatoPrev||""} onChange={e=>upd("ultimoContatoPrev",e.target.value)} style={{...inp,maxWidth:200}}/></div>
@@ -7066,24 +7133,47 @@ export default function App(){
           // Fim de garantia = 6 meses após a data de entrega técnica
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
           // Status da preventiva evolui conforme as etapas concluidas
+          // ── MODELO DE RECEITA (serviço, não mercadoria) ──
+          // Fórmulas de custo por caso
+          const VALOR_KM_REPASSE=3.5, VALOR_HORA=280;
+          const custoGasolina=(x)=>{const km=pv(x.distanciaKm),kpl=pv(x.kmPorLitro),pl=pv(x.precoLitro);return (km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;};
+          const repasseKm=(x)=>pv(x.distanciaKm)*VALOR_KM_REPASSE;
+          const custoMaoObra=(x)=>pv(x.horasTrab)*VALOR_HORA;
+          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return gas+pv(r.gastoAlimentacao)+pv(r.horasTrab)*VALOR_HORA+km*VALOR_KM_REPASSE;};
+          const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
+          // Gasto total do caso = gasolina(custo) + alimentação + mão de obra + repasse km + retrabalhos
+          const gastoCaso=(x)=>custoGasolina(x)+pv(x.gastoAlimentacao)+custoMaoObra(x)+repasseKm(x)+gastosRetrabalhos(x);
+          // Receitas
+          const recEntregaTec=(x)=>pv(x.valor)*0.01;               // 1% entrega técnica (bruto)
+          const recGarantia=(x)=>x.comissaoValor?pv(x.comissaoValor):pv(x.valor)*0.01; // 1% fim garantia
+          const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor); // acordado
+          const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
+          // Comissão 1% entrega técnica: bruto e líquido (líquido desconta gastos + retrabalhos)
+          const comissaoBruta=(x)=>recEntregaTec(x);
+          const comissaoLiquida=(x)=>comissaoBruta(x)-gastoCaso(x);
           const statusPreventiva=(x)=>{
             if(x.prev1000Aprov)return {k:"completa",l:"🏆 Preventiva de garantia completa",c:"#15803D",bg:"#DCFCE7"};
             if(x.prev500Aprov)return {k:"aguarda1000",l:"✅ 500h concluída · aguardando 1000h",c:"#0D9488",bg:"#F0FDFA"};
             if(x.prev100Aprov)return {k:"aguarda500",l:"✅ 100h concluída · aguardando 500h",c:"#1565C0",bg:"#EFF6FF"};
             return {k:"pendente100",l:"⏳ Pendente marcação preventiva 100h",c:"#E67E00",bg:"#FFF8F0"};
           };
-          // Comissão recebida menos se houver retrabalho
-          const comissaoLiquida=(x)=>{let c=pv(x.comissao);if(x.retrabalho)c-=pv(x.valorRetrabalho);return c;};
-          // KPIs
-          const totalReceita=lista.reduce((a,x)=>a+pv(x.valor),0);
-          const totalComissao=lista.reduce((a,x)=>a+comissaoLiquida(x),0);
-          const totalCombustivel=lista.reduce((a,x)=>a+pv(x.gastoCombustivel),0);
+          // KPIs (receita = serviço, não valor da NF)
+          const totRecEntrega=lista.reduce((a,x)=>a+recEntregaTec(x),0);
+          const totRecGarantia=lista.reduce((a,x)=>a+recGarantia(x),0);
+          const totRecPreventiva=lista.reduce((a,x)=>a+recPreventivas(x),0);
+          const totalReceita=totRecEntrega+totRecGarantia+totRecPreventiva;
+          const totalComissaoLiq=lista.reduce((a,x)=>a+comissaoLiquida(x),0);
+          const totalGasolina=lista.reduce((a,x)=>a+custoGasolina(x),0);
+          const totalRepasse=lista.reduce((a,x)=>a+repasseKm(x),0);
+          const totalMaoObra=lista.reduce((a,x)=>a+custoMaoObra(x),0);
           const totalAlimentacao=lista.reduce((a,x)=>a+pv(x.gastoAlimentacao),0);
-          const totalGastos=totalCombustivel+totalAlimentacao;
+          const totalRetrab=lista.reduce((a,x)=>a+gastosRetrabalhos(x),0);
+          const totalGastos=lista.reduce((a,x)=>a+gastoCaso(x),0);
+          const totalCombustivel=totalGasolina; // compat
           const mesAtual=hoje.slice(0,7);
           const doMes=lista.filter(x=>(x.dataSolicitacao||"").startsWith(mesAtual));
           const garantiaAtiva=lista.filter(x=>x.fimGarantia&&x.fimGarantia>=hoje).length;
-          const comRetrabalho=lista.filter(x=>x.retrabalho).length;
+          const comRetrabalho=lista.filter(x=>(x.retrabalhos||[]).length>0||x.retrabalho).length;
           // Alertas de preventiva: clientes de entrega tecnica devem fazer preventivas — alerta mensal
           const alertasPrev=lista.filter(x=>{
             if(!x.dataEntrega)return false;
@@ -7103,7 +7193,7 @@ export default function App(){
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>🚚 Entrega Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} entrega(s) · {doMes.length} este mês · <span style={{color:"#1A7A3C",fontWeight:700}}>{garantiaAtiva} em garantia</span>{comRetrabalho>0&&<span style={{color:"#C62828",fontWeight:700}}> · {comRetrabalho} c/ retrabalho</span>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
-                <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",retrabalho:false,valorRetrabalho:"",prev100Aprov:false,prev100Data:"",prev100Valor:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
+                <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",kmPorLitro:"",precoLitro:"",horasTrab:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
             </div>
 
@@ -7118,15 +7208,17 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:16}}>
               {[
                 {l:"Entregas",v:lista.length,sub:`${doMes.length} este mês`,c:"#1565C0",i:"🚚"},
-                {l:"Receita (NF)",v:fmtR(totalReceita),c:"#1A7A3C",i:"💰"},
-                {l:"Comissão Líquida",v:fmtR(totalComissao),sub:"já desconta retrabalho",c:"#7E22CE",i:"📈"},
-                {l:"⛽ Combustível",v:fmtR(totalCombustivel),c:"#B45309",i:"⛽"},
-                {l:"🍽️ Alimentação",v:fmtR(totalAlimentacao),c:"#E67E00",i:"🍽️"},
+                {l:"Receita Total",v:fmtR(totalReceita),sub:"serviço (não NF)",c:"#1A7A3C",i:"💰"},
+                {l:"1% Entrega Téc.",v:fmtR(totRecEntrega),c:"#0369A1",i:"🔧"},
+                {l:"1% Fim Garantia",v:fmtR(totRecGarantia),sub:"recebimento futuro",c:"#0D9488",i:"🛡️"},
+                {l:"Preventivas",v:fmtR(totRecPreventiva),sub:"100+500+1000h",c:"#7E22CE",i:"🛠️"},
+                {l:"Gastos Totais",v:fmtR(totalGastos),sub:"c/ retrabalhos",c:"#C62828",i:"📉"},
+                {l:"Comissão Líquida",v:fmtR(totalComissaoLiq),sub:"1% − gastos",c:totalComissaoLiq>=0?"#15803D":"#C62828",i:"📈"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
               ].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
                   <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?16:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
+                  <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?15:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
                   {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:2}}>{k.sub}</div>}
                 </div>
               ))}
@@ -7134,24 +7226,30 @@ export default function App(){
 
             <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:14,marginBottom:18}}>
               <div className="card" style={{padding:14}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Receita × Comissão × Gastos por Mês</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Receita (Entrega + Garantia + Preventivas) × Gastos por Mês</div>
                 {meses.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
                 <ChartCanvas type="bar" height={200} data={{
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return `${MESN[parseInt(mo)-1]}/${y.slice(2)}`;}),
                   datasets:[
-                    {label:"Receita",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+pv(x.valor),0)),backgroundColor:"#1A7A3C",borderRadius:5},
-                    {label:"Comissão",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+comissaoLiquida(x),0)),backgroundColor:"#7E22CE",borderRadius:5},
-                    {label:"Gastos",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+pv(x.gastoCombustivel)+pv(x.gastoAlimentacao),0)),backgroundColor:"#B45309",borderRadius:5},
+                    {label:"1% Entrega",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recEntregaTec(x),0)),backgroundColor:"#0369A1",borderRadius:4,stack:"rec"},
+                    {label:"1% Garantia",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
+                    {label:"Preventivas",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
+                    {label:"Gastos",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+gastoCaso(x),0)),backgroundColor:"#C62828",borderRadius:4,stack:"gasto"},
                   ]
-                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
+                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},stacked:true},y:{beginAtZero:true,stacked:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
               </div>
               <div className="card" style={{padding:14}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Ganhos × Gastos (total)</div>
-                <ChartCanvas type="doughnut" height={200} data={{
-                  labels:["Comissão Líquida","⛽ Combustível","🍽️ Alimentação"],
-                  datasets:[{data:[totalComissao,totalCombustivel,totalAlimentacao],backgroundColor:["#7E22CE","#B45309","#E67E00"],borderWidth:2,borderColor:"#FFF"}]
-                }} options={{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
-                <div style={{textAlign:"center",marginTop:8,fontSize:11}}><span style={{color:"#1A7A3C",fontWeight:800}}>Ganho {fmtR(totalComissao)}</span> · <span style={{color:"#C62828",fontWeight:800}}>Gasto {fmtR(totalGastos)}</span></div>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>% Ganho × Gasto (sobre receita)</div>
+                {(()=>{const pctGanho=totalReceita>0?(totalComissaoLiq/totalReceita*100):0;const pctGasto=totalReceita>0?(totalGastos/totalReceita*100):0;return(<>
+                <ChartCanvas type="doughnut" height={180} data={{
+                  labels:["Ganho líquido","Gastos"],
+                  datasets:[{data:[Math.max(totalComissaoLiq,0),totalGastos],backgroundColor:["#15803D","#C62828"],borderWidth:2,borderColor:"#FFF"}]
+                }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
+                <div style={{textAlign:"center",marginTop:8,fontSize:11,lineHeight:1.6}}>
+                  <div><span style={{color:"#15803D",fontWeight:800}}>Ganho {fmtR(totalComissaoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
+                  <div><span style={{color:"#C62828",fontWeight:800}}>Gasto {fmtR(totalGastos)}</span> <span style={{color:"#C62828"}}>({pctGasto.toFixed(1)}%)</span></div>
+                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>sobre receita de {fmtR(totalReceita)}</div>
+                </div></>);})()}
               </div>
             </div>
 
@@ -7182,9 +7280,13 @@ export default function App(){
                 {filtrada.map(x=>{
                   const garAtiva=x.fimGarantia&&x.fimGarantia>=hoje;
                   const stPrev=statusPreventiva(x);
+                  const nRetrab=(x.retrabalhos||[]).length;
+                  const temRetrab=nRetrab>0||x.retrabalho;
+                  const comBruta=comissaoBruta(x);
                   const comLiq=comissaoLiquida(x);
-                  const gasto=pv(x.gastoCombustivel)+pv(x.gastoAlimentacao);
-                  return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${x.retrabalho?"#C62828":garAtiva?"#0D9488":"#1565C0"}`}}>
+                  const gasto=gastoCaso(x);
+                  const recTotal=receitaBruta(x);
+                  return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${garAtiva?"#0D9488":"#1565C0"}`}}>
                     <div style={{padding:"9px 12px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
                       <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.cliente||"Cliente"}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(x.dataSolicitacao)} · NF {x.nf||"—"}</div></div>
                       <div style={{display:"flex",gap:3,flexShrink:0}}>
@@ -7196,22 +7298,24 @@ export default function App(){
                     <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7}}>
                       <div style={{background:stPrev.bg,color:stPrev.c,borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:800,textAlign:"center"}}>{stPrev.l}</div>
                       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        <span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0369A1",borderRadius:10,padding:"2px 9px"}}>🔧 Entrega Técnica</span>
                         {garAtiva&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0D9488",borderRadius:10,padding:"2px 9px"}}>🛡️ Garantia até {fmtDataBR(x.fimGarantia)}</span>}
-                        {x.retrabalho&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ Retrabalho -{fmtR(pv(x.valorRetrabalho))}</span>}
+                        {temRetrab&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ {nRetrab||1} retrabalho{(nRetrab||1)>1?"s":""}</span>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Valor NF</span><div style={{fontWeight:800,color:"#1A7A3C"}}>{fmtR(pv(x.valor))}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Comissão líq.</span><div style={{fontWeight:800,color:"#7E22CE"}}>{fmtR(comLiq)}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⛽+🍽️ Gasto</span><div style={{fontWeight:700,color:"#B45309"}}>{fmtR(gasto)}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Técnico</span><div style={{fontWeight:600}}>{x.tecnico||"—"}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Receita total</span><div style={{fontWeight:800,color:"#1A7A3C"}}>{fmtR(recTotal)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Entrega (bruto)</span><div style={{fontWeight:800,color:"#0369A1"}}>{fmtR(comBruta)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Líquido</span><div style={{fontWeight:800,color:comLiq>=0?"#15803D":"#C62828"}}>{fmtR(comLiq)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Gastos</span><div style={{fontWeight:700,color:"#C62828"}}>{fmtR(gasto)}</div></div>
                       </div>
+                      <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoGasolina(x))} · 🍽️ {fmtR(pv(x.gastoAlimentacao))} · 🛣️ km×3,50 {fmtR(repasseKm(x))} · ⏱️ {fmtR(custoMaoObra(x))}{gastosRetrabalhos(x)>0?` · 🔁 ${fmtR(gastosRetrabalhos(x))}`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
                       {(x.equipamentos||[]).filter(Boolean).length>0&&<div style={{fontSize:10,color:"#475569",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>🔧 {(x.equipamentos||[]).filter(Boolean).join(" · ")}</div>}
                       <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
-                        {[["100h",x.prev100Aprov,x.prev100Data],["500h",x.prev500Aprov,x.prev500Data],["1000h",x.prev1000Aprov,x.prev1000Data]].map(([lbl,ap,dt])=>(
-                          <span key={lbl} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ap?"#DCFCE7":"#F1F5F9",color:ap?"#15803D":"#94A3B8"}}>Prev {lbl} {ap?"✅":"○"}{ap&&dt?` ${fmtDataBR(dt)}`:""}</span>
+                        {[["100h",x.prev100Aprov,x.prev100Data,x.prev100Valor],["500h",x.prev500Aprov,x.prev500Data,x.prev500Valor],["1000h",x.prev1000Aprov,x.prev1000Data,x.prev1000Valor]].map(([lbl,ap,dt,vl])=>(
+                          <span key={lbl} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ap?"#DCFCE7":"#F1F5F9",color:ap?"#15803D":"#94A3B8"}}>Prev {lbl} {ap?"✅":"○"}{ap&&vl?` ${fmtR(pv(vl))}`:""}</span>
                         ))}
                       </div>
-                      {(()=>{const certs=[["certEntrega","Entrega Téc."],["certBateria","Bateria"],["certBateriaLitio","Bat. Lítio"],["certCarregadorLitio","Carreg. Lítio"]].filter(([c])=>x[c]&&x[c].url);return certs.length>0&&(
+                      {(()=>{const certs=[["nfPdf","NF"],["certEntrega","Entrega Téc."],["certBateria","Bateria"],["certBateriaLitio","Bat. Lítio"],["certCarregadorLitio","Carreg. Lítio"]].filter(([c])=>x[c]&&x[c].url);return certs.length>0&&(
                         <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
                           {certs.map(([c,nome])=><a key={c} href={x[c].url} target="_blank" rel="noreferrer" style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"#EFF6FF",color:"#1565C0",textDecoration:"none"}}>📄 {nome}</a>)}
                         </div>
