@@ -3969,6 +3969,33 @@ export default function App(){
                 ))}
                 <div><label style={lbl}>Último contato sobre preventiva</label><input type="date" value={d.ultimoContatoPrev||""} onChange={e=>upd("ultimoContatoPrev",e.target.value)} style={{...inp,maxWidth:200}}/></div>
 
+                <div style={sec}>📎 Certificados (PDF)</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  {[["certEntrega","Certificado de Entrega Técnica"],["certBateria","Certificado de Bateria"],["certBateriaLitio","Certificado de Bateria Lítio"],["certCarregadorLitio","Certificado de Carregador Lítio"]].map(([campo,nome])=>{
+                    const anexo=d[campo];
+                    return(<div key={campo} style={{border:"1.5px solid #E2E8F0",borderRadius:10,padding:"9px 11px",background:anexo?"#F0FDF4":"#FAFAFA"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#334155",marginBottom:6}}>📄 {nome}</div>
+                      {anexo?(<div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        <a href={anexo.url} target="_blank" rel="noreferrer" style={{fontSize:11,fontWeight:700,color:"#15803D",textDecoration:"none",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>✅ {anexo.nome||"ver PDF"}</a>
+                        <button onClick={()=>upd(campo,null)} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 8px",fontSize:10,fontWeight:700}}>Remover</button>
+                      </div>):(
+                        <label style={{display:"inline-block",fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:8,padding:"6px 12px",cursor:"pointer"}}>
+                          📎 Anexar PDF
+                          <input type="file" accept="application/pdf,.pdf" style={{display:"none"}} onChange={async e=>{
+                            const file=e.target.files[0]; if(!file)return;
+                            if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){alert("Envie um arquivo PDF.");return;}
+                            const pastaId=d.id||`ET${Date.now()}`;
+                            try{ notify("⏳ Enviando PDF...");
+                              const r=await uploadArquivoSupabase(file,pastaId,campo,nome+".pdf");
+                              upd(campo,{url:r.url,nome:file.name,path:r.path});
+                              notify("✅ PDF anexado!");
+                            }catch(err){ alert("Falha ao enviar: "+err.message); }
+                          }}/>
+                        </label>
+                      )}
+                    </div>);
+                  })}
+                </div>
                 <div><label style={lbl}>Observação</label><textarea value={d.obs||""} onChange={e=>upd("obs",e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></div>
                 <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9",position:"sticky",bottom:0,background:"#FFF",paddingBottom:2}}>
                   <BtnG onClick={()=>{setEntregaModal(false);setEntregaEdit(null);}}>Cancelar</BtnG>
@@ -7171,6 +7198,11 @@ export default function App(){
                           <span key={lbl} style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:ap?"#DCFCE7":"#F1F5F9",color:ap?"#15803D":"#94A3B8"}}>Prev {lbl} {ap?"✅":"○"}{ap&&dt?` ${fmtDataBR(dt)}`:""}</span>
                         ))}
                       </div>
+                      {(()=>{const certs=[["certEntrega","Entrega Téc."],["certBateria","Bateria"],["certBateriaLitio","Bat. Lítio"],["certCarregadorLitio","Carreg. Lítio"]].filter(([c])=>x[c]&&x[c].url);return certs.length>0&&(
+                        <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
+                          {certs.map(([c,nome])=><a key={c} href={x[c].url} target="_blank" rel="noreferrer" style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"#EFF6FF",color:"#1565C0",textDecoration:"none"}}>📄 {nome}</a>)}
+                        </div>
+                      );})()}
                     </div>
                   </div>);
                 })}
