@@ -111,6 +111,7 @@ const USERS = [
   { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"Comercial2026", canDelete:true, acessoComercial:true },
   { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"Ldias2026", canDelete:true, acessoComercial:true },
   { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"SAS/Comercial",           password:"Fteixeira2026", canDelete:true, acessoComercial:true },
+  { id:"paulo",        username:"paulo.pataro",      name:"Paulo Pataro",     role:"Comercial",               password:"Ppataro2026", canDelete:true, acessoComercial:true },
   { id:"matheus_m",    username:"matheus_m",         name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:true, apenasOficina150:true },
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
@@ -2519,21 +2520,22 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
 
   if(user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
+      <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Comercial</div>
+      <Btn k="comercial" l="📋 Propostas"/>
+      <Btn k="dashboard_comercial" l="📊 Dashboard"/>
+      {!user.semSas&&<>
+        <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
+        <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
+        <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
+        <Btn k="sas_vendas" l="💰 SAS Vendas"/>
+        <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
+      </>}
       <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Serviços</div>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
-      {!user.semSas&&<>
-        <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
-        <Btn k="sas_manutencao" l="🔧 SAS Manutenção"/>
-        <Btn k="sas_vendas" l="💰 SAS Vendas"/>
-        <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
-      </>}
-      <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Comercial</div>
-      <Btn k="comercial" l="📋 Propostas"/>
-      <Btn k="dashboard_comercial" l="📊 Dashboard"/>
     </div>
   );
   if(user.acessoSas&&!user.acessoComercial) return(
@@ -2692,12 +2694,12 @@ export default function App(){
   });
   const [users,setUsers]=useState(USERS);
   const [modalUsers,setModalUsers]=useState(false);
-  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"sas";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
+  const [tab,setTab]=useState(()=>{try{const s=localStorage.getItem("grupomov_user");if(s){const p=JSON.parse(s);const u=USERS.find(x=>x.id===p.id);if(u?.acessoSas&&!u?.acessoComercial)return"entrega_tecnica";if(u?.acessoComercial)return"mau_uso";if(u?.apenasAgenda)return"agenda_prev";if(u?.apenasOficina)return"agenda_ofi";if(u?.apenasOficina150)return"agenda_ofi_150";}}catch(e){}return"relatorios";});
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    const al = user.acessoSas&&!user.acessoComercial ? ["sas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas","sas_manutencao","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
+    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
