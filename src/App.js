@@ -3985,42 +3985,42 @@ export default function App(){
                 </div>
 
                 <div style={sec}>🚗 Deslocamento e Custo</div>
-                {(()=>{const km=pvv(d.distanciaKm),kpl=pvv(d.kmPorLitro),pl=pvv(d.precoLitro),hrs=pvv(d.horasTrab);
-                  const gasol=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const repasse=km*3.5;const mo=hrs*280;
+                {(()=>{const comb=pvv(d.gastoCombustivel),alim=pvv(d.gastoAlimentacao);
+                  const parseH=(s)=>{if(!s)return 0;s=String(s).trim();if(s.includes(":")){const[h,m]=s.split(":").map(Number);return (h||0)+(m||0)/60;}return pvv(s);};
+                  const hrs=parseH(d.horasTrab);const mo=hrs*280;
                   const fmt=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
                   return(<>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                   <div><label style={lbl}>Placa do Carro</label><input type="text" value={d.placa||""} onChange={e=>upd("placa",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>Técnico</label><input type="text" value={d.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} list="tecnicos-et" style={inp}/><datalist id="tecnicos-et">{TODOS_TECNICOS.map(t=><option key={t} value={t}/>)}</datalist></div>
-                  <div><label style={lbl}>Distância (KM)</label><input type="text" value={d.distanciaKm||""} onChange={e=>upd("distanciaKm",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Distância até o cliente (KM)</label><input type="text" value={d.distanciaKm||""} onChange={e=>upd("distanciaKm",e.target.value)} style={inp}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                  <div><label style={lbl}>Km por litro do carro</label><input type="text" value={d.kmPorLitro||""} onChange={e=>upd("kmPorLitro",e.target.value)} placeholder="ex: 10" style={inp}/></div>
-                  <div><label style={lbl}>Preço do litro (R$)</label><input type="text" value={d.precoLitro||""} onChange={e=>upd("precoLitro",e.target.value)} placeholder="ex: 6,00" style={inp}/></div>
-                  <div><label style={lbl}>Horas Trabalhadas</label><input type="text" value={d.horasTrab||""} onChange={e=>upd("horasTrab",e.target.value)} placeholder="ex: 3" style={inp}/></div>
+                  <div><label style={lbl}>Horas Trabalhadas (hora:min)</label><input type="text" value={d.horasTrab||""} onChange={e=>upd("horasTrab",e.target.value)} placeholder="ex: 3:30" style={inp}/></div>
+                  <div><label style={lbl}>⛽ Custo Combustível (R$)</label><input type="text" value={d.gastoCombustivel||""} onChange={e=>upd("gastoCombustivel",e.target.value)} placeholder="0,00" style={inp}/></div>
+                  <div><label style={lbl}>🍽️ Custo Alimentação (R$)</label><input type="text" value={d.gastoAlimentacao||""} onChange={e=>upd("gastoAlimentacao",e.target.value)} placeholder="0,00" style={inp}/></div>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  <div><label style={lbl}>🍽️ Gasto Alimentação (R$)</label><input type="text" value={d.gastoAlimentacao||""} onChange={e=>upd("gastoAlimentacao",e.target.value)} placeholder="0,00" style={inp}/></div>
-                  <div><label style={lbl}>🎫 Nº Ticket</label><input type="text" value={d.ticket||""} onChange={e=>upd("ticket",e.target.value)} placeholder="ticket do gasto" style={inp}/></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr",gap:10}}>
+                  <div><label style={lbl}>🎫 Ticket Solicitação Adiantamento</label><input type="text" value={d.ticket||""} onChange={e=>upd("ticket",e.target.value)} placeholder="nº do ticket" style={inp}/></div>
                 </div>
                 <div style={{background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:10,padding:"8px 12px",fontSize:11,color:"#334155"}}>
-                  <div style={{fontWeight:800,color:"#64748B",fontSize:9,textTransform:"uppercase",marginBottom:4}}>Cálculo automático</div>
+                  <div style={{fontWeight:800,color:"#64748B",fontSize:9,textTransform:"uppercase",marginBottom:4}}>Resumo dos custos</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
-                    <span>⛽ Gasolina (custo): <b>{fmt(gasol)}</b> <span style={{color:"#94A3B8"}}>({km||0}km ÷ {kpl||0} × {fmt(pl)})</span></span>
-                    <span>🛣️ Repasse km×3,50: <b>{fmt(repasse)}</b></span>
-                    <span>⏱️ Mão de obra (h×280): <b>{fmt(mo)}</b></span>
+                    <span>⛽ Combustível: <b>{fmt(comb)}</b></span>
+                    <span>🍽️ Alimentação: <b>{fmt(alim)}</b></span>
+                    <span style={{color:"#94A3B8"}}>⏱️ Mão de obra (à parte, {hrs.toFixed(2)}h × R$280): <b>{fmt(mo)}</b></span>
                   </div>
                 </div>
                   </>);})()}
 
                 <div style={sec}>⚠️ Retrabalhos (até 10)</div>
-                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. Cada retrabalho é somado como gasto e entra no cálculo de "vale a pena".</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. O gasto do retrabalho (combustível + alimentação + horas×280) entra como <b>negativo</b> no card.</div>
                 {(d.retrabalhos||[]).map((r,i)=>{
-                  const km=pvv(r.distanciaKm),kpl=pvv(r.kmPorLitro),pl=pvv(r.precoLitro),hrs=pvv(r.horasTrab);
-                  const gasol=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const tot=gasol+pvv(r.gastoAlimentacao)+hrs*280+km*3.5;
+                  const parseH=(s)=>{if(!s)return 0;s=String(s).trim();if(s.includes(":")){const[h,m]=s.split(":").map(Number);return (h||0)+(m||0)/60;}return pvv(s);};
+                  const tot=pvv(r.gastoCombustivel)+pvv(r.gastoAlimentacao)+parseH(r.horasTrab)*280;
                   const setR=(k,v)=>{const arr=[...(d.retrabalhos||[])];arr[i]={...arr[i],[k]:v};upd("retrabalhos",arr);};
                   return(<div key={i} style={{border:"1.5px solid #FCA5A5",borderRadius:10,padding:"10px 12px",background:"#FFF7F7",marginBottom:8}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontSize:11,fontWeight:800,color:"#C62828"}}>🔁 Retrabalho {i+1} · gasto {`R$ ${tot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`}</div><button onClick={()=>{const arr=[...(d.retrabalhos||[])];arr.splice(i,1);upd("retrabalhos",arr);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 9px",fontSize:10,fontWeight:700}}>Remover</button></div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontSize:11,fontWeight:800,color:"#C62828"}}>🔁 Retrabalho {i+1} · custo −{`R$ ${tot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`}</div><button onClick={()=>{const arr=[...(d.retrabalhos||[])];arr.splice(i,1);upd("retrabalhos",arr);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 9px",fontSize:10,fontWeight:700}}>Remover</button></div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
                       <div><label style={lbl}>Data</label><input type="date" value={r.data||""} onChange={e=>setR("data",e.target.value)} style={inp}/></div>
                       <div><label style={lbl}>Nº Relatório</label><input type="text" value={r.relatorio||""} onChange={e=>setR("relatorio",e.target.value)} style={inp}/></div>
@@ -4028,17 +4028,16 @@ export default function App(){
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
                       <div><label style={lbl}>Distância (KM)</label><input type="text" value={r.distanciaKm||""} onChange={e=>setR("distanciaKm",e.target.value)} style={inp}/></div>
-                      <div><label style={lbl}>Km/litro</label><input type="text" value={r.kmPorLitro||""} onChange={e=>setR("kmPorLitro",e.target.value)} style={inp}/></div>
-                      <div><label style={lbl}>Preço litro (R$)</label><input type="text" value={r.precoLitro||""} onChange={e=>setR("precoLitro",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Horas Trab. (hora:min)</label><input type="text" value={r.horasTrab||""} onChange={e=>setR("horasTrab",e.target.value)} placeholder="ex: 2:00" style={inp}/></div>
+                      <div><label style={lbl}>🎫 Ticket Adiantamento</label><input type="text" value={r.ticket||""} onChange={e=>setR("ticket",e.target.value)} style={inp}/></div>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                      <div><label style={lbl}>Horas Trab.</label><input type="text" value={r.horasTrab||""} onChange={e=>setR("horasTrab",e.target.value)} style={inp}/></div>
-                      <div><label style={lbl}>🍽️ Alimentação (R$)</label><input type="text" value={r.gastoAlimentacao||""} onChange={e=>setR("gastoAlimentacao",e.target.value)} style={inp}/></div>
-                      <div><label style={lbl}>🎫 Nº Ticket</label><input type="text" value={r.ticket||""} onChange={e=>setR("ticket",e.target.value)} style={inp}/></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                      <div><label style={lbl}>⛽ Custo Combustível (R$)</label><input type="text" value={r.gastoCombustivel||""} onChange={e=>setR("gastoCombustivel",e.target.value)} placeholder="0,00" style={inp}/></div>
+                      <div><label style={lbl}>🍽️ Custo Alimentação (R$)</label><input type="text" value={r.gastoAlimentacao||""} onChange={e=>setR("gastoAlimentacao",e.target.value)} placeholder="0,00" style={inp}/></div>
                     </div>
                   </div>);
                 })}
-                {(d.retrabalhos||[]).length<10&&<button onClick={()=>upd("retrabalhos",[...(d.retrabalhos||[]),{data:"",relatorio:"",chamado:"",distanciaKm:"",kmPorLitro:d.kmPorLitro||"",precoLitro:d.precoLitro||"",horasTrab:"",gastoAlimentacao:"",ticket:""}])} style={{fontSize:11,fontWeight:700,color:"#C62828",background:"#FFF0F0",border:"1.5px solid #FCA5A5",borderRadius:8,padding:"8px 14px",cursor:"pointer"}}>+ Adicionar retrabalho</button>}
+                {(d.retrabalhos||[]).length<10&&<button onClick={()=>upd("retrabalhos",[...(d.retrabalhos||[]),{data:"",relatorio:"",chamado:"",distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",ticket:""}])} style={{fontSize:11,fontWeight:700,color:"#C62828",background:"#FFF0F0",border:"1.5px solid #FCA5A5",borderRadius:8,padding:"8px 14px",cursor:"pointer"}}>+ Adicionar retrabalho</button>}
 
                 <div style={sec}>🛠️ Preventivas Obrigatórias (receita)</div>
                 <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Valor acordado lançado aqui entra como receita. Informe também o nº do relatório de cada preventiva.</div>
@@ -7149,38 +7148,29 @@ export default function App(){
           // Fim de garantia = 6 meses após a data de entrega técnica
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
           // ── MODELO DE RECEITA (serviço, não mercadoria) ──
-          const VALOR_KM_REPASSE=3.5, VALOR_HORA=280;
-          const custoGasolina=(x)=>{const km=pv(x.distanciaKm),kpl=pv(x.kmPorLitro),pl=pv(x.precoLitro);const g=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return g<=20000?g:0;};
-          const repasseKm=(x)=>{const km=pv(x.distanciaKm);return km<=100000?km*VALOR_KM_REPASSE:0;};
-          const custoMaoObra=(x)=>{const h=pv(x.horasTrab);return (h>0&&h<=24)?h*VALOR_HORA:0;};
-          const gastoAlimSan=(x)=>{const a=pv(x.gastoAlimentacao);return (a>=0&&a<=5000)?a:0;};
-          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const h=pv(r.horasTrab);const al=pv(r.gastoAlimentacao);return (gas<=20000?gas:0)+(al<=5000?al:0)+((h>0&&h<=24)?h*VALOR_HORA:0);};
+          const VALOR_HORA=280;
+          const parseHrs=(s)=>{if(!s)return 0;s=String(s).trim();if(s.includes(":")){const[h,m]=s.split(":").map(Number);return (h||0)+(m||0)/60;}const n=pv(s);return isNaN(n)?0:n;};
+          // Custos digitados direto em R$ (combustível e alimentação)
+          const custoCombustivel=(x)=>{const v=pv(x.gastoCombustivel);return (v>=0&&v<=50000)?v:0;};
+          const gastoAlimSan=(x)=>{const a=pv(x.gastoAlimentacao);return (a>=0&&a<=50000)?a:0;};
+          const horasCaso=(x)=>{const h=parseHrs(x.horasTrab);return (h>=0&&h<=100)?h:0;};
+          const custoMaoObra=(x)=>horasCaso(x)*VALOR_HORA; // à parte
+          // Retrabalho: combustível + alimentação + horas×280, somado como NEGATIVO
+          const gastoRetrabalhoUn=(r)=>{const c=pv(r.gastoCombustivel),al=pv(r.gastoAlimentacao),h=parseHrs(r.horasTrab);return (c<=50000?c:0)+(al<=50000?al:0)+((h>=0&&h<=100)?h*VALOR_HORA:0);};
           const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
-          // Gasto do caso p/ deduzir da comissão = gasolina + alimentação + mão de obra + retrabalhos
-          // (repasse km é referência de valor recebido, não custo — fica fora do desconto)
-          const gastoCaso=(x)=>custoGasolina(x)+gastoAlimSan(x)+custoMaoObra(x)+gastosRetrabalhos(x);
-          // COMISSÕES (o campo comissao é editável; se vazio, sugere 1% da NF)
-          // 1% entrega tecnica. Se o campo comissao guardar um valor suspeito (dado antigo
-          // que salvou o valor da NF inteiro), recalcula como 1% do valor.
-          const comissaoSaneada=(x)=>{
-            const nf=pv(x.valor); const c=pv(x.comissao);
-            if(!x.comissao||x.comissao==="") return nf*0.01;
-            if(nf>0 && c > nf*0.05) return nf*0.01;
-            return c;
-          };
-          const recEntregaTec=(x)=>comissaoSaneada(x);   // 1% entrega técnica
-          const recGarantiaSaneada=(x)=>{
-            const nf=pv(x.valor); const c=pv(x.comissaoValor);
-            if(!x.comissaoValor||x.comissaoValor==="") return nf*0.01;
-            if(nf>0 && c > nf*0.05) return nf*0.01;
-            return c;
-          };
+          // Custo do atendimento (o que aparece no dash/gráfico): combustível + alimentação + retrabalhos
+          // Mão de obra fica à PARTE (as duas visões existem no card)
+          const custoAtendimento=(x)=>custoCombustivel(x)+gastoAlimSan(x)+gastosRetrabalhos(x);
+          // COMISSÕES
+          const comissaoSaneada=(x)=>{const nf=pv(x.valor),c=pv(x.comissao);if(!x.comissao||x.comissao==="")return nf*0.01;if(nf>0&&c>nf*0.05)return nf*0.01;return c;};
+          const recEntregaTec=(x)=>comissaoSaneada(x);   // 1% BRUTO entrega técnica
+          const recGarantiaSaneada=(x)=>{const nf=pv(x.valor),c=pv(x.comissaoValor);if(!x.comissaoValor||x.comissaoValor==="")return nf*0.01;if(nf>0&&c>nf*0.05)return nf*0.01;return c;};
           const recGarantia=(x)=>recGarantiaSaneada(x); // 1% fim garantia (futuro)
           const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor);
           const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
-          // Comissão bruta (1% entrega) e líquida (menos gastos e retrabalhos)
+          // 1% BRUTO e 1% LÍQUIDO (líquido = bruto - combustível - alimentação - retrabalhos; horas FORA)
           const comissaoBruta=(x)=>recEntregaTec(x);
-          const comissaoLiquida=(x)=>comissaoBruta(x)-gastoCaso(x);
+          const comissaoLiquida=(x)=>comissaoBruta(x)-custoAtendimento(x);
           const statusPreventiva=(x)=>{
             if(x.prev1000Aprov)return {k:"completa",l:"🏆 Preventiva de garantia completa",c:"#15803D",bg:"#DCFCE7"};
             if(x.prev500Aprov)return {k:"aguarda1000",l:"✅ 500h concluída · aguardando 1000h",c:"#0D9488",bg:"#F0FDFA"};
@@ -7193,13 +7183,14 @@ export default function App(){
           const totRecPreventiva=lista.reduce((a,x)=>a+recPreventivas(x),0);
           const totalReceita=totRecEntrega+totRecGarantia+totRecPreventiva;
           const totalComissaoLiq=lista.reduce((a,x)=>a+comissaoLiquida(x),0);
-          const totalGasolina=lista.reduce((a,x)=>a+custoGasolina(x),0);
-          const totalRepasse=lista.reduce((a,x)=>a+repasseKm(x),0);
+          const totalCombustivelR=lista.reduce((a,x)=>a+custoCombustivel(x),0);
           const totalMaoObra=lista.reduce((a,x)=>a+custoMaoObra(x),0);
           const totalAlimentacao=lista.reduce((a,x)=>a+gastoAlimSan(x),0);
           const totalRetrab=lista.reduce((a,x)=>a+gastosRetrabalhos(x),0);
-          const totalGastos=lista.reduce((a,x)=>a+gastoCaso(x),0);
-          const totalCombustivel=totalGasolina; // compat
+          const totalCustoAtend=lista.reduce((a,x)=>a+custoAtendimento(x),0);
+          const totalGastos=totalCustoAtend;
+          const totalGasolina=totalCombustivelR; // compat
+          const totalCombustivel=totalCombustivelR; // compat
           const mesAtual=hoje.slice(0,7);
           const doMes=lista.filter(x=>(x.dataSolicitacao||"").startsWith(mesAtual));
           const garantiaAtiva=lista.filter(x=>x.fimGarantia&&x.fimGarantia>=hoje).length;
@@ -7233,7 +7224,7 @@ export default function App(){
                   notify(`✅ ${atualizados.length} entrega(s) recalculada(s) para 1%.`);
                 }} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:12,cursor:"pointer",fontWeight:700}}>🔄 Recalcular 1%</button>
                 <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
-                <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",kmPorLitro:"",precoLitro:"",horasTrab:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
+                <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
             </div>
 
@@ -7259,9 +7250,9 @@ export default function App(){
                 {l:"Receita Realizada",v:fmtR(totRecEntrega),sub:"1% entrega (recebido)",c:"#1A7A3C",i:"💰"},
                 totRecGarantia>0&&{l:"A Receber — Garantia",v:fmtR(totRecGarantia),sub:"futuro (após 6 meses)",c:"#0D9488",i:"🛡️"},
                 totRecPreventiva>0&&{l:"A Receber — Preventivas",v:fmtR(totRecPreventiva),sub:"futuro (se cliente optar)",c:"#7E22CE",i:"🛠️"},
-                {l:"⛽🍽️ Combustível+Alim.",v:fmtR(totalGasolina+totalAlimentacao),sub:"despesas diretas",c:"#B45309",i:"⛽"},
-                {l:"⏱️ Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280 (separado)",c:"#E67E00",i:"⏱️"},
-                {l:"Comissão Líquida",v:fmtR(totRecEntrega-(totalGasolina+totalAlimentacao)),sub:"1% − combust.+alim.",c:(totRecEntrega-(totalGasolina+totalAlimentacao))>=0?"#15803D":"#C62828",i:"📈"},
+                {l:"Custo Atendimento",v:fmtR(totalCustoAtend),sub:"combust.+alim.+retrab.",c:"#C62828",i:"📉"},
+                {l:"⏱️ Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280 (à parte)",c:"#E67E00",i:"⏱️"},
+                {l:"1% Líquido",v:fmtR(totRecEntrega-totalCustoAtend),sub:"1% bruto − custo atend.",c:(totRecEntrega-totalCustoAtend)>=0?"#15803D":"#C62828",i:"📈"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
               ].filter(Boolean).map((k,i)=>(
                 <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
@@ -7289,23 +7280,22 @@ export default function App(){
                     {label:"1% Entrega",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recEntregaTec(x),0)),backgroundColor:"#0369A1",borderRadius:4,stack:"rec"},
                     {label:"1% Garantia (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
                     {label:"Preventivas (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
-                    {label:"⛽🍽️ Combust.+Alim.",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoGasolina(x)+gastoAlimSan(x),0)),backgroundColor:"#B45309",borderRadius:4,stack:"gasto"},
-                    {label:"⏱️ Mão de obra",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoMaoObra(x),0)),backgroundColor:"#E67E00",borderRadius:4,stack:"gasto"},
+                    {label:"Custo atendimento",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoAtendimento(x),0)),backgroundColor:"#C62828",borderRadius:4,stack:"gasto"},
                   ]
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},stacked:true},y:{beginAtZero:true,stacked:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
               </div>
               <div className="card" style={{padding:14}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>% Ganho × Gasto (sobre receita)</div>
-                {(()=>{const gastoDireto=totalGasolina+totalAlimentacao;const ganhoLiq=totRecEntrega-gastoDireto;const baseRec=totRecEntrega||1;const pctGanho=ganhoLiq/baseRec*100;const pctGasto=gastoDireto/baseRec*100;return(<>
+                {(()=>{const custoTot=totalCustoAtend;const ganhoLiq=totRecEntrega-custoTot;const baseRec=totRecEntrega||1;const pctGanho=ganhoLiq/baseRec*100;const pctGasto=custoTot/baseRec*100;return(<>
                 <ChartCanvas type="doughnut" height={180} data={{
-                  labels:["Ganho líquido","⛽🍽️ Combust.+Alim."],
-                  datasets:[{data:[Math.max(ganhoLiq,0),gastoDireto],backgroundColor:["#15803D","#B45309"],borderWidth:2,borderColor:"#FFF"}]
+                  labels:["1% líquido","Custo atendimento"],
+                  datasets:[{data:[Math.max(ganhoLiq,0),custoTot],backgroundColor:["#15803D","#C62828"],borderWidth:2,borderColor:"#FFF"}]
                 }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
                 <div style={{textAlign:"center",marginTop:8,fontSize:11,lineHeight:1.6}}>
-                  <div><span style={{color:"#15803D",fontWeight:800}}>Ganho {fmtR(ganhoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
-                  <div><span style={{color:"#B45309",fontWeight:800}}>Combust.+Alim. {fmtR(gastoDireto)}</span> <span style={{color:"#B45309"}}>({pctGasto.toFixed(1)}%)</span></div>
-                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — mostrada à parte</div>
-                  <div style={{color:"#94A3B8",fontSize:10}}>sobre 1% de entrega de {fmtR(totRecEntrega)}</div>
+                  <div><span style={{color:"#0369A1",fontWeight:800}}>1% bruto {fmtR(totRecEntrega)}</span></div>
+                  <div><span style={{color:"#15803D",fontWeight:800}}>1% líquido {fmtR(ganhoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
+                  <div><span style={{color:"#C62828",fontWeight:800}}>Custo atend. {fmtR(custoTot)}</span> <span style={{color:"#C62828"}}>({pctGasto.toFixed(1)}%)</span></div>
+                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — cálculo à parte</div>
                 </div></>);})()}
               </div>
             </div>
@@ -7341,7 +7331,9 @@ export default function App(){
                   const temRetrab=nRetrab>0||x.retrabalho;
                   const comBruta=comissaoBruta(x);
                   const comLiq=comissaoLiquida(x);
-                  const gasto=gastoCaso(x);
+                  const custoAtend=custoAtendimento(x);
+                  const maoObra=custoMaoObra(x);
+                  const retrabNeg=gastosRetrabalhos(x);
                   const recTotal=receitaBruta(x);
                   return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${garAtiva?"#0D9488":"#1565C0"}`}}>
                     <div style={{padding:"9px 12px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
@@ -7360,12 +7352,12 @@ export default function App(){
                         {temRetrab&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ {nRetrab||1} retrabalho{(nRetrab||1)>1?"s":""}</span>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Receita total</span><div style={{fontWeight:800,color:"#1A7A3C"}}>{fmtR(recTotal)}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Entrega (bruto)</span><div style={{fontWeight:800,color:"#0369A1"}}>{fmtR(comBruta)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Bruto (serviço)</span><div style={{fontWeight:800,color:"#0369A1"}}>{fmtR(comBruta)}</div></div>
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Líquido</span><div style={{fontWeight:800,color:comLiq>=0?"#15803D":"#C62828"}}>{fmtR(comLiq)}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Gastos</span><div style={{fontWeight:700,color:"#C62828"}}>{fmtR(gasto)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Custo atendimento</span><div style={{fontWeight:700,color:"#C62828"}}>−{fmtR(custoAtend)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⏱️ Mão de obra (à parte)</span><div style={{fontWeight:700,color:"#E67E00"}}>{fmtR(maoObra)}</div></div>
                       </div>
-                      <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoGasolina(x))} · 🍽️ {fmtR(pv(x.gastoAlimentacao))} · 🛣️ km×3,50 {fmtR(repasseKm(x))} · ⏱️ {fmtR(custoMaoObra(x))}{gastosRetrabalhos(x)>0?` · 🔁 ${fmtR(gastosRetrabalhos(x))}`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
+                      <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoCombustivel(x))} · 🍽️ {fmtR(gastoAlimSan(x))}{retrabNeg>0?` · 🔁 retrabalho −${fmtR(retrabNeg)}`:""}{x.horasTrab?` · ⏱️ ${x.horasTrab}h`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
                       {(x.equipamentos||[]).filter(Boolean).length>0&&<div style={{fontSize:10,color:"#475569",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>🔧 {(x.equipamentos||[]).filter(Boolean).join(" · ")}</div>}
                       <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
                         {[["100h",x.prev100Aprov,x.prev100Data,x.prev100Valor],["500h",x.prev500Aprov,x.prev500Data,x.prev500Valor],["1000h",x.prev1000Aprov,x.prev1000Data,x.prev1000Valor]].map(([lbl,ap,dt,vl])=>(
