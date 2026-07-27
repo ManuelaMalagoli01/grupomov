@@ -3871,7 +3871,7 @@ export default function App(){
         {entregaModal&&entregaEdit&&(()=>{
           const d=entregaEdit;
           const upd=(k,v)=>setEntregaEdit(p=>({...p,[k]:v}));
-          const pvv=(v)=>{const n=parseFloat(String(v||"0").replace(/[^\d.,-]/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const pvv=(v)=>{if(v===null||v===undefined)return 0;let s=String(v).trim().replace(/[^\d.,-]/g,"");if(!s)return 0;if(s.includes(",")){s=s.replace(/\./g,"").replace(",",".");}else if((s.match(/\./g)||[]).length>1){s=s.replace(/\./g,"");}else if(/^\d{1,3}\.\d{3}$/.test(s)){s=s.replace(/\./g,"");}const n=parseFloat(s);return isNaN(n)?0:n;};
           // auto-calcula comissao 1% do valor e fim de garantia (6 meses apos entrega)
           const setValor=(v)=>{setEntregaEdit(p=>({...p,valor:v,comissao:v?(pvv(v)*0.01).toFixed(2):""}));};
           const setEntrega=(v)=>{setEntregaEdit(p=>{let fg="";if(v){const dt=new Date(v+"T12:00:00");dt.setMonth(dt.getMonth()+6);fg=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;}return{...p,dataEntrega:v,fimGarantia:fg};});};
@@ -7032,7 +7032,19 @@ export default function App(){
         {/* ── ENTREGA TÉCNICA ── */}
         {tab==="entrega_tecnica"&&(()=>{
           const lista=(entregaTec||[]).filter(x=>x&&(showArqEntrega?x.arquivado:!x.arquivado));
-          const pv=(v)=>{const n=parseFloat(String(v||"0").replace(/[^\d.,-]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
+          const pv=(v)=>{
+            if(v===null||v===undefined)return 0;
+            let s=String(v).trim().replace(/[^\d.,-]/g,"");
+            if(!s)return 0;
+            // Formato brasileiro: ponto = milhar, virgula = decimal. Ex: 1.000.000,00
+            if(s.includes(",")){ s=s.replace(/\./g,"").replace(",","."); }
+            // Sem virgula mas com varios pontos (ex: 1.000.000) -> pontos sao milhar
+            else if((s.match(/\./g)||[]).length>1){ s=s.replace(/\./g,""); }
+            // Sem virgula e um ponto so com 3 casas depois (ex: 1.000) -> milhar, nao decimal
+            else if(/^\d{1,3}\.\d{3}$/.test(s)){ s=s.replace(/\./g,""); }
+            const n=parseFloat(s);
+            return isNaN(n)?0:n;
+          };
           const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const hoje=TODAY_STR;
           const filtrada=lista.filter(x=>{
