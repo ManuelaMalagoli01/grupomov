@@ -7219,6 +7219,16 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>🚚 Entrega Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} entrega(s) · {doMes.length} este mês · <span style={{color:"#1A7A3C",fontWeight:700}}>{garantiaAtiva} em garantia</span>{comRetrabalho>0&&<span style={{color:"#C62828",fontWeight:700}}> · {comRetrabalho} c/ retrabalho</span>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={async()=>{
+                  if(!window.confirm("Recalcular a comissão (1%) de TODAS as entregas com base no valor da NF? Use isto para corrigir cards antigos. Cards sem valor de NF não são alterados."))return;
+                  const alvo=(entregaTec||[]).filter(x=>x&&pv(x.valor)>0);
+                  if(alvo.length===0){alert("Nenhuma entrega com valor de NF para recalcular.");return;}
+                  const atualizados=alvo.map(x=>{const c=(pv(x.valor)*0.01).toFixed(2);return {...x,comissao:c,comissaoValor:x.comissaoValor&&pv(x.comissaoValor)<=pv(x.valor)*0.05?x.comissaoValor:c};});
+                  const mapa=Object.fromEntries(atualizados.map(x=>[x.id,x]));
+                  setEntregaTec(p=>p.map(y=>mapa[y.id]||y));
+                  await db.saveBatch("entrega_tecnica",atualizados);
+                  notify(`✅ ${atualizados.length} entrega(s) recalculada(s) para 1%.`);
+                }} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:12,cursor:"pointer",fontWeight:700}}>🔄 Recalcular 1%</button>
                 <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
                 <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",kmPorLitro:"",precoLitro:"",horasTrab:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
