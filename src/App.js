@@ -7148,14 +7148,15 @@ export default function App(){
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
           // ── MODELO DE RECEITA (serviço, não mercadoria) ──
           const VALOR_KM_REPASSE=3.5, VALOR_HORA=280;
-          const custoGasolina=(x)=>{const km=pv(x.distanciaKm),kpl=pv(x.kmPorLitro),pl=pv(x.precoLitro);return (km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;};
-          const repasseKm=(x)=>pv(x.distanciaKm)*VALOR_KM_REPASSE;
-          const custoMaoObra=(x)=>pv(x.horasTrab)*VALOR_HORA;
-          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return gas+pv(r.gastoAlimentacao)+pv(r.horasTrab)*VALOR_HORA;};
+          const custoGasolina=(x)=>{const km=pv(x.distanciaKm),kpl=pv(x.kmPorLitro),pl=pv(x.precoLitro);const g=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return g<=20000?g:0;};
+          const repasseKm=(x)=>{const km=pv(x.distanciaKm);return km<=100000?km*VALOR_KM_REPASSE:0;};
+          const custoMaoObra=(x)=>{const h=pv(x.horasTrab);return (h>0&&h<=24)?h*VALOR_HORA:0;};
+          const gastoAlimSan=(x)=>{const a=pv(x.gastoAlimentacao);return (a>=0&&a<=5000)?a:0;};
+          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;const h=pv(r.horasTrab);const al=pv(r.gastoAlimentacao);return (gas<=20000?gas:0)+(al<=5000?al:0)+((h>0&&h<=24)?h*VALOR_HORA:0);};
           const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
           // Gasto do caso p/ deduzir da comissão = gasolina + alimentação + mão de obra + retrabalhos
           // (repasse km é referência de valor recebido, não custo — fica fora do desconto)
-          const gastoCaso=(x)=>custoGasolina(x)+pv(x.gastoAlimentacao)+custoMaoObra(x)+gastosRetrabalhos(x);
+          const gastoCaso=(x)=>custoGasolina(x)+gastoAlimSan(x)+custoMaoObra(x)+gastosRetrabalhos(x);
           // COMISSÕES (o campo comissao é editável; se vazio, sugere 1% da NF)
           // 1% entrega tecnica. Se o campo comissao guardar um valor suspeito (dado antigo
           // que salvou o valor da NF inteiro), recalcula como 1% do valor.
@@ -7193,7 +7194,7 @@ export default function App(){
           const totalGasolina=lista.reduce((a,x)=>a+custoGasolina(x),0);
           const totalRepasse=lista.reduce((a,x)=>a+repasseKm(x),0);
           const totalMaoObra=lista.reduce((a,x)=>a+custoMaoObra(x),0);
-          const totalAlimentacao=lista.reduce((a,x)=>a+pv(x.gastoAlimentacao),0);
+          const totalAlimentacao=lista.reduce((a,x)=>a+gastoAlimSan(x),0);
           const totalRetrab=lista.reduce((a,x)=>a+gastosRetrabalhos(x),0);
           const totalGastos=lista.reduce((a,x)=>a+gastoCaso(x),0);
           const totalCombustivel=totalGasolina; // compat
