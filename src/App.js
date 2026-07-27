@@ -7157,8 +7157,22 @@ export default function App(){
           // (repasse km é referência de valor recebido, não custo — fica fora do desconto)
           const gastoCaso=(x)=>custoGasolina(x)+pv(x.gastoAlimentacao)+custoMaoObra(x)+gastosRetrabalhos(x);
           // COMISSÕES (o campo comissao é editável; se vazio, sugere 1% da NF)
-          const recEntregaTec=(x)=>x.comissao!==undefined&&x.comissao!==""?pv(x.comissao):pv(x.valor)*0.01;   // 1% entrega técnica
-          const recGarantia=(x)=>x.comissaoValor!==undefined&&x.comissaoValor!==""?pv(x.comissaoValor):pv(x.valor)*0.01; // 1% fim garantia (futuro)
+          // 1% entrega tecnica. Se o campo comissao guardar um valor suspeito (dado antigo
+          // que salvou o valor da NF inteiro), recalcula como 1% do valor.
+          const comissaoSaneada=(x)=>{
+            const nf=pv(x.valor); const c=pv(x.comissao);
+            if(!x.comissao||x.comissao==="") return nf*0.01;
+            if(nf>0 && c > nf*0.05) return nf*0.01;
+            return c;
+          };
+          const recEntregaTec=(x)=>comissaoSaneada(x);   // 1% entrega técnica
+          const recGarantiaSaneada=(x)=>{
+            const nf=pv(x.valor); const c=pv(x.comissaoValor);
+            if(!x.comissaoValor||x.comissaoValor==="") return nf*0.01;
+            if(nf>0 && c > nf*0.05) return nf*0.01;
+            return c;
+          };
+          const recGarantia=(x)=>recGarantiaSaneada(x); // 1% fim garantia (futuro)
           const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor);
           const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
           // Comissão bruta (1% entrega) e líquida (menos gastos e retrabalhos)
