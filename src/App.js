@@ -2471,7 +2471,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
-  const SAS_TABS = ["sas","entrega_tecnica","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
+  const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -2526,6 +2526,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       {!user.semSas&&<>
         <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
         <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
+        <Btn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
         <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
         <Btn k="sas_vendas" l="💰 SAS Vendas"/>
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2541,6 +2542,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   if(user.acessoSas&&!user.acessoComercial) return(
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
+      <Btn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
       <Btn k="sas_vendas" l="💰 SAS Vendas"/>
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
@@ -2663,6 +2665,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
+          <SubBtn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
           <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2698,8 +2701,8 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
+    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3024,6 +3027,10 @@ export default function App(){
   const [bancoModal,setBancoModal]=useState(false);
   const [bancoSearch,setBancoSearch]=useState(""); const [bancoFiltroStatus,setBancoFiltroStatus]=useState("todos");
   const [entregaTec,setEntregaTec]=useState([]);
+  const [clientesSas,setClientesSas]=useState([]);
+  const [cliSasEdit,setCliSasEdit]=useState(null);
+  const [cliSasModal,setCliSasModal]=useState(false);
+  const [cliSasSearch,setCliSasSearch]=useState("");
   const [showArqEntrega,setShowArqEntrega]=useState(false);
   const [entregaEdit,setEntregaEdit]=useState(null);
   const [entregaModal,setEntregaModal]=useState(false);
@@ -3182,6 +3189,8 @@ export default function App(){
       if(bancoRows.length>0) setBancoHoras(bancoRows);
       const entregaRows=await safeGet("entrega_tecnica");
       if(entregaRows.length>0) setEntregaTec(entregaRows);
+      const cliSasRows=await safeGet("clientes_sas");
+      if(cliSasRows.length>0) setClientesSas(cliSasRows);
       const pontoRows=await safeGet("ponto_diario");
       if(pontoRows.length>0) setPontoDiario(pontoRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
@@ -3233,7 +3242,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, ponto_diario:setPontoDiario,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, ponto_diario:setPontoDiario,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3392,6 +3401,9 @@ export default function App(){
   const delBanco=(id)=>{ setBancoHoras(p=>p.filter(x=>x.id!==id)); db.delete("banco_horas",id); };
   const updateEntrega=(id,changes)=>{ setEntregaTec(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("entrega_tecnica",id,row); return np; }); };
   const delEntrega=(id)=>{ setEntregaTec(p=>p.filter(x=>x.id!==id)); db.delete("entrega_tecnica",id); };
+  const saveCliSas=(obj)=>{ const id=obj.id||`CLI${Date.now()}`; const row={...obj,id}; setClientesSas(prev=>{ const ex=prev.some(x=>x.id===id); return ex?prev.map(x=>x.id===id?row:x):[...prev,row]; }); db.save("clientes_sas",id,row); };
+  const updateCliSas=(id,changes)=>{ setClientesSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("clientes_sas",id,row); return np; }); };
+  const delCliSas=(id)=>{ setClientesSas(p=>p.filter(x=>x.id!==id)); db.delete("clientes_sas",id); };
   // Sincroniza a lista do banco de horas com os colaboradores do calendario de ferias (adiciona quem falta)
   const sincronizarBancoComFerias=()=>{
     const nomesFerias=(ferias||[]).filter(f=>f&&!f.arquivado&&f.nome).map(f=>({nome:f.nome,setor:f.setor||""}));
@@ -7115,6 +7127,80 @@ export default function App(){
         })()}
 
         {/* ── ENTREGA TÉCNICA ── */}
+        {tab==="clientes_sas"&&(()=>{
+          const CLI_STATUS={prospeccao:{l:"🔍 Prospecção",c:"#B45309",bg:"#FFF8F0"},negociacao:{l:"🤝 Em negociação",c:"#1565C0",bg:"#EFF6FF"},cliente:{l:"✅ Cliente",c:"#15803D",bg:"#F0FDF4"},perdido:{l:"❌ Perdido",c:"#94A3B8",bg:"#F8FAFC"}};
+          const q=(cliSasSearch||"").toLowerCase();
+          const filtro=(x)=>!q||[x.empresa,x.contato,x.telefone,x.email,x.obs].some(v=>(v||"").toLowerCase().includes(q));
+          const lista=(clientesSas||[]).filter(filtro);
+          const clientesAtuais=lista.filter(x=>(x.status||"prospeccao")==="cliente");
+          const prospeccoes=lista.filter(x=>(x.status||"prospeccao")!=="cliente");
+          const abrirNovo=(status)=>{setCliSasEdit({id:null,empresa:"",contato:"",telefone:"",email:"",status:status||"prospeccao",obs:""});setCliSasModal(true);};
+          const Cartao=(x)=>{const st=CLI_STATUS[x.status||"prospeccao"]||CLI_STATUS.prospeccao;
+            return(<div key={x.id} className="card" style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,borderLeft:`4px solid ${st.c}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                <div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.empresa||"Empresa"}</div>{x.contato&&<div style={{fontSize:11,color:"#64748B"}}>{x.contato}</div>}</div>
+                <div style={{display:"flex",gap:3,flexShrink:0}}>
+                  <button onClick={()=>{setCliSasEdit({...x});setCliSasModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
+                  <button onClick={()=>{if(window.confirm("Excluir este registro?"))delCliSas(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                </div>
+              </div>
+              {(x.telefone||x.email)&&<div style={{fontSize:11,color:"#475569",display:"flex",flexDirection:"column",gap:2}}>{x.telefone&&<span>📞 {x.telefone}</span>}{x.email&&<span style={{overflow:"hidden",textOverflow:"ellipsis"}}>✉️ {x.email}</span>}</div>}
+              <select value={x.status||"prospeccao"} onChange={e=>updateCliSas(x.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,border:"none",borderRadius:8,padding:"5px 8px",cursor:"pointer"}}>
+                {Object.entries(CLI_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
+              </select>
+              {x.obs&&<div style={{fontSize:10.5,color:"#64748B",fontStyle:"italic",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>{x.obs}</div>}
+            </div>);
+          };
+          return(<div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🤝 Clientes / Prospecção</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{clientesAtuais.length} cliente(s) · {prospeccoes.length} em prospecção/negociação</div></div>
+              <BtnY onClick={()=>abrirNovo("prospeccao")}>+ Novo Registro</BtnY>
+            </div>
+            <div style={{position:"relative",marginBottom:16,maxWidth:420}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#94A3B8",fontSize:14}}>🔍</span><input type="text" value={cliSasSearch} onChange={e=>setCliSasSearch(e.target.value)} placeholder="Buscar empresa, contato, telefone, e-mail..." style={{width:"100%",padding:"10px 12px 10px 34px",fontSize:13,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#F0FDF4",border:"1.5px solid #BBF7D0",borderRadius:10,padding:"9px 12px",marginBottom:10}}>
+                  <span style={{fontSize:13,fontWeight:800,color:"#15803D"}}>✅ Clientes Atuais <span style={{fontSize:11,color:"#FFF",background:"#15803D",borderRadius:20,padding:"1px 8px",marginLeft:4}}>{clientesAtuais.length}</span></span>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {clientesAtuais.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30,fontSize:12,border:"1.5px dashed #E2E8F0",borderRadius:10}}>Nenhum cliente ainda</div>:clientesAtuais.map(Cartao)}
+                </div>
+              </div>
+              <div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#FFF8F0",border:"1.5px solid #FED7AA",borderRadius:10,padding:"9px 12px",marginBottom:10}}>
+                  <span style={{fontSize:13,fontWeight:800,color:"#B45309"}}>🔍 Prospecções <span style={{fontSize:11,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 8px",marginLeft:4}}>{prospeccoes.length}</span></span>
+                  <button onClick={()=>abrirNovo("prospeccao")} style={{fontSize:11,fontWeight:700,color:"#B45309",background:"#FFEDD5",border:"none",borderRadius:8,padding:"4px 10px",cursor:"pointer"}}>+ prospecção</button>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {prospeccoes.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:30,fontSize:12,border:"1.5px dashed #E2E8F0",borderRadius:10}}>Nenhuma prospecção</div>:prospeccoes.map(Cartao)}
+                </div>
+              </div>
+            </div>
+
+            {cliSasModal&&cliSasEdit&&(()=>{const d=cliSasEdit;const upd=(k,v)=>setCliSasEdit(p=>({...p,[k]:v}));const lbl={display:"block",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3};const inp={width:"100%",padding:"9px 11px",fontSize:13,borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"};
+              return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={()=>setCliSasModal(false)}>
+                <div style={{background:"#FFF",borderRadius:16,padding:22,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{fontSize:17,fontWeight:800,marginBottom:16}}>{d.id?"Editar":"Novo"} — Cliente / Prospecção</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                    <div><label style={lbl}>Empresa</label><input type="text" value={d.empresa||""} onChange={e=>upd("empresa",e.target.value)} style={inp}/></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div><label style={lbl}>Contato</label><input type="text" value={d.contato||""} onChange={e=>upd("contato",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Telefone</label><input type="text" value={d.telefone||""} onChange={e=>upd("telefone",e.target.value)} style={inp}/></div>
+                    </div>
+                    <div><label style={lbl}>E-mail</label><input type="email" value={d.email||""} onChange={e=>upd("email",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Status</label><select value={d.status||"prospeccao"} onChange={e=>upd("status",e.target.value)} style={inp}><option value="prospeccao">🔍 Prospecção</option><option value="negociacao">🤝 Em negociação</option><option value="cliente">✅ Cliente</option><option value="perdido">❌ Perdido</option></select></div>
+                    <div><label style={lbl}>Observação</label><textarea value={d.obs||""} onChange={e=>upd("obs",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
+                  </div>
+                  <div style={{display:"flex",gap:10,marginTop:18,justifyContent:"flex-end"}}>
+                    <button onClick={()=>setCliSasModal(false)} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",color:"#555",fontSize:13,cursor:"pointer",fontWeight:600}}>Cancelar</button>
+                    <button onClick={()=>{if(!d.empresa){alert("Informe a empresa.");return;}saveCliSas(d);setCliSasModal(false);notify("✅ Registro salvo!");}} style={{padding:"9px 18px",borderRadius:10,border:"none",background:"#F5C200",color:"#1A1A1A",fontSize:13,cursor:"pointer",fontWeight:800}}>Salvar</button>
+                  </div>
+                </div>
+              </div>);
+            })()}
+          </div>);
+        })()}
+
         {tab==="entrega_tecnica"&&(()=>{
           const lista=(entregaTec||[]).filter(x=>x&&(showArqEntrega?x.arquivado:!x.arquivado));
           const pv=(v)=>{
