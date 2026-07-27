@@ -2485,12 +2485,12 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
   const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario"];
   const SUB_FROTA=["pendencias_frota"];
-  const [subOfiOpen,setSubOfiOpen]=useState(SUB_OFICINA.includes(tab));
-  const [subExtOpen,setSubExtOpen]=useState(SUB_EXTERNOS.includes(tab));
-  const [subAdmOpen,setSubAdmOpen]=useState(SUB_ADMIN.includes(tab));
-  const [subFrotaOpen,setSubFrotaOpen]=useState(SUB_FROTA.includes(tab));
-  const [subAlmoxOpen,setSubAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
-  const [subCliOpen,setSubCliOpen]=useState(CLIENTES_TABS.includes(tab));
+  const [subOfiOpen,setSubOfiOpen]=useState(false);
+  const [subExtOpen,setSubExtOpen]=useState(false);
+  const [subAdmOpen,setSubAdmOpen]=useState(false);
+  const [subFrotaOpen,setSubFrotaOpen]=useState(false);
+  const [subAlmoxOpen,setSubAlmoxOpen]=useState(false);
+  const [subCliOpen,setSubCliOpen]=useState(false);
 
   const areaTecAtiva = AREA_TEC_TABS.includes(tab);
   const servicosAtiva = SERVICOS_TABS.includes(tab);
