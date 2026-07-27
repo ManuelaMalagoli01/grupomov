@@ -2448,6 +2448,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     </button>
   );
 
+  const SubFolder=({label,icon,open,setOpen,ativa,color,children})=>(<>
+    <button onClick={()=>setOpen(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"7px 16px 7px 20px",border:"none",background:ativa?(color+"14"):"transparent",color:ativa?color:"#475569",fontSize:11,fontWeight:700,cursor:"pointer",borderLeft:ativa?`3px solid ${color}`:"3px solid transparent",transition:"all .15s",fontFamily:"inherit"}}>
+      <span>{icon} {label}</span>
+      <span style={{fontSize:8,transition:"transform .2s",display:"inline-block",transform:open?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+    </button>
+    {open&&<div style={{background:"#FCFCFD"}}>{children}</div>}
+  </>);
+
   const GroupIcon=({icon,ativa,badgeCount,onClick,title})=>(
     <button onClick={onClick} title={title} style={{display:"flex",alignItems:"center",justifyContent:"center",width:"100%",padding:"13px 0",border:"none",background:ativa?"#FFFBEB":"transparent",color:ativa?"#1A1A1A":"#94A3B8",fontSize:18,cursor:"pointer",borderLeft:ativa?"3px solid #F5C200":"3px solid transparent",position:"relative",transition:"all .15s"}}>
       {icon}
@@ -2472,6 +2480,17 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab));
   const [clientesOpen,setClientesOpen]=useState(CLIENTES_TABS.includes(tab));
   const [sasGroupOpen,setSasGroupOpen]=useState(SAS_TABS.includes(tab));
+  // Subpastas dentro de Manutenção
+  const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
+  const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
+  const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario"];
+  const SUB_FROTA=["pendencias_frota"];
+  const [subOfiOpen,setSubOfiOpen]=useState(SUB_OFICINA.includes(tab));
+  const [subExtOpen,setSubExtOpen]=useState(SUB_EXTERNOS.includes(tab));
+  const [subAdmOpen,setSubAdmOpen]=useState(SUB_ADMIN.includes(tab));
+  const [subFrotaOpen,setSubFrotaOpen]=useState(SUB_FROTA.includes(tab));
+  const [subAlmoxOpen,setSubAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
+  const [subCliOpen,setSubCliOpen]=useState(CLIENTES_TABS.includes(tab));
 
   const areaTecAtiva = AREA_TEC_TABS.includes(tab);
   const servicosAtiva = SERVICOS_TABS.includes(tab);
@@ -2590,40 +2609,44 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
       {/* MANUTENÇÃO - PASTA-MÃE COM SUBSEÇÕES */}
       <GroupHeader label="Manutenção" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")}/>
       {areaTecOpen&&<div style={{background:"#FFFFFF"}}>
-        {canSee("oficinas")&&canSee("oficina")&&<>
-          <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#0369A1",textTransform:"uppercase",letterSpacing:1,background:"#F0F9FF"}}>🏭 Oficina</div>
+        {canSee("oficinas")&&canSee("oficina")&&<SubFolder label="Oficina" icon="🏭" open={subOfiOpen} setOpen={setSubOfiOpen} ativa={SUB_OFICINA.includes(tab)} color="#0369A1">
           <SubBtn k="apontamentos_oficina" l="📋 OS Oficinas / Apontamento"/>
           <SubBtn k="agenda_ofi" l="🗓 Planejamento Oficina Hebert"/>
           <SubBtn k="agenda_ofi_matheus" l="🗓 Planejamento Oficina Matheus"/>
           <SubBtn k="dashboard_ofi" l="📊 KPIs Oficina"/>
-        </>}
+        </SubFolder>}
 
-        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#15803D",textTransform:"uppercase",letterSpacing:1,background:"#F0FDF4"}}>👷 Externos</div>
-        <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
-        <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
-        <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
+        <SubFolder label="Externos" icon="👷" open={subExtOpen} setOpen={setSubExtOpen} ativa={SUB_EXTERNOS.includes(tab)} color="#15803D">
+          <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
+          <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
+          <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
+        </SubFolder>
 
-        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#B45309",textTransform:"uppercase",letterSpacing:1,background:"#FFFBEB"}}>🗂️ Administrativo</div>
-        <SubBtn k="financeiro" l="🎫 Ticket-Financeiro"/>
-        <SubBtn k="uber" l="🚗 Uber"/>
-        <SubBtn k="vale_tecnico_maquinas" l="🎫 Vale Técnico Máquinas"/>
-        <SubBtn k="ferias_colaboradores" l="🏖️ Férias Colaboradores"/>
-        <SubBtn k="banco_horas" l="⏱️ Banco de Horas"/>
-        <SubBtn k="treinamentos_reunioes" l="📅 Treinamentos e Reuniões"/>
-        <SubBtn k="carros" l="🚙 Carros"/>
-        <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
+        <SubFolder label="Administrativo" icon="🗂️" open={subAdmOpen} setOpen={setSubAdmOpen} ativa={SUB_ADMIN.includes(tab)} color="#B45309">
+          <SubBtn k="financeiro" l="🎫 Ticket-Financeiro"/>
+          <SubBtn k="uber" l="🚗 Uber"/>
+          <SubBtn k="vale_tecnico_maquinas" l="🎫 Vale Técnico Máquinas"/>
+          <SubBtn k="ferias_colaboradores" l="🏖️ Férias Colaboradores"/>
+          <SubBtn k="banco_horas" l="⏱️ Banco de Horas"/>
+          <SubBtn k="treinamentos_reunioes" l="📅 Treinamentos e Reuniões"/>
+          <SubBtn k="carros" l="🚙 Carros"/>
+          <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
+        </SubFolder>
 
-        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#C2410C",textTransform:"uppercase",letterSpacing:1,background:"#FFF7ED"}}>🔋 Frota</div>
-        <SubBtn k="pendencias_frota" l="🔋 Frota - Substituição Bateria, Carregador e Máquina"/>
+        <SubFolder label="Frota" icon="🔋" open={subFrotaOpen} setOpen={setSubFrotaOpen} ativa={SUB_FROTA.includes(tab)} color="#C2410C">
+          <SubBtn k="pendencias_frota" l="🔋 Substituição Bateria, Carregador e Máquina"/>
+        </SubFolder>
 
-        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#7E22CE",textTransform:"uppercase",letterSpacing:1,background:"#FAF5FF"}}>📦 Almoxarifado</div>
-        <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
-        <SubBtn k="saida_entrada" l="📋 Requisições Gerais"/>
-        {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
-        <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
+        <SubFolder label="Almoxarifado" icon="📦" open={subAlmoxOpen} setOpen={setSubAlmoxOpen} ativa={ALMOX_TABS.includes(tab)} color="#7E22CE">
+          <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
+          <SubBtn k="saida_entrada" l="📋 Requisições Gerais"/>
+          {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
+          <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
+        </SubFolder>
 
-        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",letterSpacing:1,background:"#EFF6FF"}}>🏢 Clientes</div>
-        <SubBtn k="operacoes" l="🏢 Operações"/>
+        <SubFolder label="Clientes" icon="🏢" open={subCliOpen} setOpen={setSubCliOpen} ativa={CLIENTES_TABS.includes(tab)} color="#1565C0">
+          <SubBtn k="operacoes" l="🏢 Operações"/>
+        </SubFolder>
       </div>}
 
       {/* COMERCIAL - ACORDEÃO (Propostas, Dashboard) */}
