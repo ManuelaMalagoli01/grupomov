@@ -2463,7 +2463,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","entrega_tecnica","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros"];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -2575,10 +2575,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     <>
       {ToggleBtn}
       <div style={{position:"fixed",left:0,top:56,width:60,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"14px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-        <GroupIcon icon="🗂️" title="Administrativo" ativa={adminAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setAdminOpen(true);}}/>
-        <GroupIcon icon="📦" title="Almoxarifado" ativa={almoxAtiva} badgeCount={empAlerta} onClick={()=>{setCollapsed(false);setAlmoxOpen(true);}}/>
-        <GroupIcon icon="🛠️" title="Manutenção" ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
-        <GroupIcon icon="🏢" title="Clientes" ativa={clientesAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setClientesOpen(true);}}/>
+        <GroupIcon icon="🛠️" title="Manutenção" ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")+empAlerta} onClick={()=>{setCollapsed(false);setAreaTecOpen(true);}}/>
         <GroupIcon icon="💼" title="Comercial" ativa={comercialAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setComercialOpen(true);}}/>
         {!user?.semSas&&<GroupIcon icon="📄" title="SAS" ativa={sasGroupAtiva} badgeCount={bdg("sas")} onClick={()=>{setCollapsed(false);setSasGroupOpen(true);}}/>}
         <GroupIcon icon="🧾" title="Serviços" ativa={servicosAtiva} badgeCount={0} onClick={()=>{setCollapsed(false);setServicosOpen(true);}}/>
@@ -2590,48 +2587,42 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
     <>
     {ToggleBtn}
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
-      {/* ADMINISTRATIVO - ACORDEÃO (Uber, Financeiro) */}
-      <GroupHeader label="Administrativo" icon="🗂️" open={adminOpen} setOpen={setAdminOpen} ativa={adminAtiva} badgeCount={0}/>
-      {adminOpen&&<div style={{background:"#FFFFFF"}}>
-        <SubBtn k="uber" l="🚗 Uber"/>
-        <SubBtn k="financeiro" l="💰 Financeiro"/>
-      </div>}
-
-      {/* ALMOXARIFADO - ACORDEÃO (Empréstimo, Entrada/Saída, Ruptura, Dash Requisições) */}
-      <GroupHeader label="Almoxarifado" icon="📦" open={almoxOpen} setOpen={setAlmoxOpen} ativa={almoxAtiva} badgeCount={empAlerta}/>
-      {almoxOpen&&<div style={{background:"#FFFFFF"}}>
-        <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
-        <SubBtn k="saida_entrada" l="📋 Requisições Gerais"/>
-        {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
-        <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
-      </div>}
-
-      {/* MANUTENÇÃO - GRUPO ÚNICO */}
+      {/* MANUTENÇÃO - PASTA-MÃE COM SUBSEÇÕES */}
       <GroupHeader label="Manutenção" icon="🛠️" open={areaTecOpen} setOpen={setAreaTecOpen} ativa={areaTecAtiva} badgeCount={bdg("pendencias_frota")}/>
       {areaTecOpen&&<div style={{background:"#FFFFFF"}}>
-        <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
-        <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
-        <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
-
         {canSee("oficinas")&&canSee("oficina")&&<>
+          <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#0369A1",textTransform:"uppercase",letterSpacing:1,background:"#F0F9FF"}}>🏭 Oficina</div>
           <SubBtn k="apontamentos_oficina" l="📋 OS Oficinas / Apontamento"/>
           <SubBtn k="agenda_ofi" l="🗓 Planejamento Oficina Hebert"/>
           <SubBtn k="agenda_ofi_matheus" l="🗓 Planejamento Oficina Matheus"/>
           <SubBtn k="dashboard_ofi" l="📊 KPIs Oficina"/>
         </>}
 
-        <SubBtn k="pendencias_frota" l="🔋 Frota - Substituição Bateria, Carregador e Máquina"/>
+        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#15803D",textTransform:"uppercase",letterSpacing:1,background:"#F0FDF4"}}>👷 Externos</div>
+        <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
+        <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
+        <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
+
+        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#B45309",textTransform:"uppercase",letterSpacing:1,background:"#FFFBEB"}}>🗂️ Administrativo</div>
+        <SubBtn k="financeiro" l="🎫 Ticket-Financeiro"/>
+        <SubBtn k="uber" l="🚗 Uber"/>
         <SubBtn k="vale_tecnico_maquinas" l="🎫 Vale Técnico Máquinas"/>
         <SubBtn k="ferias_colaboradores" l="🏖️ Férias Colaboradores"/>
         <SubBtn k="banco_horas" l="⏱️ Banco de Horas"/>
         <SubBtn k="treinamentos_reunioes" l="📅 Treinamentos e Reuniões"/>
         <SubBtn k="carros" l="🚙 Carros"/>
         <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
-      </div>}
 
-      {/* CLIENTES - ACORDEÃO (Operações) */}
-      <GroupHeader label="Clientes" icon="🏢" open={clientesOpen} setOpen={setClientesOpen} ativa={clientesAtiva} badgeCount={0}/>
-      {clientesOpen&&<div style={{background:"#FFFFFF"}}>
+        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#C2410C",textTransform:"uppercase",letterSpacing:1,background:"#FFF7ED"}}>🔋 Frota</div>
+        <SubBtn k="pendencias_frota" l="🔋 Frota - Substituição Bateria, Carregador e Máquina"/>
+
+        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#7E22CE",textTransform:"uppercase",letterSpacing:1,background:"#FAF5FF"}}>📦 Almoxarifado</div>
+        <SubBtn k="emprestimos" l="🔄 Req. Empréstimo" badge={empAlerta}/>
+        <SubBtn k="saida_entrada" l="📋 Requisições Gerais"/>
+        {canSee("ruptura_almox")&&<SubBtn k="ruptura_almox" l="🔴 Ruptura Almox"/>}
+        <SubBtn k="dashboard_req" l="📊 Dash Requisições"/>
+
+        <div style={{padding:"8px 16px 3px 20px",fontSize:9,fontWeight:800,color:"#1565C0",textTransform:"uppercase",letterSpacing:1,background:"#EFF6FF"}}>🏢 Clientes</div>
         <SubBtn k="operacoes" l="🏢 Operações"/>
       </div>}
 
@@ -2642,7 +2633,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
       </div>}
 
-      {/* SAS - CATEGORIA PRÓPRIA */}
+      {/* SAS - CATEGORIA PRÓPRIA INDEPENDENTE */}
       {!user?.semSas&&<>
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
@@ -2653,7 +2644,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         </div>}
       </>}
 
-      {/* SERVIÇOS - ACORDEÃO (Mau Uso, A Faturar, Dash Processos) */}
+      {/* SERVIÇOS - CATEGORIA PRÓPRIA INDEPENDENTE */}
       <GroupHeader label="Serviços" icon="🧾" open={servicosOpen} setOpen={setServicosOpen} ativa={servicosAtiva} badgeCount={0}/>
       {servicosOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -3897,7 +3888,7 @@ export default function App(){
                   <div><label style={lbl}>Data Solicitação</label><input type="date" value={d.dataSolicitacao||""} onChange={e=>upd("dataSolicitacao",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>NF</label><input type="text" value={d.nf||""} onChange={e=>upd("nf",e.target.value)} style={inp}/></div>
                   <div><label style={lbl}>Valor (R$)</label><input type="text" value={d.valor||""} onChange={e=>setValor(e.target.value)} placeholder="0,00" style={inp}/></div>
-                  <div><label style={lbl}>Comissão 1%</label><input type="text" value={d.comissao||""} onChange={e=>upd("comissao",e.target.value)} placeholder="auto" style={{...inp,background:"#F0FDF4",fontWeight:700,color:"#15803D"}}/></div>
+                  <div><label style={lbl}>Comissão Entrega 1% (editável)</label><input type="text" value={d.comissao||""} onChange={e=>upd("comissao",e.target.value)} placeholder="auto 1%" style={{...inp,background:"#F0FDF4",fontWeight:700,color:"#15803D"}}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                   <div><label style={lbl}>Cliente</label><input type="text" value={d.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Empresa" style={inp}/></div>
@@ -7132,23 +7123,22 @@ export default function App(){
           }).sort((a,b)=>String(b.dataSolicitacao||"").localeCompare(String(a.dataSolicitacao||"")));
           // Fim de garantia = 6 meses após a data de entrega técnica
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
-          // Status da preventiva evolui conforme as etapas concluidas
           // ── MODELO DE RECEITA (serviço, não mercadoria) ──
-          // Fórmulas de custo por caso
           const VALOR_KM_REPASSE=3.5, VALOR_HORA=280;
           const custoGasolina=(x)=>{const km=pv(x.distanciaKm),kpl=pv(x.kmPorLitro),pl=pv(x.precoLitro);return (km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;};
           const repasseKm=(x)=>pv(x.distanciaKm)*VALOR_KM_REPASSE;
           const custoMaoObra=(x)=>pv(x.horasTrab)*VALOR_HORA;
-          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return gas+pv(r.gastoAlimentacao)+pv(r.horasTrab)*VALOR_HORA+km*VALOR_KM_REPASSE;};
+          const gastoRetrabalhoUn=(r)=>{const km=pv(r.distanciaKm),kpl=pv(r.kmPorLitro),pl=pv(r.precoLitro);const gas=(km>0&&kpl>0&&pl>0)?(km/kpl)*pl:0;return gas+pv(r.gastoAlimentacao)+pv(r.horasTrab)*VALOR_HORA;};
           const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
-          // Gasto total do caso = gasolina(custo) + alimentação + mão de obra + repasse km + retrabalhos
-          const gastoCaso=(x)=>custoGasolina(x)+pv(x.gastoAlimentacao)+custoMaoObra(x)+repasseKm(x)+gastosRetrabalhos(x);
-          // Receitas
-          const recEntregaTec=(x)=>pv(x.valor)*0.01;               // 1% entrega técnica (bruto)
-          const recGarantia=(x)=>x.comissaoValor?pv(x.comissaoValor):pv(x.valor)*0.01; // 1% fim garantia
-          const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor); // acordado
+          // Gasto do caso p/ deduzir da comissão = gasolina + alimentação + mão de obra + retrabalhos
+          // (repasse km é referência de valor recebido, não custo — fica fora do desconto)
+          const gastoCaso=(x)=>custoGasolina(x)+pv(x.gastoAlimentacao)+custoMaoObra(x)+gastosRetrabalhos(x);
+          // COMISSÕES (o campo comissao é editável; se vazio, sugere 1% da NF)
+          const recEntregaTec=(x)=>x.comissao!==undefined&&x.comissao!==""?pv(x.comissao):pv(x.valor)*0.01;   // 1% entrega técnica
+          const recGarantia=(x)=>x.comissaoValor!==undefined&&x.comissaoValor!==""?pv(x.comissaoValor):pv(x.valor)*0.01; // 1% fim garantia (futuro)
+          const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor);
           const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
-          // Comissão 1% entrega técnica: bruto e líquido (líquido desconta gastos + retrabalhos)
+          // Comissão bruta (1% entrega) e líquida (menos gastos e retrabalhos)
           const comissaoBruta=(x)=>recEntregaTec(x);
           const comissaoLiquida=(x)=>comissaoBruta(x)-gastoCaso(x);
           const statusPreventiva=(x)=>{
@@ -7157,7 +7147,7 @@ export default function App(){
             if(x.prev100Aprov)return {k:"aguarda500",l:"✅ 100h concluída · aguardando 500h",c:"#1565C0",bg:"#EFF6FF"};
             return {k:"pendente100",l:"⏳ Pendente marcação preventiva 100h",c:"#E67E00",bg:"#FFF8F0"};
           };
-          // KPIs (receita = serviço, não valor da NF)
+          // KPIs
           const totRecEntrega=lista.reduce((a,x)=>a+recEntregaTec(x),0);
           const totRecGarantia=lista.reduce((a,x)=>a+recGarantia(x),0);
           const totRecPreventiva=lista.reduce((a,x)=>a+recPreventivas(x),0);
