@@ -3028,6 +3028,7 @@ export default function App(){
   const [entregaSearch,setEntregaSearch]=useState(""); const [entregaFiltro,setEntregaFiltro]=useState("todos");
   const [entregaDe,setEntregaDe]=useState(""); const [entregaAte,setEntregaAte]=useState(""); const [entregaMes,setEntregaMes]=useState("");
   const [showFiltroEntrega,setShowFiltroEntrega]=useState(false);
+  const [showAlertaPrev,setShowAlertaPrev]=useState(false);
   const [showArqValeTec,setShowArqValeTec]=useState(false);
   const [valeTecEdit,setValeTecEdit]=useState(null);
   const [valeTecModal,setValeTecModal]=useState(false);
@@ -7235,25 +7236,33 @@ export default function App(){
               </div>
             </div>
 
-            {alertasPrev.length>0&&<div className="card" style={{padding:"10px 14px",marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA"}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#C2410C",marginBottom:6}}>🔔 Contatar cliente sobre preventiva ({alertasPrev.length})</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                {alertasPrev.slice(0,8).map(x=><span key={x.id} style={{fontSize:11,fontWeight:700,color:"#7C2D12",background:"#FFEDD5",borderRadius:10,padding:"3px 10px"}}>{x.cliente||x.nome||"Cliente"}</span>)}
-                {alertasPrev.length>8&&<span style={{fontSize:11,color:"#9A3412",fontWeight:700}}>+{alertasPrev.length-8}</span>}
-              </div>
-            </div>}
+            {alertasPrev.length>0&&(()=>{
+              const nomes=[...new Set(alertasPrev.map(x=>x.cliente||x.nome||"Cliente"))];
+              return(<div className="card" style={{padding:0,marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA",overflow:"hidden"}}>
+                <button onClick={()=>setShowAlertaPrev(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"10px 14px",border:"none",background:"transparent",cursor:"pointer",fontFamily:"inherit"}}>
+                  <span style={{display:"flex",alignItems:"center",gap:8,fontSize:12,fontWeight:800,color:"#C2410C"}}>
+                    <span style={{fontSize:14}}>🔔</span> Contatar cliente sobre preventiva
+                    <span style={{fontSize:11,fontWeight:800,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 9px"}}>{nomes.length}</span>
+                  </span>
+                  <span style={{fontSize:10,color:"#C2410C"}}>{showAlertaPrev?"▲ ocultar":"▼ ver lista"}</span>
+                </button>
+                {showAlertaPrev&&<div style={{padding:"0 14px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
+                  {nomes.map((n,i)=><span key={i} style={{fontSize:11,fontWeight:600,color:"#7C2D12",background:"#FFEDD5",borderRadius:8,padding:"4px 11px"}}>{n}</span>)}
+                </div>}
+              </div>);
+            })()}
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:16}}>
               {[
                 {l:"Entregas",v:lista.length,sub:`${doMes.length} este mês`,c:"#1565C0",i:"🚚"},
-                {l:"Receita Total",v:fmtR(totalReceita),sub:"serviço (não NF)",c:"#1A7A3C",i:"💰"},
-                {l:"1% Entrega Téc.",v:fmtR(totRecEntrega),c:"#0369A1",i:"🔧"},
-                {l:"1% Fim Garantia",v:fmtR(totRecGarantia),sub:"recebimento futuro",c:"#0D9488",i:"🛡️"},
-                {l:"Preventivas",v:fmtR(totRecPreventiva),sub:"100+500+1000h",c:"#7E22CE",i:"🛠️"},
-                {l:"Gastos Totais",v:fmtR(totalGastos),sub:"c/ retrabalhos",c:"#C62828",i:"📉"},
-                {l:"Comissão Líquida",v:fmtR(totalComissaoLiq),sub:"1% − gastos",c:totalComissaoLiq>=0?"#15803D":"#C62828",i:"📈"},
+                {l:"Receita Realizada",v:fmtR(totRecEntrega),sub:"1% entrega (recebido)",c:"#1A7A3C",i:"💰"},
+                totRecGarantia>0&&{l:"A Receber — Garantia",v:fmtR(totRecGarantia),sub:"futuro (após 6 meses)",c:"#0D9488",i:"🛡️"},
+                totRecPreventiva>0&&{l:"A Receber — Preventivas",v:fmtR(totRecPreventiva),sub:"futuro (se cliente optar)",c:"#7E22CE",i:"🛠️"},
+                {l:"⛽🍽️ Combustível+Alim.",v:fmtR(totalGasolina+totalAlimentacao),sub:"despesas diretas",c:"#B45309",i:"⛽"},
+                {l:"⏱️ Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280 (separado)",c:"#E67E00",i:"⏱️"},
+                {l:"Comissão Líquida",v:fmtR(totRecEntrega-(totalGasolina+totalAlimentacao)),sub:"1% − combust.+alim.",c:(totRecEntrega-(totalGasolina+totalAlimentacao))>=0?"#15803D":"#C62828",i:"📈"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
-              ].map((k,i)=>(
+              ].filter(Boolean).map((k,i)=>(
                 <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
                   <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
                   <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?15:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
@@ -7261,6 +7270,13 @@ export default function App(){
                 </div>
               ))}
             </div>
+            {(totRecGarantia>0||totRecPreventiva>0)&&<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#F0FDFA",border:"1.5px dashed #5EEAD4"}}>
+              <span style={{fontSize:11,fontWeight:800,color:"#0F766E"}}>📅 Recebimentos futuros:</span>
+              <span style={{fontSize:12,color:"#134E4A",marginLeft:8}}>
+                {totRecGarantia>0&&<span style={{marginRight:14}}>🛡️ Garantia (6 meses): <b>{fmtR(totRecGarantia)}</b></span>}
+                {totRecPreventiva>0&&<span>🛠️ Preventivas (se optar): <b>{fmtR(totRecPreventiva)}</b></span>}
+              </span>
+            </div>}
 
             <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:14,marginBottom:18}}>
               <div className="card" style={{padding:14}}>
@@ -7270,23 +7286,25 @@ export default function App(){
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return `${MESN[parseInt(mo)-1]}/${y.slice(2)}`;}),
                   datasets:[
                     {label:"1% Entrega",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recEntregaTec(x),0)),backgroundColor:"#0369A1",borderRadius:4,stack:"rec"},
-                    {label:"1% Garantia",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
-                    {label:"Preventivas",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
-                    {label:"Gastos",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+gastoCaso(x),0)),backgroundColor:"#C62828",borderRadius:4,stack:"gasto"},
+                    {label:"1% Garantia (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
+                    {label:"Preventivas (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
+                    {label:"⛽🍽️ Combust.+Alim.",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoGasolina(x)+gastoAlimSan(x),0)),backgroundColor:"#B45309",borderRadius:4,stack:"gasto"},
+                    {label:"⏱️ Mão de obra",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoMaoObra(x),0)),backgroundColor:"#E67E00",borderRadius:4,stack:"gasto"},
                   ]
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},stacked:true},y:{beginAtZero:true,stacked:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
               </div>
               <div className="card" style={{padding:14}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>% Ganho × Gasto (sobre receita)</div>
-                {(()=>{const pctGanho=totalReceita>0?(totalComissaoLiq/totalReceita*100):0;const pctGasto=totalReceita>0?(totalGastos/totalReceita*100):0;return(<>
+                {(()=>{const gastoDireto=totalGasolina+totalAlimentacao;const ganhoLiq=totRecEntrega-gastoDireto;const baseRec=totRecEntrega||1;const pctGanho=ganhoLiq/baseRec*100;const pctGasto=gastoDireto/baseRec*100;return(<>
                 <ChartCanvas type="doughnut" height={180} data={{
-                  labels:["Ganho líquido","Gastos"],
-                  datasets:[{data:[Math.max(totalComissaoLiq,0),totalGastos],backgroundColor:["#15803D","#C62828"],borderWidth:2,borderColor:"#FFF"}]
+                  labels:["Ganho líquido","⛽🍽️ Combust.+Alim."],
+                  datasets:[{data:[Math.max(ganhoLiq,0),gastoDireto],backgroundColor:["#15803D","#B45309"],borderWidth:2,borderColor:"#FFF"}]
                 }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtR(c.raw)}`}}}}}/>
                 <div style={{textAlign:"center",marginTop:8,fontSize:11,lineHeight:1.6}}>
-                  <div><span style={{color:"#15803D",fontWeight:800}}>Ganho {fmtR(totalComissaoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
-                  <div><span style={{color:"#C62828",fontWeight:800}}>Gasto {fmtR(totalGastos)}</span> <span style={{color:"#C62828"}}>({pctGasto.toFixed(1)}%)</span></div>
-                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>sobre receita de {fmtR(totalReceita)}</div>
+                  <div><span style={{color:"#15803D",fontWeight:800}}>Ganho {fmtR(ganhoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
+                  <div><span style={{color:"#B45309",fontWeight:800}}>Combust.+Alim. {fmtR(gastoDireto)}</span> <span style={{color:"#B45309"}}>({pctGasto.toFixed(1)}%)</span></div>
+                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — mostrada à parte</div>
+                  <div style={{color:"#94A3B8",fontSize:10}}>sobre 1% de entrega de {fmtR(totRecEntrega)}</div>
                 </div></>);})()}
               </div>
             </div>
