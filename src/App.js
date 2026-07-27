@@ -3012,6 +3012,7 @@ export default function App(){
   const [entregaModal,setEntregaModal]=useState(false);
   const [entregaSearch,setEntregaSearch]=useState(""); const [entregaFiltro,setEntregaFiltro]=useState("todos");
   const [entregaDe,setEntregaDe]=useState(""); const [entregaAte,setEntregaAte]=useState(""); const [entregaMes,setEntregaMes]=useState("");
+  const [showFiltroEntrega,setShowFiltroEntrega]=useState(false);
   const [showArqValeTec,setShowArqValeTec]=useState(false);
   const [valeTecEdit,setValeTecEdit]=useState(null);
   const [valeTecModal,setValeTecModal]=useState(false);
@@ -7114,10 +7115,16 @@ export default function App(){
               </div>
             </div>
 
-            <div className="card" style={{padding:"12px 14px",marginBottom:14,border:"2px solid #F5C200",background:"#FFFEF7"}}>
+            {(()=>{const temFiltro=entregaSearch||entregaFiltro!=="todos"||entregaDe||entregaAte||entregaMes;return(<>
+            <button onClick={()=>setShowFiltroEntrega(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltroEntrega?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:13}}>🔍</span><span style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>Filtrar Entregas</span>
+              {temFiltro&&<span style={{fontSize:9,fontWeight:700,color:"#B45309",background:"#FEF3C7",borderRadius:10,padding:"1px 8px"}}>ativo</span>}
+              <span style={{fontSize:9,color:"#94A3B8",marginLeft:4}}>{showFiltroEntrega?"▲":"▼"}</span>
+            </button>
+            {showFiltroEntrega&&<div className="card" style={{padding:"12px 14px",marginBottom:14,border:"2px solid #F5C200",background:"#FFFEF7"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",display:"flex",alignItems:"center",gap:6}}>🔍 Filtrar Entregas</div>
-                {(entregaSearch||entregaFiltro!=="todos"||entregaDe||entregaAte||entregaMes)&&<button onClick={()=>{setEntregaSearch("");setEntregaFiltro("todos");setEntregaDe("");setEntregaAte("");setEntregaMes("");}} style={{padding:"5px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>✕ Limpar</button>}
+                {temFiltro&&<button onClick={()=>{setEntregaSearch("");setEntregaFiltro("todos");setEntregaDe("");setEntregaAte("");setEntregaMes("");}} style={{padding:"5px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>✕ Limpar</button>}
               </div>
               <div style={{position:"relative",marginBottom:10}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#94A3B8",fontSize:15}}>🔍</span><input type="text" value={entregaSearch} onChange={e=>setEntregaSearch(e.target.value)} placeholder="Buscar por cliente, nome, NF, chamado, MOV, e-mail, técnico..." style={{width:"100%",padding:"11px 12px 11px 36px",fontSize:13,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}}>
@@ -7127,7 +7134,8 @@ export default function App(){
                 <div><label style={{display:"block",fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3}}>Mês</label><select value={entregaMes} onChange={e=>setEntregaMes(e.target.value)} style={{width:"100%",fontSize:12,padding:"8px 10px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}><option value="">Todos</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select></div>
               </div>
               <div style={{fontSize:11,color:"#94A3B8",marginTop:8,fontWeight:600}}>{filtrada.length} de {lista.length} entrega(s)</div>
-            </div>
+            </div>}
+            </>);})()}
 
             {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚚</div><div style={{fontSize:14,fontWeight:600}}>Nenhuma entrega técnica — clique em "+ Nova Solicitação"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:12}}>
