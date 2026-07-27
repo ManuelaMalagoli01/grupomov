@@ -9108,7 +9108,14 @@ export default function App(){
           const motivosAtivos=[...new Set(perdidas.map(c=>c.motivoPerda).filter(Boolean))];
           const chartMotivo={labels:motivosAtivos,datasets:[{label:"Perdas",data:motivosAtivos.map(m=>perdidas.filter(c=>c.motivoPerda===m).length),backgroundColor:"#EF4444",borderRadius:6}]};
 
-          const chartVendaLocacao={labels:["Venda","Locação"],datasets:[{data:[valorVenda,valorLocacao],backgroundColor:["#1565C0","#F97316"],borderRadius:6}]};
+          const qtdVenda=lista.filter(c=>c.tipoServico==="Venda").length;
+          const qtdLocacao=lista.filter(c=>c.tipoServico==="Locação").length;
+          const ticketVenda=qtdVenda>0?valorVenda/qtdVenda:0;
+          const ticketLocacao=qtdLocacao>0?valorLocacao/qtdLocacao:0;
+          const totalVL=valorVenda+valorLocacao;
+          const pctVenda=totalVL>0?(valorVenda/totalVL*100):0;
+          const pctLocacao=totalVL>0?(valorLocacao/totalVL*100):0;
+          const chartVendaLocacao={labels:["Venda","Locação"],datasets:[{data:[valorVenda,valorLocacao],backgroundColor:["#1565C0","#F97316"],borderWidth:2,borderColor:"#FFF"}]};
 
           const chartOptsBase={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}};
           const chartOptsPie={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:10}}},animation:{duration:600}};
@@ -9167,8 +9174,21 @@ export default function App(){
                 </div>
                 <div className="card" style={{padding:18}}>
                   <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🛒 Venda × Locação</div>
-                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor total por tipo de serviço</div>
-                  <ChartCanvas type="doughnut" data={chartVendaLocacao} options={chartOptsPie} height={220}/>
+                  <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor, quantidade e ticket médio por tipo</div>
+                  {totalVL>0?<>
+                  <ChartCanvas type="doughnut" data={chartVendaLocacao} options={{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{display:true,position:"bottom",labels:{font:{size:11},boxWidth:11,usePointStyle:true,padding:10}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot>0?(c.raw/tot*100).toFixed(1):0;return `${c.label}: ${fmtBRL(c.raw)} (${pct}%)`;}}}},animation:{duration:600}}} height={200}/>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:14}}>
+                    <div style={{border:"1.5px solid #DBEAFE",borderRadius:10,padding:"10px 12px",background:"#EFF6FF"}}>
+                      <div style={{fontSize:11,fontWeight:800,color:"#1565C0",marginBottom:6,display:"flex",alignItems:"center",gap:5}}>🛒 Venda <span style={{fontSize:10,color:"#FFF",background:"#1565C0",borderRadius:10,padding:"0 7px"}}>{pctVenda.toFixed(0)}%</span></div>
+                      <div style={{fontSize:9,color:"#64748B",fontWeight:700,textTransform:"uppercase"}}>Valor</div><div style={{fontSize:14,fontWeight:900,color:"#1565C0"}}>{fmtBRL(valorVenda)}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:11}}><span style={{color:"#64748B"}}>Qtd: <b style={{color:"#1E293B"}}>{qtdVenda}</b></span><span style={{color:"#64748B"}}>Ticket: <b style={{color:"#1E293B"}}>{fmtBRL(ticketVenda)}</b></span></div>
+                    </div>
+                    <div style={{border:"1.5px solid #FED7AA",borderRadius:10,padding:"10px 12px",background:"#FFF7ED"}}>
+                      <div style={{fontSize:11,fontWeight:800,color:"#EA580C",marginBottom:6,display:"flex",alignItems:"center",gap:5}}>🏗️ Locação <span style={{fontSize:10,color:"#FFF",background:"#F97316",borderRadius:10,padding:"0 7px"}}>{pctLocacao.toFixed(0)}%</span></div>
+                      <div style={{fontSize:9,color:"#64748B",fontWeight:700,textTransform:"uppercase"}}>Valor</div><div style={{fontSize:14,fontWeight:900,color:"#EA580C"}}>{fmtBRL(valorLocacao)}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:11}}><span style={{color:"#64748B"}}>Qtd: <b style={{color:"#1E293B"}}>{qtdLocacao}</b></span><span style={{color:"#64748B"}}>Ticket: <b style={{color:"#1E293B"}}>{fmtBRL(ticketLocacao)}</b></span></div>
+                    </div>
+                  </div></>:<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados de venda/locação</div>}
                 </div>
               </div>
             </div>
