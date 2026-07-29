@@ -249,6 +249,31 @@ const COM_EQUIPAMENTO = ["Empilhadeira a Combustão Diesel","Empilhadeira a Comb
 const COM_MARCA = ["SAS","MOV"];
 const COM_BATERIA = ["Chumbo","Lítio"];
 const COM_TIPO_SERVICO = ["Locação","Venda"];
+const PROSPECCAO_SEED = [
+  {empresa:"GM Facilities",cidade:"Belo Horizonte",telefone:"(31) 3234-0418",email:"contato@gmfacilities.com.br"},
+  {empresa:"Dinâmica Facility",cidade:"Belo Horizonte",telefone:"(31) 2511-5245",email:"comercial@dinamicafacility.com.br"},
+  {empresa:"Grupo Impacto Facilities",cidade:"Belo Horizonte",telefone:"(31) 2512-8200",email:"contato@grupoimpacto.com.br"},
+  {empresa:"SLF Facilities",cidade:"Belo Horizonte",telefone:"(31) 2555-3535",email:"contato@slffacilities.com.br"},
+  {empresa:"Facility Group",cidade:"Belo Horizonte",telefone:"(31) 3377-8700",email:"comercial@facilitygroup.com.br"},
+  {empresa:"AH Facilities",cidade:"Contagem",telefone:"(31) 3391-9000",email:"contato@ahfacilities.com.br"},
+  {empresa:"GAPE Segurança & Facilities",cidade:"Belo Horizonte",telefone:"(31) 3490-7000",email:"comercial@gape.com.br"},
+  {empresa:"Conservadora Mineira",cidade:"Belo Horizonte",telefone:"(31) 3273-4444",email:"contato@conservadoramineira.com.br"},
+  {empresa:"Village Serviços",cidade:"Belo Horizonte",telefone:"(31) 2515-4800",email:"contato@villageservicos.com.br"},
+  {empresa:"GT Serviços Terceirizados",cidade:"Contagem",telefone:"(31) 3359-6000",email:"contato@gtservicos.com.br"},
+  {empresa:"Liderança Limpeza e Conservação",cidade:"Belo Horizonte",telefone:"(31) 3298-5000",email:"contato@liderancalimpeza.com.br"},
+  {empresa:"Minas Conservação",cidade:"Belo Horizonte",telefone:"(31) 3271-2200",email:"atendimento@minasconservacao.com.br"},
+  {empresa:"Emive Facilities",cidade:"Belo Horizonte",telefone:"(31) 3526-3000",email:"atendimento@emive.com.br"},
+  {empresa:"Inove Facilities",cidade:"Uberlândia",telefone:"(34) 3235-7000",email:"contato@inovefacilities.com.br"},
+  {empresa:"Master Facilities",cidade:"Juiz de Fora",telefone:"(32) 3215-4200",email:"contato@masterfacilities.com.br"},
+  {empresa:"Manserv",cidade:"Contagem",telefone:"0800 225 5800",email:""},
+  {empresa:"Jotaele conservadora",cidade:"Belo Horizonte",telefone:"(31) 98394-3249",email:""},
+  {empresa:"Grupo Alfa Facilities",cidade:"",telefone:"(31) 3047-2148",email:""},
+  {empresa:"Human Service",cidade:"Belo Horizonte",telefone:"(31) 99944-5186",email:""},
+  {empresa:"Delta Facilities",cidade:"Belo Horizonte",telefone:"(31) 9 2535-4444",email:""},
+  {empresa:"JB Conservadora",cidade:"Belo Horizonte",telefone:"(31) 3503-1212",email:""},
+  {empresa:"RS Serviços - Terceirização de Segurança, Tecnologia e Facilities",cidade:"Belo Horizonte",telefone:"(31) 2488-8895",email:""},
+  {empresa:"Horizonte Serviços e Limpeza",cidade:"Belo Horizonte",telefone:"(31) 97130-5678",email:""},
+];
 const COM_NOVO_SEMINOVO = ["Novo","Seminovo"];
 const COM_MOTIVO_PERDA = ["Cliente em Novo Projeto Comercial","Condição de Pagamento","Perdida por Preço","Perdido por Prazo de Entrega","Perdido por Indisponibilidade de Estoque"];
 const fmtBRL=(v)=>{const n=parseFloat(v);if(isNaN(n))return "R$ 0,00";return "R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});};
@@ -2481,6 +2506,14 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab));
   const [clientesOpen,setClientesOpen]=useState(CLIENTES_TABS.includes(tab));
   const [sasGroupOpen,setSasGroupOpen]=useState(SAS_TABS.includes(tab));
+  const [prospGroupOpen,setProspGroupOpen]=useState(tab==="prospeccao");
+  const prospAlertaCount=(prospeccao||[]).filter(p=>{
+    if(p.contatado||!p.dataRetorno)return false;
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    const dr=new Date(p.dataRetorno+"T00:00:00");
+    const diff=Math.ceil((dr-hoje)/(1000*60*60*24));
+    return diff<=2; // vence em 2 dias ou já venceu
+  }).length;
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
@@ -2660,6 +2693,12 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
         <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
       </div>}
 
+      {/* PROSPECÇÃO - CATEGORIA PRÓPRIA INDEPENDENTE */}
+      <GroupHeader label="Prospecção" icon="🎯" open={prospGroupOpen} setOpen={setProspGroupOpen} ativa={tab==="prospeccao"} badgeCount={prospAlertaCount}/>
+      {prospGroupOpen&&<div style={{background:"#FFFFFF"}}>
+        <SubBtn k="prospeccao" l="🎯 Lista de Clientes" badge={prospAlertaCount}/>
+      </div>}
+
       {/* SAS - CATEGORIA PRÓPRIA INDEPENDENTE */}
       {!user?.semSas&&<>
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
@@ -2702,7 +2741,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3028,6 +3067,11 @@ export default function App(){
   const [bancoSearch,setBancoSearch]=useState(""); const [bancoFiltroStatus,setBancoFiltroStatus]=useState("todos");
   const [entregaTec,setEntregaTec]=useState([]);
   const [clientesSas,setClientesSas]=useState([]);
+  const [prospeccao,setProspeccao]=useState([]);
+  const [prospEdit,setProspEdit]=useState(null);
+  const [prospModal,setProspModal]=useState(false);
+  const [prospSearch,setProspSearch]=useState("");
+  const [prospCidade,setProspCidade]=useState("todas");
   const [cliSasEdit,setCliSasEdit]=useState(null);
   const [cliSasModal,setCliSasModal]=useState(false);
   const [cliSasSearch,setCliSasSearch]=useState("");
@@ -3191,6 +3235,14 @@ export default function App(){
       if(entregaRows.length>0) setEntregaTec(entregaRows);
       const cliSasRows=await safeGet("clientes_sas");
       if(cliSasRows.length>0) setClientesSas(cliSasRows);
+      const prospRows=await safeGet("prospeccao");
+      if(prospRows.length>0){ setProspeccao(prospRows); }
+      else{
+        // primeira vez: popular com o seed da planilha Lavadoura
+        const seeded=PROSPECCAO_SEED.map((c,i)=>({...c,id:`PROS${Date.now()}_${i}`,cnpj:"",status:"prospeccao",contatos:[],info:"",dataRetorno:"",contatado:false}));
+        setProspeccao(seeded);
+        try{ await db.saveBatch("prospeccao",seeded); }catch(e){}
+      }
       const pontoRows=await safeGet("ponto_diario");
       if(pontoRows.length>0) setPontoDiario(pontoRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
@@ -3242,7 +3294,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, ponto_diario:setPontoDiario,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3404,6 +3456,9 @@ export default function App(){
   const saveCliSas=(obj)=>{ const id=obj.id||`CLI${Date.now()}`; const row={...obj,id}; setClientesSas(prev=>{ const ex=prev.some(x=>x.id===id); return ex?prev.map(x=>x.id===id?row:x):[...prev,row]; }); db.save("clientes_sas",id,row); };
   const updateCliSas=(id,changes)=>{ setClientesSas(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("clientes_sas",id,row); return np; }); };
   const delCliSas=(id)=>{ setClientesSas(p=>p.filter(x=>x.id!==id)); db.delete("clientes_sas",id); };
+  const saveProsp=(obj)=>{ const id=obj.id||`PROS${Date.now()}`; const row={...obj,id}; setProspeccao(prev=>{ const ex=prev.some(x=>x.id===id); return ex?prev.map(x=>x.id===id?row:x):[...prev,row]; }); db.save("prospeccao",id,row); };
+  const updateProsp=(id,changes)=>{ setProspeccao(prev=>{ const np=prev.map(x=>x.id===id?{...x,...changes}:x); const row=np.find(x=>x.id===id); db.save("prospeccao",id,row); return np; }); };
+  const delProsp=(id)=>{ setProspeccao(p=>p.filter(x=>x.id!==id)); db.delete("prospeccao",id); };
   // Sincroniza a lista do banco de horas com os colaboradores do calendario de ferias (adiciona quem falta)
   const sincronizarBancoComFerias=()=>{
     const nomesFerias=(ferias||[]).filter(f=>f&&!f.arquivado&&f.nome).map(f=>({nome:f.nome,setor:f.setor||""}));
@@ -7127,6 +7182,140 @@ export default function App(){
         })()}
 
         {/* ── ENTREGA TÉCNICA ── */}
+        {tab==="prospeccao"&&(()=>{
+          const PROSP_STATUS={prospeccao:{l:"🎯 Prospecção",c:"#B45309",bg:"#FFF8F0"},negociacao:{l:"🤝 Em negociação",c:"#1565C0",bg:"#EFF6FF"},cliente:{l:"✅ Cliente",c:"#15803D",bg:"#F0FDF4"},perdido:{l:"❌ Perdido",c:"#94A3B8",bg:"#F8FAFC"}};
+          const hojeD=new Date(); hojeD.setHours(0,0,0,0);
+          const diasParaRetorno=(p)=>{ if(!p.dataRetorno)return null; const dr=new Date(p.dataRetorno+"T00:00:00"); return Math.ceil((dr-hojeD)/(1000*60*60*24)); };
+          const q=(prospSearch||"").toLowerCase();
+          const filtro=(x)=>{
+            const okQ=!q||[x.empresa,x.cidade,x.telefone,x.email,x.cnpj,x.info].some(v=>(v||"").toLowerCase().includes(q))||(x.contatos||[]).some(c=>[c.nome,c.email,c.telefone].some(v=>(v||"").toLowerCase().includes(q)));
+            const okC=prospCidade==="todas"||(x.cidade||"(sem cidade)")===prospCidade;
+            return okQ&&okC;
+          };
+          const lista=(prospeccao||[]).filter(filtro);
+          const cidades=[...new Set((prospeccao||[]).map(x=>x.cidade||"(sem cidade)"))].sort((a,b)=>a.localeCompare(b,"pt"));
+          // agrupar por cidade
+          const grupos={};
+          lista.forEach(x=>{const c=x.cidade||"(sem cidade)"; (grupos[c]=grupos[c]||[]).push(x);});
+          const gruposOrd=Object.keys(grupos).sort((a,b)=>a.localeCompare(b,"pt"));
+          const alertas=(prospeccao||[]).filter(p=>{if(p.contatado||!p.dataRetorno)return false;const d=diasParaRetorno(p);return d!==null&&d<=2;});
+          const abrirNovo=()=>{setProspEdit({id:null,empresa:"",cnpj:"",cidade:"",telefone:"",email:"",status:"prospeccao",contatos:[],info:"",dataRetorno:"",contatado:false});setProspModal(true);};
+
+          const Cartao=(x)=>{
+            const st=PROSP_STATUS[x.status||"prospeccao"]||PROSP_STATUS.prospeccao;
+            const dias=diasParaRetorno(x);
+            const alertaAtivo=!x.contatado&&dias!==null&&dias<=2;
+            const nContatos=(x.contatos||[]).filter(c=>c.nome||c.email||c.telefone).length;
+            return(<div key={x.id} className="card" style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:7,borderLeft:`4px solid ${st.c}`,boxShadow:alertaAtivo?"0 0 0 2px #FCA5A5":undefined}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                <div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.empresa||"Empresa"}</div><div style={{fontSize:10,color:"#94A3B8"}}>📍 {x.cidade||"—"}{x.cnpj?` · ${x.cnpj}`:""}</div></div>
+                <div style={{display:"flex",gap:3,flexShrink:0}}>
+                  <button onClick={()=>{setProspEdit({...x,contatos:x.contatos||[]});setProspModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
+                  <button onClick={()=>{if(window.confirm("Excluir este registro?"))delProsp(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                </div>
+              </div>
+              {alertaAtivo&&<div style={{background:dias<0?"#FEE2E2":"#FEF3C7",color:dias<0?"#991B1B":"#92400E",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:800,display:"flex",alignItems:"center",gap:6}}>🔔 {dias<0?`Retorno atrasado ${Math.abs(dias)}d`:dias===0?"Retornar HOJE":`Retornar em ${dias}d`}<button onClick={()=>updateProsp(x.id,{contatado:true})} style={{marginLeft:"auto",background:"#15803D",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"2px 8px",fontSize:9,fontWeight:700}}>✓ Contatado</button></div>}
+              {(x.telefone||x.email)&&<div style={{fontSize:11,color:"#475569",display:"flex",flexDirection:"column",gap:2}}>{x.telefone&&<span>📞 {x.telefone}</span>}{x.email&&<span style={{overflow:"hidden",textOverflow:"ellipsis"}}>✉️ {x.email}</span>}</div>}
+              {nContatos>0&&<div style={{fontSize:10,color:"#64748B",background:"#F8FAFC",borderRadius:6,padding:"4px 8px"}}>👥 {nContatos} contato(s): {(x.contatos||[]).filter(c=>c.nome).map(c=>c.nome).join(", ")||"—"}</div>}
+              <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                <select value={x.status||"prospeccao"} onChange={e=>updateProsp(x.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,border:"none",borderRadius:8,padding:"5px 8px",cursor:"pointer"}}>
+                  {Object.entries(PROSP_STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
+                </select>
+                {x.dataRetorno&&<span style={{fontSize:10,color:x.contatado?"#94A3B8":"#B45309",fontWeight:600}}>{x.contatado?"✓ contatado":`↩️ ${fmtDataBR(x.dataRetorno)}`}</span>}
+              </div>
+              {x.info&&<div style={{fontSize:10.5,color:"#64748B",fontStyle:"italic",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>{x.info}</div>}
+            </div>);
+          };
+
+          return(<div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🎯 Lista de Clientes — Prospecção</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} de {(prospeccao||[]).length} · {cidades.length} cidade(s)</div></div>
+              <BtnY onClick={abrirNovo}>+ Novo Cliente</BtnY>
+            </div>
+
+            {alertas.length>0&&<div className="card" style={{padding:"10px 14px",marginBottom:14,background:"#FEF2F2",border:"1.5px solid #FCA5A5"}}>
+              <div style={{fontSize:12,fontWeight:800,color:"#B91C1C",marginBottom:6}}>🔔 Retornos pendentes ({alertas.length})</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {alertas.map(p=>{const d=diasParaRetorno(p);return<span key={p.id} style={{fontSize:11,fontWeight:700,color:"#7F1D1D",background:"#FEE2E2",borderRadius:8,padding:"3px 10px"}}>{p.empresa} · {d<0?`${Math.abs(d)}d atraso`:d===0?"hoje":`${d}d`}</span>;})}
+              </div>
+            </div>}
+
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16,alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:240}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#94A3B8",fontSize:14}}>🔍</span><input type="text" value={prospSearch} onChange={e=>setProspSearch(e.target.value)} placeholder="Buscar empresa, contato, telefone, e-mail..." style={{width:"100%",padding:"10px 12px 10px 34px",fontSize:13,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
+              <select value={prospCidade} onChange={e=>setProspCidade(e.target.value)} style={{fontSize:13,fontWeight:600,padding:"10px 12px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",cursor:"pointer",minWidth:180}}>
+                <option value="todas">🌎 Todas as cidades</option>
+                {cidades.map(c=><option key={c} value={c}>📍 {c} ({grupos[c]?.length||(prospeccao||[]).filter(x=>(x.cidade||"(sem cidade)")===c).length})</option>)}
+              </select>
+            </div>
+
+            {gruposOrd.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:50,fontSize:13,border:"1.5px dashed #E2E8F0",borderRadius:12}}>Nenhum cliente encontrado</div>:
+              gruposOrd.map(cidade=>(
+                <div key={cidade} style={{marginBottom:22}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,position:"sticky",top:0,background:"#F0F4F8",borderRadius:8,padding:"7px 12px",zIndex:1}}>
+                    <span style={{fontSize:14,fontWeight:800,color:"#1E293B"}}>📍 {cidade}</span>
+                    <span style={{fontSize:11,fontWeight:700,color:"#FFF",background:"#64748B",borderRadius:20,padding:"1px 9px"}}>{grupos[cidade].length}</span>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+                    {grupos[cidade].map(Cartao)}
+                  </div>
+                </div>
+              ))
+            }
+
+            {prospModal&&prospEdit&&(()=>{const d=prospEdit;const upd=(k,v)=>setProspEdit(p=>({...p,[k]:v}));const lbl={display:"block",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:3};const inp={width:"100%",padding:"9px 11px",fontSize:13,borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"};
+              const contatos=d.contatos||[];
+              const setCt=(i,k,v)=>{const arr=[...contatos];arr[i]={...arr[i],[k]:v};upd("contatos",arr);};
+              const cidadesSug=[...new Set((prospeccao||[]).map(x=>x.cidade).filter(Boolean))].sort();
+              return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={()=>setProspModal(false)}>
+                <div style={{background:"#FFF",borderRadius:16,padding:22,width:"100%",maxWidth:560,maxHeight:"92vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{fontSize:17,fontWeight:800,marginBottom:16}}>{d.id?"Editar":"Novo"} Cliente / Prospecção</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                    <div><label style={lbl}>Empresa</label><input type="text" value={d.empresa||""} onChange={e=>upd("empresa",e.target.value)} style={inp}/></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div><label style={lbl}>CNPJ</label><input type="text" value={d.cnpj||""} onChange={e=>upd("cnpj",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>Cidade</label><input type="text" value={d.cidade||""} onChange={e=>upd("cidade",e.target.value)} list="prosp-cidades" style={inp}/><datalist id="prosp-cidades">{cidadesSug.map(c=><option key={c} value={c}/>)}</datalist></div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div><label style={lbl}>Telefone</label><input type="text" value={d.telefone||""} onChange={e=>upd("telefone",e.target.value)} style={inp}/></div>
+                      <div><label style={lbl}>E-mail</label><input type="email" value={d.email||""} onChange={e=>upd("email",e.target.value)} style={inp}/></div>
+                    </div>
+                    <div><label style={lbl}>Status</label><select value={d.status||"prospeccao"} onChange={e=>upd("status",e.target.value)} style={inp}><option value="prospeccao">🎯 Prospecção</option><option value="negociacao">🤝 Em negociação</option><option value="cliente">✅ Cliente</option><option value="perdido">❌ Perdido</option></select></div>
+
+                    <div style={{border:"1px solid #E2E8F0",borderRadius:10,padding:"10px 12px",background:"#FAFAFA"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                        <span style={{fontSize:11,fontWeight:800,color:"#334155"}}>👥 Contatos ({contatos.length}/10)</span>
+                        {contatos.length<10&&<button onClick={()=>upd("contatos",[...contatos,{nome:"",cargo:"",telefone:"",email:""}])} style={{background:"#1565C0",border:"none",borderRadius:8,color:"#FFF",cursor:"pointer",padding:"4px 12px",fontSize:12,fontWeight:800}}>+ Contato</button>}
+                      </div>
+                      {contatos.length===0?<div style={{fontSize:11,color:"#94A3B8",textAlign:"center",padding:8}}>Nenhum contato. Clique em "+ Contato" para adicionar (até 10).</div>:
+                        contatos.map((c,i)=>(<div key={i} style={{border:"1px solid #E8E8E8",borderRadius:8,padding:"8px 10px",marginBottom:8,background:"#FFF"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:10,fontWeight:700,color:"#64748B"}}>Contato {i+1}</span><button onClick={()=>{const arr=[...contatos];arr.splice(i,1);upd("contatos",arr);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"2px 8px",fontSize:10,fontWeight:700}}>Remover</button></div>
+                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
+                            <input type="text" placeholder="Nome" value={c.nome||""} onChange={e=>setCt(i,"nome",e.target.value)} style={{...inp,padding:"7px 9px",fontSize:12}}/>
+                            <input type="text" placeholder="Cargo/Setor" value={c.cargo||""} onChange={e=>setCt(i,"cargo",e.target.value)} style={{...inp,padding:"7px 9px",fontSize:12}}/>
+                            <input type="text" placeholder="Telefone" value={c.telefone||""} onChange={e=>setCt(i,"telefone",e.target.value)} style={{...inp,padding:"7px 9px",fontSize:12}}/>
+                            <input type="email" placeholder="E-mail" value={c.email||""} onChange={e=>setCt(i,"email",e.target.value)} style={{...inp,padding:"7px 9px",fontSize:12}}/>
+                          </div>
+                        </div>))
+                      }
+                    </div>
+
+                    <div><label style={lbl}>📝 Informações</label><textarea value={d.info||""} onChange={e=>upd("info",e.target.value)} rows={3} placeholder="Anotações, histórico, observações sobre o cliente..." style={{...inp,resize:"vertical"}}/></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:10,alignItems:"end",background:"#FFF8F0",borderRadius:10,padding:"10px 12px"}}>
+                      <div><label style={lbl}>↩️ Data de retorno ao cliente</label><input type="date" value={d.dataRetorno||""} onChange={e=>upd("dataRetorno",e.target.value)} style={inp}/></div>
+                      <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:700,cursor:"pointer",paddingBottom:9}}><input type="checkbox" checked={!!d.contatado} onChange={e=>upd("contatado",e.target.checked)}/>Já contatado</label>
+                    </div>
+                    <div style={{fontSize:10,color:"#94A3B8"}}>O sistema alerta quando faltar 2 dias (ou menos) para a data de retorno, até você marcar "Já contatado".</div>
+                  </div>
+                  <div style={{display:"flex",gap:10,marginTop:18,justifyContent:"flex-end"}}>
+                    <button onClick={()=>setProspModal(false)} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",color:"#555",fontSize:13,cursor:"pointer",fontWeight:600}}>Cancelar</button>
+                    <button onClick={()=>{if(!d.empresa){alert("Informe a empresa.");return;}saveProsp(d);setProspModal(false);notify("✅ Cliente salvo!");}} style={{padding:"9px 18px",borderRadius:10,border:"none",background:"#F5C200",color:"#1A1A1A",fontSize:13,cursor:"pointer",fontWeight:800}}>Salvar</button>
+                  </div>
+                </div>
+              </div>);
+            })()}
+          </div>);
+        })()}
+
         {tab==="clientes_sas"&&(()=>{
           const CLI_STATUS={prospeccao:{l:"🔍 Prospecção",c:"#B45309",bg:"#FFF8F0"},negociacao:{l:"🤝 Em negociação",c:"#1565C0",bg:"#EFF6FF"},cliente:{l:"✅ Cliente",c:"#15803D",bg:"#F0FDF4"},perdido:{l:"❌ Perdido",c:"#94A3B8",bg:"#F8FAFC"}};
           const q=(cliSasSearch||"").toLowerCase();
