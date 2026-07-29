@@ -2448,7 +2448,7 @@ function AppTopBar({user, setUser, setModalUsers}){
   );
 }
 
-function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, setCollapsed=()=>{}}){
+function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, collapsed=false, setCollapsed=()=>{}}){
   const bdg=(k)=>badges[k]||0;
   const Btn=({k,l,badge})=>{
     const isActive=tab===k;
@@ -2507,13 +2507,7 @@ function AppSidebar({tab, setTab, user, empAlerta, badges={}, collapsed=false, s
   const [clientesOpen,setClientesOpen]=useState(CLIENTES_TABS.includes(tab));
   const [sasGroupOpen,setSasGroupOpen]=useState(SAS_TABS.includes(tab));
   const [prospGroupOpen,setProspGroupOpen]=useState(tab==="prospeccao");
-  const prospAlertaCount=(prospeccao||[]).filter(p=>{
-    if(p.contatado||!p.dataRetorno)return false;
-    const hoje=new Date(); hoje.setHours(0,0,0,0);
-    const dr=new Date(p.dataRetorno+"T00:00:00");
-    const diff=Math.ceil((dr-hoje)/(1000*60*60*24));
-    return diff<=2; // vence em 2 dias ou já venceu
-  }).length;
+  const prospAlertaCount=prospAlerta||0;
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
@@ -10233,7 +10227,7 @@ export default function App(){
       <style>{CSS}</style>
       {notification&&<div className="notif">{notification}</div>}
       <AppTopBar user={user} setUser={setUser} setModalUsers={setModalUsers}/>
-      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta} badges={menuBadges} collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed}/>
+      <AppSidebar tab={tab} setTab={setTab} user={user} empAlerta={empAlerta} prospAlerta={(prospeccao||[]).filter(p=>{if(p.contatado||!p.dataRetorno)return false;const h=new Date();h.setHours(0,0,0,0);const dr=new Date(p.dataRetorno+"T00:00:00");return Math.ceil((dr-h)/(1000*60*60*24))<=2;}).length} badges={menuBadges} collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed}/>
       <div style={{marginLeft:sidebarCollapsed?60:196,padding:"16px 20px 48px",minHeight:"calc(100vh - 56px)",transition:"margin-left .18s ease"}}>
         {renderTab()}
         {modals}
