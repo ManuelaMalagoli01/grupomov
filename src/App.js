@@ -2503,10 +2503,9 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
   const [adminOpen,setAdminOpen]=useState(ADMIN_TABS.includes(tab));
   const [almoxOpen,setAlmoxOpen]=useState(ALMOX_TABS.includes(tab));
-  const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab));
+  const [comercialOpen,setComercialOpen]=useState(COMERCIAL_TABS.includes(tab)||tab==="prospeccao");
   const [clientesOpen,setClientesOpen]=useState(CLIENTES_TABS.includes(tab));
   const [sasGroupOpen,setSasGroupOpen]=useState(SAS_TABS.includes(tab));
-  const [prospGroupOpen,setProspGroupOpen]=useState(tab==="prospeccao");
   const prospAlertaCount=prospAlerta||0;
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
@@ -2550,6 +2549,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Comercial</div>
       <Btn k="comercial" l="📋 Propostas"/>
       <Btn k="dashboard_comercial" l="📊 Dashboard"/>
+      <Btn k="prospeccao" l="🎯 Prospecção - Lista de Clientes" badge={prospAlerta}/>
       {!user.semSas&&<>
         <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
         <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
@@ -2570,6 +2570,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
       <Btn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
+      <Btn k="prospeccao" l="🎯 Lista de Clientes" badge={prospAlerta}/>
       <Btn k="sas_vendas" l="💰 SAS Vendas"/>
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
@@ -2681,16 +2682,11 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       </div>}
 
       {/* COMERCIAL - ACORDEÃO (Propostas, Dashboard) */}
-      <GroupHeader label="Comercial" icon="💼" open={comercialOpen} setOpen={setComercialOpen} ativa={comercialAtiva} badgeCount={0}/>
+      <GroupHeader label="Comercial" icon="💼" open={comercialOpen} setOpen={setComercialOpen} ativa={comercialAtiva||tab==="prospeccao"} badgeCount={prospAlertaCount}/>
       {comercialOpen&&<div style={{background:"#FFFFFF"}}>
         <SubBtn k="comercial" l="📋 Propostas"/>
         <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
-      </div>}
-
-      {/* PROSPECÇÃO - CATEGORIA PRÓPRIA INDEPENDENTE */}
-      <GroupHeader label="Prospecção" icon="🎯" open={prospGroupOpen} setOpen={setProspGroupOpen} ativa={tab==="prospeccao"} badgeCount={prospAlertaCount}/>
-      {prospGroupOpen&&<div style={{background:"#FFFFFF"}}>
-        <SubBtn k="prospeccao" l="🎯 Lista de Clientes" badge={prospAlertaCount}/>
+        <SubBtn k="prospeccao" l="🎯 Prospecção - Lista de Clientes" badge={prospAlertaCount}/>
       </div>}
 
       {/* SAS - CATEGORIA PRÓPRIA INDEPENDENTE */}
@@ -2734,7 +2730,7 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
       user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
