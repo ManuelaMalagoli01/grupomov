@@ -2764,7 +2764,7 @@ export default function App(){
   const [rupFiltroStatus,setRupFiltroStatus]=useState("todos");
   const [rupSearch,setRupSearch]=useState("");
   const [rupViewMode,setRupViewMode]=useState("cards");
-  const [rupturaForm,setRupturaForm]=useState({solicitacao:"sem_estoque",data:"",ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});
+  const [rupturaForm,setRupturaForm]=useState({solicitacao:"sem_estoque",data:"",ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",pecas:[],osRel:"",pat:"",empresa:"",tecnico:"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});
   const [emprestimos,setEmprestimos]=useState(EMP_DATA);
   const [saidaEntrada,setSaidaEntrada]=useState(SAIDA_DATA);
   const [modalImportSE,setModalImportSE]=useState(false);
@@ -8070,6 +8070,19 @@ export default function App(){
                         </div>
                       ))}
                     </div>
+                    {/* Peças adicionais da mesma requisição (até 10 no total) */}
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      <label style={{fontSize:11,fontWeight:700,color:"#999",textTransform:"uppercase",letterSpacing:.8}}>Peças adicionais desta requisição</label>
+                      {(rupturaForm.pecas||[]).map((pc,pi)=>(
+                        <div key={pi} style={{display:"grid",gridTemplateColumns:"2fr 1fr 80px auto",gap:8,alignItems:"center"}}>
+                          <input type="text" value={pc.peca||""} onChange={e=>{const arr=[...(rupturaForm.pecas||[])];arr[pi]={...arr[pi],peca:e.target.value};setRupturaForm(p=>({...p,pecas:arr}));}} placeholder="Nome da peça" style={{fontSize:13,padding:"9px 11px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                          <input type="text" value={pc.codigo||""} onChange={e=>{const arr=[...(rupturaForm.pecas||[])];arr[pi]={...arr[pi],codigo:e.target.value};setRupturaForm(p=>({...p,pecas:arr}));}} placeholder="Cód." style={{fontSize:13,padding:"9px 11px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                          <input type="text" value={pc.quantidade||""} onChange={e=>{const arr=[...(rupturaForm.pecas||[])];arr[pi]={...arr[pi],quantidade:e.target.value};setRupturaForm(p=>({...p,pecas:arr}));}} placeholder="0" style={{fontSize:13,padding:"9px 11px",borderRadius:9,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                          <button onClick={()=>{const arr=[...(rupturaForm.pecas||[])];arr.splice(pi,1);setRupturaForm(p=>({...p,pecas:arr}));}} style={{background:"#FFF0F0",border:"1.5px solid #FCA5A5",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"8px 10px",fontSize:12,fontWeight:700}}>✕</button>
+                        </div>
+                      ))}
+                      {(rupturaForm.pecas||[]).length<9&&<button onClick={()=>setRupturaForm(p=>({...p,pecas:[...(p.pecas||[]),{peca:"",codigo:"",quantidade:""}]}))} style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1.5px solid #BFDBFE",borderRadius:8,padding:"8px 14px",cursor:"pointer",alignSelf:"flex-start"}}>+ Adicionar peça ({((rupturaForm.pecas||[]).length)+1}/10)</button>}
+                    </div>
                     {/* OS/REL + PAT + Empresa + Técnico */}
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10}}>
                       {[["OS / REL","osRel","OS_REL"],["PAT","pat","Patrimônio"],["Empresa","empresa","Cliente"]].map(([lbl,field,ph])=>(
@@ -8132,9 +8145,9 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <button onClick={()=>setViewMode(v=>v==="cards"?"calendario":"cards")} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontWeight:600}}>{viewMode==="cards"?"📅 Calendário":"🃏 Cards"}</button>
-                <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
+                <ExportBar data={lista.map(r=>({...r,pecasAdicionais:(r.pecas||[]).filter(pc=>pc&&pc.peca).map(pc=>`${pc.peca}${pc.codigo?` (${pc.codigo})`:""}${pc.quantidade?` x${pc.quantidade}`:""}`).join("; ")}))} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"pecasAdicionais",label:"Peças Adicionais"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
                 <BtnImport onClick={()=>setModalImportRuptura(true)}/>
-                <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
+                <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",pecas:[],osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
               </div>
             </div>
 
@@ -8204,7 +8217,7 @@ export default function App(){
                             {d!==null&&<span style={{fontSize:10,fontWeight:700,color:slaC,background:slaC+"18",borderRadius:20,padding:"2px 8px"}}>{d}d</span>}
                           </div>
                           <div style={{display:"flex",gap:3}}>
-                            <button onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
+                            <button onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",pecas:r.pecas||[],osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"4px 7px",fontSize:13}}>✏️</button>
                             <button onClick={()=>updateRuptura(r.id,{arquivado:!r.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"4px 7px",fontSize:13}}>{r.arquivado?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))delRuptura(r.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"4px 7px",fontSize:11,fontWeight:700}}>✕</button>
                           </div>
@@ -8215,6 +8228,7 @@ export default function App(){
                             <div style={{flex:1}}>
                               <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",lineHeight:1.2,marginBottom:3}}>{r.peca||<span style={{color:"#CCC"}}>Sem peça</span>}</div>
                               <div style={{fontSize:11,color:"#888"}}>📅 {fmtDataBR(r.data)} · {SOL_LABEL[r.solicitacao]||"—"}</div>
+                              {(r.pecas||[]).filter(pc=>pc&&pc.peca).length>0&&<div style={{fontSize:10,color:"#1565C0",marginTop:3}}>+{(r.pecas||[]).filter(pc=>pc&&pc.peca).length} peça(s): {(r.pecas||[]).filter(pc=>pc&&pc.peca).map(pc=>`${pc.peca}${pc.codigo?` (${pc.codigo})`:""}${pc.quantidade?` x${pc.quantidade}`:""}`).join(", ")}</div>}
                             </div>
                             {r.codigo&&<span style={{fontSize:10,fontWeight:700,color:"#888",background:"#F0F0F0",borderRadius:6,padding:"2px 7px",whiteSpace:"nowrap"}}>{r.codigo}</span>}
                           </div>
@@ -8270,7 +8284,7 @@ export default function App(){
                         const st=ST[r.status||"aguardando"]||ST.aguardando;
                         return(
                           <div key={i} style={{background:st.bg,border:`1px solid ${st.c}44`,borderRadius:6,padding:"3px 6px",marginBottom:3,cursor:"pointer"}} title={`${r.peca||"—"} · ${r.empresa||"—"}`}
-                            onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}}>
+                            onClick={()=>{setEditRuptura(r);setRupturaForm({solicitacao:r.solicitacao||"sem_estoque",data:r.data||TODAY_STR,ticket:r.ticket||"",requisicao:r.requisicao||"",peca:r.peca||"",codigo:r.codigo||"",quantidade:r.quantidade||"",pecas:r.pecas||[],osRel:r.osRel||"",pat:r.pat||"",empresa:r.empresa||"",tecnico:r.tecnico||ALL_TECHS[0]||"",dataLiberacao:r.dataLiberacao||"",obs:r.obs||"",status:r.status||"aguardando",arquivado:r.arquivado||false});setModalRuptura(true);}}>
                             <div style={{fontSize:9,fontWeight:700,color:st.c,textOverflow:"ellipsis",overflow:"hidden",whiteSpace:"nowrap"}}>{r.peca||"—"}</div>
                           </div>
                         );
