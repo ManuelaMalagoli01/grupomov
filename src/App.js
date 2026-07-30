@@ -5745,7 +5745,9 @@ export default function App(){
                   const nivel=(slaD===null||!emAberto)?null:slaD<=7?"verde":slaD<30?"laranja":"vermelho";
                   const urgente=nivel==="vermelho";
                   const incompleto=!p.relatorio||!p.numMauUso||!p.valor;
-                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,background:urgente?"#C62828":undefined,border:nivel==="laranja"?"1.5px solid #E67E00":nivel==="verde"?"1.5px solid #1A7A3C":urgente?"3px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 1.4s ease-in-out infinite":undefined,boxShadow:urgente?"0 0 0 2px #FCA5A5":undefined}}>
+                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,background:urgente?"#C62828":nivel==="laranja"?"#FFF8F0":nivel==="verde"?"#F0FFF5":undefined,borderLeft:nivel==="laranja"?"5px solid #E67E00":nivel==="verde"?"5px solid #1A7A3C":undefined,border:urgente?"3px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 1.4s ease-in-out infinite":undefined,boxShadow:urgente?"0 0 0 2px #FCA5A5":undefined}}>
+                    {nivel==="laranja"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",textAlign:"center",letterSpacing:.3}}>🟠 {slaD} DIAS SEM RETORNO</div>}
+                    {nivel==="verde"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#1A7A3C",textAlign:"center",letterSpacing:.3}}>🟢 {slaD} DIAS EM ABERTO</div>}
                     {urgente&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>🔴 {slaD} DIAS SEM RETORNO — ATENÇÃO 🔴</div>}
                     <div style={{background:urgente?"#FFF":undefined,borderRadius:urgente?8:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
