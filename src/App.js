@@ -4530,7 +4530,12 @@ export default function App(){
                   const alerta=analisarAlertaPreventivo(r)||{level:"neutro",label:"",achados:[]};
                   const alertColor={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853",neutro:"#94A3B8"}[alerta.level];
                   const urgenteR=alerta.level==="urgente";
-                  return(<div key={r.id} className="card" style={{padding:0,overflow:"hidden",opacity:r.arquivado?0.55:1,border:urgenteR?"1.5px solid #C62828":undefined,animation:urgenteR?"pulseUrgente 2s ease-in-out infinite":undefined}}>
+                  const isMauUso=r.status==="mau_uso";
+                  const isAFaturar=r.status==="a_faturar";
+                  return(<div key={r.id} className="card" style={{padding:isMauUso||isAFaturar?5:0,overflow:"hidden",opacity:r.arquivado?0.55:1,background:isMauUso?"#F97316":isAFaturar?"#0D2E63":undefined,border:isMauUso?"3px solid #C2410C":isAFaturar?"3px solid #0D2E63":urgenteR?"1.5px solid #C62828":undefined,animation:isMauUso?"pulseUrgente 1.4s ease-in-out infinite":urgenteR?"pulseUrgente 2s ease-in-out infinite":undefined,boxShadow:isMauUso?"0 0 0 2px #FDBA74":isAFaturar?"0 0 0 2px #1E3A8A":undefined}}>
+                    {isMauUso&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>⚠️ MAU USO — ATENÇÃO ⚠️</div>}
+                    {isAFaturar&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>💰 A FATURAR</div>}
+                    <div style={{background:isMauUso||isAFaturar?"#FFF":undefined,borderRadius:isMauUso||isAFaturar?8:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:5}}>
                       <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
                         <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stColor,borderRadius:20,padding:"2px 9px"}}>{st.l}</span>
@@ -4539,7 +4544,7 @@ export default function App(){
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>gerarPDFCard(`Relatório - ${r.cliente||r.empresa||"Sem Cliente"}`,[["Cliente",r.cliente||r.empresa],["Data",fmtDataBR(r.data||r.dataAtendimento)],["Técnico",r.tecnico],["Cidade",r.cidade],["Tipo",isCorr?"Corretivo":"Preventivo"],["PAT",r.patrimonio],["Modelo",r.modelo],["Horímetro",r.horimetro],["Relatório",r.relatorio],["Chamado",r.chamado],["Início",r.horaInicio],["Fim",r.horaFim],["Total",r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)],["Serviços",(r.servicos||[]).join(", ")],["Status",st.l],["Pendências",r.pendencias],["Observação",r.obs]],`PAT ${r.patrimonio||"—"} · ${fmtDataBR(r.data||r.dataAtendimento)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:5,color:"#1A1A1A",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:700}}>📄</button>
                         <button onClick={()=>{setEditReport(r);setModalReport(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:600}}>✏️</button>
-                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:r.atendimento==="corretivo"?"corretiva_concluida":"preventiva_concluida"})} title={r.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9}}>{r.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>updateReport(r.id,r.arquivado?{arquivado:false}:{arquivado:true,status:(r.status==="mau_uso"||r.status==="a_faturar")?r.status:(r.atendimento==="corretivo"?"corretiva_concluida":"preventiva_concluida")})} title={r.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9}}>{r.arquivado?"📤":"🗄️"}</button>
                         <button onClick={()=>{if(window.confirm("Excluir?")){setReports(p=>p.filter(x=>x.id!==r.id));db.delete("relatorios",r.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:700}}>✕</button>
                       </div>
                     </div>
@@ -4569,6 +4574,7 @@ export default function App(){
                       <input type="text" value={r.obs||""} onChange={e=>updateReport(r.id,{obs:e.target.value})} placeholder="Observação..." style={{fontSize:11,color:"#64748B",border:"none",background:"transparent",outline:"none",padding:0}}/>
                     </div>
                     <textarea value={r.pendencias||""} onChange={e=>updateReport(r.id,{pendencias:e.target.value})} placeholder="Sem pendências" rows={r.pendencias?Math.min(6,Math.max(1,Math.ceil(r.pendencias.length/38))):1} style={{fontSize:11,color:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#7F1D1D":"#166534",fontWeight:(r.pendencias&&!ehPendenciaVazia(r.pendencias))?700:600,border:"none",borderTop:`2px solid ${(r.pendencias&&!ehPendenciaVazia(r.pendencias))?"#EF4444":"#86EFAC"}`,background:"#FFF",outline:"none",padding:"8px 14px",width:"100%",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit",lineHeight:1.5}}/>
+                    </div>
                   </div>);
                 })}
               </div>
