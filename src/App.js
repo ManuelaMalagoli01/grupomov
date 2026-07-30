@@ -6,6 +6,7 @@ const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 
 let __dbErrShown=false;
 const __saveQueues={};
+let __deleteQueue=Promise.resolve();
 const db = {
   async get(table) {
     try {
@@ -50,13 +51,18 @@ const db = {
     __saveQueues[key] = next;
     return next;
   },
-  async delete(table, id) {
-    try {
-      await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
-        method: "DELETE",
-        headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
-      });
-    } catch(e) { console.error("DB delete error:", e); }
+  delete(table, id) {
+    const prev = __deleteQueue || Promise.resolve();
+    const next = prev.then(async () => {
+      try {
+        await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+          method: "DELETE",
+          headers: {"apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`}
+        });
+      } catch(e) { console.error("DB delete error:", e); }
+    }).catch(()=>{});
+    __deleteQueue = next;
+    return next;
   },
   // Salva várias linhas de uma vez (usado nas importações de Excel). Envia em lotes pequenos e em
   // sequência (não tudo de uma vez) pra não sobrecarregar o banco quando a planilha tem centenas/milhares
@@ -2535,7 +2541,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
     if(user.apenasOfi150) return ["agenda_ofi_150","dashboard_ofi_150","matheus"].includes(tipo);
     if(tipo==="somanuela") return user.id==="manuela";
     if(tipo==="ruptura_almox") return ["manuela","gustavo","renato"].includes(user.id);
-    if(user.id==="renato") return !["sas","financeiro","pendencias_frota","pendencias_hebert","pendencias_matheus","pendencias_manuela_tab","prioridades_clientes","rh_fiscal"].includes(tipo);
+    if(user.id==="renato") return true;
     if(tipo==="hebert") return user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s";
     if(tipo==="matheus") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
     if(tipo==="ofi150") return user.id==="manuela"||user.id==="gustavo"||user.id==="matheus_m";
