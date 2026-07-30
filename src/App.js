@@ -2193,7 +2193,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
         aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
         slaMedio:slaLista.length?Math.round(slaLista.reduce((a,v)=>a+v,0)/slaLista.length):null,
-        conversao:totalPeriodo.length?Math.round(concPeriodo.length/totalPeriodo.length*100):null,
+        conversao:soma(totalPeriodo)>0?Math.round(soma(concPeriodo)/soma(totalPeriodo)*100*10)/10:null,
       });
     }
   }
@@ -2215,8 +2215,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const semanaConc=semanaTotal.filter(isConcluido);
   const mesTotal=all.filter(p=>inMonth(dataAbertura(p)));
   const mesConc=mesTotal.filter(isConcluido);
-  const convSemanal=semanaTotal.length?Math.round(semanaConc.length/semanaTotal.length*100):null;
-  const convMensal=mesTotal.length?Math.round(mesConc.length/mesTotal.length*100):null;
+  const convSemanal=soma(semanaTotal)>0?Math.round(soma(semanaConc)/soma(semanaTotal)*100*10)/10:null;
+  const convMensal=soma(mesTotal)>0?Math.round(soma(mesConc)/soma(mesTotal)*100*10)/10:null;
 
   const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
