@@ -121,8 +121,10 @@ const USERS = [
   { id:"matheus_m",    username:"matheus_m",         name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:true, apenasOficina150:true },
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
-const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
-const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Pintura","Elétrica","Pequenos Reparos","Bateria","Carregador","Usinagem","Soldagem","Bateria e Mecânica"];
+const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
+const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
+const SERVICOS_OFICINA = ["Bateria/Carregador","Usinagem/Soldagem","Elétrica","Pintura","Mecânica","Hidráulica","Outros Serviços"];
+const SERVICO_OFICINA_MIGRACAO = {"Bateria":"Bateria/Carregador","Carregador":"Bateria/Carregador","Bateria e Mecânica":"Bateria/Carregador","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Pequenos Reparos":"Outros Serviços"};
 const SAS_VENDAS_MODELOS = {
   "Empilhadeiras Contrabalançadas Elétricas": ["STRONG 3RL 18","STRONG 4RL 25","STRONG 4RL 30","STRONG 4RD 38","STRONG 4RQ 30","STRONG 4RQ 35","STRONG 4RQ 50","STRONG 4RL 80"],
   "Empilhadeiras Retráteis": ["ER16","ERN20 Pro N","ERN20 B"],
@@ -158,7 +160,10 @@ const TECNICO_SERVICO_AUTO=[
   {match:"eduardo",servico:"Mecânica"},
   {match:"matheus",servico:"Bateria e Mecânica"},
   {match:"hebert",servico:"Mecânica"},
-  {match:"guilherme",servico:"Mecânica"},
+  {match:"guilherme",servico:"Outros Serviços"},
+  {match:"gracielle",servico:"Outros Serviços"},
+  {match:"thiago lino",servico:"Outros Serviços"},
+  {match:"alexandre",servico:"Outros Serviços"},
 ];
 const autoServicoPorTecnico=(tecNome)=>{
   const n=normalizeTec(tecNome);
@@ -288,11 +293,11 @@ const classificarSetor=(tecnico)=>{
   if(!n)return "1340";
   return SETOR_150_TECHS.some(t=>n.includes(t))?"150":"1340";
 };
-const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe"];
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe","Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
 // Planejamento Hebert = todos menos Matheus/Pedro Souza/Pedro Pimentel
 const OFICINA_TECHS_HEBERT = OFICINA_TECHS.filter(t=>!["Pedro Souza","Pedro Pimentel","Matheus Felipe"].includes(t));
 // Planejamento Matheus = só esses três
-const OFICINA_TECHS_MATHEUS = ["Matheus Felipe","Pedro Souza","Pedro Pimentel"];
+const OFICINA_TECHS_MATHEUS = ["Matheus Felipe","Pedro Souza","Pedro Pimentel","Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
@@ -1129,7 +1134,7 @@ function RelatorioModal({initial,onClose,onSave}){
     setPdfLoading(false);
   };
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div style={{background:"#FFF",borderRadius:14,width:"100%",maxWidth:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}} onClick={e=>e.stopPropagation()}>
         <div style={{background:"#1A1A1A",padding:"12px 18px",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:1}}>
           <div style={{fontWeight:800,fontSize:15,color:"#F5C200"}}>{initial?"✏️ Editar Relatório":"➕ Novo Relatório"}</div>
@@ -1953,7 +1958,7 @@ function ImportAFModal({onClose,onImport}){
     setLoading(false);
   };
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:900,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}>
           <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>📥 Importar Prospecções (Farol OV Revenda)</div>
@@ -2067,7 +2072,7 @@ function ImportSaidaEntradaModal({onClose,onImport}){
   };
   const preview=rows?rows.slice(0,5).map(mapear):[];
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:820,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
         <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}>
           <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>📥 Importar Planilha de Requisições</div>
@@ -3285,11 +3290,16 @@ export default function App(){
       if(hebRows.length>0) setPendHebert(hebRows);
       if(apRows.length>0){
         const corrigidos=apRows.map(a=>{
-          if(a&&!a.servico){
-            const auto=autoServicoPorTecnico(a.tecnico);
-            if(auto)return {...a,servico:auto};
+          if(!a)return a;
+          let novo=a;
+          if(!novo.servico){
+            const auto=autoServicoPorTecnico(novo.tecnico);
+            if(auto)novo={...novo,servico:auto};
           }
-          return a;
+          if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
+            novo={...novo,servico:SERVICO_OFICINA_MIGRACAO[novo.servico]};
+          }
+          return novo;
         });
         setApontamentos(corrigidos);
         const paraSalvar=corrigidos.filter((a,i)=>a!==apRows[i]);
@@ -3333,11 +3343,16 @@ export default function App(){
       if(pendManRows && pendManRows.length>0) setPendManuela(pendManRows);
       if(ap150Rows.length>0){
         const corrigidos150=ap150Rows.map(a=>{
-          if(a&&!a.servico){
-            const auto=autoServicoPorTecnico(a.tecnico);
-            if(auto)return {...a,servico:auto};
+          if(!a)return a;
+          let novo=a;
+          if(!novo.servico){
+            const auto=autoServicoPorTecnico(novo.tecnico);
+            if(auto)novo={...novo,servico:auto};
           }
-          return a;
+          if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
+            novo={...novo,servico:SERVICO_OFICINA_MIGRACAO[novo.servico]};
+          }
+          return novo;
         });
         setApontamentos150(corrigidos150);
         const paraSalvar150=corrigidos150.filter((a,i)=>a!==ap150Rows[i]);
@@ -3771,7 +3786,7 @@ export default function App(){
         {modalOfi&&<ReportModal techs={OFICINA_TECHS} onClose={()=>setModalOfi(false)} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};setOficina(p=>[dd,...p]);db.save("oficina",dd.id,dd);notify("✅ Relatório (Oficina) salvo!");}}/>}
 
         {uberModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setUberModal(false);setUberEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{uberEdit?.id?"✏️ Editar":"🚗 Novo"} Pedido Uber</div><button onClick={()=>{setUberModal(false);setUberEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -3787,7 +3802,7 @@ export default function App(){
           </div>
         )}
         {finModalOpen&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFinModalOpen(false);setFinEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{finEdit?.id?"✏️ Editar":"💳 Novo"} Lançamento Financeiro</div><button onClick={()=>{setFinModalOpen(false);setFinEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -3806,7 +3821,7 @@ export default function App(){
           </div>
         )}
         {sasModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setSasModal(false);setSasEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{sasEdit?.id?"✏️ Editar":"📄 Novo"} SAS Financeiro</div><button onClick={()=>{setSasModal(false);setSasEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:16}}>
@@ -3859,7 +3874,7 @@ export default function App(){
           </div>
         )}
         {sasManutModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setSasManutModal(false);setSasManutEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{sasManutEdit?.id?"✏️ Editar":"🔧 Novo"} SAS Manutenção</div><button onClick={()=>{setSasManutModal(false);setSasManutEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -3875,7 +3890,7 @@ export default function App(){
           </div>
         )}
         {sasVendModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setSasVendModal(false);setSasVendEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:820,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
                 <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{sasVendEdit?.id?`✏️ Editar Proposta ${sasVendEdit.numero||""}`:"💰 Nova Proposta"}</div>
@@ -4046,7 +4061,7 @@ export default function App(){
             if(d.id){updateEntrega(d.id,d);}else{const row={...d,id:`ET${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoPor:user.name,registradoEm:new Date().toISOString()};setEntregaTec(p=>[row,...p]);db.save("entrega_tecnica",row.id,row);}
             notify("✅ Entrega técnica salva!");setEntregaModal(false);setEntregaEdit(null);
           };
-          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setEntregaModal(false);setEntregaEdit(null);}}}>
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:820,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"🚚 Nova"} Entrega Técnica</div><button onClick={()=>{setEntregaModal(false);setEntregaEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:12}}>
@@ -4244,7 +4259,7 @@ export default function App(){
             else{ const row={...d,id:`TRE${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoPor:user.name,registradoEm:new Date().toISOString()}; setTreinamentos(p=>[row,...p]); db.save("treinamentos_reunioes",row.id,row); }
             notify("✅ Compromisso salvo!"); setTreinModal(false); setTreinEdit(null);
           };
-          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setTreinModal(false);setTreinEdit(null);}}}>
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"📅 Novo"} Compromisso</div><button onClick={()=>{setTreinModal(false);setTreinEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
@@ -4295,7 +4310,7 @@ export default function App(){
             else{ const row={...d,id:`FER${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoEm:new Date().toISOString()}; setFerias(p=>[row,...p]); db.save("ferias_colaboradores",row.id,row); }
             notify("✅ Colaborador salvo!"); setFeriasModal(false); setFeriasEdit(null);
           };
-          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFeriasModal(false);setFeriasEdit(null);}}}>
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"🏖️ Novo"} Colaborador — Férias</div><button onClick={()=>{setFeriasModal(false);setFeriasEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
@@ -4337,7 +4352,7 @@ export default function App(){
           </div>);
         })()}
         {valeTecModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setValeTecModal(false);setValeTecEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{valeTecEdit?.id?"✏️ Editar":"🎫 Novo"} Vale Técnico Máquinas</div><button onClick={()=>{setValeTecModal(false);setValeTecEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
@@ -4392,7 +4407,7 @@ export default function App(){
           </div>
         )}
         {froModal&&(
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setFroModal(false);setFroEdit(null);}}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
               <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{froEdit?.id?"✏️ Editar":"🚜 Nova"} Pendência Frota</div><button onClick={()=>{setFroModal(false);setFroEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
@@ -5157,9 +5172,10 @@ export default function App(){
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
-          const TECHS_NO_DASH=[...new Set([...OFICINA_TECHS, ...apMes.map(a=>a.tecnico).filter(Boolean)])];
+          const agrupTec=(t)=>OFICINA_TECHS_OUTROS.includes(t)?"Outros":t;
+          const TECHS_NO_DASH=[...new Set([...OFICINA_TECHS.filter(t=>!OFICINA_TECHS_OUTROS.includes(t)),"Outros",...apMes.map(a=>agrupTec(a.tecnico)).filter(Boolean)])];
           TECHS_NO_DASH.forEach(t=>{
-            const aps=apMes.filter(a=>a.tecnico===t);
+            const aps=apMes.filter(a=>agrupTec(a.tecnico)===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
             const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
             byTech[t]={aps,mins,porServ};
@@ -5855,7 +5871,7 @@ export default function App(){
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               {modalExecMU&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalExecMU(false);setEditExecMU(null);setExecMUForm(EXECMU_EMPTY);}}}>
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
                   <div style={{background:"#FFF",borderRadius:14,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
                     <div style={{padding:"12px 16px",background:"#1A1A1A",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{fontWeight:800,fontSize:16,color:"#F5C200"}}>{editExecMU?"✏️ Editar Execução":"🔩 Nova Execução — Mau Uso"}</div>
@@ -5964,7 +5980,7 @@ export default function App(){
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               {modalSasPecas&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalSasPecas(false);setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);}}}>
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
                   <div style={{background:"#FFF",borderRadius:14,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
                     <div style={{padding:"12px 16px",background:"#1A1A1A",borderRadius:"14px 14px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{fontWeight:800,fontSize:16,color:"#F5C200"}}>{editSasPecas?"✏️ Editar Solicitação":"🔧 Nova Execução — Solicitação de Peças"}</div>
@@ -8173,7 +8189,7 @@ export default function App(){
           <div style={{animation:"fadeIn .3s ease"}}>
             {/* Modal criar/editar */}
             {modalRuptura&&(
-              <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalRuptura(false);setEditRuptura(null);}}}>
+              <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
                 <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:680,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
                   <div style={{background:"#1A1A1A",padding:"18px 24px",borderRadius:"16px 16px 0 0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:1}}>
                     <div style={{fontWeight:900,fontSize:18,color:"#F5C200"}}>{editRuptura?"✏️ Editar Ruptura":"🔴 Nova Ruptura — Almoxarifado"}</div>
@@ -9287,7 +9303,7 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               {/* Modal inserir/editar */}
               {modalOp&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalOp(false);setEditOp(null);setOpForm(OP_FORM_EMPTY);}}}>
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
                   <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:720,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
                     <div style={{padding:"10px 14px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
                       <div style={{fontWeight:800,fontSize:15,color:"#1A1A1A"}}>{editOp?"✏️ Editar Operação":"➕ Nova Operação — Cliente"}</div>
@@ -9840,7 +9856,7 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               {/* Modal inserir/editar */}
               {modalCarros&&(
-                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>{if(e.target===e.currentTarget){setModalCarros(false);setEditCarro(null);setCarForm(CARRO_FORM_EMPTY);}}}>
+                <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
                   <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
                     <div style={{padding:"8px 12px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:1}}>
                       <div style={{fontWeight:800,fontSize:16,color:"#1A1A1A"}}>{editCarro?"✏️ Editar Registro":"➕ Novo Registro — Carros"}</div>
@@ -10220,9 +10236,10 @@ export default function App(){
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
           const byTech={};
-          const TECHS_NO_DASH=[...new Set([...OFICINA_150_TECHS, ...apMes.map(a=>a.tecnico).filter(Boolean)])];
+          const agrupTec=(t)=>OFICINA_TECHS_OUTROS.includes(t)?"Outros":t;
+          const TECHS_NO_DASH=[...new Set([...OFICINA_150_TECHS.filter(t=>!OFICINA_TECHS_OUTROS.includes(t)),"Outros",...apMes.map(a=>agrupTec(a.tecnico)).filter(Boolean)])];
           TECHS_NO_DASH.forEach(t=>{
-            const aps=apMes.filter(a=>a.tecnico===t);
+            const aps=apMes.filter(a=>agrupTec(a.tecnico)===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
             const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
             byTech[t]={aps,mins,porServ};
