@@ -2187,10 +2187,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       const dentro=(x)=>x&&x>=de&&x<=ate;
       const enviadosNoPeriodo=all.filter(p=>p.date&&p.dataEnvio&&dentro(p.dataEnvio));
       const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
+      const totalPeriodo=all.filter(p=>dentro(dataAbertura(p)));
+      const concPeriodo=totalPeriodo.filter(isConcluido);
       serie.push({lab,
         concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
         aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
         slaMedio:slaLista.length?Math.round(slaLista.reduce((a,v)=>a+v,0)/slaLista.length):null,
+        conversao:totalPeriodo.length?Math.round(concPeriodo.length/totalPeriodo.length*100):null,
       });
     }
   }
@@ -2265,7 +2268,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span>{(convSemanal!==null||convMensal!==null)&&<> · <span style={{color:"#6A1B9A",fontWeight:700}}>🔄 Conversão: {convSemanal!==null?`Sem ${convSemanal}%`:""}{convSemanal!==null&&convMensal!==null?" · ":""}{convMensal!==null?`Mês ${convMensal}%`:""}</span></>}{slaEnvioMedio!==null&&<> · <span style={{color:"#1565C0",fontWeight:700}}>⏱️ SLA envio: {slaEnvioMedio}d</span></>}</div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
       </div>
       <button onClick={()=>{
         const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
@@ -2277,6 +2280,11 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
       <div style={{display:"flex",gap:6}}>{btnPer("dia","Diário")}{btnPer("semana","Semanal")}{btnPer("mes","Mensal")}{btnPer("tudo","Tudo")}</div>
+      {(slaEnvioMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
+        {slaEnvioMedio!==null&&<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>}
+        {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#6A1B9A",background:"#F5F0FF",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
+        {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#6A1B9A",background:"#F5F0FF",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
+      </div>}
       {periodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
         <button onClick={()=>navegar(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
         <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabel}</div>
@@ -2306,10 +2314,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       ))}
     </div>
 
-    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"3fr 2fr",gap:14}}>
+    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"2fr 1.3fr 1.3fr",gap:14}}>
       <div className="card" style={{padding:14}}>
         <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
-        <ChartCanvas type="bar" height={200} data={{
+        <ChartCanvas type="bar" height={180} data={{
           labels:serie.map(s=>s.lab),
           datasets:[
             {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
@@ -2318,12 +2326,19 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
       <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA — dias da abertura até o envio ao cliente</div>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA até envio (dias)</div>
         {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem envios registrados</div>:
-        <ChartCanvas type="line" height={200} data={{
+        <ChartCanvas type="line" height={180} data={{
           labels:serie.map(s=>s.lab),
           datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",fill:true,tension:.3,spanGaps:true}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F0F0F0"}}}}}/>}
+      </div>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>🔄 Taxa de Conversão (%)</div>
+        <ChartCanvas type="line" height={180} data={{
+          labels:serie.map(s=>s.lab),
+          datasets:[{label:"Conversão (%)",data:serie.map(s=>s.conversao),borderColor:"#6A1B9A",backgroundColor:"#6A1B9A22",fill:true,tension:.3,spanGaps:true}]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
     </div>
 
