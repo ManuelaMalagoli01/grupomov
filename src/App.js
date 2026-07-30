@@ -2226,12 +2226,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
       {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
-        <table style={{borderCollapse:"collapse",width:"100%",minWidth:560,fontSize:11}}>
+        <table style={{borderCollapse:"collapse",width:"100%",minWidth:660,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº Mau Uso</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Envio Cliente</th>
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Conclusão</th>}
             {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Tempo</th>}
           </tr></thead>
@@ -2241,7 +2242,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 <td style={{padding:"6px 10px",fontWeight:600,color:"#334155"}}>{p.empresa||"—"}</td>
                 <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
                 <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(dataAbertura(p))||"—"}</td>
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(p.date)||"—"}</td>
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#1565C0"}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
                 {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
               </tr>
