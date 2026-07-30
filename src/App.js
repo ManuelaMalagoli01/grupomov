@@ -2500,9 +2500,9 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
-  const COMERCIAL_TABS = ["comercial","dashboard_comercial"];
+  const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
   const CLIENTES_TABS = ["operacoes"];
-  const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
+  const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","dashboard_clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
   const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
@@ -2556,10 +2556,12 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="comercial" l="📋 Propostas"/>
       <Btn k="dashboard_comercial" l="📊 Dashboard"/>
       <Btn k="prospeccao" l="🎯 Prospecção - Lista de Clientes" badge={prospAlerta}/>
+      <Btn k="dashboard_prospeccao" l="📊 Dash Prospecção"/>
       {!user.semSas&&<>
         <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>SAS</div>
         <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
         <Btn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
+        <Btn k="dashboard_clientes_sas" l="📊 Dash Clientes SAS"/>
         <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
         <Btn k="sas_vendas" l="💰 SAS Vendas"/>
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2576,7 +2578,9 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
     <div style={{position:"fixed",left:0,top:56,width:196,background:"#FFFFFF",borderRight:"1px solid #EEF1F4",overflowY:"auto",padding:"12px 0",height:"calc(100vh - 56px)",zIndex:50}}>
       <Btn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
       <Btn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
+      <Btn k="dashboard_clientes_sas" l="📊 Dash Clientes SAS"/>
       <Btn k="prospeccao" l="🎯 Lista de Clientes" badge={prospAlerta}/>
+      <Btn k="dashboard_prospeccao" l="📊 Dash Prospecção"/>
       <Btn k="sas_vendas" l="💰 SAS Vendas"/>
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
@@ -2693,6 +2697,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="comercial" l="📋 Propostas"/>
         <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
         <SubBtn k="prospeccao" l="🎯 Prospecção - Lista de Clientes" badge={prospAlertaCount}/>
+        <SubBtn k="dashboard_prospeccao" l="📊 Dash Prospecção"/>
       </div>}
 
       {/* SAS - CATEGORIA PRÓPRIA INDEPENDENTE */}
@@ -2701,6 +2706,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
           <SubBtn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
+          <SubBtn k="dashboard_clientes_sas" l="📊 Dash Clientes SAS"/>
           <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
           <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
@@ -2736,8 +2742,8 @@ export default function App(){
   useEffect(()=>{ if(user&&user.apenasOficina) setTab("agenda_ofi"); },[user?.id]);
   useEffect(()=>{
     if(!user) return;
-    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao"]) :
+    const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -4377,8 +4383,8 @@ export default function App(){
 
 
   const renderTab = () => {
-    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao"]) :
+    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
       user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
@@ -7319,6 +7325,58 @@ export default function App(){
           </div>);
         })()}
 
+        {tab==="dashboard_prospeccao"&&(()=>{
+          const lista=(prospeccao||[]);
+          const cnt=k=>lista.filter(x=>(x.status||"prospeccao")===k).length;
+          const total=lista.length;
+          const nCliente=cnt("cliente"),nNeg=cnt("negociacao"),nProsp=cnt("prospeccao"),nPerdido=cnt("perdido");
+          const taxaConv=total?(nCliente/total*100):0;
+          const hojeD=new Date();hojeD.setHours(0,0,0,0);
+          const diasParaRetorno=(p)=>{if(!p.dataRetorno)return null;const dr=new Date(p.dataRetorno+"T00:00:00");return Math.ceil((dr-hojeD)/(1000*60*60*24));};
+          const retornosPend=lista.filter(p=>{if(p.contatado||!p.dataRetorno)return false;const d=diasParaRetorno(p);return d!==null&&d<=2;}).length;
+          const porCidade={};
+          lista.forEach(x=>{const c=x.cidade||"(sem cidade)";porCidade[c]=(porCidade[c]||0)+1;});
+          const cidadesOrd=Object.entries(porCidade).sort((a,b)=>b[1]-a[1]).slice(0,10);
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard — Prospecção (Comercial)</div>
+            <div style={{fontSize:12,color:"#94A3B8",marginBottom:20}}>Funil da Lista de Clientes — {total} registro(s)</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:20}}>
+              {[
+                {l:"Total",v:total,c:"#1A1A1A",i:"📋"},
+                {l:"Prospecção",v:nProsp,c:"#B45309",i:"🎯"},
+                {l:"Em negociação",v:nNeg,c:"#1565C0",i:"🤝"},
+                {l:"Clientes",v:nCliente,c:"#15803D",i:"✅"},
+                {l:"Perdidos",v:nPerdido,c:"#94A3B8",i:"❌"},
+                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,c:"#7E22CE",i:"📈"},
+                retornosPend>0&&{l:"Retornos pendentes",v:retornosPend,c:"#C62828",i:"🔔"},
+              ].filter(Boolean).map((k,i)=>(
+                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Funil de Prospecção</div>
+                {total===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+                <ChartCanvas type="doughnut" height={220} data={{
+                  labels:["Prospecção","Em negociação","Cliente","Perdido"],
+                  datasets:[{data:[nProsp,nNeg,nCliente,nPerdido],backgroundColor:["#B45309","#1565C0","#15803D","#94A3B8"],borderWidth:2,borderColor:"#FFF"}]
+                }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+              </div>
+              <div className="card" style={{padding:14}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Cidades</div>
+                {cidadesOrd.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+                <ChartCanvas type="bar" height={220} data={{
+                  labels:cidadesOrd.map(([c])=>c.length>12?c.slice(0,12)+"…":c),
+                  datasets:[{label:"Registros",data:cidadesOrd.map(([,n])=>n),backgroundColor:"#3B82F6",borderRadius:6}]
+                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}}/>}
+              </div>
+            </div>
+          </div>);
+        })()}
+
         {tab==="clientes_sas"&&(()=>{
           const CLI_STATUS={prospeccao:{l:"🔍 Prospecção",c:"#B45309",bg:"#FFF8F0"},negociacao:{l:"🤝 Em negociação",c:"#1565C0",bg:"#EFF6FF"},cliente:{l:"✅ Cliente",c:"#15803D",bg:"#F0FDF4"},perdido:{l:"❌ Perdido",c:"#94A3B8",bg:"#F8FAFC"}};
           const q=(cliSasSearch||"").toLowerCase();
@@ -7390,6 +7448,41 @@ export default function App(){
                 </div>
               </div>);
             })()}
+          </div>);
+        })()}
+
+        {tab==="dashboard_clientes_sas"&&(()=>{
+          const lista=(clientesSas||[]);
+          const cnt=k=>lista.filter(x=>(x.status||"prospeccao")===k).length;
+          const total=lista.length;
+          const nCliente=cnt("cliente"),nNeg=cnt("negociacao"),nProsp=cnt("prospeccao"),nPerdido=cnt("perdido");
+          const taxaConv=total?(nCliente/total*100):0;
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard — Clientes / Prospecção (SAS)</div>
+            <div style={{fontSize:12,color:"#94A3B8",marginBottom:20}}>Funil de clientes e prospecções do SAS — {total} registro(s)</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:20}}>
+              {[
+                {l:"Total",v:total,c:"#1A1A1A",i:"📋"},
+                {l:"Prospecção",v:nProsp,c:"#B45309",i:"🔍"},
+                {l:"Em negociação",v:nNeg,c:"#1565C0",i:"🤝"},
+                {l:"Clientes",v:nCliente,c:"#15803D",i:"✅"},
+                {l:"Perdidos",v:nPerdido,c:"#94A3B8",i:"❌"},
+                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,c:"#7E22CE",i:"📈"},
+              ].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{padding:14,maxWidth:420}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Funil de Clientes/Prospecção</div>
+              {total===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
+              <ChartCanvas type="doughnut" height={220} data={{
+                labels:["Prospecção","Em negociação","Cliente","Perdido"],
+                datasets:[{data:[nProsp,nNeg,nCliente,nPerdido],backgroundColor:["#B45309","#1565C0","#15803D","#94A3B8"],borderWidth:2,borderColor:"#FFF"}]
+              }} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+            </div>
           </div>);
         })()}
 
