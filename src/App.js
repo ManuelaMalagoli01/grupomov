@@ -5633,7 +5633,7 @@ export default function App(){
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
           const applyFilter=(r,d=r.date||"")=>{
-            if(muSearch){const q=muSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.numMauUso||"").toLowerCase().includes(q)||(r.chamado||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)))return false;}
+            if(muSearch){const q=muSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.numMauUso||"").toLowerCase().includes(q)||(r.chamado||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)))return false;}
             if(muFrom&&d<muFrom)return false;
             if(muTo&&d>muTo)return false;
             if(muMes&&!d.slice(5,7).startsWith(muMes))return false;
@@ -5671,7 +5671,7 @@ export default function App(){
               <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosMU?"▲":"▼"}</span>
             </button>
             {showFiltrosMU&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={muSearch} onChange={e=>setMuSearch(e.target.value)} placeholder="Buscar empresa, PAT, relatório, chamado..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+              <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={muSearch} onChange={e=>setMuSearch(e.target.value)} placeholder="Buscar Nº MU, PAT, relatório, cliente, ticket..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={muFrom} onChange={e=>setMuFrom(e.target.value)}/></div>
               <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={muTo} onChange={e=>setMuTo(e.target.value)}/></div>
               <select value={muMes} onChange={e=>setMuMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
@@ -5680,7 +5680,7 @@ export default function App(){
               {hasFilterMU&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');setMuAprov('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
                 {listaFil.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
@@ -5688,7 +5688,7 @@ export default function App(){
                   const urgente=slaD!==null&&slaD>10&&p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
                   const incompleto=!p.relatorio||!p.numMauUso||!p.valor;
                   return(<div key={p.id} className="card" style={{padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,border:urgente?"1.5px solid #C62828":undefined,animation:urgente?"pulseUrgente 2s ease-in-out infinite":undefined}}>
-                    <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
                         <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
                         {urgente&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
@@ -5701,13 +5701,13 @@ export default function App(){
                         <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:600}}>✕</button>
                       </div>
                     </div>
-                    <div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:7}}>
+                    <div style={{padding:"7px 9px",display:"flex",flexDirection:"column",gap:5}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:1}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(p.date)} · PAT {p.patrimonio||"—"}</div></div>
+                        <div><div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",marginBottom:1}}>{p.empresa||<span style={{color:"#CCC"}}>Empresa</span>}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(p.date)} · PAT {p.patrimonio||"—"}</div></div>
                         <span style={{fontSize:9,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"2px 9px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span>
                       </div>
 
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:6,columnGap:9,paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:4,columnGap:7,paddingTop:5,borderTop:"1px solid #F1F5F9"}}>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nº MU</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
