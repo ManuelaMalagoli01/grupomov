@@ -123,8 +123,16 @@ const USERS = [
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
-const SERVICOS_OFICINA = ["Bateria/Carregador","Usinagem/Soldagem","Elétrica","Pintura","Mecânica","Hidráulica","Outros Serviços"];
-const SERVICO_OFICINA_MIGRACAO = {"Bateria":"Bateria/Carregador","Carregador":"Bateria/Carregador","Bateria e Mecânica":"Bateria/Carregador","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Pequenos Reparos":"Outros Serviços"};
+const SERVICOS_OFICINA = ["Bateria/Carregador","Usinagem/Soldagem","Elétrica/Pintura","Mecânica","Hidráulica","Outros Serviços"];
+const SERVICO_OFICINA_MIGRACAO = {"Bateria":"Bateria/Carregador","Carregador":"Bateria/Carregador","Bateria e Mecânica":"Bateria/Carregador","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Elétrica":"Elétrica/Pintura","Pintura":"Elétrica/Pintura","Pequenos Reparos":"Outros Serviços"};
+const servicoEfetivoOficina=(a)=>{
+  if(a&&a.servico==="Bateria/Carregador"){
+    if(a.tecnico==="Pedro Souza")return "Bateria";
+    if(a.tecnico==="Pedro Pimentel")return "Carregador";
+  }
+  return a?a.servico:undefined;
+};
+const CATS_PORSERV_OFICINA=[...SERVICOS_OFICINA,"Bateria","Carregador"];
 const SAS_VENDAS_MODELOS = {
   "Empilhadeiras Contrabalançadas Elétricas": ["STRONG 3RL 18","STRONG 4RL 25","STRONG 4RL 30","STRONG 4RD 38","STRONG 4RQ 30","STRONG 4RQ 35","STRONG 4RQ 50","STRONG 4RL 80"],
   "Empilhadeiras Retráteis": ["ER16","ERN20 Pro N","ERN20 B"],
@@ -5177,7 +5185,7 @@ export default function App(){
           TECHS_NO_DASH.forEach(t=>{
             const aps=apMes.filter(a=>agrupTec(a.tecnico)===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
+            const porServ={};CATS_PORSERV_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>servicoEfetivoOficina(a)===s).length;});
             byTech[t]={aps,mins,porServ};
           });
           const byServ={};
@@ -5335,7 +5343,7 @@ export default function App(){
                     <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width .5s"}}/>
                   </div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {SERVICOS_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
+                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
                       <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
                         {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
                       </span>
@@ -10241,7 +10249,7 @@ export default function App(){
           TECHS_NO_DASH.forEach(t=>{
             const aps=apMes.filter(a=>agrupTec(a.tecnico)===t);
             const mins=aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
-            const porServ={};SERVICOS_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>a.servico===s).length;});
+            const porServ={};CATS_PORSERV_OFICINA.forEach(s=>{porServ[s]=aps.filter(a=>servicoEfetivoOficina(a)===s).length;});
             byTech[t]={aps,mins,porServ};
           });
           const byServ={};
@@ -10390,7 +10398,7 @@ export default function App(){
                     <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3}}/>
                   </div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {SERVICOS_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
+                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
                       <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
                         {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
                       </span>
