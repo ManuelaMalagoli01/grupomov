@@ -4103,13 +4103,14 @@ export default function App(){
                   </>);})()}
 
                 <div style={sec}>⚠️ Retrabalhos (até 10)</div>
-                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. O gasto do retrabalho (combustível + alimentação + horas×280) entra como <b>negativo</b> no card.</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. O gasto do retrabalho (combustível + alimentação) entra como <b>negativo</b> no card. As horas do retrabalho somam na <b>mão de obra</b> (à parte, não entram no custo).</div>
                 {(d.retrabalhos||[]).map((r,i)=>{
                   const parseH=(s)=>{if(!s)return 0;s=String(s).trim();if(s.includes(":")){const[h,m]=s.split(":").map(Number);return (h||0)+(m||0)/60;}return pvv(s);};
-                  const tot=pvv(r.gastoCombustivel)+pvv(r.gastoAlimentacao)+parseH(r.horasTrab)*280;
+                  const tot=pvv(r.gastoCombustivel)+pvv(r.gastoAlimentacao);
+                  const horasR=parseH(r.horasTrab);
                   const setR=(k,v)=>{const arr=[...(d.retrabalhos||[])];arr[i]={...arr[i],[k]:v};upd("retrabalhos",arr);};
                   return(<div key={i} style={{border:"1.5px solid #FCA5A5",borderRadius:10,padding:"10px 12px",background:"#FFF7F7",marginBottom:8}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontSize:11,fontWeight:800,color:"#C62828"}}>🔁 Retrabalho {i+1} · custo −{`R$ ${tot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`}</div><button onClick={()=>{const arr=[...(d.retrabalhos||[])];arr.splice(i,1);upd("retrabalhos",arr);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 9px",fontSize:10,fontWeight:700}}>Remover</button></div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontSize:11,fontWeight:800,color:"#C62828"}}>🔁 Retrabalho {i+1} · custo −{`R$ ${tot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`}{horasR>0?` · +${horasR.toFixed(2)}h mão de obra`:""}</div><button onClick={()=>{const arr=[...(d.retrabalhos||[])];arr.splice(i,1);upd("retrabalhos",arr);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 9px",fontSize:10,fontWeight:700}}>Remover</button></div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
                       <div><label style={lbl}>Data</label><input type="date" value={r.data||""} onChange={e=>setR("data",e.target.value)} style={inp}/></div>
                       <div><label style={lbl}>Nº Relatório</label><input type="text" value={r.relatorio||""} onChange={e=>setR("relatorio",e.target.value)} style={inp}/></div>
@@ -7593,10 +7594,11 @@ export default function App(){
           // Custos digitados direto em R$ (combustível e alimentação)
           const custoCombustivel=(x)=>{const v=pv(x.gastoCombustivel);return (v>=0&&v<=50000)?v:0;};
           const gastoAlimSan=(x)=>{const a=pv(x.gastoAlimentacao);return (a>=0&&a<=50000)?a:0;};
-          const horasCaso=(x)=>{const h=parseHrs(x.horasTrab);return (h>=0&&h<=100)?h:0;};
+          const horasCaso=(x)=>{const h=parseHrs(x.horasTrab);const hBase=(h>=0&&h<=100)?h:0;return hBase+horasRetrabalho(x);};
           const custoMaoObra=(x)=>horasCaso(x)*VALOR_HORA; // à parte
-          // Retrabalho: combustível + alimentação + horas×280, somado como NEGATIVO
-          const gastoRetrabalhoUn=(r)=>{const c=pv(r.gastoCombustivel),al=pv(r.gastoAlimentacao),h=parseHrs(r.horasTrab);return (c<=50000?c:0)+(al<=50000?al:0)+((h>=0&&h<=100)?h*VALOR_HORA:0);};
+          // Retrabalho: combustível + alimentação continuam como NEGATIVO no custo; horas somam na mão de obra
+          const horasRetrabalho=(x)=>((x.retrabalhos||[]).reduce((a,r)=>{const h=parseHrs(r.horasTrab);return a+((h>=0&&h<=100)?h:0);},0));
+          const gastoRetrabalhoUn=(r)=>{const c=pv(r.gastoCombustivel),al=pv(r.gastoAlimentacao);return (c<=50000?c:0)+(al<=50000?al:0);};
           const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
           // Custo do atendimento (o que aparece no dash/gráfico): combustível + alimentação + retrabalhos
           // Mão de obra fica à PARTE (as duas visões existem no card)
@@ -7799,7 +7801,7 @@ export default function App(){
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Custo atendimento</span><div style={{fontWeight:700,color:"#C62828"}}>−{fmtR(custoAtend)}</div></div>
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⏱️ Mão de obra (à parte)</span><div style={{fontWeight:700,color:"#E67E00"}}>{fmtR(maoObra)}</div></div>
                       </div>
-                      <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoCombustivel(x))} · 🍽️ {fmtR(gastoAlimSan(x))}{retrabNeg>0?` · 🔁 retrabalho −${fmtR(retrabNeg)}`:""}{x.horasTrab?` · ⏱️ ${x.horasTrab}h`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
+                      <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoCombustivel(x))} · 🍽️ {fmtR(gastoAlimSan(x))}{retrabNeg>0?` · 🔁 retrabalho −${fmtR(retrabNeg)}`:""}{horasCaso(x)>0?` · ⏱️ ${horasCaso(x).toFixed(2)}h${horasRetrabalho(x)>0?` (${horasRetrabalho(x).toFixed(2)}h retrab.)`:""}`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
                       {(x.equipamentos||[]).filter(Boolean).length>0&&<div style={{fontSize:10,color:"#475569",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>🔧 {(x.equipamentos||[]).filter(Boolean).join(" · ")}</div>}
                       <div style={{display:"flex",gap:5,flexWrap:"wrap",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>
                         {[["100h",x.prev100Aprov,x.prev100Data,x.prev100Valor],["500h",x.prev500Aprov,x.prev500Data,x.prev500Valor],["1000h",x.prev1000Aprov,x.prev1000Data,x.prev1000Valor]].map(([lbl,ap,dt,vl])=>(
