@@ -2187,10 +2187,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       const dentro=(x)=>x&&x>=de&&x<=ate;
       const enviadosNoPeriodo=all.filter(p=>p.date&&p.dataEnvio&&dentro(p.dataEnvio));
       const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
+      const totalPeriodo=all.filter(p=>dentro(dataAbertura(p)));
+      const concPeriodo=totalPeriodo.filter(isConcluido);
       serie.push({lab,
         concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
         aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
         slaMedio:slaLista.length?Math.round(slaLista.reduce((a,v)=>a+v,0)/slaLista.length):null,
+        conversao:totalPeriodo.length?Math.round(concPeriodo.length/totalPeriodo.length*100):null,
       });
     }
   }
@@ -2311,10 +2314,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       ))}
     </div>
 
-    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"3fr 2fr",gap:14}}>
+    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"2fr 1.3fr 1.3fr",gap:14}}>
       <div className="card" style={{padding:14}}>
         <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
-        <ChartCanvas type="bar" height={200} data={{
+        <ChartCanvas type="bar" height={180} data={{
           labels:serie.map(s=>s.lab),
           datasets:[
             {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
@@ -2323,12 +2326,19 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
       <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA — dias da abertura até o envio ao cliente</div>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA até envio (dias)</div>
         {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem envios registrados</div>:
-        <ChartCanvas type="line" height={200} data={{
+        <ChartCanvas type="line" height={180} data={{
           labels:serie.map(s=>s.lab),
           datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",fill:true,tension:.3,spanGaps:true}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F0F0F0"}}}}}/>}
+      </div>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>🔄 Taxa de Conversão (%)</div>
+        <ChartCanvas type="line" height={180} data={{
+          labels:serie.map(s=>s.lab),
+          datasets:[{label:"Conversão (%)",data:serie.map(s=>s.conversao),borderColor:"#6A1B9A",backgroundColor:"#6A1B9A22",fill:true,tension:.3,spanGaps:true}]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
     </div>
 
