@@ -2336,11 +2336,19 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F0F0F0"}}}}}/>}
       </div>
       <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>🔄 Taxa de Conversão (%)</div>
-        <ChartCanvas type="line" height={180} data={{
-          labels:serie.map(s=>s.lab),
-          datasets:[{label:"Conversão (%)",data:serie.map(s=>s.conversao),borderColor:"#6A1B9A",backgroundColor:"#6A1B9A22",fill:true,tension:.3,spanGaps:true}]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`},grid:{color:"#F0F0F0"}}}}}/>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>🔄 Taxa de Conversão (%) — valor R$ concluído/faturado sobre total do período</div>
+        {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
+        <div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:180,overflowY:"auto",paddingRight:2}}>
+          {serie.map((s,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{fontSize:10,color:"#94A3B8",width:44,flexShrink:0}}>{s.lab}</div>
+              <div style={{flex:1,background:"#F1F5F9",borderRadius:4,height:14,position:"relative",overflow:"hidden"}}>
+                <div style={{background:"#6A1B9A",height:"100%",borderRadius:4,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
+              </div>
+              <div style={{fontSize:11,fontWeight:800,color:"#6A1B9A",width:42,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
+            </div>
+          ))}
+        </div>}
       </div>
     </div>
 
