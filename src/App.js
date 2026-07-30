@@ -8407,7 +8407,16 @@ export default function App(){
 
         {tab==="dashboard_a_faturar"&&(
           <DashboardProcessoSimples
-            lista={processosAF}
+            lista={(processosAF||[]).map(p=>{
+              const mapaAprov={aguardando_aprovacao:"aguardando_retorno",aprovado_pend_conclusao:"aprovado_cliente",env_faturamento:"cobrado_faturado",nao_aprovado:"negado_cliente"};
+              return {...p,
+                empresa:p.empresaGrupo||p.cliente||p.empresa||"",
+                date:p.emissao||p.date||"",
+                aprovCliente:mapaAprov[p.statusAF]||p.aprovCliente||"aguardando_retorno",
+                dataAprovacao:p.dataEnvioFat||p.dataAprovacao||"",
+                dataFaturamento:p.dataEnvioFat||p.dataFaturamento||"",
+              };
+            })}
             titulo="A Faturar"
             icone="💰"
             cor="#1565C0"
