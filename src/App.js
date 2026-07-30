@@ -3174,6 +3174,24 @@ export default function App(){
   const [modalImportApon,setModalImportApon]=useState(false);
   const [modalImportApon150,setModalImportApon150]=useState(false);
   const [modalImportAgenda,setModalImportAgenda]=useState(false);
+  const [modalImportEMU,setModalImportEMU]=useState(false);
+  const [modalImportSasPecas,setModalImportSasPecas]=useState(false);
+  const [modalImportEmp,setModalImportEmp]=useState(false);
+  const [modalImportUber,setModalImportUber]=useState(false);
+  const [modalImportFin,setModalImportFin]=useState(false);
+  const [modalImportFrota,setModalImportFrota]=useState(false);
+  const [modalImportFerias,setModalImportFerias]=useState(false);
+  const [modalImportTrein,setModalImportTrein]=useState(false);
+  const [modalImportPonto,setModalImportPonto]=useState(false);
+  const [modalImportBH,setModalImportBH]=useState(false);
+  const [modalImportPendManuela,setModalImportPendManuela]=useState(false);
+  const [modalImportProsp,setModalImportProsp]=useState(false);
+  const [modalImportCliSas,setModalImportCliSas]=useState(false);
+  const [modalImportEntrega,setModalImportEntrega]=useState(false);
+  const [modalImportPrioClientes,setModalImportPrioClientes]=useState(false);
+  const [modalImportRuptura,setModalImportRuptura]=useState(false);
+  const [modalImportCarros,setModalImportCarros]=useState(false);
+  const [modalImportAgOfi150,setModalImportAgOfi150]=useState(false);
 
   // ── TÍTULO DO APP ──
   useEffect(()=>{ document.title = "Gestão Manutenção Grupo MOV"; },[]);
@@ -4373,6 +4391,34 @@ export default function App(){
           setModalImportAgenda(false);
           notify(`✅ ${novos.length} atendimento(s) importado(s)!`);
         }}/>}
+        {modalImportEMU&&<ImportExcelModal onClose={()=>setModalImportEMU(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`EMU${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setExecMauUso(p=>[...stamp,...(p||[])]);db.saveBatch("execucao_mau_uso",stamp);setModalImportEMU(false);notify(`✅ ${stamp.length} execução(ões) importada(s)!`);}}/>}
+        {modalImportSasPecas&&<ImportExcelModal onClose={()=>setModalImportSasPecas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`SP${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setSasPecas(p=>[...stamp,...(p||[])]);db.saveBatch("sas_pecas",stamp);setModalImportSasPecas(false);notify(`✅ ${stamp.length} solicitação(ões) importada(s)!`);}}/>}
+        {modalImportEmp&&<ImportExcelModal onClose={()=>setModalImportEmp(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`EMP${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setEmprestimos(p=>[...stamp,...(p||[])]);db.saveBatch("emprestimos",stamp);setModalImportEmp(false);notify(`✅ ${stamp.length} empréstimo(s) importado(s)!`);}}/>}
+        {modalImportUber&&<ImportExcelModal onClose={()=>setModalImportUber(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`UBR${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setUberPedidos(p=>[...stamp,...(p||[])]);db.saveBatch("uber_pedidos",stamp);setModalImportUber(false);notify(`✅ ${stamp.length} pedido(s) importado(s)!`);}}/>}
+        {modalImportFin&&<ImportExcelModal onClose={()=>setModalImportFin(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FIN${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setFinanceiro(p=>[...stamp,...(p||[])]);db.saveBatch("financeiro",stamp);setModalImportFin(false);notify(`✅ ${stamp.length} lançamento(s) importado(s)!`);}}/>}
+        {modalImportFrota&&<ImportExcelModal onClose={()=>setModalImportFrota(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FRO${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setFrota(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_frota",stamp);setModalImportFrota(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
+        {modalImportFerias&&<ImportExcelModal onClose={()=>setModalImportFerias(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FER${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setFerias(p=>[...stamp,...(p||[])]);db.saveBatch("ferias_colaboradores",stamp);setModalImportFerias(false);notify(`✅ ${stamp.length} colaborador(es) importado(s)!`);}}/>}
+        {modalImportTrein&&<ImportExcelModal onClose={()=>setModalImportTrein(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`TRE${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),tecnicos:d.tecnicos?String(d.tecnicos).split(",").map(s=>s.trim()).filter(Boolean):[]}));setTreinamentos(p=>[...stamp,...(p||[])]);db.saveBatch("treinamentos_reunioes",stamp);setModalImportTrein(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
+        {modalImportPonto&&<ImportExcelModal onClose={()=>setModalImportPonto(false)} onImport={novos=>{novos.forEach(d=>{if(!d.tecnico)return;const dt=d.data||TODAY_STR;const stKey=Object.entries(PONTO_STATUS).find(([k,s])=>s.l===d.status||k===d.status);setPonto(d.tecnico,dt,{status:stKey?stKey[0]:"presente",obs:d.obs||""});});setModalImportPonto(false);notify(`✅ ${novos.length} registro(s) importado(s)!`);}}/>}
+        {modalImportBH&&<ImportExcelModal onClose={()=>setModalImportBH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`BH${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setBancoHoras(p=>[...stamp,...(p||[])]);db.saveBatch("banco_horas",stamp);setModalImportBH(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
+        {modalImportPendManuela&&<ImportExcelModal onClose={()=>setModalImportPendManuela(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PM2${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setPendManuela(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_manuela",stamp);setModalImportPendManuela(false);notify(`✅ ${stamp.length} pendência(s) importada(s)!`);}}/>}
+        {modalImportProsp&&<ImportExcelModal onClose={()=>setModalImportProsp(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PROS${Date.now()}${Math.random().toString(36).slice(2,6)}`,status:d.status||"prospeccao"}));setProspeccao(p=>[...stamp,...(p||[])]);db.saveBatch("prospeccao",stamp);setModalImportProsp(false);notify(`✅ ${stamp.length} cliente(s) importado(s)!`);}}/>}
+        {modalImportCliSas&&<ImportExcelModal onClose={()=>setModalImportCliSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`CLI${Date.now()}${Math.random().toString(36).slice(2,6)}`,status:d.status||"prospeccao"}));setClientesSas(p=>[...stamp,...(p||[])]);db.saveBatch("clientes_sas",stamp);setModalImportCliSas(false);notify(`✅ ${stamp.length} cliente(s) importado(s)!`);}}/>}
+        {modalImportEntrega&&<ImportExcelModal onClose={()=>setModalImportEntrega(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`ET${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setEntregaTec(p=>[...stamp,...(p||[])]);db.saveBatch("entrega_tecnica",stamp);setModalImportEntrega(false);notify(`✅ ${stamp.length} entrega(s) importada(s)!`);}}/>}
+        {modalImportPrioClientes&&<ImportExcelModal onClose={()=>setModalImportPrioClientes(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PRI${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setPrioridades(p=>[...stamp,...(p||[])]);db.saveBatch("prioridades_clientes",stamp);setModalImportPrioClientes(false);notify(`✅ ${stamp.length} item(ns) importado(s)!`);}}/>}
+        {modalImportRuptura&&<ImportExcelModal onClose={()=>setModalImportRuptura(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`RUP${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aguardando",arquivado:false}));setRupturas(p=>[...stamp,...(p||[])]);db.saveBatch("rupturas_alm",stamp);setModalImportRuptura(false);notify(`✅ ${stamp.length} ruptura(s) importada(s)!`);}}/>}
+        {modalImportCarros&&<ImportExcelModal onClose={()=>setModalImportCarros(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`CAR${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setCarros(p=>[...stamp,...(p||[])]);db.saveBatch("carros",stamp);setModalImportCarros(false);notify(`✅ ${stamp.length} veículo(s) importado(s)!`);}}/>}
+        {modalImportAgOfi150&&<ImportExcelModal onClose={()=>setModalImportAgOfi150(false)} onImport={novos=>{
+          novos.forEach(d=>{
+            const tech=d.tecnico||OFICINA_150_TECHS[0];
+            const dt=d.data||TODAY_STR;
+            const key=`${tech}__${dt}`;
+            const slot={client:d.cliente||"",horimetro:d.horimetro||"",patrimonio:d.patrimonio||"",servico:d.servico||SERVICOS_OFICINA[0],status:d.status||"agendada",horaEntrada:d.entrada||"",horaSaida:d.saida||"",horasTrabalhadas:d.horas||calcHoras(d.entrada||"",d.saida||""),obs:d.obs||"",relatorio:d.relatorio||""};
+            saveAgendaOfi150(key,[...(agendaOfi150[key]||[]),slot]);
+          });
+          setModalImportAgOfi150(false);
+          notify(`✅ ${novos.length} atendimento(s) importado(s)!`);
+        }}/>}
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);db.saveBatch("relatorios",stamp);setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
@@ -5216,6 +5262,7 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 1340</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
                 <BtnImport onClick={()=>setModalImportPH(true)}/>
+                <BtnExcel onClick={()=>exportCSV(lF,"servicos_administrativos_1340",[{key:"data",label:"Data"},{key:"servico",label:"Serviço"},{key:"equipCateg",label:"Categoria"},{key:"equipDetalhe",label:"Detalhe"},{key:"descricao",label:"Descrição"},{key:"prioridade",label:"Prioridade"},{key:"status",label:"Status"},{key:"obsCondicional",label:"Obs. Condicional"},{key:"obs",label:"Obs"},{key:"registradoPor",label:"Registrado Por"}])}/>
                 <button onClick={()=>setShowArqHeb(!showArqHeb)} style={{background:showArqHeb?"#D97706":"#F5F5F5",color:showArqHeb?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqHeb?"📦 Voltar aos Ativos":"📦 Consultar Arquivados"}</button>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
@@ -5340,7 +5387,11 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>📋 Pendências Manuela</div><div style={{fontSize:13,color:"#888"}}>{list.length} pendência(s)</div></div>
-                <button onClick={()=>setShowArqPendMan(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPendMan?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPendMan?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <BtnImport onClick={()=>setModalImportPendManuela(true)}/>
+                  <BtnExcel onClick={()=>exportCSV(list,"pendencias_manuela",[{key:"tarefa",label:"Tarefa"},{key:"tarefaOutros",label:"Descrição"},{key:"data",label:"Data"},{key:"prioridade",label:"Prioridade"},{key:"solucao",label:"Solução"},{key:"status",label:"Status"},{key:"dataConclusao",label:"Data Conclusão"}])}/>
+                  <button onClick={()=>setShowArqPendMan(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPendMan?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPendMan?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
+                </div>
               </div>
 
               {/* Formulário */}
@@ -5696,6 +5747,7 @@ export default function App(){
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqExecMU(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqExecMU?"#1A1A1A":"#FFF",color:showArqExecMU?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqExecMU?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                   <BtnExcel onClick={()=>exportCSV(lista,"execucao_mau_uso",[{key:"status",label:"Status"},{key:"data",label:"Data"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"patrimonio",label:"PAT"},{key:"cliente",label:"Cliente"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"dataExecucao",label:"Data Execução"},{key:"chamado",label:"Chamado"},{key:"relatorio",label:"Relatório"},{key:"observacao",label:"Observação"}])}/>
+                  <BtnImport onClick={()=>setModalImportEMU(true)}/>
                   <BtnY onClick={()=>{setEditExecMU(null);setExecMUForm(EXECMU_EMPTY);setModalExecMU(true);}}>+ Nova Execução</BtnY>
                 </div>
               </div>
@@ -5805,6 +5857,7 @@ export default function App(){
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqSasPecas(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqSasPecas?"#1A1A1A":"#FFF",color:showArqSasPecas?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqSasPecas?"✕ Voltar aos Ativos":"Concluído/Arquivado"}</button>
                   <BtnExcel onClick={()=>exportCSV(lista,"solicitacao_pecas",[{key:"status",label:"Status"},{key:"dataSolicitacao",label:"Data Solicitação"},{key:"cliente",label:"Cliente"},{key:"nf",label:"NF"},{key:"relatorioMov",label:"Relatório MOV"},{key:"maquina",label:"Máquina"},{key:"peca",label:"Peça"},{key:"arEnvio",label:"AR Envio"},{key:"previsaoRecebimento",label:"Previsão Recebimento"},{key:"dataExecucao",label:"Data Execução"},{key:"chamado",label:"Chamado"},{key:"relatorio",label:"Relatório"}])}/>
+                  <BtnImport onClick={()=>setModalImportSasPecas(true)}/>
                   <BtnY onClick={()=>{setEditSasPecas(null);setSasPecasForm(SASPECAS_EMPTY);setModalSasPecas(true);}}>+ Nova Execução</BtnY>
                 </div>
               </div>
@@ -6016,6 +6069,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqEmp(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEmp?"#1A1A1A":"#FFF",color:showArqEmp?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEmp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"emprestimos_grupomov",[{key:"req",label:"REQ"},{key:"data",label:"Data"},{key:"requerente",label:"Requerente"},{key:"item",label:"Item"},{key:"descricao",label:"Descrição"},{key:"situacao",label:"Situação"},{key:"quant",label:"Qtd"},{key:"dataRetorno",label:"Retorno"},{key:"observacao",label:"Obs"}])}/>
+                <BtnImport onClick={()=>setModalImportEmp(true)}/>
                 <BtnY onClick={()=>{setEditEmp(null);setModalEmp(true);}}>+ Nova Requisição</BtnY>
               </div>
             </div>
@@ -6664,6 +6718,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"uber_grupomov",[{key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"endereco",label:"Endereço"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
+                <BtnImport onClick={()=>setModalImportUber(true)}/>
                 <BtnY onClick={()=>{setUberEdit({data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:""});setUberModal(true);}}>+ Novo Pedido</BtnY>
               </div>
             </div>
@@ -6741,6 +6796,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqFin(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFin?"#1A1A1A":"#FFF",color:showArqFin?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFin?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"financeiro_grupomov",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"tecnico",label:"Técnico"},{key:"solicitacao",label:"Solicitação"},{key:"atendimento",label:"Atendimento"},{key:"patrimonio",label:"PAT"},{key:"valor",label:"Valor"},{key:"situacao",label:"Situação"},{key:"acerto",label:"Acerto"},{key:"dataAcerto",label:"Dt Acerto"},{key:"reembolso",label:"Reembolso"},{key:"valorReembolso",label:"Vl Reembolso"}])}/>
+                <BtnImport onClick={()=>setModalImportFin(true)}/>
                 <BtnY onClick={()=>{setFinEdit({data:TODAY_STR,ticket:"",solicitacao:"combustivel",tecnico:ALL_TECHS[0],atendimento:"",patrimonio:"",valor:"",situacao:"pendente",acerto:"nao",obs:""});setFinModalOpen(true);}}>+ Novo Lançamento</BtnY>
               </div>
             </div>
@@ -6826,6 +6882,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqFro(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFro?"#1A1A1A":"#FFF",color:showArqFro?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFro?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"pendencias_frota",[{key:"dataEnvio",label:"Dt Envio"},{key:"rel",label:"REL"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"pat",label:"PAT"},{key:"patTipo",label:"Tipo"},{key:"resolvido",label:"Resolvido"},{key:"novoPat",label:"Novo PAT"},{key:"nf",label:"NF"},{key:"relEntrega",label:"Rel Entrega"}])}/>
+                <BtnImport onClick={()=>setModalImportFrota(true)}/>
                 <BtnY onClick={()=>{setFroEdit({dataEnvio:TODAY_STR,rel:"",empresa:"",tecnico:ALL_TECHS[0],pat:"",patTipo:"bateria",resolvido:"nao",novoPat:"",nf:"",relEntrega:""});setFroModal(true);}}>+ Nova Pendência</BtnY>
               </div>
             </div>
@@ -7020,6 +7077,7 @@ export default function App(){
                 <select value="2026" disabled style={{fontSize:12,padding:"8px 12px",borderRadius:20,border:"1.5px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontWeight:800,cursor:"default"}}><option>2026</option></select>
                 <button onClick={()=>setShowArqFerias(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqFerias?"#1A1A1A":"#FFF",color:showArqFerias?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqFerias?"✕ Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada,"ferias_colaboradores_2026",[{key:"nome",label:"Nome"},{key:"admissao",label:"Data Admissão"},{key:"depAtual",label:"Dep. Atual"},{key:"setor",label:"Setor Interno"},{key:"aquisitivoIni",label:"Aquisitivo Início"},{key:"aquisitivoFim",label:"Aquisitivo Fim"},{key:"limite",label:"Data Limite"},{key:"saldoDias",label:"Saldo Dias"},{key:"previsaoIni",label:"Previsão Início"},{key:"previsaoFim",label:"Previsão Fim"},{key:"previsao2Ini",label:"2ª Parcela Início"},{key:"previsao2Fim",label:"2ª Parcela Fim"}])}/>
+                <BtnImport onClick={()=>setModalImportFerias(true)}/>
                 <BtnY onClick={()=>{setFeriasEdit({id:null,ano:"2026",nome:"",admissao:"",depAtual:"MANUTENÇÃO A",setor:FERIAS_SETORES[0],aquisitivoIni:"",aquisitivoFim:"",limite:"",saldoDias:"",previsaoIni:"",previsaoFim:"",previsao2Ini:"",previsao2Fim:""});setFeriasModal(true);}}>+ Novo Colaborador</BtnY>
               </div>
             </div>
@@ -7125,6 +7183,7 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <button onClick={()=>setShowArqTrein(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqTrein?"#1A1A1A":"#FFF",color:showArqTrein?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqTrein?"✕ Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada.map(t=>({...t,tecnicos:(t.tecnicos||[]).join(", ")})),"treinamentos_reunioes",[{key:"data",label:"Data"},{key:"horaIni",label:"Início"},{key:"horaFim",label:"Fim"},{key:"compromisso",label:"Compromisso"},{key:"categoria",label:"Categoria"},{key:"tecnicos",label:"Participantes"},{key:"local",label:"Local"},{key:"obs",label:"Observação"}])}/>
+                <BtnImport onClick={()=>setModalImportTrein(true)}/>
                 <BtnY onClick={()=>{setTreinEdit({id:null,data:TODAY_STR,horaIni:"08:00",horaFim:"09:00",compromisso:COMPROMISSO_TIPOS[0],categoria:COMPROMISSO_CATEGORIAS[0],tecnicos:[],local:COMPROMISSO_LOCAIS[0],alarmeDias:"3",obs:""});setTreinModal(true);}}>+ Novo Compromisso</BtnY>
               </div>
             </div>
@@ -7239,7 +7298,11 @@ export default function App(){
           return(<div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🎯 Lista de Clientes — Prospecção</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} de {(prospeccao||[]).length} · {cidades.length} cidade(s)</div></div>
-              <BtnY onClick={abrirNovo}>+ Novo Cliente</BtnY>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <BtnImport onClick={()=>setModalImportProsp(true)}/>
+                <BtnExcel onClick={()=>exportCSV((prospeccao||[]),"prospeccao_comercial",[{key:"empresa",label:"Empresa"},{key:"cnpj",label:"CNPJ"},{key:"cidade",label:"Cidade"},{key:"telefone",label:"Telefone"},{key:"email",label:"E-mail"},{key:"status",label:"Status"},{key:"info",label:"Informações"},{key:"dataRetorno",label:"Data Retorno"},{key:"contatado",label:"Contatado"}])}/>
+                <BtnY onClick={abrirNovo}>+ Novo Cliente</BtnY>
+              </div>
             </div>
 
             {alertas.length>0&&<div className="card" style={{padding:"10px 14px",marginBottom:14,background:"#FEF2F2",border:"1.5px solid #FCA5A5"}}>
@@ -7404,7 +7467,11 @@ export default function App(){
           return(<div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🤝 Clientes / Prospecção</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{clientesAtuais.length} cliente(s) · {prospeccoes.length} em prospecção/negociação</div></div>
-              <BtnY onClick={()=>abrirNovo("prospeccao")}>+ Novo Registro</BtnY>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <BtnImport onClick={()=>setModalImportCliSas(true)}/>
+                <BtnExcel onClick={()=>exportCSV((clientesSas||[]),"clientes_sas",[{key:"empresa",label:"Empresa"},{key:"contato",label:"Contato"},{key:"telefone",label:"Telefone"},{key:"email",label:"E-mail"},{key:"status",label:"Status"},{key:"obs",label:"Obs"}])}/>
+                <BtnY onClick={()=>abrirNovo("prospeccao")}>+ Novo Registro</BtnY>
+              </div>
             </div>
             <div style={{position:"relative",marginBottom:16,maxWidth:420}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#94A3B8",fontSize:14}}>🔍</span><input type="text" value={cliSasSearch} onChange={e=>setCliSasSearch(e.target.value)} placeholder="Buscar empresa, contato, telefone, e-mail..." style={{width:"100%",padding:"10px 12px 10px 34px",fontSize:13,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
@@ -7597,6 +7664,8 @@ export default function App(){
                   notify(`✅ ${atualizados.length} entrega(s) recalculada(s) para 1%.`);
                 }} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:12,cursor:"pointer",fontWeight:700}}>🔄 Recalcular 1%</button>
                 <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
+                <BtnImport onClick={()=>setModalImportEntrega(true)}/>
+                <BtnExcel onClick={()=>exportCSV(lista,"entrega_tecnica",[{key:"dataSolicitacao",label:"Data"},{key:"nf",label:"NF"},{key:"valor",label:"Valor NF"},{key:"comissao",label:"Comissão 1%"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Contato"},{key:"tecnico",label:"Técnico"},{key:"dataEntrega",label:"Data Entrega"},{key:"mov",label:"Rel. MOV"},{key:"chamado",label:"Chamado"},{key:"fimGarantia",label:"Fim Garantia"},{key:"retrabalho",label:"Retrabalho"},{key:"obs",label:"Obs"}])}/>
                 <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
             </div>
@@ -7760,7 +7829,10 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>📋 Ponto Diário</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{TODOS_TECNICOS.length} técnicos · registro por dia</div></div>
-              <BtnExcel onClick={()=>{const dados=TODOS_TECNICOS.map(t=>{const r=regDe(t);return{tecnico:t,data:dataBR,status:(PONTO_STATUS[r?r.status:"presente"]||{}).l||"",obs:r?r.obs:""};});exportCSV(dados,`ponto_diario_${pontoData}`,[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"status",label:"Status"},{key:"obs",label:"Observação"}]);}}/>
+              <div style={{display:"flex",gap:8}}>
+                <BtnImport onClick={()=>setModalImportPonto(true)}/>
+                <BtnExcel onClick={()=>{const dados=TODOS_TECNICOS.map(t=>{const r=regDe(t);return{tecnico:t,data:dataBR,status:(PONTO_STATUS[r?r.status:"presente"]||{}).l||"",obs:r?r.obs:""};});exportCSV(dados,`ponto_diario_${pontoData}`,[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"status",label:"Status"},{key:"obs",label:"Observação"}]);}}/>
+              </div>
             </div>
             <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:14}}>
               <button onClick={()=>nav(-1)} style={{width:34,height:34,borderRadius:10,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B",fontSize:16}}>‹</button>
@@ -7837,6 +7909,7 @@ export default function App(){
                 <button onClick={sincronizarBancoComFerias} style={{padding:"8px 14px",borderRadius:20,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:12,cursor:"pointer",fontWeight:700}}>🔄 Sincronizar com Férias</button>
                 <button onClick={()=>setShowArqBanco(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqBanco?"#1A1A1A":"#FFF",color:showArqBanco?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqBanco?"✕ Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada,"banco_de_horas",[{key:"nome",label:"Colaborador"},{key:"setor",label:"Setor"},{key:"saldo",label:"Saldo"},{key:"comoCompensar",label:"Como Compensar"},{key:"dataCompensacao",label:"Data Compensação"},{key:"status",label:"Status"}])}/>
+                <BtnImport onClick={()=>setModalImportBH(true)}/>
                 <BtnY onClick={()=>{const row={id:`BH${Date.now()}_${Math.floor(Math.random()*9999)}`,nome:"",setor:"",saldo:"",comoCompensar:"",dataCompensacao:"",status:"pendente",arquivado:false,registradoEm:new Date().toISOString()};setBancoHoras(p=>[row,...p]);db.save("banco_horas",row.id,row);notify("✅ Linha adicionada!");}}>+ Colaborador</BtnY>
               </div>
             </div>
@@ -7893,8 +7966,10 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:800,fontSize:22,marginBottom:4}}>⭐ Prioridades Clientes</div><div style={{fontSize:13,color:"#888"}}>{list.length} item(ns) · visível só para você</div></div>
-                <div style={{display:"flex",gap:8}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqPri(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqPri?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqPri?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
+                  <BtnImport onClick={()=>setModalImportPrioClientes(true)}/>
+                  <BtnExcel onClick={()=>exportCSV(list,"prioridades_clientes",[{key:"data",label:"Data"},{key:"empresa",label:"Empresa"},{key:"pat",label:"PAT"},{key:"motivo",label:"Motivo"},{key:"canal",label:"Canal"},{key:"responsavel",label:"Responsável"},{key:"status",label:"Status"},{key:"dataResolucao",label:"Data Resolução"},{key:"obs",label:"Observação"}])}/>
                   <BtnY onClick={()=>priCrud.add({data:TODAY_STR,empresa:"",pat:"",motivo:"",canal:"email",responsavel:"",status:"pendente",dataResolucao:"",obs:""})}>+ Nova Prioridade</BtnY>
                 </div>
               </div>
@@ -8056,6 +8131,7 @@ export default function App(){
                 <button onClick={()=>setShowArqRuptura(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqRuptura?"#1A1A1A":"#FFF",color:showArqRuptura?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqRuptura?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <button onClick={()=>setViewMode(v=>v==="cards"?"calendario":"cards")} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:"#FFF",fontSize:12,cursor:"pointer",fontWeight:600}}>{viewMode==="cards"?"📅 Calendário":"🃏 Cards"}</button>
                 <ExportBar data={lista} filename="ruptura_almox" cols={[{key:"data",label:"Data"},{key:"solicitacao",label:"Solicitação"},{key:"ticket",label:"Ticket"},{key:"requisicao",label:"Requisição"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Qtd"},{key:"osRel",label:"OS/REL"},{key:"pat",label:"PAT"},{key:"empresa",label:"Empresa"},{key:"tecnico",label:"Técnico"},{key:"status",label:"Status"},{key:"dataLiberacao",label:"Dt Liberação"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
+                <BtnImport onClick={()=>setModalImportRuptura(true)}/>
                 <BtnY onClick={()=>{setEditRuptura(null);setRupturaForm({solicitacao:"sem_estoque",data:TODAY_STR,ticket:"",requisicao:"",peca:"",codigo:"",quantidade:"",osRel:"",pat:"",empresa:"",tecnico:ALL_TECHS[0]||"",dataLiberacao:"",obs:"",status:"aguardando",arquivado:false});setModalRuptura(true);}}>+ Nova Ruptura</BtnY>
               </div>
             </div>
@@ -9684,6 +9760,7 @@ export default function App(){
                   </select>
                   <button onClick={()=>setShowArqCarros(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E0E0E0",background:showArqCarros?"#F5F5F5":"#FFF",fontSize:12,cursor:"pointer",color:"#888",fontFamily:"inherit"}}>{showArqCarros?"✓ Consultando Arquivados":"📁 Consultar Arquivados"}</button>
                   <ExportBar data={lista} filename="carros" cols={[{key:"data",label:"Data"},{key:"placa",label:"Placa"},{key:"status",label:"Status"},{key:"responsavel",label:"Responsável"},{key:"kmAtual",label:"Km Atual"},{key:"kmUltimaRevisao",label:"Km Últ. Rev."},{key:"valorUltimaRevisao",label:"Valor Rev."},{key:"oficina",label:"Oficina"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}]}/>
+                  <BtnImport onClick={()=>setModalImportCarros(true)}/>
                   <BtnY onClick={()=>{setEditCarro(null);setCarForm({placa:PLACAS_CARROS[0],status:"orcamento_pendente",data:TODAY_STR,responsavel:"",kmAtual:"",kmUltimaRevisao:"",valorUltimaRevisao:"",ultimaRevisaoData:"",itensSubstituidos:[],itensSubstituidosObs:"",itensProximaRevisao:[],itensProximaRevisaoObs:"",proximaRevisaoData:"",oficina:"",obs:"",requisicao:""});setModalCarros(true);}}>+ Novo Registro</BtnY>
                 </div>
               </div>
@@ -9900,6 +9977,8 @@ export default function App(){
                   <select value={agOfi150Servico} onChange={e=>setAgOfi150Servico(e.target.value)} style={{fontSize:12}}><option value="todos">Todos os serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                   <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                   <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12}}>{[2026,2027,2028,2029,2030].map(y=><option key={y}>{y}</option>)}</select>
+                  <BtnImport onClick={()=>setModalImportAgOfi150(true)}/>
+                  <BtnExcel onClick={()=>{const allAtend=Object.entries(agendaOfi150).flatMap(([k,v])=>{const[tech,dt]=k.split("__");return(v||[]).map(s=>({tecnico:tech,data:dt,cliente:s.client,horimetro:s.horimetro,patrimonio:s.patrimonio,servico:s.servico,status:s.status,entrada:s.horaEntrada,saida:s.horaSaida,horas:s.horasTrabalhadas||"",relatorio:s.relatorio,obs:s.obs}));});exportCSV(allAtend,"agenda_oficina_150",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"cliente",label:"Empresa/Serviço"},{key:"horimetro",label:"Horímetro"},{key:"patrimonio",label:"Patrimônio"},{key:"servico",label:"Serviço"},{key:"status",label:"Status"},{key:"entrada",label:"Entrada"},{key:"saida",label:"Saída"},{key:"horas",label:"Horas"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"}]);}}/>
                 </div>
               </div>
               {!isReadOnlyAgenda(user)&&(
@@ -10202,6 +10281,7 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>📋 Serviços Administrativos — Oficina 150</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{lF.length} registro(s)</div></div>
                 <BtnImport onClick={()=>setModalImportPM(true)}/>
+                <BtnExcel onClick={()=>exportCSV(lF,"servicos_administrativos_150",[{key:"data",label:"Data"},{key:"servico",label:"Serviço"},{key:"equipCateg",label:"Categoria"},{key:"equipDetalhe",label:"Detalhe"},{key:"descricao",label:"Descrição"},{key:"prioridade",label:"Prioridade"},{key:"status",label:"Status"},{key:"obsCondicional",label:"Obs. Condicional"},{key:"obs",label:"Obs"},{key:"registradoPor",label:"Registrado Por"}])}/>
                 <button onClick={()=>setShowArqMat(!showArqMat)} style={{background:showArqMat?"#D97706":"#F5F5F5",color:showArqMat?"#FFF":"#888",border:"none",borderRadius:10,padding:"8px 16px",fontWeight:700,fontSize:12,cursor:"pointer"}}>{showArqMat?"📦 Voltar aos Ativos":"📦 Consultar Arquivados"}</button>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
