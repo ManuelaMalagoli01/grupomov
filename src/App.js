@@ -361,6 +361,7 @@ const LOGO_MOV_LIGHT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAACiCA
 const PAD        = n=>String(n).padStart(2,"0");const fmtDate    = d=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
 const TODAY_STR  = fmtDate(TODAY);
 const diffDays   = s=>{ if(!s) return null; const d=Math.floor((TODAY-new Date(s))/86400000); return d>=0?d:null; };
+const diffDaysEntre = (a,b)=>{ if(!a||!b) return null; const d=Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000); return isNaN(d)?null:d; };
 const TIPOS = [
   {v:"preventivo",l:"📋 Preventivo",color:"#2563EB",bg:"#EFF6FF"},
   {v:"corretivo",l:"🔧 Corretivo",color:"#EF4444",bg:"#FEF2F2"},
@@ -1224,7 +1225,7 @@ function ProcessoModal({onClose,onSave,tipo,initial}){
             <div style={{fontSize:11,fontWeight:700,color:"#555",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Aprovação</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,alignItems:"end"}}>
               <Sel label="Enviado para Aprovação?" value={form.enviadoAprovacao} onChange={v=>upd("enviadoAprovacao",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim"}]}/>
-              {form.enviadoAprovacao==="sim"?<div><Inp type="date" label="Data do Envio" value={form.dataEnvio} onChange={v=>upd("dataEnvio",v)}/>{sla!==null&&<div style={{marginTop:6,fontSize:11,color:"#888"}}>SLA desde envio: <SlaBadge days={sla}/></div>}</div>:<div style={{fontSize:12,color:"#C62828",fontWeight:600,paddingTop:20}}>⏱ SLA contando — aguardando envio</div>}
+              {form.enviadoAprovacao==="sim"?<div><Inp type="date" label="Data do Envio ao Cliente" value={form.dataEnvio} onChange={v=>upd("dataEnvio",v)}/>{sla!==null&&<div style={{marginTop:6,fontSize:11,color:"#888"}}>SLA desde envio: <SlaBadge days={sla}/></div>}</div>:<div style={{fontSize:12,color:"#C62828",fontWeight:600,paddingTop:20}}>⏱ SLA contando — aguardando envio</div>}
             </div>
             <div style={{marginTop:12,display:"grid",gridTemplateColumns:"1fr",gap:12}}>
               <Sel label="Aprovado?" value={form.aprovado} onChange={v=>upd("aprovado",v)} options={[{v:"nao",l:"Não"},{v:"sim",l:"Sim — aprovado"}]}/>
@@ -2116,7 +2117,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-  const dataAbertura=(p)=>p.date||p.dataEnvio||"";
+  const dataAbertura=(p)=>p.dataEnvio||p.date||"";
   const isArquivado=(p)=>p.processoStatus==="arquivado"||p.arquivado===true||p.arquivado==="sim";
   const isConcluido=(p)=>isArquivado(p)||p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado";
   const dataConclusaoDe=(p)=>p.dataConclusao||p.dataFaturamento||p.dataAprovacao||"";
@@ -2184,12 +2185,18 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       else if(modo==="semana"){ d.setDate(d.getDate()-7*i); const s=new Date(d); s.setDate(d.getDate()-((d.getDay()+6)%7)); const e=new Date(s); e.setDate(s.getDate()+6); de=iso(s); ate=iso(e); lab=`${PAD(s.getDate())}/${PAD(s.getMonth()+1)}`; }
       else { d.setMonth(d.getMonth()-i); const s=new Date(d.getFullYear(),d.getMonth(),1); const e=new Date(d.getFullYear(),d.getMonth()+1,0); de=iso(s); ate=iso(e); lab=`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`; }
       const dentro=(x)=>x&&x>=de&&x<=ate;
+      const enviadosNoPeriodo=all.filter(p=>p.date&&p.dataEnvio&&dentro(p.dataEnvio));
+      const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
       serie.push({lab,
         concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
         aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
+        slaMedio:slaLista.length?Math.round(slaLista.reduce((a,v)=>a+v,0)/slaLista.length):null,
       });
     }
   }
+  const comEnvioSla=all.filter(p=>p.date&&p.dataEnvio);
+  const slaEnvioValores=comEnvioSla.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
+  const slaEnvioMedio=slaEnvioValores.length?Math.round(slaEnvioValores.reduce((a,v)=>a+v,0)/slaEnvioValores.length):null;
 
   const empValMap={};
   all.forEach(p=>{if(p.empresa)empValMap[p.empresa]=(empValMap[p.empresa]||0)+parseVal(p.valor);});
@@ -2197,6 +2204,16 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
   const hoje=new Date(); hoje.setHours(0,0,0,0);
   const diasAberto=(p)=>{const d=dataAbertura(p);if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.max(0,Math.round((hoje-dt)/86400000));};
+
+  // ── Conversao semanal/mensal (% concluido/faturado) ─────────────────────
+  const inWeek=(d)=>{ if(!d)return false; const s=new Date(hoje); s.setDate(hoje.getDate()-((hoje.getDay()+6)%7)); const e=new Date(s); e.setDate(s.getDate()+6); const dt=new Date(d+"T12:00:00"); return dt>=s&&dt<=e; };
+  const inMonth=(d)=>d&&d.slice(0,7)===iso(hoje).slice(0,7);
+  const semanaTotal=all.filter(p=>inWeek(dataAbertura(p)));
+  const semanaConc=semanaTotal.filter(isConcluido);
+  const mesTotal=all.filter(p=>inMonth(dataAbertura(p)));
+  const mesConc=mesTotal.filter(isConcluido);
+  const convSemanal=semanaTotal.length?Math.round(semanaConc.length/semanaTotal.length*100):null;
+  const convMensal=mesTotal.length?Math.round(mesConc.length/mesTotal.length*100):null;
 
   const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
@@ -2248,7 +2265,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span>{(convSemanal!==null||convMensal!==null)&&<> · <span style={{color:"#6A1B9A",fontWeight:700}}>🔄 Conversão: {convSemanal!==null?`Sem ${convSemanal}%`:""}{convSemanal!==null&&convMensal!==null?" · ":""}{convMensal!==null?`Mês ${convMensal}%`:""}</span></>}{slaEnvioMedio!==null&&<> · <span style={{color:"#1565C0",fontWeight:700}}>⏱️ SLA envio: {slaEnvioMedio}d</span></>}</div>
       </div>
       <button onClick={()=>{
         const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
@@ -2289,7 +2306,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       ))}
     </div>
 
-    <div style={{marginBottom:18}}>
+    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"3fr 2fr",gap:14}}>
       <div className="card" style={{padding:14}}>
         <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
         <ChartCanvas type="bar" height={200} data={{
@@ -2300,7 +2317,16 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
           ]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
       </div>
+      <div className="card" style={{padding:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA — dias da abertura até o envio ao cliente</div>
+        {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem envios registrados</div>:
+        <ChartCanvas type="line" height={200} data={{
+          labels:serie.map(s=>s.lab),
+          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",fill:true,tension:.3,spanGaps:true}]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F0F0F0"}}}}}/>}
+      </div>
     </div>
+
 
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:18}}>
       <div style={{padding:"10px 16px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
@@ -5716,6 +5742,7 @@ export default function App(){
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nota Débito</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" title={p.ov||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Ticket</div><input type="text" value={p.ticket||""} onChange={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" title={p.ticket||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Ticket</div><input type="date" value={p.dataEnvioTicket||""} onChange={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Cliente</div><input type="date" value={p.dataEnvio||""} onChange={e=>updateMU(p.id,{dataEnvio:e.target.value,enviadoAprovacao:e.target.value?"sim":p.enviadoAprovacao})} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>{p.date&&p.dataEnvio&&<div style={{fontSize:8,color:"#94A3B8",marginTop:1}}>SLA {diffDaysEntre(p.date,p.dataEnvio)}d p/ enviar</div>}</div>
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Aprovação</div><input type="date" value={p.dataAprovacao||""} onChange={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div style={{gridColumn:"span 2",minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
