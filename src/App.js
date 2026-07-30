@@ -2912,7 +2912,7 @@ export default function App(){
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
-  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [muStatus,setMuStatus]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false);
+  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [muStatus,setMuStatus]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false); const [muExpandido,setMuExpandido]=useState({});
   const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState(""); const [afAprov,setAfAprov]=useState("todos");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
   const [saiSearch,setSaiSearch]=useState(""); const [saiFrom,setSaiFrom]=useState(""); const [saiTo,setSaiTo]=useState(""); const [saiMes,setSaiMes]=useState(""); const [saiAno,setSaiAno]=useState("");
@@ -5766,30 +5766,10 @@ export default function App(){
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:4,columnGap:7,paddingTop:5,borderTop:"1px solid #F1F5F9"}}>
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório</div><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="—" title={p.relatorio||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
                         <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nº MU</div><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" title={p.numMauUso||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" title={p.chamado||""} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nota Débito</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" title={p.ov||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Ticket</div><input type="text" value={p.ticket||""} onChange={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" title={p.ticket||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Ticket</div><input type="date" value={p.dataEnvioTicket||""} onChange={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Cliente</div><input type="date" value={p.dataEnvio||""} onChange={e=>updateMU(p.id,{dataEnvio:e.target.value,enviadoAprovacao:e.target.value?"sim":p.enviadoAprovacao})} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>{p.date&&p.dataEnvio&&<div style={{fontSize:8,color:"#94A3B8",marginTop:1}}>SLA {diffDaysEntre(p.date,p.dataEnvio)}d p/ enviar</div>}</div>
-                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Aprovação</div><input type="date" value={p.dataAprovacao||""} onChange={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div style={{gridColumn:"span 2",minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Valor</div><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
 
-                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{p.obs}</div>}
-
-                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                        <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Serviço Executado</div>
-                        <select value={p.servicoExecutado||"nao"} onChange={e=>updateMU(p.id,{servicoExecutado:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:p.servicoExecutado==="sim"?"#14532D":"#B45309",background:p.servicoExecutado==="sim"?"#F0FFF5":"#FFF8F0"}}>
-                          <option value="nao">⏳ Pendente</option>
-                          <option value="sim">✅ Executado</option>
-                        </select>
-                        {p.servicoExecutado==="sim"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:8}}>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório de Atendimento</div><input type="text" value={p.relatorioAtendimento||""} onChange={e=>updateMU(p.id,{relatorioAtendimento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data</div><input type="date" value={p.dataServicoExecutado||""} onChange={e=>updateMU(p.id,{dataServicoExecutado:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        </div>}
-                      </div>
-
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,paddingTop:5,borderTop:"1px solid #F1F5F9"}}>
                         <select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{
                           const nv=e.target.value;
                           const ch={aprovCliente:nv};
@@ -5809,10 +5789,38 @@ export default function App(){
                           <option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option>
                         </select>
                       </div>
+
+                      <button onClick={()=>setMuExpandido(pr=>({...pr,[p.id]:!pr[p.id]}))} style={{fontSize:10,fontWeight:700,color:"#64748B",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:8,padding:"5px 0",cursor:"pointer",marginTop:2}}>{muExpandido[p.id]?"▲ Menos detalhes":"▾ Mais detalhes"}</button>
+
+                      {muExpandido[p.id]&&<>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",rowGap:4,columnGap:7,paddingTop:5,borderTop:"1px solid #F1F5F9"}}>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Chamado</div><input type="text" value={p.chamado||""} onChange={e=>updateMU(p.id,{chamado:e.target.value})} placeholder="—" title={p.chamado||""} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Nota Débito</div><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" title={p.ov||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Ticket</div><input type="text" value={p.ticket||""} onChange={e=>updateMU(p.id,{ticket:e.target.value})} placeholder="—" title={p.ticket||""} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Ticket</div><input type="date" value={p.dataEnvioTicket||""} onChange={e=>updateMU(p.id,{dataEnvioTicket:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Envio Cliente</div><input type="date" value={p.dataEnvio||""} onChange={e=>updateMU(p.id,{dataEnvio:e.target.value,enviadoAprovacao:e.target.value?"sim":p.enviadoAprovacao})} style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/>{p.date&&p.dataEnvio&&<div style={{fontSize:8,color:"#94A3B8",marginTop:1}}>SLA {diffDaysEntre(p.date,p.dataEnvio)}d p/ enviar</div>}</div>
+                        <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Aprovação</div><input type="date" value={p.dataAprovacao||""} onChange={e=>updateMU(p.id,{dataAprovacao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      </div>
+
+                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{p.obs}</div>}
+
+                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:4}}>Serviço Executado</div>
+                        <select value={p.servicoExecutado||"nao"} onChange={e=>updateMU(p.id,{servicoExecutado:e.target.value})} style={{width:"100%",fontSize:11,fontWeight:700,color:p.servicoExecutado==="sim"?"#14532D":"#B45309",background:p.servicoExecutado==="sim"?"#F0FFF5":"#FFF8F0"}}>
+                          <option value="nao">⏳ Pendente</option>
+                          <option value="sim">✅ Executado</option>
+                        </select>
+                        {p.servicoExecutado==="sim"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:8}}>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Relatório de Atendimento</div><input type="text" value={p.relatorioAtendimento||""} onChange={e=>updateMU(p.id,{relatorioAtendimento:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data</div><input type="date" value={p.dataServicoExecutado||""} onChange={e=>updateMU(p.id,{dataServicoExecutado:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                        </div>}
+                      </div>
+
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Faturamento</div><input type="date" value={p.dataFaturamento||""} onChange={e=>updateMU(p.id,{dataFaturamento:e.target.value})} style={{width:"100%",fontSize:12,color:"#6A1B9A",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Conclusão</div><input type="date" value={p.dataConclusao||""} onChange={e=>updateMU(p.id,{dataConclusao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A7A3C",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
+                      </>}
                     </div>
                   </div>);
                 })}
