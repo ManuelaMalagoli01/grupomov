@@ -4407,7 +4407,72 @@ export default function App(){
         {modalImportCliSas&&<ImportExcelModal onClose={()=>setModalImportCliSas(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`CLI${Date.now()}${Math.random().toString(36).slice(2,6)}`,status:d.status||"prospeccao"}));setClientesSas(p=>[...stamp,...(p||[])]);db.saveBatch("clientes_sas",stamp);setModalImportCliSas(false);notify(`✅ ${stamp.length} cliente(s) importado(s)!`);}}/>}
         {modalImportEntrega&&<ImportExcelModal onClose={()=>setModalImportEntrega(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`ET${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setEntregaTec(p=>[...stamp,...(p||[])]);db.saveBatch("entrega_tecnica",stamp);setModalImportEntrega(false);notify(`✅ ${stamp.length} entrega(s) importada(s)!`);}}/>}
         {modalImportPrioClientes&&<ImportExcelModal onClose={()=>setModalImportPrioClientes(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PRI${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setPrioridades(p=>[...stamp,...(p||[])]);db.saveBatch("prioridades_clientes",stamp);setModalImportPrioClientes(false);notify(`✅ ${stamp.length} item(ns) importado(s)!`);}}/>}
-        {modalImportRuptura&&<ImportExcelModal onClose={()=>setModalImportRuptura(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`RUP${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),status:d.status||"aguardando",arquivado:false}));setRupturas(p=>[...stamp,...(p||[])]);db.saveBatch("rupturas_alm",stamp);setModalImportRuptura(false);notify(`✅ ${stamp.length} ruptura(s) importada(s)!`);}}/>}
+        {modalImportRuptura&&<ImportExcelModal onClose={()=>setModalImportRuptura(false)} onImport={rows=>{
+          const norm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+          const getVal=(row,...names)=>{
+            const keys=Object.keys(row);
+            for(const name of names){
+              const target=norm(name);
+              const found=keys.find(k=>norm(k)===target)||keys.find(k=>norm(k).includes(target));
+              if(found&&row[found]!==undefined&&row[found]!=="")return row[found];
+            }
+            return "";
+          };
+          const toISO=(v)=>{
+            if(!v)return "";
+            if(v instanceof Date)return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,"0")}-${String(v.getDate()).padStart(2,"0")}`;
+            const s=String(v).trim();
+            if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);
+            let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+            if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;}
+            if(/^\d+(\.\d+)?$/.test(s)){const n=parseFloat(s);const dt=new Date(Math.round((n-25569)*86400*1000));if(!isNaN(dt))return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;}
+            return s;
+          };
+          const statusFromSituacao=(v)=>{
+            const s=norm(v);
+            if(s.includes("diretoria"))return "aguard_aprov_dir";
+            if(s.includes("suporte"))return "separado_suporte";
+            if(s.includes("liberado"))return "liberado_almox";
+            return "aguardando";
+          };
+          const grupos={};const ordem=[];
+          rows.forEach(row=>{
+            const req=String(getVal(row,"Requisição","Requisicao")||"").trim();
+            const key=req||`__semreq_${ordem.length}`;
+            if(!grupos[key]){grupos[key]=[];ordem.push(key);}
+            grupos[key].push(row);
+          });
+          const item=(row)=>({peca:String(getVal(row,"Nome Peça","Nome Peca","Peça","Peca")||""),codigo:String(getVal(row,"Cód Peça","Cod Peça","Codigo","Código")||""),quantidade:String(getVal(row,"Qnt Peças","Qtd","Quantidade")||"")});
+          const novos=ordem.map(key=>{
+            const grupo=grupos[key];
+            const first=grupo[0];
+            const patRaw=getVal(first,"PAT");
+            const pat=/sem\s*pat/i.test(String(patRaw))?"":String(patRaw||"");
+            const principal=item(first);
+            const extras=grupo.slice(1).map(item);
+            return {
+              id:`RUP${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+              solicitacao:"sem_estoque",
+              data:toISO(getVal(first,"Data Solicitação","Data Solicitacao","Data")),
+              ticket:"",
+              requisicao:key.startsWith("__semreq_")?"":key,
+              peca:principal.peca,codigo:principal.codigo,quantidade:principal.quantidade,
+              pecas:extras,
+              osRel:String(getVal(first,"O.S/Rel","OS/Rel","O.S./Rel")||""),
+              pat,
+              empresa:"",
+              tecnico:String(getVal(first,"Requerente")||""),
+              dataLiberacao:"",
+              obs:"",
+              status:statusFromSituacao(getVal(first,"Situação","Situacao")),
+              registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false,
+            };
+          });
+          setRupturas(p=>[...novos,...(p||[])]);
+          db.saveBatch("rupturas_alm",novos);
+          setModalImportRuptura(false);
+          notify(`✅ ${novos.length} requisição(ões) importada(s) (${rows.length} peça(s) no total)!`);
+        }}/>}
         {modalImportCarros&&<ImportExcelModal onClose={()=>setModalImportCarros(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`CAR${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setCarros(p=>[...stamp,...(p||[])]);db.saveBatch("carros",stamp);setModalImportCarros(false);notify(`✅ ${stamp.length} veículo(s) importado(s)!`);}}/>}
         {modalImportAgOfi150&&<ImportExcelModal onClose={()=>setModalImportAgOfi150(false)} onImport={novos=>{
           novos.forEach(d=>{
