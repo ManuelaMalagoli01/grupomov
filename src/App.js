@@ -2300,64 +2300,67 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:8}}>📊 Macro — {janLabel}</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:18}}>
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📊 Macro — {janLabel}</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:32}}>
       {[
         {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:cor},
         {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#1A7A3C"},
         {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1565C0"},
         {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
       ].map((k,i)=>(
-        <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
+        <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`}}>
           <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2,lineHeight:1}}>{k.v}</div>
-          <div style={{fontSize:11,fontWeight:700,color:k.c,opacity:.8,marginTop:2}}>{k.sub}</div>
+          <div style={{fontSize:24,fontWeight:900,color:k.c,marginTop:4,lineHeight:1}}>{k.v}</div>
+          <div style={{fontSize:11,fontWeight:700,color:k.c,opacity:.8,marginTop:4}}>{k.sub}</div>
         </div>
       ))}
     </div>
 
-    <div style={{marginBottom:18,display:"grid",gridTemplateColumns:"2fr 1.3fr 1.3fr",gap:14}}>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
-        <ChartCanvas type="bar" height={180} data={{
-          labels:serie.map(s=>s.lab),
-          datasets:[
-            {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
-            {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#CBD5E1",borderRadius:6},
-          ]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>
-      </div>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>⏱️ SLA até envio (dias)</div>
-        {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem envios registrados</div>:
-        <ChartCanvas type="line" height={180} data={{
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
+    <div className="card" style={{padding:20,marginBottom:20}}>
+      <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
+      <ChartCanvas type="bar" height={230} data={{
+        labels:serie.map(s=>s.lab),
+        datasets:[
+          {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
+          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#CBD5E1",borderRadius:6},
+        ]
+      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},boxWidth:10,usePointStyle:true,padding:16}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F5F5F5"}}}}}/>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:32}}>
+      <div className="card" style={{padding:20}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:4}}>⏱️ SLA até envio ao cliente</div>
+        <div style={{fontSize:10,color:"#94A3B8",marginBottom:14}}>Dias médios da abertura até o envio, por período</div>
+        {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
+        <ChartCanvas type="line" height={200} data={{
           labels:serie.map(s=>s.lab),
           datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",fill:true,tension:.3,spanGaps:true}]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F0F0F0"}}}}}/>}
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F5F5F5"}}}}}/>}
       </div>
-      <div className="card" style={{padding:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>🔄 Taxa de Conversão (%) — valor R$ concluído/faturado sobre total do período</div>
-        {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
-        <div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:180,overflowY:"auto",paddingRight:2}}>
+      <div className="card" style={{padding:20}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:4}}>🔄 Taxa de Conversão</div>
+        <div style={{fontSize:10,color:"#94A3B8",marginBottom:14}}>Valor R$ concluído/faturado sobre o total do período</div>
+        {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem dados no período</div>:
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {serie.map((s,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontSize:10,color:"#94A3B8",width:44,flexShrink:0}}>{s.lab}</div>
-              <div style={{flex:1,background:"#F1F5F9",borderRadius:4,height:14,position:"relative",overflow:"hidden"}}>
-                <div style={{background:"#6A1B9A",height:"100%",borderRadius:4,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
+            <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{fontSize:11,color:"#94A3B8",width:48,flexShrink:0}}>{s.lab}</div>
+              <div style={{flex:1,background:"#F1F5F9",borderRadius:5,height:16,position:"relative",overflow:"hidden"}}>
+                <div style={{background:"#6A1B9A",height:"100%",borderRadius:5,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
               </div>
-              <div style={{fontSize:11,fontWeight:800,color:"#6A1B9A",width:42,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
+              <div style={{fontSize:12,fontWeight:800,color:"#6A1B9A",width:46,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
             </div>
           ))}
         </div>}
       </div>
     </div>
 
-
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:18}}>
-      <div style={{padding:"10px 16px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
-      <div style={{padding:"12px 14px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
+      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
+      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
         {aprovCounts.map((a,i)=>(
-          <div key={i} style={{background:a.bg,borderRadius:10,padding:"12px 14px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+          <div key={i} style={{background:a.bg,borderRadius:10,padding:"14px 16px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
             <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
             <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
             <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
@@ -2366,8 +2369,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",margin:"6px 0 10px"}}>🔬 Micro — Detalhado (para Diretoria)</div>
-    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:12,letterSpacing:.2}}>🔬 Micro — Detalhado (para Diretoria)</div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
       {ABAS_MICRO.map(a=>(
         <button key={a.k} onClick={()=>setAbaMicro(a.k)} style={{padding:"6px 13px",borderRadius:20,border:abaMicro===a.k?`2px solid ${a.cor}`:"1.5px solid #E2E8F0",background:abaMicro===a.k?a.cor+"18":"#FFF",color:abaMicro===a.k?a.cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
           {a.icone} {a.rotulo} <span style={{opacity:.7}}>({a.registros.length})</span>
@@ -2377,8 +2380,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     {(()=>{const a=ABAS_MICRO.find(x=>x.k===abaMicro)||ABAS_MICRO[0];
       return <TabelaMicro titulo={a.titulo} icone={a.icone} corSec={a.cor} registros={a.registros} vazio={a.vazio} mostrarConclusao={a.conc} mostrarTempo={a.tempo}/>;})()}
 
-    <div className="card" style={{padding:16,marginTop:4}}>
-      <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Top Empresas por Valor</div>
+    <div className="card" style={{padding:20,marginTop:18}}>
+      <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Top Empresas por Valor</div>
       {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
         <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span></div>
