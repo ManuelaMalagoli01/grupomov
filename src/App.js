@@ -4377,9 +4377,10 @@ export default function App(){
 
 
   const renderTab = () => {
-    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["sas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","sas","sas_manutencao","sas_vendas","sas_pecas","comercial","dashboard_comercial"]) :
-      user?.apenasAgenda||user?.apenasAgenda150 ? ["agenda_prev","dashboard_tech","dashboard_mau_uso","dashboard_a_faturar"] :
+    const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao"]) :
+      user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
+      user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user?.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
       null;
