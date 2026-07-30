@@ -5741,13 +5741,19 @@ export default function App(){
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
                   const slaD=p.date?diffDays(p.date):null;
-                  const urgente=slaD!==null&&slaD>10&&p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
+                  const emAberto=p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
+                  const nivel=(slaD===null||!emAberto)?null:slaD<=7?"verde":slaD<30?"laranja":"vermelho";
+                  const urgente=nivel==="vermelho";
                   const incompleto=!p.relatorio||!p.numMauUso||!p.valor;
-                  return(<div key={p.id} className="card" style={{padding:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,border:urgente?"1.5px solid #C62828":undefined,animation:urgente?"pulseUrgente 2s ease-in-out infinite":undefined}}>
+                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,background:urgente?"#C62828":undefined,border:nivel==="laranja"?"1.5px solid #E67E00":nivel==="verde"?"1.5px solid #1A7A3C":urgente?"3px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 1.4s ease-in-out infinite":undefined,boxShadow:urgente?"0 0 0 2px #FCA5A5":undefined}}>
+                    {urgente&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>🔴 {slaD} DIAS SEM RETORNO — ATENÇÃO 🔴</div>}
+                    <div style={{background:urgente?"#FFF":undefined,borderRadius:urgente?8:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
                         <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
-                        {urgente&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
+                        {nivel==="vermelho"&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
+                        {nivel==="laranja"&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",borderRadius:20,padding:"3px 10px"}}>🟠 {slaD}d em aberto</span>}
+                        {nivel==="verde"&&<span style={{fontSize:10,fontWeight:700,color:"#FFF",background:"#1A7A3C",borderRadius:20,padding:"3px 10px"}}>🟢 {slaD}d em aberto</span>}
                         {incompleto&&<span title="Faltam dados: Relatório, Nº MU ou Valor" style={{fontSize:10,fontWeight:700,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:20,padding:"3px 10px"}}>⚠ Verificar dados</span>}
                       </div>
                       <div style={{display:"flex",gap:4}}>
@@ -5821,6 +5827,7 @@ export default function App(){
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Conclusão</div><input type="date" value={p.dataConclusao||""} onChange={e=>updateMU(p.id,{dataConclusao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A7A3C",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                       </div>
                       </>}
+                    </div>
                     </div>
                   </div>);
                 })}
