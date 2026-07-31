@@ -2569,7 +2569,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","dashboard_clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -2582,7 +2582,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
-  const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario"];
+  const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria"];
   const SUB_FROTA=["pendencias_frota"];
   const [subOfiOpen,setSubOfiOpen]=useState(false);
   const [subExtOpen,setSubExtOpen]=useState(false);
@@ -2739,6 +2739,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
           <SubBtn k="treinamentos_reunioes" l="📅 Treinamentos e Reuniões"/>
           <SubBtn k="carros" l="🚙 Carros"/>
           <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
+          <SubBtn k="escala_diaria" l="🗓️ Escala Diária"/>
         </SubFolder>
 
         <SubFolder label="Frota" icon="🔋" open={subFrotaOpen} setOpen={setSubFrotaOpen} ativa={SUB_FROTA.includes(tab)} color="#C2410C">
@@ -3123,6 +3124,11 @@ export default function App(){
   const [feriasColFiltro,setFeriasColFiltro]=useState({});
   const [treinamentos,setTreinamentos]=useState([]);
   const [pontoDiario,setPontoDiario]=useState([]);
+  const [escalaDiaria,setEscalaDiaria]=useState([]);
+  const [showArqEscala,setShowArqEscala]=useState(false);
+  const [escalaModal,setEscalaModal]=useState(false);
+  const [escalaEdit,setEscalaEdit]=useState(null);
+  const [modalImportEscala,setModalImportEscala]=useState(false);
   const [pontoData,setPontoData]=useState(TODAY_STR);
   const [showArqTrein,setShowArqTrein]=useState(false);
   const [treinEdit,setTreinEdit]=useState(null);
@@ -3336,6 +3342,8 @@ export default function App(){
       }
       const pontoRows=await safeGet("ponto_diario");
       if(pontoRows.length>0) setPontoDiario(pontoRows);
+      const escalaRows=await safeGet("escala_diaria");
+      if(escalaRows.length>0) setEscalaDiaria(escalaRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3390,7 +3398,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3521,6 +3529,7 @@ export default function App(){
     del:(id)=>{ setFn(p=>p.filter(x=>x.id!==id)); db.delete(table,id); },
   });
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
+  const escalaCrud=mkCrud("escala_diaria",setEscalaDiaria);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes)=>{
     let saved=null;
@@ -4306,6 +4315,50 @@ export default function App(){
             </div>
           </div>);
         })()}
+        {escalaModal&&escalaEdit&&(()=>{
+          const d=escalaEdit;
+          const upd=(k,v)=>setEscalaEdit(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const atrib=d.atribuicoes||[{tecnico:"",local:"",obs:""}];
+          const setAtrib=(i,k,v)=>{const arr=[...atrib];arr[i]={...arr[i],[k]:v};upd("atribuicoes",arr);};
+          const addAtrib=()=>upd("atribuicoes",[...atrib,{tecnico:"",local:"",obs:""}]);
+          const rmAtrib=(i)=>upd("atribuicoes",atrib.filter((_,idx)=>idx!==i));
+          const salvar=()=>{
+            if(!d.data){alert("Informe a data.");return;}
+            const limpa={...d,atribuicoes:atrib.filter(a=>a.tecnico||a.local)};
+            if(d.id){ escalaCrud.update(d.id,limpa); }
+            else{ const row={...limpa,id:`ESC${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoPor:user.name,registradoEm:new Date().toISOString()}; setEscalaDiaria(p=>[row,...p]); db.save("escala_diaria",row.id,row); }
+            notify("✅ Escala salva!"); setEscalaModal(false); setEscalaEdit(null);
+          };
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"🗓️ Nova"} Escala</div><button onClick={()=>{setEscalaModal(false);setEscalaEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                <div><label style={lbl}>Data</label><input type="date" value={d.data||""} onChange={e=>upd("data",e.target.value)} style={{...inp,maxWidth:220}}/></div>
+                <div>
+                  <label style={lbl}>Técnicos e Locais ({atrib.filter(a=>a.tecnico||a.local).length})</label>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {atrib.map((a,i)=>(
+                      <div key={i} style={{display:"grid",gridTemplateColumns:"1.2fr 1.2fr 1fr auto",gap:8,alignItems:"center"}}>
+                        <select value={a.tecnico||""} onChange={e=>setAtrib(i,"tecnico",e.target.value)} style={inp}><option value="">Técnico...</option>{TODOS_TECNICOS.map(t=><option key={t} value={t}>{t}</option>)}</select>
+                        <input type="text" value={a.local||""} onChange={e=>setAtrib(i,"local",e.target.value)} placeholder="Cliente/Local" style={inp}/>
+                        <input type="text" value={a.obs||""} onChange={e=>setAtrib(i,"obs",e.target.value)} placeholder="Obs. (opcional)" style={inp}/>
+                        <button onClick={()=>rmAtrib(i)} style={{background:"#FFF0F0",border:"1.5px solid #FCA5A5",borderRadius:8,color:"#C62828",cursor:"pointer",padding:"9px 10px",fontSize:12,fontWeight:700}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  {atrib.length<20&&<button onClick={addAtrib} style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1.5px solid #BFDBFE",borderRadius:8,padding:"8px 14px",cursor:"pointer",marginTop:8}}>+ Adicionar técnico</button>}
+                </div>
+                <div><label style={lbl}>Observação Geral</label><textarea value={d.obs||""} onChange={e=>upd("obs",e.target.value)} placeholder="Observação geral do dia..." rows={2} style={{...inp,resize:"vertical"}}/></div>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
+                  <BtnG onClick={()=>{setEscalaModal(false);setEscalaEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>);
+        })()}
         {feriasModal&&feriasEdit&&(()=>{
           const d=feriasEdit;
           const upd=(k,v)=>setFeriasEdit(p=>({...p,[k]:v}));
@@ -4476,6 +4529,7 @@ export default function App(){
         {modalImportFrota&&<ImportExcelModal onClose={()=>setModalImportFrota(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FRO${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setFrota(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_frota",stamp);setModalImportFrota(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
         {modalImportFerias&&<ImportExcelModal onClose={()=>setModalImportFerias(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FER${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setFerias(p=>[...stamp,...(p||[])]);db.saveBatch("ferias_colaboradores",stamp);setModalImportFerias(false);notify(`✅ ${stamp.length} colaborador(es) importado(s)!`);}}/>}
         {modalImportTrein&&<ImportExcelModal onClose={()=>setModalImportTrein(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`TRE${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),tecnicos:d.tecnicos?String(d.tecnicos).split(",").map(s=>s.trim()).filter(Boolean):[]}));setTreinamentos(p=>[...stamp,...(p||[])]);db.saveBatch("treinamentos_reunioes",stamp);setModalImportTrein(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
+        {modalImportEscala&&<ImportExcelModal onClose={()=>setModalImportEscala(false)} onImport={novos=>{const stamp=novos.map(d=>({id:d.id||`ESC${Date.now()}${Math.random().toString(36).slice(2,6)}`,data:d.data||"",atribuicoes:d.atribuicoes?String(d.atribuicoes).split(";").map(s=>{const[tecnico,local]=s.split("→").map(x=>(x||"").trim());return{tecnico:tecnico||"",local:local||"",obs:""};}).filter(a=>a.tecnico||a.local):[],obs:d.obs||"",registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}));setEscalaDiaria(p=>[...stamp,...(p||[])]);db.saveBatch("escala_diaria",stamp);setModalImportEscala(false);notify(`✅ ${stamp.length} escala(s) importada(s)!`);}}/>}
         {modalImportPonto&&<ImportExcelModal onClose={()=>setModalImportPonto(false)} onImport={novos=>{novos.forEach(d=>{if(!d.tecnico)return;const dt=d.data||TODAY_STR;const stKey=Object.entries(PONTO_STATUS).find(([k,s])=>s.l===d.status||k===d.status);setPonto(d.tecnico,dt,{status:stKey?stKey[0]:"presente",obs:d.obs||""});});setModalImportPonto(false);notify(`✅ ${novos.length} registro(s) importado(s)!`);}}/>}
         {modalImportBH&&<ImportExcelModal onClose={()=>setModalImportBH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`BH${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setBancoHoras(p=>[...stamp,...(p||[])]);db.saveBatch("banco_horas",stamp);setModalImportBH(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
         {modalImportPendManuela&&<ImportExcelModal onClose={()=>setModalImportPendManuela(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PM2${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setPendManuela(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_manuela",stamp);setModalImportPendManuela(false);notify(`✅ ${stamp.length} pendência(s) importada(s)!`);}}/>}
@@ -8040,6 +8094,68 @@ export default function App(){
                 </table>
               </div>
             </div>
+          </div>);
+        })()}
+
+        {/* ── ESCALA DIÁRIA ── */}
+        {tab==="escala_diaria"&&(()=>{
+          const lista=(escalaDiaria||[]).filter(e=>e&&(showArqEscala?e.arquivado:!e.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const DOW=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+          const MESES3=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+          const fmtDiaCal=(iso)=>{if(!iso)return{dia:"--",mes:"",dow:""};const d=new Date(iso+"T12:00:00");return{dia:String(d.getDate()).padStart(2,"0"),mes:MESES3[d.getMonth()],dow:DOW[d.getDay()]};};
+          const copiarWhats=(e)=>{
+            const cal=fmtDiaCal(e.data);
+            let txt=`*GRUPO MOV - ESCALA DO DIA*\n📅 ${cal.dow}, ${fmtDataBR(e.data)}\n\n`;
+            (e.atribuicoes||[]).filter(a=>a&&(a.tecnico||a.local)).forEach(a=>{
+              txt+=`👤 *${a.tecnico||"—"}* — 📍 ${a.local||"—"}${a.obs?` (${a.obs})`:""}\n`;
+            });
+            if(e.obs)txt+=`\n${e.obs}`;
+            navigator.clipboard.writeText(txt).then(()=>notify("✅ Escala copiada! Cole no WhatsApp.")).catch(()=>alert("Não consegui copiar. Copie manualmente:\n\n"+txt));
+          };
+          const abrirNovaEscala=()=>{setEscalaEdit({id:null,data:TODAY_STR,atribuicoes:[{tecnico:"",local:"",obs:""}],obs:"",arquivado:false});setEscalaModal(true);};
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>🗓️ Escala Diária</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s) — onde cada técnico estará no dia</div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setShowArqEscala(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEscala?"#1A1A1A":"#FFF",color:showArqEscala?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEscala?"✕ Ativos":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista.map(e=>({...e,atribuicoes:(e.atribuicoes||[]).map(a=>`${a.tecnico}→${a.local}`).join("; ")})),"escala_diaria",[{key:"data",label:"Data"},{key:"atribuicoes",label:"Técnico → Local"},{key:"obs",label:"Observação"}])}/>
+                <BtnImport onClick={()=>setModalImportEscala(true)}/>
+                <BtnY onClick={abrirNovaEscala}>+ Nova Escala</BtnY>
+              </div>
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🗓️</div><div style={{fontSize:14,fontWeight:600}}>Nenhuma escala cadastrada</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14}}>
+                {lista.map(e=>{
+                  const cal=fmtDiaCal(e.data);
+                  const atrib=(e.atribuicoes||[]).filter(a=>a&&(a.tecnico||a.local));
+                  return(<div key={e.id} className="card" style={{padding:0,overflow:"hidden",opacity:e.arquivado?0.6:1}}>
+                    <div style={{background:"#1A1A1A",padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:800,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV — ESCALA DO DIA</div>
+                        <div style={{fontSize:14,fontWeight:900,color:"#FFF",marginTop:2}}>{cal.dow}, {fmtDataBR(e.data)}</div>
+                      </div>
+                      <div style={{display:"flex",gap:4}}>
+                        <button onClick={()=>copiarWhats(e)} title="Copiar para WhatsApp" style={{background:"#25D366",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:11,fontWeight:700}}>📋</button>
+                        <button onClick={()=>{setEscalaEdit({...e,atribuicoes:e.atribuicoes&&e.atribuicoes.length?e.atribuicoes:[{tecnico:"",local:"",obs:""}]});setEscalaModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:11}}>✏️</button>
+                        <button onClick={()=>escalaCrud.update(e.id,{arquivado:!e.arquivado})} title={e.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:11}}>{e.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))escalaCrud.del(e.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
+                      {atrib.length===0?<div style={{fontSize:12,color:"#CCC",fontStyle:"italic"}}>Sem técnicos atribuídos</div>:atrib.map((a,i)=>(
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:12,padding:"5px 8px",background:"#F8FAFC",borderRadius:8}}>
+                          <span style={{fontWeight:800,color:"#1A1A1A",minWidth:0}}>👤 {a.tecnico||"—"}</span>
+                          <span style={{color:"#94A3B8"}}>→</span>
+                          <span style={{fontWeight:700,color:"#1565C0"}}>📍 {a.local||"—"}</span>
+                          {a.obs&&<span style={{color:"#64748B",fontSize:10,fontStyle:"italic"}}>({a.obs})</span>}
+                        </div>
+                      ))}
+                      {e.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>{e.obs}</div>}
+                    </div>
+                  </div>);
+                })}
+              </div>
+            )}
           </div>);
         })()}
 
