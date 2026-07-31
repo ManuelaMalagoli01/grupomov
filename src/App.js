@@ -5834,6 +5834,7 @@ export default function App(){
                         {nivel==="laranja"&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",borderRadius:20,padding:"3px 10px"}}>🟠 {slaD}d em aberto</span>}
                         {nivel==="verde"&&<span style={{fontSize:10,fontWeight:700,color:"#FFF",background:"#1A7A3C",borderRadius:20,padding:"3px 10px"}}>🟢 {slaD}d em aberto</span>}
                         {incompleto&&<span title="Faltam dados: Relatório, Nº MU ou Valor" style={{fontSize:10,fontWeight:700,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:20,padding:"3px 10px"}}>⚠ Verificar dados</span>}
+                        {(p.contatos||[]).length>0&&<span title="Último contato registrado" style={{fontSize:10,fontWeight:700,color:"#0F766E",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:20,padding:"3px 10px"}}>📞 {fmtDataBR([...(p.contatos||[])].sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")))[0].data)}</span>}
                       </div>
                       <div style={{display:"flex",gap:4}}>
                         <button onClick={()=>gerarPDFCard(`Mau Uso - ${p.empresa||"Sem Empresa"}`,[["Empresa",p.empresa],["Data",fmtDataBR(p.date)],["PAT",p.patrimonio],["Relatório",p.relatorio],["Nº Mau Uso",p.numMauUso],["Chamado",p.chamado],["Nota Débito",p.ov],["Ticket",p.ticket],["Envio Ticket",fmtDataBR(p.dataEnvioTicket)],["Data Aprovação",fmtDataBR(p.dataAprovacao)],["Valor",p.valor],["Status",st.l],["Aprovação Cliente",(APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{}).l],["Aprovado",p.aprovado==="sim"?"Sim":"Não"],["Observações",p.obs]],`PAT ${p.patrimonio||"—"} · ${fmtDataBR(p.date)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>📄</button>
@@ -5904,6 +5905,20 @@ export default function App(){
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Faturamento</div><input type="date" value={p.dataFaturamento||""} onChange={e=>updateMU(p.id,{dataFaturamento:e.target.value})} style={{width:"100%",fontSize:12,color:"#6A1B9A",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Data Conclusão</div><input type="date" value={p.dataConclusao||""} onChange={e=>updateMU(p.id,{dataConclusao:e.target.value})} style={{width:"100%",fontSize:12,color:"#1A7A3C",fontWeight:600,border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      </div>
+                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                          <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>📞 Contato Realizado ({(p.contatos||[]).length})</div>
+                        </div>
+                        {(p.contatos||[]).map((c,ci)=>(
+                          <div key={ci} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr auto",gap:6,marginBottom:5,alignItems:"center"}}>
+                            <input type="text" value={c.nome||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],nome:e.target.value};updateMU(p.id,{contatos:arr});}} placeholder="Nome" style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
+                            <input type="text" value={c.telefone||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],telefone:e.target.value};updateMU(p.id,{contatos:arr});}} placeholder="Telefone" style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
+                            <input type="date" value={c.data||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],data:e.target.value};updateMU(p.id,{contatos:arr});}} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
+                            <button onClick={()=>{const arr=(p.contatos||[]).filter((_,idx)=>idx!==ci);updateMU(p.id,{contatos:arr});}} style={{background:"#FFF0F0",border:"1px solid #FCA5A5",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                          </div>
+                        ))}
+                        {(p.contatos||[]).length<10&&<button onClick={()=>updateMU(p.id,{contatos:[...(p.contatos||[]),{nome:"",telefone:"",data:TODAY_STR}]})} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:8,padding:"5px 12px",cursor:"pointer",marginTop:2}}>+ Registrar contato</button>}
                       </div>
                       </>}
                     </div>
