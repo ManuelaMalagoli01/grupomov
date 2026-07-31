@@ -6012,31 +6012,34 @@ export default function App(){
               </div>}
 
               {lista.length===0?(<div className="card" style={{padding:36,textAlign:"center",color:"#CCC"}}><div style={{fontSize:26,marginBottom:4}}>🔩</div><div style={{fontSize:10,fontWeight:600}}>Nenhuma execução registrada</div></div>):(
-                <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
-                  <table style={{minWidth:900}}>
-                    <thead><tr><th>Status</th><th>Data</th><th>Nº Mau Uso</th><th>PAT</th><th>Cliente</th><th>Requisição</th><th>Peça</th><th>Data Execução</th><th>Chamado</th><th>Relatório</th><th>Observação</th><th></th></tr></thead>
-                    <tbody>{lista.map(x=>{const stx=EXEC_MAUUSO_STATUS[x.status]||EXEC_MAUUSO_STATUS.pendente_compras;return(
-                      <tr key={x.id}>
-                        <td><select value={x.status} onChange={e=>updateExecMU(x.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,color:stx.c,background:stx.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{EXEC_MAUUSO_STATUS_KEYS.map(k=><option key={k} value={k}>{EXEC_MAUUSO_STATUS[k].l}</option>)}</select></td>
-                        <td><input type="date" defaultValue={x.data||""} onBlur={e=>updateExecMU(x.id,{data:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
-                        <td><input type="text" defaultValue={x.numMauUso||""} onBlur={e=>updateExecMU(x.id,{numMauUso:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",width:90}}/></td>
-                        <td><input type="text" defaultValue={x.patrimonio||""} onBlur={e=>updateExecMU(x.id,{patrimonio:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
-                        <td><input type="text" defaultValue={x.cliente||""} onBlur={e=>updateExecMU(x.id,{cliente:e.target.value})} style={{fontSize:11,fontWeight:700,border:"none",background:"transparent",outline:"none",width:130}}/></td>
-                        <td><input type="text" defaultValue={x.requisicao||""} onBlur={e=>updateExecMU(x.id,{requisicao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:90}}/></td>
-                        <td><input type="text" defaultValue={x.peca||""} onBlur={e=>updateExecMU(x.id,{peca:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:120}}/></td>
-                        <td><input type="date" defaultValue={x.dataExecucao||""} onBlur={e=>updateExecMU(x.id,{dataExecucao:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none"}}/></td>
-                        <td><input type="text" defaultValue={x.chamado||""} onBlur={e=>updateExecMU(x.id,{chamado:e.target.value})} style={{fontSize:11,border:"none",background:"transparent",outline:"none",width:80}}/></td>
-                        <td><input type="text" defaultValue={x.relatorio||""} onBlur={e=>updateExecMU(x.id,{relatorio:e.target.value})} style={{fontSize:11,fontWeight:700,color:"#1565C0",border:"none",background:"transparent",outline:"none",width:80}}/></td>
-                        <td><input type="text" defaultValue={x.observacao||""} onBlur={e=>updateExecMU(x.id,{observacao:e.target.value})} placeholder="—" style={{fontSize:11,color:"#64748B",fontStyle:"italic",border:"none",background:"transparent",outline:"none",width:140}}/></td>
-                        <td style={{whiteSpace:"nowrap"}}>
-                          <button onClick={()=>{setEditExecMU(x);setExecMUForm({...EXECMU_EMPTY,...x});setModalExecMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
-                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginLeft:4}}>{x.arquivado?"📤":"🗄️"}</button>
-                          <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,fontWeight:700,marginLeft:4}}>✕</button>
-                        </td>
-                      </tr>
-                    );})}</tbody>
-                  </table>
-                </div></div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:10}}>
+                  {lista.map(x=>{const stx=EXEC_MAUUSO_STATUS[x.status]||EXEC_MAUUSO_STATUS.pendente_compras;return(
+                    <div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.6:1,borderLeft:`4px solid ${stx.c}`}}>
+                      <div style={{padding:"7px 10px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
+                        <select value={x.status} onChange={e=>updateExecMU(x.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,color:stx.c,background:stx.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{EXEC_MAUUSO_STATUS_KEYS.map(k=><option key={k} value={k}>{EXEC_MAUUSO_STATUS[k].l}</option>)}</select>
+                        <div style={{display:"flex",gap:3,flexShrink:0}}>
+                          <button onClick={()=>{setEditExecMU(x);setExecMUForm({...EXECMU_EMPTY,...x});setModalExecMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>✏️</button>
+                          <button onClick={()=>updateExecMU(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10}}>{x.arquivado?"📤":"🗄️"}</button>
+                          <button onClick={()=>{if(window.confirm("Excluir esta execução?"))delExecMU(x.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 6px",fontSize:10,fontWeight:700}}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
+                          <div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.cliente||<span style={{color:"#CCC"}}>Cliente</span>}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(x.data)} · PAT {x.patrimonio||"—"}</div></div>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:4,columnGap:8,paddingTop:5,borderTop:"1px solid #F1F5F9"}}>
+                          <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Nº Mau Uso</div><div style={{fontSize:11,fontWeight:700,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.numMauUso||"—"}</div></div>
+                          <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Requisição</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.requisicao||"—"}</div></div>
+                          <div style={{gridColumn:"span 2",minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Peça</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.peca||"—"}</div></div>
+                          <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Chamado</div><div style={{fontSize:11,fontWeight:600,color:"#1A1A1A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.chamado||"—"}</div></div>
+                          <div style={{minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Relatório</div><div style={{fontSize:11,fontWeight:700,color:"#1565C0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{x.relatorio||"—"}</div></div>
+                          <div style={{gridColumn:"span 2",minWidth:0}}><div style={{color:"#94A3B8",fontSize:8,fontWeight:700,textTransform:"uppercase",marginBottom:1}}>Data Execução</div><div style={{fontSize:11,fontWeight:700,color:"#14532D"}}>{x.dataExecucao?fmtDataBR(x.dataExecucao):"—"}</div></div>
+                        </div>
+                        {x.observacao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:5,borderTop:"1px solid #F1F5F9"}}>{x.observacao}</div>}
+                      </div>
+                    </div>
+                  );})}
+                </div>
               )}
             </div>
           );
