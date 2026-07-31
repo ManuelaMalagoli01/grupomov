@@ -5911,14 +5911,15 @@ export default function App(){
                           <div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>📞 Contato Realizado ({(p.contatos||[]).length})</div>
                         </div>
                         {(p.contatos||[]).map((c,ci)=>(
-                          <div key={ci} style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr auto",gap:6,marginBottom:5,alignItems:"center"}}>
+                          <div key={ci} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr auto",gap:6,marginBottom:5,alignItems:"center"}}>
                             <input type="text" value={c.nome||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],nome:e.target.value};updateMU(p.id,{contatos:arr});}} placeholder="Nome" style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
                             <input type="text" value={c.telefone||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],telefone:e.target.value};updateMU(p.id,{contatos:arr});}} placeholder="Telefone" style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
-                            <input type="date" value={c.data||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],data:e.target.value};updateMU(p.id,{contatos:arr});}} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
+                            <input type="text" value={c.email||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],email:e.target.value};updateMU(p.id,{contatos:arr});}} placeholder="E-mail" style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
+                            <input type="date" title="Data de Envio" value={c.data||""} onChange={e=>{const arr=[...(p.contatos||[])];arr[ci]={...arr[ci],data:e.target.value};updateMU(p.id,{contatos:arr});}} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E2E8F0"}}/>
                             <button onClick={()=>{const arr=(p.contatos||[]).filter((_,idx)=>idx!==ci);updateMU(p.id,{contatos:arr});}} style={{background:"#FFF0F0",border:"1px solid #FCA5A5",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
                           </div>
                         ))}
-                        {(p.contatos||[]).length<10&&<button onClick={()=>updateMU(p.id,{contatos:[...(p.contatos||[]),{nome:"",telefone:"",data:TODAY_STR}]})} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:8,padding:"5px 12px",cursor:"pointer",marginTop:2}}>+ Registrar contato</button>}
+                        {(p.contatos||[]).length<10&&<button onClick={()=>updateMU(p.id,{contatos:[...(p.contatos||[]),{nome:"",telefone:"",email:"",data:TODAY_STR}]})} style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:8,padding:"5px 12px",cursor:"pointer",marginTop:2}}>+ Registrar contato</button>}
                       </div>
                       </>}
                     </div>
