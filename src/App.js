@@ -126,11 +126,13 @@ const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Ale
 const SERVICOS_OFICINA = ["Bateria/Carregador","Usinagem/Soldagem","Elétrica/Pintura","Mecânica","Hidráulica","Outros Serviços"];
 const SERVICO_OFICINA_MIGRACAO = {"Bateria":"Bateria/Carregador","Carregador":"Bateria/Carregador","Bateria e Mecânica":"Bateria/Carregador","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Elétrica":"Elétrica/Pintura","Pintura":"Elétrica/Pintura","Pequenos Reparos":"Outros Serviços"};
 const servicoEfetivoOficina=(a)=>{
-  if(a&&a.servico==="Bateria/Carregador"){
+  if(!a)return undefined;
+  if(OFICINA_TECHS_OUTROS.includes(a.tecnico))return "Outros Serviços";
+  if(a.servico==="Bateria/Carregador"){
     if(a.tecnico==="Pedro Souza")return "Bateria";
     if(a.tecnico==="Pedro Pimentel")return "Carregador";
   }
-  return a?a.servico:undefined;
+  return a.servico;
 };
 const CATS_PORSERV_OFICINA=[...SERVICOS_OFICINA,"Bateria","Carregador"];
 const SAS_VENDAS_MODELOS = {
