@@ -122,19 +122,16 @@ const USERS = [
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
-const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre"];
-const SERVICOS_OFICINA = ["Bateria/Carregador","Usinagem/Soldagem","Elétrica/Pintura","Mecânica","Hidráulica","Outros Serviços"];
-const SERVICO_OFICINA_MIGRACAO = {"Bateria":"Bateria/Carregador","Carregador":"Bateria/Carregador","Bateria e Mecânica":"Bateria/Carregador","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Elétrica":"Elétrica/Pintura","Pintura":"Elétrica/Pintura","Pequenos Reparos":"Outros Serviços"};
+const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva"];
+const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador","Usinagem/Soldagem","Pintura","Outros"];
+const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Bateria e Mecânica":"Mecânica","Bateria/Carregador":"Bateria","Elétrica/Pintura":"Elétrica"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
-  if(OFICINA_TECHS_OUTROS.includes(a.tecnico))return "Outros Serviços";
-  if(a.servico==="Bateria/Carregador"){
-    if(a.tecnico==="Pedro Souza")return "Bateria";
-    if(a.tecnico==="Pedro Pimentel")return "Carregador";
-  }
+  if(TECH_SERVICO_FIXO[a.tecnico])return TECH_SERVICO_FIXO[a.tecnico];
   return a.servico;
 };
-const CATS_PORSERV_OFICINA=[...SERVICOS_OFICINA,"Bateria","Carregador"];
+const CATS_PORSERV_OFICINA=SERVICOS_OFICINA;
 const SAS_VENDAS_MODELOS = {
   "Empilhadeiras Contrabalançadas Elétricas": ["STRONG 3RL 18","STRONG 4RL 25","STRONG 4RL 30","STRONG 4RD 38","STRONG 4RQ 30","STRONG 4RQ 35","STRONG 4RQ 50","STRONG 4RL 80"],
   "Empilhadeiras Retráteis": ["ER16","ERN20 Pro N","ERN20 B"],
