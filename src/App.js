@@ -5822,7 +5822,7 @@ export default function App(){
                   const nivel=(slaD===null||!emAberto)?null:slaD<=7?"verde":slaD<30?"laranja":"vermelho";
                   const urgente=nivel==="vermelho";
                   const incompleto=!p.relatorio||!p.numMauUso||!p.valor;
-                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,background:urgente?"#C62828":nivel==="laranja"?"#FFF8F0":nivel==="verde"?"#F0FFF5":undefined,borderLeft:nivel==="laranja"?"5px solid #E67E00":nivel==="verde"?"5px solid #1A7A3C":undefined,border:urgente?"3px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 1.4s ease-in-out infinite":undefined,boxShadow:urgente?"0 0 0 2px #FCA5A5":undefined}}>
+                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,alignSelf:"start",background:urgente?"#C62828":nivel==="laranja"?"#FFF8F0":nivel==="verde"?"#F0FFF5":undefined,borderLeft:nivel==="laranja"?"5px solid #E67E00":nivel==="verde"?"5px solid #1A7A3C":undefined,border:urgente?"2px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 2.2s ease-in-out infinite":undefined}}>
                     {nivel==="laranja"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",textAlign:"center",letterSpacing:.3}}>🟠 {slaD} DIAS SEM RETORNO</div>}
                     {nivel==="verde"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#1A7A3C",textAlign:"center",letterSpacing:.3}}>🟢 {slaD} DIAS EM ABERTO</div>}
                     {urgente&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>🔴 {slaD} DIAS SEM RETORNO — ATENÇÃO 🔴</div>}
@@ -5830,9 +5830,6 @@ export default function App(){
                     <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
                         <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:stSolid,borderRadius:20,padding:"3px 11px"}}>{st.l}</span>
-                        {nivel==="vermelho"&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:20,padding:"3px 10px"}}>🔴 {slaD}d em aberto</span>}
-                        {nivel==="laranja"&&<span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",borderRadius:20,padding:"3px 10px"}}>🟠 {slaD}d em aberto</span>}
-                        {nivel==="verde"&&<span style={{fontSize:10,fontWeight:700,color:"#FFF",background:"#1A7A3C",borderRadius:20,padding:"3px 10px"}}>🟢 {slaD}d em aberto</span>}
                         {incompleto&&<span title="Faltam dados: Relatório, Nº MU ou Valor" style={{fontSize:10,fontWeight:700,color:"#92400E",background:"#FFFBEB",border:"1px solid #FDE68A",borderRadius:20,padding:"3px 10px"}}>⚠ Verificar dados</span>}
                         {(p.contatos||[]).length>0&&<span title="Último contato registrado" style={{fontSize:10,fontWeight:700,color:"#0F766E",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:20,padding:"3px 10px"}}>📞 {fmtDataBR([...(p.contatos||[])].sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")))[0].data)}</span>}
                       </div>
