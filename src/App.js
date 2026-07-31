@@ -125,7 +125,7 @@ const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle",
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador","Usinagem/Soldagem","Pintura","Outros"];
 const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Bateria e Mecânica":"Mecânica","Bateria/Carregador":"Bateria","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(TECH_SERVICO_FIXO[a.tecnico])return TECH_SERVICO_FIXO[a.tecnico];
