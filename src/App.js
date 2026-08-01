@@ -2406,12 +2406,11 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:20,marginTop:18}}>
       <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Top Empresas por Valor</div>
-      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:topEmp.map(([emp,val],i)=>(
-        <div key={i} style={{display:"flex",flexDirection:"column",gap:3,marginBottom:8}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,fontWeight:600,color:"#333"}}>{i+1}. {emp}</span><span style={{fontSize:12,fontWeight:700,color:cor}}>{fmtR(val)}</span></div>
-          <div style={{background:"#F0F0F0",borderRadius:4,height:6}}><div style={{background:cor,height:6,borderRadius:4,width:`${topEmp[0][1]>0?(val/topEmp[0][1])*100:0}%`,transition:"width .6s"}}/></div>
-        </div>
-      ))}
+      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:
+      <ChartCanvas type="bar" height={Math.max(160,topEmp.length*46)} data={{
+        labels:topEmp.map(([emp])=>emp.length>28?emp.slice(0,28)+"…":emp),
+        datasets:[{label:"Valor",data:topEmp.map(([,val])=>val),backgroundColor:cor,borderRadius:6,barThickness:22}]
+      }} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtR(c.raw)}}},scales:{x:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F5F5F5"}},y:{grid:{display:false}}}}}/>}
     </div>
   </div>);
 }
