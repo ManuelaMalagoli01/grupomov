@@ -5322,6 +5322,15 @@ export default function App(){
           });
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
+          const apTudo=[...(apontamentos||[]),...(apontamentos150||[])].filter(a=>{
+            if(!a||!a.data)return false;
+            if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech)return false;
+            if(dashOfiSetor!=="todos"&&classificarSetor(a.tecnico)!==dashOfiSetor)return false;
+            return true;
+          });
+          const totalMinTudo=apTudo.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          const osListTudo=[...new Set(apTudo.map(a=>a.os).filter(Boolean))];
+          const techAtivosTudo=[...new Set(apTudo.map(a=>a.tecnico).filter(Boolean))];
           const byTech={};
           const agrupTec=(t)=>OFICINA_TECHS_OUTROS.includes(t)?"Outros":t;
           const TECHS_NO_DASH=[...new Set([...OFICINA_TECHS.filter(t=>!OFICINA_TECHS_OUTROS.includes(t)),"Outros",...apMes.map(a=>agrupTec(a.tecnico)).filter(Boolean)])];
@@ -5424,7 +5433,7 @@ export default function App(){
             <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
             <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores da Oficina</span>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:2,marginBottom:24,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:2,marginBottom:6,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
             {[
               {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1F2937"},
               {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1D4E89"},
@@ -5434,6 +5443,20 @@ export default function App(){
               <div key={i} style={{padding:"14px 16px",background:s.c}}>
                 <div style={{fontSize:9,color:"rgba(255,255,255,.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
                 <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>📊 Total Geral (Todos os Meses)</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24}}>
+            {[
+              {icon:"📋",l:"Apontamentos",v:apTudo.length},
+              {icon:"⏱",l:"Horas",v:fmtMin(totalMinTudo)},
+              {icon:"👷",l:"Técnicos",v:techAtivosTudo.length},
+              {icon:"🔧",l:"OSs",v:osListTudo.length},
+            ].map((s,i)=>(
+              <div key={i} className="card" style={{padding:"9px 12px",borderLeft:"3px solid #CBD5E1"}}>
+                <div style={{fontSize:8,color:"#94A3B8",fontWeight:700,textTransform:"uppercase"}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:16,fontWeight:800,color:"#334155"}}>{s.v}</div>
               </div>
             ))}
           </div>
@@ -10494,6 +10517,15 @@ export default function App(){
           });
           const totalMin=apMes.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
           const osList=[...new Set(apMes.map(a=>a.os).filter(Boolean))];
+          const apTudo=[...(apontamentos||[]),...(apontamentos150||[])].filter(a=>{
+            if(!a||!a.data)return false;
+            if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech)return false;
+            if(dashOfiSetor!=="todos"&&classificarSetor(a.tecnico)!==dashOfiSetor)return false;
+            return true;
+          });
+          const totalMinTudo=apTudo.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0);
+          const osListTudo=[...new Set(apTudo.map(a=>a.os).filter(Boolean))];
+          const techAtivosTudo=[...new Set(apTudo.map(a=>a.tecnico).filter(Boolean))];
           const byTech={};
           const agrupTec=(t)=>OFICINA_TECHS_OUTROS.includes(t)?"Outros":t;
           const TECHS_NO_DASH=[...new Set([...OFICINA_150_TECHS.filter(t=>!OFICINA_TECHS_OUTROS.includes(t)),"Outros",...apMes.map(a=>agrupTec(a.tecnico)).filter(Boolean)])];
@@ -10580,16 +10612,34 @@ export default function App(){
           })()}
 
           {/* KPIs */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+          <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+            <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores da Oficina 150</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:2,marginBottom:6,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
             {[
-              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A",bg:"#FFF"},
-              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1565C0",bg:"#F0F4FF"},
-              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C",bg:"#F0FFF5"},
-              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00",bg:"#FFFBF0"},
+              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1F2937"},
+              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1D4E89"},
+              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#166534"},
+              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#B45309"},
             ].map((s,i)=>(
-              <div key={i} className="card" style={{padding:"8px 12px",borderTop:`4px solid ${s.c}`,background:s.bg}}>
-                <div style={{fontSize:11,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>{s.icon} {s.l}</div>
-                <div style={{fontSize:32,fontWeight:900,color:s.c,lineHeight:1}}>{s.v}</div>
+              <div key={i} style={{padding:"14px 16px",background:s.c}}>
+                <div style={{fontSize:9,color:"rgba(255,255,255,.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>📊 Total Geral (Todos os Meses)</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:24}}>
+            {[
+              {icon:"📋",l:"Apontamentos",v:apTudo.length},
+              {icon:"⏱",l:"Horas",v:fmtMin(totalMinTudo)},
+              {icon:"👷",l:"Técnicos",v:techAtivosTudo.length},
+              {icon:"🔧",l:"OSs",v:osListTudo.length},
+            ].map((s,i)=>(
+              <div key={i} className="card" style={{padding:"9px 12px",borderLeft:"3px solid #CBD5E1"}}>
+                <div style={{fontSize:8,color:"#94A3B8",fontWeight:700,textTransform:"uppercase"}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:16,fontWeight:800,color:"#334155"}}>{s.v}</div>
               </div>
             ))}
           </div>
