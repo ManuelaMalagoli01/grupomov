@@ -2355,17 +2355,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:4}}>🔄 Taxa de Conversão</div>
         <div style={{fontSize:10,color:"#94A3B8",marginBottom:14}}>Valor R$ concluído/faturado sobre o total do período</div>
         {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem dados no período</div>:
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {serie.map((s,i)=>(
-            <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{fontSize:11,color:"#94A3B8",width:48,flexShrink:0}}>{s.lab}</div>
-              <div style={{flex:1,background:"#F1F5F9",borderRadius:5,height:16,position:"relative",overflow:"hidden"}}>
-                <div style={{background:"#334155",height:"100%",borderRadius:5,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
-              </div>
-              <div style={{fontSize:12,fontWeight:800,color:"#334155",width:46,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
-            </div>
-          ))}
-        </div>}
+        <ChartCanvas type="bar" height={200} data={{
+          labels:serie.map(s=>s.lab),
+          datasets:[{label:"Conversão",data:serie.map(s=>s.conversao),backgroundColor:"#334155",borderRadius:6}]
+        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`},grid:{color:"#F5F5F5"}}}}}/>}
       </div>
     </div>
 
