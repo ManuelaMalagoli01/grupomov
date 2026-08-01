@@ -2196,7 +2196,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       let de,ate,lab;
       if(modo==="dia"){ d.setDate(d.getDate()-i); de=ate=iso(d); lab=`${PAD(d.getDate())}/${PAD(d.getMonth()+1)}`; }
       else if(modo==="semana"){ d.setDate(d.getDate()-7*i); const s=new Date(d); s.setDate(d.getDate()-((d.getDay()+6)%7)); const e=new Date(s); e.setDate(s.getDate()+6); de=iso(s); ate=iso(e); lab=`${PAD(s.getDate())}/${PAD(s.getMonth()+1)}`; }
-      else { d.setMonth(d.getMonth()-i); const s=new Date(d.getFullYear(),d.getMonth(),1); const e=new Date(d.getFullYear(),d.getMonth()+1,0); de=iso(s); ate=iso(e); lab=`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`; }
+      else { d.setDate(1); d.setMonth(d.getMonth()-i); const s=new Date(d.getFullYear(),d.getMonth(),1); const e=new Date(d.getFullYear(),d.getMonth()+1,0); de=iso(s); ate=iso(e); lab=`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`; }
       const dentro=(x)=>x&&x>=de&&x<=ate;
       const enviadosNoPeriodo=all.filter(p=>p.date&&p.dataEnvio&&dentro(p.dataEnvio));
       const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
@@ -2332,7 +2332,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
     <div className="card" style={{padding:20,marginBottom:20}}>
       <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
-      <ChartCanvas type="bar" height={230} data={{
+      <ChartCanvas type="bar" height={190} data={{
         labels:serie.map(s=>s.lab),
         datasets:[
           {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
