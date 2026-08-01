@@ -5341,7 +5341,7 @@ export default function App(){
             const aps=apMes.filter(a=>a.os===os);
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
-          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0);
+          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0).sort((a,b)=>byTech[b].mins-byTech[a].mins);
           const pctTecAtivos=TECHS_NO_DASH.length?Math.round(techAtivos.length/TECHS_NO_DASH.length*100):0;
           const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
@@ -5378,6 +5378,7 @@ export default function App(){
           };
           const fmtHoraDecimal=(v)=>{const totalMinV=Math.round(v*60);return `${Math.floor(totalMinV/60)}h${String(totalMinV%60).padStart(2,"0")}`;};
           const chartOpts=(title)=>{const isHoras=title==="Horas";return {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${isHoras?fmtHoraDecimal(c.parsed.y):c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#555"}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:isHoras?undefined:0,font:{size:11},callback:isHoras?(v)=>fmtHoraDecimal(v):undefined}}},animation:{duration:600}};};
+          const chartOptsHoriz=()=>({indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtHoraDecimal(c.parsed.x)}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{callback:v=>fmtHoraDecimal(v),font:{size:10}}}},animation:{duration:600}});
           const chartOptsStacked=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
@@ -5460,13 +5461,11 @@ export default function App(){
             </div>
           </div>
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-            <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período selecionado</div>
-              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
-            </div>
-
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período selecionado (1h = 60min)</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
           </div>
           {servAtivos.length>0&&<>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
@@ -10514,7 +10513,7 @@ export default function App(){
             const aps=apMes.filter(a=>a.os===os);
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
-          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0);
+          const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0).sort((a,b)=>byTech[b].mins-byTech[a].mins);
           const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
@@ -10546,6 +10545,7 @@ export default function App(){
           };
           const fmtHoraDecimal=(v)=>{const totalMinV=Math.round(v*60);return `${Math.floor(totalMinV/60)}h${String(totalMinV%60).padStart(2,"0")}`;};
           const chartOpts=(title)=>{const isHoras=title==="Horas";return {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${isHoras?fmtHoraDecimal(c.parsed.y):c.parsed.y}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:isHoras?undefined:0,font:{size:11},callback:isHoras?(v)=>fmtHoraDecimal(v):undefined}}},animation:{duration:600}};};
+          const chartOptsHoriz=()=>({indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtHoraDecimal(c.parsed.x)}`}}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{callback:v=>fmtHoraDecimal(v),font:{size:10}}}},animation:{duration:600}});
           const chartOptsStacked150=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom",labels:{font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}});
           return(
         <div style={{animation:"fadeIn .3s ease"}}>
@@ -10595,17 +10595,17 @@ export default function App(){
           </div>
 
           {/* Gráficos */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-            <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Total de horas no período</div>
-              <ChartCanvas type="bar" data={chartHoras} options={chartOpts("Horas")} height={220}/>
-            </div>
-            <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-              <ChartCanvas type="bar" data={chartApon} options={chartOpts()} height={220}/>
-            </div>
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período (1h = 60min)</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
+          </div>
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartApon} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}}} height={Math.max(140,techAtivos.length*32)}/>}
           </div>
           {servAtivos.length>0&&<>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
