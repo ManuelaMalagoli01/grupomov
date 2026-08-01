@@ -2297,8 +2297,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <div style={{display:"flex",gap:6}}>{btnPer("dia","Diário")}{btnPer("semana","Semanal")}{btnPer("mes","Mensal")}{btnPer("tudo","Tudo")}</div>
       {(slaEnvioMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
         {slaEnvioMedio!==null&&<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>}
-        {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#6A1B9A",background:"#F5F0FF",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
-        {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#6A1B9A",background:"#F5F0FF",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
+        {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
+        {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
       </div>}
       {periodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
         <button onClick={()=>navegar(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
@@ -2316,15 +2316,15 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📊 Macro — {janLabel}</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:32}}>
       {[
-        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:cor},
-        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#1A7A3C"},
-        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1565C0"},
-        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#E67E00"},
+        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#334155"},
+        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#166534"},
+        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#334155"},
+        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#334155"},
       ].map((k,i)=>(
-        <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`4px solid ${k.c}`}}>
+        <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`3px solid ${k.c}`}}>
           <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{fontSize:24,fontWeight:900,color:k.c,marginTop:4,lineHeight:1}}>{k.v}</div>
-          <div style={{fontSize:11,fontWeight:700,color:k.c,opacity:.8,marginTop:4}}>{k.sub}</div>
+          <div style={{fontSize:26,fontWeight:800,color:"#0F172A",marginTop:4,lineHeight:1}}>{k.v}</div>
+          <div style={{fontSize:11,fontWeight:600,color:"#64748B",marginTop:4}}>{k.sub}</div>
         </div>
       ))}
     </div>
@@ -2360,9 +2360,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             <div key={i} style={{display:"flex",alignItems:"center",gap:10}}>
               <div style={{fontSize:11,color:"#94A3B8",width:48,flexShrink:0}}>{s.lab}</div>
               <div style={{flex:1,background:"#F1F5F9",borderRadius:5,height:16,position:"relative",overflow:"hidden"}}>
-                <div style={{background:"#6A1B9A",height:"100%",borderRadius:5,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
+                <div style={{background:"#334155",height:"100%",borderRadius:5,width:`${s.conversao||0}%`,transition:"width .5s"}}/>
               </div>
-              <div style={{fontSize:12,fontWeight:800,color:"#6A1B9A",width:46,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
+              <div style={{fontSize:12,fontWeight:800,color:"#334155",width:46,textAlign:"right",flexShrink:0}}>{s.conversao!==null?`${s.conversao}%`:"—"}</div>
             </div>
           ))}
         </div>}
@@ -2374,10 +2374,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,alignItems:"center"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
           {aprovCounts.map((a,i)=>(
-            <div key={i} style={{background:a.bg,borderRadius:10,padding:"14px 16px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
-              <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
-              <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
-              <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
+            <div key={i} style={{background:"#FFF",borderLeft:`3px solid ${a.c}`,borderRadius:8,padding:"14px 16px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #F1F5F9",borderLeftWidth:3,borderLeftColor:a.c,cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+              <div style={{fontSize:10,fontWeight:700,color:"#64748B"}}>{a.label}</div>
+              <div style={{fontSize:18,fontWeight:800,color:"#0F172A"}}>{a.total}</div>
+              <div style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>{fmtR(a.valor)}</div>
             </div>
           ))}
         </div>
