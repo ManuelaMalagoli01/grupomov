@@ -2316,14 +2316,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📊 Macro — {janLabel}</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:32}}>
       {[
-        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#334155"},
-        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#166534"},
-        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#334155"},
-        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#334155"},
+        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#334155",pct:null},
+        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#166534",pct:all.length?Math.round(concluidosTodos.length/all.length*100):0},
+        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#334155",pct:all.length?Math.round(abertosJanela.length/all.length*100):0},
+        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#334155",pct:all.length?Math.round(pendentes.length/all.length*100):0},
       ].map((k,i)=>(
         <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`3px solid ${k.c}`}}>
           <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{fontSize:26,fontWeight:800,color:"#0F172A",marginTop:4,lineHeight:1}}>{k.v}</div>
+          <div style={{display:"flex",alignItems:"baseline",gap:6,marginTop:4}}><span style={{fontSize:26,fontWeight:800,color:"#0F172A",lineHeight:1}}>{k.v}</span>{k.pct!==null&&<span style={{fontSize:11,fontWeight:700,color:"#94A3B8"}}>({k.pct}%)</span>}</div>
           <div style={{fontSize:11,fontWeight:600,color:"#64748B",marginTop:4}}>{k.sub}</div>
         </div>
       ))}
@@ -2366,18 +2366,18 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
       <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,alignItems:"center"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-          {aprovCounts.map((a,i)=>(
+          {aprovCounts.map((a,i)=>{const pctA=all.length?Math.round(a.total/all.length*100):0;return(
             <div key={i} style={{background:"#FFF",borderLeft:`3px solid ${a.c}`,borderRadius:8,padding:"14px 16px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #F1F5F9",borderLeftWidth:3,borderLeftColor:a.c,cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
               <div style={{fontSize:10,fontWeight:700,color:"#64748B"}}>{a.label}</div>
-              <div style={{fontSize:18,fontWeight:800,color:"#0F172A"}}>{a.total}</div>
+              <div style={{display:"flex",alignItems:"baseline",gap:5}}><span style={{fontSize:18,fontWeight:800,color:"#0F172A"}}>{a.total}</span><span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({pctA}%)</span></div>
               <div style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>{fmtR(a.valor)}</div>
             </div>
-          ))}
+          );})}
         </div>
         {aprovCounts.some(a=>a.total>0)&&<ChartCanvas type="doughnut" height={170} data={{
           labels:aprovCounts.map(a=>a.label),
           datasets:[{data:aprovCounts.map(a=>a.total),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
       </div>
     </div>
 
