@@ -5269,11 +5269,11 @@ export default function App(){
                   if(periodoServFechado==="semana"){
                     const d=new Date(hoje);d.setDate(d.getDate()-i*7-d.getDay());
                     const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
-                    de=iso(s);ate=iso(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
+                    de=fmtDate(s);ate=fmtDate(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
                   } else {
                     const d=new Date(hoje);d.setDate(1);d.setMonth(d.getMonth()-i);
                     const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
-                    de=iso(s);ate=iso(e);lab=`${MESES[d.getMonth()].slice(0,3)}/${String(d.getFullYear()).slice(2)}`;
+                    de=fmtDate(s);ate=fmtDate(e);lab=`${MESES[d.getMonth()].slice(0,3)}/${String(d.getFullYear()).slice(2)}`;
                   }
                   serieSF.push({lab,qtd:sfLista.filter(s=>s.data&&s.data>=de&&s.data<=ate).length});
                 }
