@@ -132,6 +132,7 @@ const servicoEfetivoOficina=(a)=>{
   return a.servico;
 };
 const CATS_PORSERV_OFICINA=SERVICOS_OFICINA;
+const SERVICO_COR={"Mecânica":"#1565C0","Hidráulica":"#00838F","Elétrica":"#F5C200","Bateria":"#C62828","Carregador":"#E67E00","Usinagem/Soldagem":"#6A1B9A","Pintura":"#1A7A3C","Outros":"#37474F"};
 const SAS_VENDAS_MODELOS = {
   "Empilhadeiras Contrabalançadas Elétricas": ["STRONG 3RL 18","STRONG 4RL 25","STRONG 4RL 30","STRONG 4RD 38","STRONG 4RQ 30","STRONG 4RQ 35","STRONG 4RQ 50","STRONG 4RL 80"],
   "Empilhadeiras Retráteis": ["ER16","ERN20 Pro N","ERN20 B"],
@@ -160,17 +161,18 @@ const TECNICO_SERVICO_AUTO=[
   {match:"andre",servico:"Pintura"},
   {match:"pedro souza",servico:"Bateria"},
   {match:"pedro pimente",servico:"Carregador"},
-  {match:"lucio",servico:"Pequenos Reparos"},
-  {match:"davi",servico:"Pequenos Reparos"},
+  {match:"lucio",servico:"Mecânica"},
   {match:"reginaldo",servico:"Mecânica"},
-  {match:"junio",servico:"Usinagem"},
   {match:"eduardo",servico:"Mecânica"},
-  {match:"matheus",servico:"Bateria e Mecânica"},
   {match:"hebert",servico:"Mecânica"},
-  {match:"guilherme",servico:"Outros Serviços"},
-  {match:"gracielle",servico:"Outros Serviços"},
-  {match:"thiago lino",servico:"Outros Serviços"},
-  {match:"alexandre",servico:"Outros Serviços"},
+  {match:"junio",servico:"Usinagem/Soldagem"},
+  {match:"davi",servico:"Outros"},
+  {match:"gracielle",servico:"Outros"},
+  {match:"guilherme",servico:"Outros"},
+  {match:"denison",servico:"Outros"},
+  {match:"manuela",servico:"Outros"},
+  {match:"thiago",servico:"Outros"},
+  {match:"alexandre",servico:"Outros"},
 ];
 const autoServicoPorTecnico=(tecNome)=>{
   const n=normalizeTec(tecNome);
@@ -5065,7 +5067,7 @@ export default function App(){
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>setAponNovaTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>{setAponNovaTech(e.target.value);const auto=autoServicoPorTecnico(e.target.value);if(auto)setAponNovaServ(auto);}} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Serviço</label><select value={aponNovaServ} onChange={e=>setAponNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:aponNovaServ?"#1565C0":"#AAA"}}><option value="">— Selecionar depois —</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={aponNovaInicio} onChange={e=>setAponNovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={aponNovaTermino} onChange={e=>setAponNovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
@@ -5092,9 +5094,9 @@ export default function App(){
               </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Clique em "+ Novo Apontamento" para começar</div>):(
-              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto",overflowY:"auto",maxHeight:620}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
-                  <thead><tr style={{background:"#1A1A1A"}}>
+                  <thead style={{position:"sticky",top:0,zIndex:2}}><tr style={{background:"#1A1A1A"}}>
                     <th style={{padding:"10px 12px",width:1}}><input type="checkbox" checked={idsVisiveis.length>0&&qtdSelecionados===idsVisiveis.length} onChange={toggleSelecionarTodos} style={{cursor:"pointer",width:15,height:15}}/></th>
                     {["Data","OS","PAT","Setor","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
@@ -5102,7 +5104,7 @@ export default function App(){
                   </tr></thead>
                   <tbody>
                     {lista.map((a,idx)=>{
-                      const cor=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Pintura:"#8E44AD","Pequenos Reparos":"#1A7A3C",Soldagem:"#546E7A",Usinagem:"#37474F",Carregador:"#00838F",Outros:"#888"})[a.servico]||"#555";
+                      const cor=SERVICO_COR[a.servico]||"#94A3B8";
                       const setorA=classificarSetor(a.tecnico);
                       return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:aponSelecionados[a.id]?"#FFFBEB":a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
                         <td style={{padding:"10px 12px"}}><input type="checkbox" checked={!!aponSelecionados[a.id]} onChange={()=>setAponSelecionados(prev=>{const novo={...prev};if(novo[a.id])delete novo[a.id];else novo[a.id]=true;return novo;})} style={{cursor:"pointer",width:15,height:15}}/></td>
@@ -5377,10 +5379,10 @@ export default function App(){
           const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
-          const SERV_COLORS=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
+          const servCor=(s)=>SERVICO_COR[s]||"#94A3B8";
           const chartServ={labels:servAtivos,datasets:[
-            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS.slice(0,servAtivos.length),borderRadius:6,borderSkipped:false},
-            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:SERV_COLORS.slice(0,servAtivos.length).map(c=>c+"80"),borderRadius:6,borderSkipped:false}
+            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:servAtivos.map(servCor),borderRadius:6,borderSkipped:false},
+            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:servAtivos.map(s=>servCor(s)+"80"),borderRadius:6,borderSkipped:false}
           ]};
           // Gráfico Serviço x Técnico (stacked)
           const chartServTech={
@@ -5388,7 +5390,7 @@ export default function App(){
             datasets:servAtivos.map((serv,si)=>({
               label:serv,
               data:techAtivos.map(t=>byTech[t].porServ[serv]||0),
-              backgroundColor:SERV_COLORS[si%SERV_COLORS.length],
+              backgroundColor:servCor(serv),
               borderRadius:4,
               borderSkipped:false,
             }))
@@ -5402,7 +5404,7 @@ export default function App(){
                 const aps=byTech[t].aps.filter(a=>a.servico===serv);
                 return +(aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)/60).toFixed(1);
               }),
-              backgroundColor:SERV_COLORS[si%SERV_COLORS.length],
+              backgroundColor:servCor(serv),
               borderRadius:4,
               borderSkipped:false,
             }))
@@ -5501,7 +5503,7 @@ export default function App(){
               {servAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
               <ChartCanvas type="doughnut" height={190} data={{
                 labels:servAtivos,
-                datasets:[{data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS.slice(0,servAtivos.length),borderWidth:2,borderColor:"#FFF"}]
+                datasets:[{data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:servAtivos.map(servCor),borderWidth:2,borderColor:"#FFF"}]
               }} options={{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
             </div>
           </div>
@@ -10365,16 +10367,16 @@ export default function App(){
               </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Preencha o formulário acima e clique em Salvar</div>):(
-              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto"}}>
+              <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto",overflowY:"auto",maxHeight:620}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
-                  <thead><tr style={{background:"#1A1A1A"}}>
+                  <thead style={{position:"sticky",top:0,zIndex:2}}><tr style={{background:"#1A1A1A"}}>
                     {["Data","OS","PAT","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
                       <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {lista.map((a,idx)=>{
-                      const cor=({Mecânica:"#1565C0",Elétrica:"#E67E00",Bateria:"#C47D00",Hidráulica:"#00838F",Pintura:"#8E44AD","Pequenos Reparos":"#1A7A3C",Soldagem:"#546E7A",Usinagem:"#37474F",Carregador:"#00838F",Outros:"#888"})[a.servico]||"#555";
+                      const cor=SERVICO_COR[a.servico]||"#94A3B8";
                       return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
                         <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
                         <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
@@ -10544,17 +10546,17 @@ export default function App(){
           const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
-          const SERV_COLORS150=["#1565C0","#C62828","#E67E00","#F5C200","#1A7A3C","#00838F","#AD1457","#6A1B9A","#4E342E","#37474F"];
+          const servCor=(s)=>SERVICO_COR[s]||"#94A3B8";
           const chartServ={labels:servAtivos,datasets:[
-            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS150.slice(0,servAtivos.length),borderRadius:6,borderSkipped:false},
-            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:SERV_COLORS150.slice(0,servAtivos.length).map(c=>c+"80"),borderRadius:6,borderSkipped:false}
+            {label:"Qtd Apontamentos",data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:servAtivos.map(servCor),borderRadius:6,borderSkipped:false},
+            {label:"Horas",data:servAtivos.map(s=>+(byServ[s].mins/60).toFixed(1)),backgroundColor:servAtivos.map(s=>servCor(s)+"80"),borderRadius:6,borderSkipped:false}
           ]};
           const chartServTech150={
             labels:techAtivos,
             datasets:servAtivos.map((serv,si)=>({
               label:serv,
               data:techAtivos.map(t=>byTech[t].porServ[serv]||0),
-              backgroundColor:SERV_COLORS150[si%SERV_COLORS150.length],
+              backgroundColor:servCor(serv),
               borderRadius:4,borderSkipped:false,
             }))
           };
@@ -10566,7 +10568,7 @@ export default function App(){
                 const aps=byTech[t].aps.filter(a=>a.servico===serv);
                 return +(aps.reduce((acc,a)=>acc+parseMin(a.total||calcHoras(a.inicio,a.termino)),0)/60).toFixed(1);
               }),
-              backgroundColor:SERV_COLORS150[si%SERV_COLORS150.length],
+              backgroundColor:servCor(serv),
               borderRadius:4,borderSkipped:false,
             }))
           };
