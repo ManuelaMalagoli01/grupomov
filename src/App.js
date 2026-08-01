@@ -5438,20 +5438,6 @@ export default function App(){
               {(dashOfiTech!=="todos"||dashOfiSetor!=="todos"||dashOfiFrom||dashOfiTo)&&<button onClick={()=>{setDashOfiTech("todos");setDashOfiSetor("todos");setDashOfiFrom("");setDashOfiTo("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
           </div>}
 
-          {/* Aviso: filtro sem dados */}
-          {apMes.length===0&&(()=>{
-            const mesesComDados=[...new Set([...(apontamentos||[]),...(apontamentos150||[])].filter(a=>a&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
-            if(mesesComDados.length===0)return null;
-            return(<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#FFFBEB",border:"1px solid #FDE68A",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-              <span style={{fontSize:12,color:"#92400E",fontWeight:700}}>⚠️ Nenhum apontamento em {MESES[agOfiMonth]}/{agOfiYear}{dashOfiTech!=="todos"?` para ${dashOfiTech}`:""}. Você tem dados em:</span>
-              {mesesComDados.slice(0,6).map(ym=>{
-                const [y,m]=ym.split("-");
-                return <button key={ym} onClick={()=>{setAgOfiYear(Number(y));setAgOfiMonth(Number(m)-1);setDashOfiFrom("");setDashOfiTo("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
-              })}
-              {dashOfiTech!=="todos"&&<button onClick={()=>setDashOfiTech("todos")} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #1A1A1A",background:"#1A1A1A",color:"#FFF",cursor:"pointer"}}>👷 Todos os técnicos</button>}
-            </div>);
-          })()}
-
           {/* KPIs */}
           <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
@@ -10593,20 +10579,6 @@ export default function App(){
               {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
             </div>
           </div>
-
-          {/* Aviso: filtro sem dados */}
-          {apMes.length===0&&(()=>{
-            const mesesComDados=[...new Set((apontamentos150||[]).filter(a=>a&&a.data).map(a=>a.data.slice(0,7)))].sort().reverse();
-            if(mesesComDados.length===0)return null;
-            return(<div className="card" style={{padding:"10px 14px",marginBottom:16,background:"#FFFBEB",border:"1px solid #FDE68A",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-              <span style={{fontSize:12,color:"#92400E",fontWeight:700}}>⚠️ Nenhum apontamento em {MESES[agOfi150Month]}/{agOfi150Year}{dashOfi150Tech!=="todos"?` para ${dashOfi150Tech}`:""}. Você tem dados em:</span>
-              {mesesComDados.slice(0,6).map(ym=>{
-                const [y,m]=ym.split("-");
-                return <button key={ym} onClick={()=>{setAgOfi150Year(Number(y));setAgOfi150Month(Number(m)-1);setDashOfi150From("");setDashOfi150To("");}} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #F5C200",background:"#FFF",color:"#92400E",cursor:"pointer"}}>{MESES[Number(m)-1]}/{y}</button>;
-              })}
-              {dashOfi150Tech!=="todos"&&<button onClick={()=>setDashOfi150Tech("todos")} style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #1A1A1A",background:"#1A1A1A",color:"#FFF",cursor:"pointer"}}>👷 Todos os técnicos</button>}
-            </div>);
-          })()}
 
           {/* KPIs */}
           <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
