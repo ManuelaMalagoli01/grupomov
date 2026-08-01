@@ -5332,16 +5332,20 @@ export default function App(){
           })()}
 
           {/* KPIs */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+          <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+            <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores da Oficina</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:2,marginBottom:24,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
             {[
-              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1A1A1A"},
-              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1565C0"},
-              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#1A7A3C"},
-              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#C47D00"},
+              {icon:"📋",l:"Total Apontamentos",v:apMes.length,c:"#1F2937"},
+              {icon:"⏱",l:"Horas Totais",v:fmtMin(totalMin),c:"#1D4E89"},
+              {icon:"👷",l:"Técnicos Ativos",v:techAtivos.length,c:"#166534"},
+              {icon:"🔧",l:"OSs Únicas",v:osList.length,c:"#B45309"},
             ].map((s,i)=>(
-              <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
-                <div style={{fontSize:9,color:"#94A3B8",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
-                <div style={{fontSize:24,fontWeight:900,color:s.c,marginTop:2}}>{s.v}</div>
+              <div key={i} style={{padding:"14px 16px",background:s.c}}>
+                <div style={{fontSize:9,color:"rgba(255,255,255,.7)",fontWeight:700,textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{s.v}</div>
               </div>
             ))}
           </div>
@@ -6851,18 +6855,22 @@ export default function App(){
                     {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
 
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:16}}>
+                  <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                    <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores de Atendimento</span>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:2,marginBottom:16,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
                     {[
-                      {l:"Total",v:dashReports.length,c:"#1A1A1A",i:"📊"},
-                      {l:"Preventivas",v:prev,c:"#2563EB",i:"📋"},
-                      {l:"Corretivas",v:corr,c:"#C62828",i:"🔧"},
+                      {l:"Total",v:dashReports.length,c:"#1F2937",i:"📊"},
+                      {l:"Preventivas",v:prev,c:"#1D4E89",i:"📋"},
+                      {l:"Corretivas",v:corr,c:"#B91C1C",i:"🔧"},
                       {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#B45309",i:"⏱"},
-                      {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",i:"👷"},
-                      {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#7E22CE",i:"📐"},
+                      {l:"Técnicos Ativos",v:techsWith.length,c:"#166534",i:"👷"},
+                      {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#6D28D9",i:"📐"},
                     ].map((k,i)=>(
-                      <div key={i} className="card" style={{padding:"10px 12px",borderLeft:`4px solid ${k.c}`}}>
-                        <div style={{fontSize:8,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,marginBottom:2}}>{k.i} {k.l}</div>
-                        <div style={{fontSize:19,fontWeight:900,color:k.c}}>{k.v}</div>
+                      <div key={i} style={{padding:"12px 12px",background:k.c,display:"flex",flexDirection:"column",gap:2}}>
+                        <div style={{fontSize:8,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.8}}>{k.i} {k.l}</div>
+                        <div style={{fontSize:20,fontWeight:900,color:"#FFF"}}>{k.v}</div>
                       </div>
                     ))}
                   </div>
