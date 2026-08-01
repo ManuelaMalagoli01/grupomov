@@ -2122,6 +2122,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const [periodo,setPeriodo]=useState("mes");   // dia | semana | mes | tudo
   const [abaMicro,setAbaMicro]=useState("todos");
   const [refIso,setRefIso]=useState(TODAY_STR); // data de referencia da janela
+  const [showMicro,setShowMicro]=useState(false);
 
   const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
   const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
@@ -2370,18 +2371,28 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
       <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
-      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-        {aprovCounts.map((a,i)=>(
-          <div key={i} style={{background:a.bg,borderRadius:10,padding:"14px 16px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
-            <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
-            <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
-            <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
-          </div>
-        ))}
+      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,alignItems:"center"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+          {aprovCounts.map((a,i)=>(
+            <div key={i} style={{background:a.bg,borderRadius:10,padding:"14px 16px",border:fAprov===a.key?`2px solid ${a.c}`:"1px solid transparent",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+              <div style={{fontSize:10,fontWeight:700,color:a.c}}>{a.label}</div>
+              <div style={{fontSize:16,fontWeight:900,color:a.c}}>{a.total}</div>
+              <div style={{fontSize:11,fontWeight:600,color:a.c,opacity:.85}}>{fmtR(a.valor)}</div>
+            </div>
+          ))}
+        </div>
+        {aprovCounts.some(a=>a.total>0)&&<ChartCanvas type="doughnut" height={170} data={{
+          labels:aprovCounts.map(a=>a.label),
+          datasets:[{data:aprovCounts.map(a=>a.total),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
       </div>
     </div>
 
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:12,letterSpacing:.2}}>🔬 Micro — Detalhado (para Diretoria)</div>
+    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showMicro?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+      <span style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>🔬 Detalhamento completo (por processo)</span>
+      <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showMicro?"▲ Ocultar":"▼ Mostrar"}</span>
+    </button>
+    {showMicro&&<>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
       {ABAS_MICRO.map(a=>(
         <button key={a.k} onClick={()=>setAbaMicro(a.k)} style={{padding:"6px 13px",borderRadius:20,border:abaMicro===a.k?`2px solid ${a.cor}`:"1.5px solid #E2E8F0",background:abaMicro===a.k?a.cor+"18":"#FFF",color:abaMicro===a.k?a.cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
@@ -2391,6 +2402,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
     {(()=>{const a=ABAS_MICRO.find(x=>x.k===abaMicro)||ABAS_MICRO[0];
       return <TabelaMicro titulo={a.titulo} icone={a.icone} corSec={a.cor} registros={a.registros} vazio={a.vazio} mostrarConclusao={a.conc} mostrarTempo={a.tempo}/>;})()}
+    </>}
 
     <div className="card" style={{padding:20,marginTop:18}}>
       <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Top Empresas por Valor</div>
