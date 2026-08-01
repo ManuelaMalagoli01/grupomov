@@ -3012,6 +3012,13 @@ export default function App(){
   const [agOfiRequisicao,setAgOfiRequisicao]=useState("");
   const [agOfiObs,setAgOfiObs]=useState("");
   const [agOfiRelatorio,setAgOfiRelatorio]=useState("");
+  const [servicosFechados,setServicosFechados]=useState([]);
+  const [showNovoServFechado,setShowNovoServFechado]=useState(false);
+  const [sfData,setSfData]=useState(TODAY_STR);
+  const [sfOs,setSfOs]=useState("");
+  const [sfServico,setSfServico]=useState("Bateria");
+  const [sfPat,setSfPat]=useState("");
+  const [periodoServFechado,setPeriodoServFechado]=useState("mes");
   const [agOfiCidade,setAgOfiCidade]=useState("");
   const [agOfiHorimetro,setAgOfiHorimetro]=useState("");
   const [agOfiTipo,setAgOfiTipo]=useState("preventivo");
@@ -3348,6 +3355,8 @@ export default function App(){
       if(pontoRows.length>0) setPontoDiario(pontoRows);
       const escalaRows=await safeGet("escala_diaria");
       if(escalaRows.length>0) setEscalaDiaria(escalaRows);
+      const servFechRows=await safeGet("servicos_fechados");
+      if(servFechRows.length>0) setServicosFechados(servFechRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3402,7 +3411,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3534,6 +3543,7 @@ export default function App(){
   });
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
   const escalaCrud=mkCrud("escala_diaria",setEscalaDiaria);
+  const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes)=>{
     let saved=null;
@@ -5216,6 +5226,82 @@ export default function App(){
                   );
                 })}
               </div>
+
+              {/* ── SERVIÇOS FECHADOS NA SEMANA ── */}
+              {(()=>{
+                const oficinaAtual=ehMatheus?"150":"1340";
+                const sfLista=(servicosFechados||[]).filter(s=>s&&s.oficina===oficinaAtual);
+                const SF_SERVICOS=["Bateria","Carregador","Máquina","Reparo de Peças"];
+                const salvarSF=()=>{
+                  if(!sfData||!sfOs){alert("Preencha ao menos Data e OS.");return;}
+                  const row={id:`SF${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:sfData,os:sfOs,servico:sfServico,pat:sfPat,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                  setServicosFechados(p=>[row,...(p||[])]);
+                  db.save("servicos_fechados",row.id,row);
+                  setSfOs("");setSfPat("");
+                  notify("✅ Serviço fechado registrado!");
+                };
+                const hoje=new Date();
+                const serieSF=[];
+                for(let i=7;i>=0;i--){
+                  let de,ate,lab;
+                  if(periodoServFechado==="semana"){
+                    const d=new Date(hoje);d.setDate(d.getDate()-i*7-d.getDay());
+                    const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
+                    de=iso(s);ate=iso(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
+                  } else {
+                    const d=new Date(hoje);d.setDate(1);d.setMonth(d.getMonth()-i);
+                    const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
+                    de=iso(s);ate=iso(e);lab=`${MESES[d.getMonth()].slice(0,3)}/${String(d.getFullYear()).slice(2)}`;
+                  }
+                  serieSF.push({lab,qtd:sfLista.filter(s=>s.data&&s.data>=de&&s.data<=ate).length});
+                }
+                const porServicoSF=SF_SERVICOS.map(s=>({s,qtd:sfLista.filter(x=>x.servico===s).length}));
+                return(<div style={{marginTop:20}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>✅ Serviços Fechados na Semana</div>
+                    {!isReadOnlyAgenda(user)&&<button onClick={()=>setShowNovoServFechado(p=>!p)} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoServFechado?"✕ Fechar":"+ Registrar Serviço Fechado"}</button>}
+                  </div>
+                  {showNovoServFechado&&<div className="card" style={{padding:16,marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data</label><input type="date" value={sfData} onChange={e=>setSfData(e.target.value)}/></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>OS</label><input type="text" placeholder="Nº OS" value={sfOs} onChange={e=>setSfOs(e.target.value)} style={{width:110}}/></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={sfServico} onChange={e=>setSfServico(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{SF_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                    <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>PAT</label><input type="text" placeholder="—" value={sfPat} onChange={e=>setSfPat(e.target.value)} style={{width:100}}/></div>
+                    <BtnY onClick={salvarSF}>Salvar</BtnY>
+                  </div>}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                    <div className="card" style={{padding:16}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                        <div style={{fontWeight:800,fontSize:12,color:"#334155"}}>Serviços Fechados — {periodoServFechado==="semana"?"por semana":"por mês"}</div>
+                        <div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>setPeriodoServFechado("semana")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:periodoServFechado==="semana"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:periodoServFechado==="semana"?"#EFF6FF":"#FFF",color:periodoServFechado==="semana"?"#1565C0":"#64748B",cursor:"pointer"}}>Semanal</button>
+                          <button onClick={()=>setPeriodoServFechado("mes")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:periodoServFechado==="mes"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:periodoServFechado==="mes"?"#EFF6FF":"#FFF",color:periodoServFechado==="mes"?"#1565C0":"#64748B",cursor:"pointer"}}>Mensal</button>
+                        </div>
+                      </div>
+                      <ChartCanvas type="bar" height={190} data={{labels:serieSF.map(s=>s.lab),datasets:[{label:"Fechados",data:serieSF.map(s=>s.qtd),backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
+                    </div>
+                    <div className="card" style={{padding:16}}>
+                      <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
+                      {sfLista.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem registros</div>:
+                      <ChartCanvas type="doughnut" height={190} data={{labels:porServicoSF.map(p=>p.s),datasets:[{data:porServicoSF.map(p=>p.qtd),backgroundColor:["#1565C0","#B45309","#166534","#6D28D9"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+                    </div>
+                  </div>
+                  <div className="card" style={{overflow:"hidden"}}>
+                    <div className="tbl-wrap"><table>
+                      <thead><tr><th>Data</th><th>OS</th><th>Serviço</th><th>PAT</th><th></th></tr></thead>
+                      <tbody>{sfLista.slice(0,50).map(s=>(
+                        <tr key={s.id}>
+                          <td>{fmtDataBR(s.data)}</td>
+                          <td style={{fontWeight:700,color:"#1565C0"}}>{s.os}</td>
+                          <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{s.servico}</span></td>
+                          <td>{s.pat||"—"}</td>
+                          <td><button onClick={()=>{if(window.confirm("Excluir?"))servFechCrud.del(s.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
+                        </tr>
+                      ))}</tbody>
+                    </table></div>
+                    {sfLista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:24,fontSize:12}}>Nenhum serviço fechado registrado</div>}
+                  </div>
+                </div>);
+              })()}
             </div>
           );
         })()}
