@@ -5256,6 +5256,7 @@ export default function App(){
             byOS[os]={aps,mins:aps.reduce((s,a)=>s+parseMin(a.total||calcHoras(a.inicio,a.termino)),0),tecnico:aps[0]?.tecnico||"—",servico:aps[0]?.servico||"—"};
           });
           const techAtivos=TECHS_NO_DASH.filter(t=>byTech[t].aps.length>0);
+          const pctTecAtivos=TECHS_NO_DASH.length?Math.round(techAtivos.length/TECHS_NO_DASH.length*100):0;
           const chartHoras={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Horas Trabalhadas",data:techAtivos.length>0?techAtivos.map(t=>+(byTech[t].mins/60).toFixed(1)):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)):TECHS_NO_DASH.map(t=>techColor(t)),borderRadius:6,borderSkipped:false}]};
           const chartApon={labels:techAtivos.length>0?techAtivos:TECHS_NO_DASH,datasets:[{label:"Apontamentos",data:techAtivos.length>0?techAtivos.map(t=>byTech[t].aps.length):TECHS_NO_DASH.map(()=>0),backgroundColor:techAtivos.length>0?techAtivos.map(t=>techColor(t)+"CC"):TECHS_NO_DASH.map(t=>techColor(t)+"CC"),borderRadius:6,borderSkipped:false}]};
           const servAtivos=SERVICOS_OFICINA.filter(s=>byServ[s].qtd>0);
@@ -5350,7 +5351,29 @@ export default function App(){
             ))}
           </div>
 
-          {/* Gráficos principais */}
+          {/* Painel estilo BI: gauge + rosca de serviços */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+            <div className="card" style={{padding:20,textAlign:"center"}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>👷 Técnicos Ativos no Período</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:8}}>{techAtivos.length} de {TECHS_NO_DASH.length} técnico(s) do quadro</div>
+              <div style={{position:"relative",height:130}}>
+                <ChartCanvas type="doughnut" height={200} data={{datasets:[{data:[pctTecAtivos,100-pctTecAtivos],backgroundColor:[pctTecAtivos>=70?"#166534":pctTecAtivos>=40?"#B45309":"#B91C1C","#E2E8F0"],borderWidth:0}]}} options={{responsive:true,maintainAspectRatio:false,circumference:180,rotation:270,cutout:"72%",plugins:{legend:{display:false},tooltip:{enabled:false}}}}/>
+                <div style={{position:"absolute",top:60,left:0,right:0,textAlign:"center"}}>
+                  <div style={{fontSize:30,fontWeight:900,color:"#1F2937"}}>{pctTecAtivos}%</div>
+                </div>
+              </div>
+            </div>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Manutenções Realizadas por Serviço</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:8}}>Distribuição de apontamentos por tipo de serviço</div>
+              {servAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
+              <ChartCanvas type="doughnut" height={190} data={{
+                labels:servAtivos,
+                datasets:[{data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:SERV_COLORS.slice(0,servAtivos.length),borderWidth:2,borderColor:"#FFF"}]
+              }} options={{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
+            </div>
+          </div>
+
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
