@@ -1394,6 +1394,24 @@ const BtnImport = ({onClick}) => (
     📥 Importar Excel
   </button>
 );
+const DASH_KPI_COLORS=["#1F2937","#1D4E89","#166534","#B45309","#7E22CE","#B91C1C"];
+const KpiBIHeader = ({subtitulo, kpis}) => (
+  <>
+    <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+      <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— {subtitulo}</span>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:2,marginBottom:20,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+      {kpis.filter(Boolean).map((k,i)=>(
+        <div key={i} style={{padding:"14px 16px",background:k.c||DASH_KPI_COLORS[i%DASH_KPI_COLORS.length]}}>
+          <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.i?`${k.i} `:""}{k.l}</div>
+          <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
+          {k.sub&&<div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:2}}>{k.sub}</div>}
+        </div>
+      ))}
+    </div>
+  </>
+);
 
 function ImportComercialModal({onClose,onImport}){
   const [rows,setRows]=useState(null);
@@ -2314,17 +2332,21 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
 
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📊 Macro — {janLabel}</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:32}}>
+    <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+      <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo}</span>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:32,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
       {[
-        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#334155",pct:null},
+        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#1F2937",pct:null},
         {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#166534",pct:all.length?Math.round(concluidosTodos.length/all.length*100):0},
-        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#334155",pct:all.length?Math.round(abertosJanela.length/all.length*100):0},
-        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#334155",pct:all.length?Math.round(pendentes.length/all.length*100):0},
+        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1D4E89",pct:all.length?Math.round(abertosJanela.length/all.length*100):0},
+        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#B45309",pct:all.length?Math.round(pendentes.length/all.length*100):0},
       ].map((k,i)=>(
-        <div key={i} className="card" style={{padding:"16px 18px",borderLeft:`3px solid ${k.c}`}}>
-          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{display:"flex",alignItems:"baseline",gap:6,marginTop:4}}><span style={{fontSize:26,fontWeight:800,color:"#0F172A",lineHeight:1}}>{k.v}</span>{k.pct!==null&&<span style={{fontSize:11,fontWeight:700,color:"#94A3B8"}}>({k.pct}%)</span>}</div>
-          <div style={{fontSize:11,fontWeight:600,color:"#64748B",marginTop:4}}>{k.sub}</div>
+        <div key={i} style={{padding:"16px 18px",background:k.c}}>
+          <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
+          <div style={{display:"flex",alignItems:"baseline",gap:6,marginTop:4}}><span style={{fontSize:26,fontWeight:800,color:"#FFF",lineHeight:1}}>{k.v}</span>{k.pct!==null&&<span style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,.7)"}}>({k.pct}%)</span>}</div>
+          <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:4}}>{k.sub}</div>
         </div>
       ))}
     </div>
@@ -7779,22 +7801,16 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard — Prospecção (Comercial)</div>
             <div style={{fontSize:12,color:"#94A3B8",marginBottom:20}}>Funil da Lista de Clientes — {total} registro(s)</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:20}}>
-              {[
-                {l:"Total",v:total,c:"#1A1A1A",i:"📋"},
-                {l:"Prospecção",v:nProsp,c:"#B45309",i:"🎯"},
-                {l:"Em negociação",v:nNeg,c:"#1565C0",i:"🤝"},
-                {l:"Clientes",v:nCliente,c:"#15803D",i:"✅"},
-                {l:"Perdidos",v:nPerdido,c:"#94A3B8",i:"❌"},
-                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,c:"#7E22CE",i:"📈"},
-                retornosPend>0&&{l:"Retornos pendentes",v:retornosPend,c:"#C62828",i:"🔔"},
-              ].filter(Boolean).map((k,i)=>(
-                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
-                </div>
-              ))}
-            </div>
+            <KpiBIHeader subtitulo="Indicadores de Prospecção" kpis={[
+                {l:"Total",v:total,i:"📋"},
+                {l:"Prospecção",v:nProsp,i:"🎯"},
+                {l:"Em negociação",v:nNeg,i:"🤝"},
+                {l:"Clientes",v:nCliente,i:"✅"},
+                {l:"Perdidos",v:nPerdido,i:"❌"},
+                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,i:"📈"},
+                retornosPend>0&&{l:"Retornos pendentes",v:retornosPend,i:"🔔"},
+              ]}/>
+
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <div className="card" style={{padding:14}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Funil de Prospecção</div>
@@ -7903,21 +7919,14 @@ export default function App(){
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard — Clientes / Prospecção (SAS)</div>
             <div style={{fontSize:12,color:"#94A3B8",marginBottom:20}}>Funil de clientes e prospecções do SAS — {total} registro(s)</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:12,marginBottom:20}}>
-              {[
-                {l:"Total",v:total,c:"#1A1A1A",i:"📋"},
-                {l:"Prospecção",v:nProsp,c:"#B45309",i:"🔍"},
-                {l:"Em negociação",v:nNeg,c:"#1565C0",i:"🤝"},
-                {l:"Clientes",v:nCliente,c:"#15803D",i:"✅"},
-                {l:"Perdidos",v:nPerdido,c:"#94A3B8",i:"❌"},
-                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,c:"#7E22CE",i:"📈"},
-              ].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"12px 14px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:3,lineHeight:1}}>{k.v}</div>
-                </div>
-              ))}
-            </div>
+            <KpiBIHeader subtitulo="Indicadores de Clientes SAS" kpis={[
+                {l:"Total",v:total,i:"📋"},
+                {l:"Prospecção",v:nProsp,i:"🔍"},
+                {l:"Em negociação",v:nNeg,i:"🤝"},
+                {l:"Clientes",v:nCliente,i:"✅"},
+                {l:"Perdidos",v:nPerdido,i:"❌"},
+                {l:"Taxa de conversão",v:`${taxaConv.toFixed(1)}%`,i:"📈"},
+              ]}/>
             <div className="card" style={{padding:14,maxWidth:420}}>
               <div style={{fontSize:11,fontWeight:700,color:"#555",marginBottom:10}}>Funil de Clientes/Prospecção</div>
               {total===0?<div style={{textAlign:"center",color:"#CCC",padding:40}}>Sem dados</div>:
@@ -8793,15 +8802,15 @@ export default function App(){
               </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
-                <KPIR icon="📦" label="Total" value={total} color="#1A1A1A"/>
-                <KPIR icon="🔄" label="Empréstimos" value={totalEmp} color="#F5C200"/>
-                <KPIR icon="📤" label="Entrada/Saída" value={totalSai} color="#1565C0"/>
-                <KPIR icon="🔴" label="Rupturas S/E" value={rupturasS.length} color="#C62828" bg="#FFF8F8"/>
-                <KPIR icon="🏭" label="Ruptura Almox" value={(ruptAlmox).filter(r=>r&&!r.arquivado).length} color="#AD1457" bg="#FFF0F8"/>
-                <KPIR icon="⏳" label="Pendentes" value={pendentes} color="#E67E00" bg="#FFF8F0"/>
-                <KPIR icon="✅" label="Concluídos" value={concluidos} color="#1A7A3C" bg="#F0FFF5"/>
-              </div>
+              <KpiBIHeader subtitulo="Indicadores de Requisições" kpis={[
+                {l:"Total",v:total,i:"📦"},
+                {l:"Empréstimos",v:totalEmp,i:"🔄"},
+                {l:"Entrada/Saída",v:totalSai,i:"📤"},
+                {l:"Rupturas S/E",v:rupturasS.length,i:"🔴"},
+                {l:"Ruptura Almox",v:(ruptAlmox).filter(r=>r&&!r.arquivado).length,i:"🏭"},
+                {l:"Pendentes",v:pendentes,i:"⏳"},
+                {l:"Concluídos",v:concluidos,i:"✅"},
+              ]}/>
 
               {/* Linha 1: Evolução por mês + Peças mais solicitadas */}
               <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:16,marginBottom:16}}>
@@ -9080,20 +9089,13 @@ export default function App(){
               <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📊 Dashboard Financeiro SAS</div>
               <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>Acompanhamento de valores, deslocamento e retrabalho — SAS Financeiro</div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,marginBottom:18}}>
-              {[
-                {l:"Total Vendido",v:fmtR(totalValor),c:"#1565C0"},
-                {l:"Comissão (1%)",v:fmtR(totalComissao),c:"#1A7A3C"},
-                {l:"Gasto Combustível",v:fmtR(totalCombustivel),c:"#B45309"},
-                {l:"Horas Trabalhadas",v:totalHoras.toLocaleString("pt-BR"),c:"#334155"},
-                {l:"Retrabalhos",v:`${retrabalhos.length} · ${fmtR(custoRetrabalho)}`,c:"#C62828"},
-              ].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
-                  <div style={{fontSize:16,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
-                </div>
-              ))}
-            </div>
+            <KpiBIHeader subtitulo="Indicadores Financeiro SAS" kpis={[
+                {l:"Total Vendido",v:fmtR(totalValor),i:"💰"},
+                {l:"Comissão (1%)",v:fmtR(totalComissao),i:"✅"},
+                {l:"Gasto Combustível",v:fmtR(totalCombustivel),i:"⛽"},
+                {l:"Horas Trabalhadas",v:totalHoras.toLocaleString("pt-BR"),i:"⏱"},
+                {l:"Retrabalhos",v:`${retrabalhos.length} · ${fmtR(custoRetrabalho)}`,i:"🔁"},
+              ]}/>
             <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:14,marginBottom:14}}>
               <div className="card" style={{padding:14}}>
                 <div style={{fontSize:10,fontWeight:800,color:"#555",textTransform:"uppercase",letterSpacing:.5,marginBottom:8}}>🚗 Por Técnico — KM / Horas / Combustível (R$)</div>
@@ -10044,21 +10046,14 @@ export default function App(){
                 </div>
               </div>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:14,marginBottom:24}}>
-                {[
-                  {icon:"📋",l:"Total Propostas",v:lista.length,c:"#1A1A1A"},
-                  {icon:"💰",l:"Valor Total",v:fmtBRL(valorTotal),c:"#1565C0"},
-                  {icon:"✅",l:"Valor Convertido",v:fmtBRL(valorConvertido),c:"#22C55E"},
-                  {icon:"📈",l:"Taxa de Conversão",v:taxaConv+"%",c:"#C47D00"},
-                  {icon:"🛒",l:"Valor Venda",v:fmtBRL(valorVenda),c:"#1565C0"},
-                  {icon:"🏗️",l:"Valor Locação",v:fmtBRL(valorLocacao),c:"#F97316"},
-                ].map((s,i)=>(
-                  <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${s.c}`}}>
-                    <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{s.icon} {s.l}</div>
-                    <div style={{fontSize:22,fontWeight:900,color:s.c,marginTop:2}}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
+              <KpiBIHeader subtitulo="Indicadores Comerciais" kpis={[
+                  {l:"Total Propostas",v:lista.length,i:"📋"},
+                  {l:"Valor Total",v:fmtBRL(valorTotal),i:"💰"},
+                  {l:"Valor Convertido",v:fmtBRL(valorConvertido),i:"✅"},
+                  {l:"Taxa de Conversão",v:taxaConv+"%",i:"📈"},
+                  {l:"Valor Venda",v:fmtBRL(valorVenda),i:"🛒"},
+                  {l:"Valor Locação",v:fmtBRL(valorLocacao),i:"🏗️"},
+                ]}/>
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
                 <div className="card" style={{padding:18}}>
