@@ -2893,6 +2893,7 @@ export default function App(){
   const [dashOfiTech,setDashOfiTech]=useState("todos");
   const [dashOfiSetor,setDashOfiSetor]=useState("todos");
   const [showFiltrosDashOfi,setShowFiltrosDashOfi]=useState(false);
+  const [dashOfiTodosMeses,setDashOfiTodosMeses]=useState(false);
   const [dashOfiFrom,setDashOfiFrom]=useState("");
   const [dashOfiTo,setDashOfiTo]=useState("");
   const [dashOfi150Tech,setDashOfi150Tech]=useState("todos");
@@ -5339,7 +5340,7 @@ export default function App(){
             if(!a||!a.data)return false;
             if(dashOfiFrom&&a.data<dashOfiFrom)return false;
             if(dashOfiTo&&a.data>dashOfiTo)return false;
-            if(!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym))return false;
+            if(!dashOfiTodosMeses&&!dashOfiFrom&&!dashOfiTo&&!a.data.startsWith(ym))return false;
             if(dashOfiTech!=="todos"&&a.tecnico!==dashOfiTech)return false;
             if(dashOfiSetor!=="todos"&&classificarSetor(a.tecnico)!==dashOfiSetor)return false;
             return true;
@@ -5419,7 +5420,7 @@ export default function App(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
             <div>
               <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📊 KPIs Oficina - Hebert</div>
-              <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{MESES[agOfiMonth]} {agOfiYear} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
+              <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{dashOfiTodosMeses?"Todos os meses":`${MESES[agOfiMonth]} ${agOfiYear}`} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <button onClick={()=>setShowFiltrosDashOfi(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDashOfi?"#FFF":"#F8FAFC",cursor:"pointer",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
               <span style={{fontSize:11}}>🔍</span>
@@ -5431,11 +5432,12 @@ export default function App(){
           {showFiltrosDashOfi&&<div className="card" style={{padding:"8px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <select value={dashOfiSetor} onChange={e=>setDashOfiSetor(e.target.value)} style={{fontWeight:700}}><option value="todos">🏭 Todos os setores</option><option value="1340">Oficina 1340</option><option value="150">Oficina 150</option></select>
               <select value={dashOfiTech} onChange={e=>setDashOfiTech(e.target.value)}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_TECHS, ...(apontamentos||[]).map(a=>a.tecnico).filter(Boolean), ...(apontamentos150||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
-              <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-              <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)}/></div>
-              {(dashOfiTech!=="todos"||dashOfiSetor!=="todos"||dashOfiFrom||dashOfiTo)&&<button onClick={()=>{setDashOfiTech("todos");setDashOfiSetor("todos");setDashOfiFrom("");setDashOfiTo("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              <select value={agOfiMonth} onChange={e=>setAgOfiMonth(Number(e.target.value))} disabled={dashOfiTodosMeses} style={{opacity:dashOfiTodosMeses?.5:1}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+              <select value={agOfiYear} onChange={e=>setAgOfiYear(Number(e.target.value))} disabled={dashOfiTodosMeses} style={{opacity:dashOfiTodosMeses?.5:1}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
+              <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:700,color:"#1565C0",cursor:"pointer"}}><input type="checkbox" checked={dashOfiTodosMeses} onChange={e=>setDashOfiTodosMeses(e.target.checked)}/>📅 Todos os meses</label>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfiFrom} onChange={e=>setDashOfiFrom(e.target.value)} disabled={dashOfiTodosMeses}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfiTo} onChange={e=>setDashOfiTo(e.target.value)} disabled={dashOfiTodosMeses}/></div>
+              {(dashOfiTech!=="todos"||dashOfiSetor!=="todos"||dashOfiFrom||dashOfiTo||dashOfiTodosMeses)&&<button onClick={()=>{setDashOfiTech("todos");setDashOfiSetor("todos");setDashOfiFrom("");setDashOfiTo("");setDashOfiTodosMeses(false);}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
           </div>}
 
           {/* KPIs */}
@@ -10494,7 +10496,7 @@ export default function App(){
             if(!a.data)return false;
             if(dashOfi150From&&a.data<dashOfi150From)return false;
             if(dashOfi150To&&a.data>dashOfi150To)return false;
-            if(!dashOfi150From&&!dashOfi150To&&!a.data.startsWith(ym))return false;
+            if(!dashOfiTodosMeses&&!dashOfi150From&&!dashOfi150To&&!a.data.startsWith(ym))return false;
             if(dashOfi150Tech!=="todos"&&a.tecnico!==dashOfi150Tech)return false;
             return true;
           });
@@ -10568,15 +10570,16 @@ export default function App(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10}}>
             <div>
               <div style={{fontWeight:900,fontSize:24,marginBottom:2}}>📊 KPIs Oficina - 150</div>
-              <div style={{fontSize:12,color:"#888"}}>{MESES[agOfi150Month]} {agOfi150Year} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
+              <div style={{fontSize:12,color:"#888"}}>{dashOfiTodosMeses?"Todos os meses":`${MESES[agOfi150Month]} ${agOfi150Year}`} · {apMes.length} apontamentos · {techAtivos.length} técnico(s) ativo(s)</div>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
               <select value={dashOfi150Tech} onChange={e=>setDashOfi150Tech(e.target.value)} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">👷 Todos técnicos</option>{[...new Set([...OFICINA_150_TECHS, ...(apontamentos150||[]).map(a=>a.tecnico).filter(Boolean)])].sort().map(t=><option key={t}>{t}</option>)}</select>
-              <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-              <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}>{[2025,2026,2027,2028,2029].map(y=><option key={y}>{y}</option>)}</select>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfi150To} onChange={e=>setDashOfi150To(e.target.value)} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
-              {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");}}>✕ Limpar</BtnG>}
+              <select value={agOfi150Month} onChange={e=>setAgOfi150Month(Number(e.target.value))} disabled={dashOfiTodosMeses} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",opacity:dashOfiTodosMeses?.5:1}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+              <select value={agOfi150Year} onChange={e=>setAgOfi150Year(Number(e.target.value))} disabled={dashOfiTodosMeses} style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"1px solid #E0E0E0",opacity:dashOfiTodosMeses?.5:1}}>{[2025,2026,2027,2028,2029].map(y=><option key={y}>{y}</option>)}</select>
+              <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:700,color:"#1565C0",cursor:"pointer"}}><input type="checkbox" checked={dashOfiTodosMeses} onChange={e=>setDashOfiTodosMeses(e.target.checked)}/>📅 Todos os meses</label>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashOfi150From} onChange={e=>setDashOfi150From(e.target.value)} disabled={dashOfiTodosMeses} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashOfi150To} onChange={e=>setDashOfi150To(e.target.value)} disabled={dashOfiTodosMeses} style={{fontSize:12,padding:"5px 8px",borderRadius:6,border:"1px solid #E0E0E0"}}/></div>
+              {(dashOfi150Tech!=="todos"||dashOfi150From||dashOfi150To||dashOfiTodosMeses)&&<BtnG onClick={()=>{setDashOfi150Tech("todos");setDashOfi150From("");setDashOfi150To("");setDashOfiTodosMeses(false);}}>✕ Limpar</BtnG>}
             </div>
           </div>
 
