@@ -5984,6 +5984,7 @@ export default function App(){
 
         {/* ── PROCESSOS MAU USO ── */}
         {tab==="mau_uso"&&(()=>{
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const ST={pendente:{l:"Pendente",c:"#C62828",bg:"#FFF0F0"},em_andamento:{l:"Em Andamento",c:"#1565C0",bg:"#EFF6FF"},concluido:{l:"Concluído",c:"#1A7A3C",bg:"#F0FFF5"},arquivado:{l:"Arquivado",c:"#888",bg:"#F5F5F5"}};
           const ST_SOLID={pendente:"#7C2D2D",em_andamento:"#1D4E89",concluido:"#14532D",arquivado:"#616161"};
           const lista=(processosMU||[]).filter(p=>p&&(showArqMU?p.processoStatus==="arquivado":p.processoStatus!=="arquivado"));
