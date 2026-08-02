@@ -121,7 +121,7 @@ const USERS = [
   { id:"matheus_m",    username:"matheus_m",         name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:true, apenasOficina150:true },
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
-const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle"];
+const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi silva","lucas pimentel","gustavo","manuela"];
 const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEYS.some(k=>n.includes(k)):false;};
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
@@ -307,11 +307,11 @@ const classificarSetor=(tecnico)=>{
   if(!n)return "1340";
   return SETOR_150_TECHS.some(t=>n.includes(t))?"150":"1340";
 };
-const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe","Gracielle"];
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe"];
 // Planejamento Hebert = todos menos Matheus/Pedro Souza/Pedro Pimentel
 const OFICINA_TECHS_HEBERT = OFICINA_TECHS.filter(t=>!["Pedro Souza","Pedro Pimentel","Matheus Felipe"].includes(t));
 // Planejamento Matheus = só esses três
-const OFICINA_TECHS_MATHEUS = ["Matheus Felipe","Pedro Souza","Pedro Pimentel","Gracielle"];
+const OFICINA_TECHS_MATHEUS = ["Matheus Felipe","Pedro Souza","Pedro Pimentel"];
 
 // ── PLACAS DA FROTA DE CARROS ─────────────────────────────────────────────────
 const PLACAS_CARROS = ["PZE4F85","RNE5A21","RTH7C23","RTH7B95","RNP2B27","QXY5H15","PUY4392","OOY0801","RFE6J64","QQC4923","RMF5D28","RNQ3F11"];
