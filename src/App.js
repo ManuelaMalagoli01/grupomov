@@ -2386,16 +2386,26 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>
     </div>
 
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:32}}>
-      <div className="card" style={{padding:18,borderTop:"3px solid #1565C0"}}>
-        <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱️ SLA até Envio ao Cliente</div>
-        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Dias médios da abertura até o envio (🟢 ≤7 · 🟠 8-29 · 🔴 30+)</div>
-        {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
-        <ChartCanvas type="bar" height={200} data={{
-          labels:serie.map(s=>s.lab),
-          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828"),borderRadius:6}]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
+    <div className="card" style={{padding:18,marginBottom:20,borderTop:"4px solid #1565C0"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:4}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:15,marginBottom:2}}>⏱️ SLA — Data de Criação × Data de Envio ao Cliente</div>
+          <div style={{fontSize:11,color:"#94A3B8"}}>Quantos dias cada processo ficou parado até ser enviado (🟢 ≤7 · 🟠 8-29 · 🔴 30+)</div>
+        </div>
+        {slaEnvioValores.length>0&&<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <div style={{textAlign:"center",background:"#EFF6FF",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase"}}>Média</div><div style={{fontSize:18,fontWeight:900,color:"#1565C0"}}>{slaEnvioMedio}d</div></div>
+          <div style={{textAlign:"center",background:"#F0FFF5",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase"}}>Melhor</div><div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{Math.min(...slaEnvioValores)}d</div></div>
+          <div style={{textAlign:"center",background:"#FFF0F0",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#C62828",textTransform:"uppercase"}}>Pior</div><div style={{fontSize:18,fontWeight:900,color:"#C62828"}}>{Math.max(...slaEnvioValores)}d</div></div>
+        </div>}
       </div>
+      {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
+      <ChartCanvas type="bar" height={220} data={{
+        labels:serie.map(s=>s.lab),
+        datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828"),borderRadius:6}]
+      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr",gap:16,marginBottom:32}}>
       <div className="card" style={{padding:18,borderTop:"3px solid #334155"}}>
         <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔄 Taxa de Conversão</div>
         <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor R$ concluído/faturado sobre o total</div>
