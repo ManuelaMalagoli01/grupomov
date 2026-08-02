@@ -2789,7 +2789,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
           <SubBtn k="carros" l="🚙 Carros"/>
           <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
           <SubBtn k="escala_diaria" l="🗓️ Escala Diária"/>
-          <SubBtn k="dificuldades_tecnicos" l="⚠️ Dificuldades dos Técnicos"/>
+          <SubBtn k="dificuldades_tecnicos" l="⚠️ Avaliação Técnica"/>
         </SubFolder>
 
         <SubFolder label="Frota" icon="🔋" open={subFrotaOpen} setOpen={setSubFrotaOpen} ativa={SUB_FROTA.includes(tab)} color="#C2410C">
@@ -8403,7 +8403,7 @@ export default function App(){
           const abrirNovaDificuldade=()=>{setDificuldadeEdit({id:null,data:TODAY_STR,tecnico:TECNICOS_ATIVOS_JUL[0]||"",categoria:DIFICULDADE_CATEGORIAS[0],descricao:"",arquivado:false});setDificuldadeModal(true);};
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⚠️ Dificuldades dos Técnicos</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s)</div></div>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⚠️ Avaliação Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s)</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 <button onClick={()=>setShowArqDificuldade(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqDificuldade?"#1A1A1A":"#FFF",color:showArqDificuldade?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqDificuldade?"✕ Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"dificuldades_tecnicos",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"categoria",label:"Categoria"},{key:"descricao",label:"Descrição"}])}/>
