@@ -2618,7 +2618,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","dashboard_clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "dificuldades_tecnicos", "banco_horas", "carros", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -2631,7 +2631,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
-  const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria"];
+  const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria","dificuldades_tecnicos"];
   const SUB_FROTA=["pendencias_frota"];
   const [subOfiOpen,setSubOfiOpen]=useState(false);
   const [subExtOpen,setSubExtOpen]=useState(false);
@@ -2789,6 +2789,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
           <SubBtn k="carros" l="🚙 Carros"/>
           <SubBtn k="ponto_diario" l="📋 Ponto Diário"/>
           <SubBtn k="escala_diaria" l="🗓️ Escala Diária"/>
+          <SubBtn k="dificuldades_tecnicos" l="⚠️ Dificuldades dos Técnicos"/>
         </SubFolder>
 
         <SubFolder label="Frota" icon="🔋" open={subFrotaOpen} setOpen={setSubFrotaOpen} ativa={SUB_FROTA.includes(tab)} color="#C2410C">
@@ -3102,6 +3103,22 @@ export default function App(){
   const APON_EMPTY={data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0]||"",servico:"",inicio:"",termino:"",total:"",oficina:"1340",relatorio:"",obs:""};
   const [aponForm,setAponForm]=useState({data:TODAY_STR,os:"",patrimonio:"",tecnico:"",servico:"",inicio:"",termino:"",total:"",oficina:"1340",relatorio:"",obs:""});
   const [apontamentos150,setApontamentos150]=useState([]);
+  const [dificuldadesTec,setDificuldadesTec]=useState([]);
+  const [showArqDificuldade,setShowArqDificuldade]=useState(false);
+  const [dificuldadeModal,setDificuldadeModal]=useState(false);
+  const [dificuldadeEdit,setDificuldadeEdit]=useState(null);
+  const [modalImportDificuldade,setModalImportDificuldade]=useState(false);
+  const [dificuldadeFiltroTec,setDificuldadeFiltroTec]=useState("todos");
+  const [dificuldadeFiltroCat,setDificuldadeFiltroCat]=useState("todos");
+  const DIFICULDADE_CATEGORIAS=["Preenchimento de Relatório","Pontualidade","Mau Uso","Relacionamento com Colegas e Líderes","Elogio","Seguir Instruções","Contaminação de Ambiente","Outros"];
+  const TECNICOS_ATIVOS_JUL=(()=>{
+    const corte="2026-07-01";
+    const setNomes=new Set();
+    (apontamentos||[]).forEach(a=>{if(a&&a.tecnico&&a.data&&a.data>=corte&&!OFICINA_TECHS_OUTROS.includes(a.tecnico))setNomes.add(a.tecnico);});
+    (apontamentos150||[]).forEach(a=>{if(a&&a.tecnico&&a.data&&a.data>=corte&&!OFICINA_TECHS_OUTROS.includes(a.tecnico))setNomes.add(a.tecnico);});
+    (reports||[]).forEach(r=>{if(r&&r.tecnico&&r.date&&r.date>=corte&&!OFICINA_TECHS_OUTROS.includes(r.tecnico))setNomes.add(r.tecnico);});
+    return [...setNomes].sort();
+  })();
   const [comercial,setComercial]=useState([]);
   const [showFiltrosComercial,setShowFiltrosComercial]=useState(false);
   const [comFiltroTermometro,setComFiltroTermometro]=useState("todos");
@@ -3404,6 +3421,8 @@ export default function App(){
       if(escalaRows.length>0) setEscalaDiaria(escalaRows);
       const servFechRows=await safeGet("servicos_fechados");
       if(servFechRows.length>0) setServicosFechados(servFechRows);
+      const dificuldadeRows=await safeGet("dificuldades_tecnicos");
+      if(dificuldadeRows.length>0) setDificuldadesTec(dificuldadeRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3458,7 +3477,7 @@ export default function App(){
       relatorios:setReports, processos_mu:setProcessosMU, processos_af:setProcessosAF,
       execucao_mau_uso:setExecMauUso, sas_pecas:setSasPecas, comercial:setComercial,
       sas_manutencao:setSasManutencao, sas_vendas:setSasVendas, documentos_sas:setDocumentosSas,
-      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados,
+      vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados, dificuldades_tecnicos:setDificuldadesTec,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
@@ -3590,6 +3609,7 @@ export default function App(){
   });
   const hebCrud=mkCrud("pendencias_hebert",setPendHebert);
   const escalaCrud=mkCrud("escala_diaria",setEscalaDiaria);
+  const dificuldadeCrud=mkCrud("dificuldades_tecnicos",setDificuldadesTec);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes)=>{
@@ -4420,6 +4440,33 @@ export default function App(){
             </div>
           </div>);
         })()}
+        {dificuldadeModal&&dificuldadeEdit&&(()=>{
+          const d=dificuldadeEdit;
+          const upd=(k,v)=>setDificuldadeEdit(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const salvar=()=>{
+            if(!d.tecnico){alert("Selecione o técnico.");return;}
+            if(d.id){ dificuldadeCrud.update(d.id,d); }
+            else{ const row={...d,id:`DIF${Date.now()}_${Math.floor(Math.random()*9999)}`,arquivado:false,registradoPor:user.name,registradoEm:new Date().toISOString()}; setDificuldadesTec(p=>[row,...p]); db.save("dificuldades_tecnicos",row.id,row); }
+            notify("✅ Registro salvo!"); setDificuldadeModal(false); setDificuldadeEdit(null);
+          };
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{d.id?"✏️ Editar":"⚠️ Novo"} Registro</div><button onClick={()=>{setDificuldadeModal(false);setDificuldadeEdit(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                <div><label style={lbl}>Data</label><input type="date" value={d.data||""} onChange={e=>upd("data",e.target.value)} style={{...inp,maxWidth:220}}/></div>
+                <div><label style={lbl}>Técnico</label><select value={d.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} style={inp}><option value="">Selecione...</option>{TECNICOS_ATIVOS_JUL.map(t=><option key={t} value={t}>{t}</option>)}</select></div>
+                <div><label style={lbl}>Categoria</label><select value={d.categoria||DIFICULDADE_CATEGORIAS[0]} onChange={e=>upd("categoria",e.target.value)} style={inp}>{DIFICULDADE_CATEGORIAS.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+                <div><label style={lbl}>Descrição</label><textarea value={d.descricao||""} onChange={e=>upd("descricao",e.target.value)} placeholder="Detalhes do ocorrido..." rows={4} style={{...inp,resize:"vertical"}}/></div>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
+                  <BtnG onClick={()=>{setDificuldadeModal(false);setDificuldadeEdit(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>);
+        })()}
         {feriasModal&&feriasEdit&&(()=>{
           const d=feriasEdit;
           const upd=(k,v)=>setFeriasEdit(p=>({...p,[k]:v}));
@@ -4591,6 +4638,7 @@ export default function App(){
         {modalImportFerias&&<ImportExcelModal onClose={()=>setModalImportFerias(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`FER${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setFerias(p=>[...stamp,...(p||[])]);db.saveBatch("ferias_colaboradores",stamp);setModalImportFerias(false);notify(`✅ ${stamp.length} colaborador(es) importado(s)!`);}}/>}
         {modalImportTrein&&<ImportExcelModal onClose={()=>setModalImportTrein(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`TRE${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),tecnicos:d.tecnicos?String(d.tecnicos).split(",").map(s=>s.trim()).filter(Boolean):[]}));setTreinamentos(p=>[...stamp,...(p||[])]);db.saveBatch("treinamentos_reunioes",stamp);setModalImportTrein(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
         {modalImportEscala&&<ImportExcelModal onClose={()=>setModalImportEscala(false)} onImport={novos=>{const stamp=novos.map(d=>({id:d.id||`ESC${Date.now()}${Math.random().toString(36).slice(2,6)}`,data:d.data||"",atribuicoes:d.atribuicoes?String(d.atribuicoes).split(";").map(s=>{const[tecnico,local]=s.split("→").map(x=>(x||"").trim());return{tecnico:tecnico||"",local:local||"",obs:""};}).filter(a=>a.tecnico||a.local):[],obs:d.obs||"",registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}));setEscalaDiaria(p=>[...stamp,...(p||[])]);db.saveBatch("escala_diaria",stamp);setModalImportEscala(false);notify(`✅ ${stamp.length} escala(s) importada(s)!`);}}/>}
+        {modalImportDificuldade&&<ImportExcelModal onClose={()=>setModalImportDificuldade(false)} onImport={novos=>{const stamp=novos.map(d=>({id:d.id||`DIF${Date.now()}${Math.random().toString(36).slice(2,6)}`,data:d.data||TODAY_STR,tecnico:d.tecnico||"",categoria:d.categoria||"Outros",descricao:d.descricao||"",registradoPor:user.name,registradoEm:new Date().toISOString(),arquivado:false}));setDificuldadesTec(p=>[...stamp,...(p||[])]);db.saveBatch("dificuldades_tecnicos",stamp);setModalImportDificuldade(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
         {modalImportPonto&&<ImportExcelModal onClose={()=>setModalImportPonto(false)} onImport={novos=>{novos.forEach(d=>{if(!d.tecnico)return;const dt=d.data||TODAY_STR;const stKey=Object.entries(PONTO_STATUS).find(([k,s])=>s.l===d.status||k===d.status);setPonto(d.tecnico,dt,{status:stKey?stKey[0]:"presente",obs:d.obs||""});});setModalImportPonto(false);notify(`✅ ${novos.length} registro(s) importado(s)!`);}}/>}
         {modalImportBH&&<ImportExcelModal onClose={()=>setModalImportBH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`BH${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoEm:d.registradoEm||new Date().toISOString()}));setBancoHoras(p=>[...stamp,...(p||[])]);db.saveBatch("banco_horas",stamp);setModalImportBH(false);notify(`✅ ${stamp.length} registro(s) importado(s)!`);}}/>}
         {modalImportPendManuela&&<ImportExcelModal onClose={()=>setModalImportPendManuela(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||`PM2${Date.now()}${Math.random().toString(36).slice(2,6)}`,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString(),arquivado:false}));setPendManuela(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_manuela",stamp);setModalImportPendManuela(false);notify(`✅ ${stamp.length} pendência(s) importada(s)!`);}}/>}
@@ -8339,6 +8387,59 @@ export default function App(){
                     </div>
                   </div>);
                 })}
+              </div>
+            )}
+          </div>);
+        })()}
+
+        {/* ── DIFICULDADES DOS TÉCNICOS ── */}
+        {tab==="dificuldades_tecnicos"&&(()=>{
+          const CAT_COR={"Preenchimento de Relatório":"#1565C0","Pontualidade":"#B45309","Mau Uso":"#C62828","Relacionamento com Colegas e Líderes":"#6D28D9","Elogio":"#166534","Seguir Instruções":"#0D9488","Contaminação de Ambiente":"#92400E","Outros":"#64748B"};
+          const lista=(dificuldadesTec||[]).filter(d=>d&&(showArqDificuldade?d.arquivado:!d.arquivado))
+            .filter(d=>dificuldadeFiltroTec==="todos"||d.tecnico===dificuldadeFiltroTec)
+            .filter(d=>dificuldadeFiltroCat==="todos"||d.categoria===dificuldadeFiltroCat)
+            .sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const porCategoria=DIFICULDADE_CATEGORIAS.map(c=>({c,qtd:(dificuldadesTec||[]).filter(d=>d&&!d.arquivado&&d.categoria===c).length})).filter(x=>x.qtd>0);
+          const abrirNovaDificuldade=()=>{setDificuldadeEdit({id:null,data:TODAY_STR,tecnico:TECNICOS_ATIVOS_JUL[0]||"",categoria:DIFICULDADE_CATEGORIAS[0],descricao:"",arquivado:false});setDificuldadeModal(true);};
+          return(<div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⚠️ Dificuldades dos Técnicos</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s)</div></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button onClick={()=>setShowArqDificuldade(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqDificuldade?"#1A1A1A":"#FFF",color:showArqDificuldade?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqDificuldade?"✕ Ativos":"Arquivados"}</button>
+                <BtnExcel onClick={()=>exportCSV(lista,"dificuldades_tecnicos",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"categoria",label:"Categoria"},{key:"descricao",label:"Descrição"}])}/>
+                <BtnImport onClick={()=>setModalImportDificuldade(true)}/>
+                <BtnY onClick={abrirNovaDificuldade}>+ Novo Registro</BtnY>
+              </div>
+            </div>
+            {porCategoria.length>0&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+              {porCategoria.map(({c,qtd})=>(
+                <div key={c} style={{fontSize:11,fontWeight:700,color:"#FFF",background:CAT_COR[c]||"#64748B",borderRadius:20,padding:"5px 12px"}}>{c}: {qtd}</div>
+              ))}
+            </div>}
+            <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+              <select value={dificuldadeFiltroTec} onChange={e=>setDificuldadeFiltroTec(e.target.value)}><option value="todos">Técnico: Todos</option>{TECNICOS_ATIVOS_JUL.map(t=><option key={t} value={t}>{t}</option>)}</select>
+              <select value={dificuldadeFiltroCat} onChange={e=>setDificuldadeFiltroCat(e.target.value)}><option value="todos">Categoria: Todas</option>{DIFICULDADE_CATEGORIAS.map(c=><option key={c} value={c}>{c}</option>)}</select>
+              {(dificuldadeFiltroTec!=="todos"||dificuldadeFiltroCat!=="todos")&&<button onClick={()=>{setDificuldadeFiltroTec("todos");setDificuldadeFiltroCat("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>
+            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>⚠️</div><div style={{fontSize:13,fontWeight:600}}>Nenhum registro</div></div>):(
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
+                {lista.map(d=>(
+                  <div key={d.id} className="card" style={{padding:0,overflow:"hidden",opacity:d.arquivado?0.6:1,borderLeft:`4px solid ${CAT_COR[d.categoria]||"#64748B"}`}}>
+                    <div style={{padding:"8px 12px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:CAT_COR[d.categoria]||"#64748B",borderRadius:20,padding:"3px 10px"}}>{d.categoria}</span>
+                      <div style={{display:"flex",gap:4}}>
+                        <button onClick={()=>{setDificuldadeEdit(d);setDificuldadeModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✏️</button>
+                        <button onClick={()=>dificuldadeCrud.update(d.id,{arquivado:!d.arquivado})} title={d.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>{d.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir?"))dificuldadeCrud.del(d.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                      </div>
+                    </div>
+                    <div style={{padding:"9px 12px",display:"flex",flexDirection:"column",gap:5}}>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{d.tecnico}</div>
+                      <div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(d.data)}</div>
+                      {d.descricao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:5,borderTop:"1px solid #F1F5F9"}}>{d.descricao}</div>}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>);
