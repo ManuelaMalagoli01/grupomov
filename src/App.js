@@ -122,10 +122,10 @@ const USERS = [
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel","Gracielle"];
-const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel"];
+const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador","Usinagem/Soldagem","Pintura","Outros"];
 const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Bateria e Mecânica":"Mecânica","Bateria/Carregador":"Bateria","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Usinagem/Soldagem"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Usinagem/Soldagem"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(TECH_SERVICO_FIXO[a.tecnico])return TECH_SERVICO_FIXO[a.tecnico];
@@ -174,6 +174,7 @@ const TECNICO_SERVICO_AUTO=[
   {match:"thiago",servico:"Outros"},
   {match:"alexandre",servico:"Outros"},
   {match:"lucas",servico:"Outros"},
+  {match:"gustavo",servico:"Outros"},
 ];
 const autoServicoPorTecnico=(tecNome)=>{
   const n=normalizeTec(tecNome);
@@ -2906,7 +2907,7 @@ export default function App(){
   const [dashOfiTech,setDashOfiTech]=useState("todos");
   const [dashOfiSetor,setDashOfiSetor]=useState("todos");
   const [showFiltrosDashOfi,setShowFiltrosDashOfi]=useState(false);
-  const [dashOfiTodosMeses,setDashOfiTodosMeses]=useState(false);
+  const [dashOfiTodosMeses,setDashOfiTodosMeses]=useState(true);
   const [dashOfiFrom,setDashOfiFrom]=useState("");
   const [dashOfiTo,setDashOfiTo]=useState("");
   const [dashOfi150Tech,setDashOfi150Tech]=useState("todos");
@@ -7037,18 +7038,6 @@ export default function App(){
                     ))}
                   </div>
 
-                  {retrabalhos.length>0&&<div style={{background:"#FFF3E8",border:"1.5px solid #FBBF24",borderRadius:12,padding:"14px 18px",marginBottom:16}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:16}}>⚠️</span><div style={{fontSize:12,fontWeight:800,color:"#92400E"}}>Alerta de Retrabalho — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
-                    <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:160,overflowY:"auto"}}>
-                      {retrabalhos.map((r,i)=>(
-                        <div key={i} style={{background:"#FFF",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11}}>
-                          <div><b>PAT {r.pat}</b> — {r.cliente||"—"} <span style={{color:"#94A3B8"}}>· {r.tecnicoAnterior}{r.tecnico!==r.tecnicoAnterior?` → ${r.tecnico}`:""}</span></div>
-                          <div style={{color:"#C47D00",fontWeight:700}}>{fmtDataBR(r.dataAnterior)} → {fmtDataBR(r.dataAtual)} ({r.dias}d)</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>}
-
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:14}}>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
@@ -7097,6 +7086,18 @@ export default function App(){
                       <ChartCanvas type="bar" data={sDS2} height={220} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10,weight:"600"},boxWidth:10,padding:10,usePointStyle:true}},tooltip:{backgroundColor:"#1E293B",padding:10,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"rgba(0,0,0,.04)"}}}}}/>
                     </div>
                   </div>
+
+                  {retrabalhos.length>0&&<div style={{background:"#FFF3E8",border:"1.5px solid #FBBF24",borderRadius:12,padding:"14px 18px",marginTop:16}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:16}}>⚠️</span><div style={{fontSize:12,fontWeight:800,color:"#92400E"}}>Alerta de Retrabalho — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:5,maxHeight:160,overflowY:"auto"}}>
+                      {retrabalhos.map((r,i)=>(
+                        <div key={i} style={{background:"#FFF",borderRadius:8,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11}}>
+                          <div><b>PAT {r.pat}</b> — {r.cliente||"—"} <span style={{color:"#94A3B8"}}>· {r.tecnicoAnterior}{r.tecnico!==r.tecnicoAnterior?` → ${r.tecnico}`:""}</span></div>
+                          <div style={{color:"#C47D00",fontWeight:700}}>{fmtDataBR(r.dataAnterior)} → {fmtDataBR(r.dataAtual)} ({r.dias}d)</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>}
                 </>
               );
             })()}
