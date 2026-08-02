@@ -6034,7 +6034,7 @@ export default function App(){
             </div>}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
               <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:8,alignItems:"flex-start"}}>
-              {["concluidos_status","aguardando_retorno","em_negociacao","aprovado_cliente","negado_cliente","cobrado_faturado","encerrado_sem_cobranca"].filter(k=>listaFil.some(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===k)).map(grupoKey=>{
+              {["concluidos_status","aguardando_retorno","em_negociacao","aprovado_cliente","negado_cliente","cobrado_faturado","encerrado_sem_cobranca"].filter(k=>k==="concluidos_status"||listaFil.some(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===k)).map(grupoKey=>{
                 const grupo=listaFil.filter(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===grupoKey);
                 const infoGrupo=grupoKey==="concluidos_status"?{l:"✅ Concluídos",c:"#1A7A3C",bg:"#F0FFF5"}:(APROV_STATUS[grupoKey]||{l:grupoKey,c:"#64748B",bg:"#F5F5F5"});
                 const totalGrupo=grupo.reduce((a,p)=>a+parseVal(p.valor),0);
