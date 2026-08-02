@@ -6046,7 +6046,7 @@ export default function App(){
                     </div>
                     <div style={{fontSize:11,fontWeight:700,color:infoGrupo.c,marginTop:2}}>R$ {totalGrupo.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
                   </div>
-              <div style={{display:"flex",flexDirection:"column",gap:10,padding:10,overflowY:"auto",flex:1}}>
+              <div style={{display:"flex",flexDirection:"column",gap:10,padding:10,overflowY:"auto",flex:1,minHeight:0}}>
                 {grupo.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
@@ -6055,7 +6055,7 @@ export default function App(){
                   const nivel=(slaD===null||!emAberto)?null:slaD<=7?"verde":slaD<30?"laranja":"vermelho";
                   const urgente=nivel==="vermelho";
                   const incompleto=!p.relatorio||!p.numMauUso||!p.valor;
-                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,alignSelf:"start",background:urgente?"#C62828":nivel==="laranja"?"#FFF8F0":nivel==="verde"?"#F0FFF5":undefined,borderLeft:nivel==="laranja"?"5px solid #E67E00":nivel==="verde"?"5px solid #1A7A3C":undefined,border:urgente?"2px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 2.2s ease-in-out infinite":undefined}}>
+                  return(<div key={p.id} className="card" style={{padding:urgente?5:0,overflow:"hidden",opacity:p.processoStatus==="arquivado"?0.6:1,flexShrink:0,background:urgente?"#C62828":nivel==="laranja"?"#FFF8F0":nivel==="verde"?"#F0FFF5":undefined,borderLeft:nivel==="laranja"?"5px solid #E67E00":nivel==="verde"?"5px solid #1A7A3C":undefined,border:urgente?"2px solid #7F1D1D":undefined,animation:urgente?"pulseUrgente 2.2s ease-in-out infinite":undefined}}>
                     {nivel==="laranja"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#E67E00",textAlign:"center",letterSpacing:.3}}>🟠 {slaD} DIAS SEM RETORNO</div>}
                     {nivel==="verde"&&<div style={{padding:"4px 10px",fontSize:10,fontWeight:800,color:"#FFF",background:"#1A7A3C",textAlign:"center",letterSpacing:.3}}>🟢 {slaD} DIAS EM ABERTO</div>}
                     {urgente&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>🔴 {slaD} DIAS SEM RETORNO — ATENÇÃO 🔴</div>}
