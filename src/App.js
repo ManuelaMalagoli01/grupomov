@@ -2338,21 +2338,32 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
       <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:32,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:6,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
       {[
-        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all)),c:"#1F2937",pct:null},
-        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),c:"#166534",pct:all.length?Math.round(concluidosTodos.length/all.length*100):0},
-        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1D4E89",pct:all.length?Math.round(abertosJanela.length/all.length*100):0},
-        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#B45309",pct:all.length?Math.round(pendentes.length/all.length*100):0},
+        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1D4E89"},
+        {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#166534"},
+        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#B45309"},
       ].map((k,i)=>(
         <div key={i} style={{padding:"16px 18px",background:k.c}}>
           <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{display:"flex",alignItems:"baseline",gap:6,marginTop:4}}><span style={{fontSize:26,fontWeight:800,color:"#FFF",lineHeight:1}}>{k.v}</span>{k.pct!==null&&<span style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,.7)"}}>({k.pct}%)</span>}</div>
+          <div style={{fontSize:26,fontWeight:800,color:"#FFF",lineHeight:1,marginTop:4}}>{k.v}</div>
           <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:4}}>{k.sub}</div>
         </div>
       ))}
     </div>
-
+    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>📊 Total Geral (Tudo — todos os períodos)</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:32}}>
+      {[
+        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all))},
+        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),pct:all.length?Math.round(concluidosTodos.length/all.length*100):0},
+      ].map((k,i)=>(
+        <div key={i} className="card" style={{padding:"9px 12px",borderLeft:"3px solid #CBD5E1"}}>
+          <div style={{fontSize:8,color:"#94A3B8",fontWeight:700,textTransform:"uppercase"}}>{k.l}</div>
+          <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:16,fontWeight:800,color:"#334155"}}>{k.v}</span>{k.pct!==undefined&&<span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({k.pct}%)</span>}</div>
+          <div style={{fontSize:10,fontWeight:600,color:"#94A3B8"}}>{k.sub}</div>
+        </div>
+      ))}
+    </div>
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
     <div className="card" style={{padding:20,marginBottom:20}}>
       <div style={{fontSize:12,fontWeight:700,color:"#334155",marginBottom:14}}>Concluído/Faturado × Aberto ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
@@ -2360,7 +2371,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         labels:serie.map(s=>s.lab),
         datasets:[
           {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
-          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#CBD5E1",borderRadius:6},
+          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#94A3B8",borderRadius:6},
         ]
       }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:11},boxWidth:10,usePointStyle:true,padding:16}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F5F5F5"}}}}}/>
     </div>
@@ -2372,7 +2383,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
         <ChartCanvas type="line" height={200} data={{
           labels:serie.map(s=>s.lab),
-          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",fill:true,tension:.3,spanGaps:true}]
+          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C033",borderWidth:3,pointBackgroundColor:"#1565C0",pointRadius:4,fill:true,tension:.3,spanGaps:true}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`},grid:{color:"#F5F5F5"}}}}}/>}
       </div>
       <div className="card" style={{padding:20}}>
