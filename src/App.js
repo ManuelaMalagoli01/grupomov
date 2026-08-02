@@ -3793,7 +3793,7 @@ export default function App(){
   }
 
   .tbl-wrap{overflow-x:auto;width:100%;}
-  table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px;font-family:'Inter',sans-serif;}
   .compact-table th{padding:5px 6px!important;font-size:8.5px!important;}
   .compact-table td{padding:4px 3px!important;font-size:9.5px!important;}
   .compact-table td input,.compact-table td select{font-size:9.5px!important;min-width:0!important;}
