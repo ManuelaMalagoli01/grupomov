@@ -2374,29 +2374,29 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       ))}
     </div>
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
-    <div className="card" style={{padding:18,marginBottom:20}}>
+    <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #1A7A3C"}}>
       <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Concluído/Faturado × Aberto</div>
       <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>{periodo==="dia"?"Por dia":periodo==="semana"?"Por semana":"Por mês"}</div>
       <ChartCanvas type="bar" height={190} data={{
         labels:serie.map(s=>s.lab),
         datasets:[
           {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
-          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#94A3B8",borderRadius:6},
+          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#E67E00",borderRadius:6},
         ]
       }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:32}}>
-      <div className="card" style={{padding:18}}>
+      <div className="card" style={{padding:18,borderTop:"3px solid #1565C0"}}>
         <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱️ SLA até Envio ao Cliente</div>
-        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Dias médios da abertura até o envio</div>
+        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Dias médios da abertura até o envio (🟢 ≤7 · 🟠 8-29 · 🔴 30+)</div>
         {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
-        <ChartCanvas type="line" height={200} data={{
+        <ChartCanvas type="bar" height={200} data={{
           labels:serie.map(s=>s.lab),
-          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),borderColor:"#1565C0",backgroundColor:"#1565C022",borderWidth:2,fill:true,tension:.3,spanGaps:true}]
+          datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828"),borderRadius:6}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
       </div>
-      <div className="card" style={{padding:18}}>
+      <div className="card" style={{padding:18,borderTop:"3px solid #334155"}}>
         <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔄 Taxa de Conversão</div>
         <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor R$ concluído/faturado sobre o total</div>
         {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem dados no período</div>:
@@ -2407,7 +2407,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32,borderTop:"3px solid #6A1B9A"}}>
       <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
       <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,alignItems:"center"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
@@ -2426,7 +2426,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showMicro?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",borderLeft:"4px solid #1A1A1A",background:showMicro?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
       <span style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>🔬 Detalhamento completo (por processo)</span>
       <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showMicro?"▲ Ocultar":"▼ Mostrar"}</span>
     </button>
@@ -2442,14 +2442,6 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       return <TabelaMicro titulo={a.titulo} icone={a.icone} corSec={a.cor} registros={a.registros} vazio={a.vazio} mostrarConclusao={a.conc} mostrarTempo={a.tempo}/>;})()}
     </>}
 
-    <div className="card" style={{padding:20,marginTop:18}}>
-      <div style={{fontWeight:800,fontSize:14,marginBottom:10,color:"#1A1A1A"}}>🏢 Top Empresas por Valor</div>
-      {topEmp.length===0?<div style={{color:"#CCC",fontSize:12,textAlign:"center",padding:20}}>Sem dados</div>:
-      <ChartCanvas type="bar" height={Math.max(160,topEmp.length*46)} data={{
-        labels:topEmp.map(([emp])=>emp.length>28?emp.slice(0,28)+"…":emp),
-        datasets:[{label:"Valor",data:topEmp.map(([,val])=>val),backgroundColor:cor,borderRadius:6,barThickness:22}]
-      }} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtR(c.raw)}}},scales:{x:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F5F5F5"}},y:{grid:{display:false}}}}}/>}
-    </div>
   </div>);
 }
 
