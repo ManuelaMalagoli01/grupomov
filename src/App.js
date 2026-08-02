@@ -3110,6 +3110,7 @@ export default function App(){
   const [modalImportDificuldade,setModalImportDificuldade]=useState(false);
   const [dificuldadeFiltroTec,setDificuldadeFiltroTec]=useState("todos");
   const [dificuldadeFiltroCat,setDificuldadeFiltroCat]=useState("todos");
+  const [expandedTecAvaliacao,setExpandedTecAvaliacao]=useState(null);
   const DIFICULDADE_CATEGORIAS=["Preenchimento de Relatório","Pontualidade","Mau Uso","Relacionamento com Colegas e Líderes","Elogio","Seguir Instruções","Contaminação de Ambiente","Outros"];
   const TECNICOS_ATIVOS_JUL=(()=>{
     const corte="2026-07-01";
@@ -8395,20 +8396,23 @@ export default function App(){
         {/* ── DIFICULDADES DOS TÉCNICOS ── */}
         {tab==="dificuldades_tecnicos"&&(()=>{
           const CAT_COR={"Preenchimento de Relatório":"#1565C0","Pontualidade":"#B45309","Mau Uso":"#C62828","Relacionamento com Colegas e Líderes":"#6D28D9","Elogio":"#166534","Seguir Instruções":"#0D9488","Contaminação de Ambiente":"#92400E","Outros":"#64748B"};
-          const lista=(dificuldadesTec||[]).filter(d=>d&&(showArqDificuldade?d.arquivado:!d.arquivado))
-            .filter(d=>dificuldadeFiltroTec==="todos"||d.tecnico===dificuldadeFiltroTec)
-            .filter(d=>dificuldadeFiltroCat==="todos"||d.categoria===dificuldadeFiltroCat)
-            .sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const todos=(dificuldadesTec||[]).filter(d=>d&&(showArqDificuldade?d.arquivado:!d.arquivado))
+            .filter(d=>dificuldadeFiltroCat==="todos"||d.categoria===dificuldadeFiltroCat);
+          const porTecnico={};
+          todos.forEach(d=>{const t=d.tecnico||"—";if(!porTecnico[t])porTecnico[t]=[];porTecnico[t].push(d);});
+          let pastas=Object.entries(porTecnico).map(([tecnico,regs])=>({tecnico,regs:regs.sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")))}));
+          if(dificuldadeFiltroTec!=="todos")pastas=pastas.filter(p=>p.tecnico===dificuldadeFiltroTec);
+          pastas.sort((a,b)=>a.tecnico.localeCompare(b.tecnico));
           const porCategoria=DIFICULDADE_CATEGORIAS.map(c=>({c,qtd:(dificuldadesTec||[]).filter(d=>d&&!d.arquivado&&d.categoria===c).length})).filter(x=>x.qtd>0);
-          const abrirNovaDificuldade=()=>{setDificuldadeEdit({id:null,data:TODAY_STR,tecnico:TECNICOS_ATIVOS_JUL[0]||"",categoria:DIFICULDADE_CATEGORIAS[0],descricao:"",arquivado:false});setDificuldadeModal(true);};
+          const abrirNovaDificuldade=(tecnicoPre)=>{setDificuldadeEdit({id:null,data:TODAY_STR,tecnico:tecnicoPre||TECNICOS_ATIVOS_JUL[0]||"",categoria:DIFICULDADE_CATEGORIAS[0],descricao:"",arquivado:false});setDificuldadeModal(true);};
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
-              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⚠️ Avaliação Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} registro(s)</div></div>
+              <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5}}>⚠️ Avaliação Técnica</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{pastas.length} técnico(s) · {todos.length} ocorrência(s)</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 <button onClick={()=>setShowArqDificuldade(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqDificuldade?"#1A1A1A":"#FFF",color:showArqDificuldade?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqDificuldade?"✕ Ativos":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(lista,"dificuldades_tecnicos",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"categoria",label:"Categoria"},{key:"descricao",label:"Descrição"}])}/>
+                <BtnExcel onClick={()=>exportCSV(todos,"avaliacao_tecnica",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"categoria",label:"Categoria"},{key:"descricao",label:"Descrição"}])}/>
                 <BtnImport onClick={()=>setModalImportDificuldade(true)}/>
-                <BtnY onClick={abrirNovaDificuldade}>+ Novo Registro</BtnY>
+                <BtnY onClick={()=>abrirNovaDificuldade()}>+ Nova Ocorrência</BtnY>
               </div>
             </div>
             {porCategoria.length>0&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
@@ -8417,29 +8421,49 @@ export default function App(){
               ))}
             </div>}
             <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-              <select value={dificuldadeFiltroTec} onChange={e=>setDificuldadeFiltroTec(e.target.value)}><option value="todos">Técnico: Todos</option>{TECNICOS_ATIVOS_JUL.map(t=><option key={t} value={t}>{t}</option>)}</select>
+              <select value={dificuldadeFiltroTec} onChange={e=>setDificuldadeFiltroTec(e.target.value)}><option value="todos">Técnico: Todos</option>{Object.keys(porTecnico).sort().map(t=><option key={t} value={t}>{t}</option>)}</select>
               <select value={dificuldadeFiltroCat} onChange={e=>setDificuldadeFiltroCat(e.target.value)}><option value="todos">Categoria: Todas</option>{DIFICULDADE_CATEGORIAS.map(c=><option key={c} value={c}>{c}</option>)}</select>
               {(dificuldadeFiltroTec!=="todos"||dificuldadeFiltroCat!=="todos")&&<button onClick={()=>{setDificuldadeFiltroTec("todos");setDificuldadeFiltroCat("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>
-            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>⚠️</div><div style={{fontSize:13,fontWeight:600}}>Nenhum registro</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
-                {lista.map(d=>(
-                  <div key={d.id} className="card" style={{padding:0,overflow:"hidden",opacity:d.arquivado?0.6:1,borderLeft:`4px solid ${CAT_COR[d.categoria]||"#64748B"}`}}>
-                    <div style={{padding:"8px 12px",borderBottom:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,fontWeight:700,color:"#FFF",background:CAT_COR[d.categoria]||"#64748B",borderRadius:20,padding:"3px 10px"}}>{d.categoria}</span>
-                      <div style={{display:"flex",gap:4}}>
-                        <button onClick={()=>{setDificuldadeEdit(d);setDificuldadeModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✏️</button>
-                        <button onClick={()=>dificuldadeCrud.update(d.id,{arquivado:!d.arquivado})} title={d.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>{d.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir?"))dificuldadeCrud.del(d.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>✕</button>
+            {pastas.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📁</div><div style={{fontSize:13,fontWeight:600}}>Nenhuma pasta ainda — clique em "+ Nova Ocorrência"</div></div>):(
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {pastas.map(({tecnico,regs})=>{
+                  const aberta=expandedTecAvaliacao===tecnico;
+                  const catCount={};regs.forEach(r=>{catCount[r.categoria]=(catCount[r.categoria]||0)+1;});
+                  return(<div key={tecnico} className="card" style={{padding:0,overflow:"hidden"}}>
+                    <div onClick={()=>setExpandedTecAvaliacao(aberta?null:tecnico)} style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",background:aberta?"#F8FAFC":"#FFF"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:18}}>{aberta?"📂":"📁"}</span>
+                        <div><div style={{fontWeight:800,fontSize:14,color:"#1A1A1A"}}>{tecnico}</div><div style={{fontSize:11,color:"#94A3B8"}}>{regs.length} ocorrência(s)</div></div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                        {Object.entries(catCount).map(([c,n])=>(
+                          <span key={c} style={{fontSize:9,fontWeight:700,color:"#FFF",background:CAT_COR[c]||"#64748B",borderRadius:20,padding:"3px 8px"}}>{c.length>18?c.slice(0,18)+"…":c} {n}</span>
+                        ))}
+                        <span style={{fontSize:14,color:"#94A3B8"}}>{aberta?"▲":"▼"}</span>
                       </div>
                     </div>
-                    <div style={{padding:"9px 12px",display:"flex",flexDirection:"column",gap:5}}>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{d.tecnico}</div>
-                      <div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(d.data)}</div>
-                      {d.descricao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",paddingTop:5,borderTop:"1px solid #F1F5F9"}}>{d.descricao}</div>}
-                    </div>
-                  </div>
-                ))}
+                    {aberta&&<div style={{padding:"10px 16px",borderTop:"1px solid #F1F5F9",display:"flex",flexDirection:"column",gap:8}}>
+                      <button onClick={()=>abrirNovaDificuldade(tecnico)} style={{alignSelf:"flex-start",fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1.5px solid #BFDBFE",borderRadius:8,padding:"6px 14px",cursor:"pointer"}}>+ Adicionar ocorrência</button>
+                      {regs.map(d=>(
+                        <div key={d.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,padding:"8px 10px",background:"#FAFAFA",borderRadius:8,borderLeft:`3px solid ${CAT_COR[d.categoria]||"#64748B"}`,opacity:d.arquivado?0.6:1}}>
+                          <div style={{minWidth:0,flex:1}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                              <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:CAT_COR[d.categoria]||"#64748B",borderRadius:20,padding:"2px 8px"}}>{d.categoria}</span>
+                              <span style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(d.data)}</span>
+                            </div>
+                            {d.descricao&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic"}}>{d.descricao}</div>}
+                          </div>
+                          <div style={{display:"flex",gap:4,flexShrink:0}}>
+                            <button onClick={()=>{setDificuldadeEdit(d);setDificuldadeModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✏️</button>
+                            <button onClick={()=>dificuldadeCrud.update(d.id,{arquivado:!d.arquivado})} title={d.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>{d.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir?"))dificuldadeCrud.del(d.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,fontWeight:700}}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>);
+                })}
               </div>
             )}
           </div>);
