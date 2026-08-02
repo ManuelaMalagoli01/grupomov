@@ -2976,7 +2976,7 @@ export default function App(){
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
-  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [muStatus,setMuStatus]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false); const [muExpandido,setMuExpandido]=useState({});
+  const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [muStatus,setMuStatus]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false); const [muExpandido,setMuExpandido]=useState({}); const [muGrupoColapsado,setMuGrupoColapsado]=useState({});
   const [relExpandido,setRelExpandido]=useState({});
   const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState(""); const [afAprov,setAfAprov]=useState("todos");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
@@ -6040,8 +6040,21 @@ export default function App(){
               {hasFilterMU&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');setMuAprov('todos');setMuStatus('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
             {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
-                {listaFil.map(p=>{
+              <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:8,alignItems:"flex-start"}}>
+              {["aguardando_retorno","em_negociacao","aprovado_cliente","negado_cliente","cobrado_faturado","encerrado_sem_cobranca"].filter(k=>listaFil.some(p=>(p.aprovCliente||"aguardando_retorno")===k)).map(grupoKey=>{
+                const grupo=listaFil.filter(p=>(p.aprovCliente||"aguardando_retorno")===grupoKey);
+                const infoGrupo=APROV_STATUS[grupoKey]||{l:grupoKey,c:"#64748B",bg:"#F5F5F5"};
+                const totalGrupo=grupo.reduce((a,p)=>a+parseVal(p.valor),0);
+                return(<div key={grupoKey} style={{flex:"0 0 300px",width:300,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 320px)",background:"#F8FAFC",borderRadius:12,border:"1px solid #EEF1F4"}}>
+                  <div style={{padding:"10px 14px",borderBottom:`2px solid ${infoGrupo.c}`,background:infoGrupo.bg,borderRadius:"12px 12px 0 0",flexShrink:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:13,fontWeight:800,color:infoGrupo.c}}>{infoGrupo.l}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:infoGrupo.c,background:"#FFF",borderRadius:20,padding:"2px 9px",marginLeft:"auto"}}>{grupo.length}</span>
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,color:infoGrupo.c,marginTop:2}}>R$ {totalGrupo.toLocaleString("pt-BR",{minimumFractionDigits:2})}</div>
+                  </div>
+              <div style={{display:"flex",flexDirection:"column",gap:10,padding:10,overflowY:"auto",flex:1}}>
+                {grupo.map(p=>{
                   const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                   const stSolid=ST_SOLID[p.processoStatus||"pendente"]||ST_SOLID.pendente;
                   const slaD=p.date?diffDays(p.date):null;
@@ -6150,6 +6163,9 @@ export default function App(){
                     </div>
                   </div>);
                 })}
+              </div>
+                </div>);
+              })}
               </div>
             )}
           </div>);
