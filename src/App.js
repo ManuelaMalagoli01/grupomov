@@ -4848,15 +4848,13 @@ export default function App(){
               </div>
             </div>
             {/* KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-              {[{l:"Total",v:lista.length,c:"#1A1A1A",bg:"#FFF",i:"📋"},{l:"Urgente",v:totalUrgente,c:"#C62828",bg:"#FFF0F0",i:"🔴"},{l:"Moderado",v:totalModerado,c:"#B45309",bg:"#FFF8F0",i:"🟠"},{l:"Sem Pendência",v:totalSemPendencia,c:"#1A7A3C",bg:"#F0FFF5",i:"🟢"},{l:"Concluído/Arquivado",v:totalConc,c:"#1565C0",bg:"#EFF6FF",i:"✅",sub:(totalMauUso>0||totalAFaturar>0)?`${totalMauUso} mau uso · ${totalAFaturar} a faturar`:null}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                  <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:17,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                  {k.sub&&<div style={{fontSize:8,color:"#94A3B8",marginTop:2}}>{k.sub}</div>}
-                </div>
-              ))}
-            </div>
+            <KpiBIHeader subtitulo="Indicadores de Relatórios" kpis={[
+                {l:"Total",v:lista.length,i:"📋"},
+                {l:"Urgente",v:totalUrgente,i:"🔴"},
+                {l:"Moderado",v:totalModerado,i:"🟠"},
+                {l:"Sem Pendência",v:totalSemPendencia,i:"🟢"},
+                {l:"Concluído/Arquivado",v:totalConc,i:"✅",sub:(totalMauUso>0||totalAFaturar>0)?`${totalMauUso} mau uso · ${totalAFaturar} a faturar`:null},
+              ]}/>
 
             {/* Filtros */}
             <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -6015,15 +6013,12 @@ export default function App(){
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
-            <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"}}>
-              {[{l:"Total",v:lista.length,dot:"#1A1A1A"},{l:"Pendentes",v:pend,dot:"#C62828"},{l:"Em Andamento",v:andamento,dot:"#F5C200"},{l:"Concluídos",v:conc,dot:"#1A7A3C"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:10,flex:"1 1 200px"}}>
-                  <span style={{width:9,height:9,borderRadius:"50%",background:k.dot,flexShrink:0}}/>
-                  <span style={{fontSize:13,fontWeight:600,color:"#334155"}}>{k.l}</span>
-                  <span style={{fontSize:20,fontWeight:800,color:"#1A1A1A",marginLeft:"auto"}}>{k.v}</span>
-                </div>
-              ))}
-            </div>
+            <KpiBIHeader subtitulo="Indicadores Mau Uso" kpis={[
+                {l:"Total",v:lista.length,i:"📋"},
+                {l:"Pendentes",v:pend,i:"🔴"},
+                {l:"Em Andamento",v:andamento,i:"🟡"},
+                {l:"Concluídos",v:conc,i:"✅"},
+              ]}/>
 
             {/* Filtros (colapsável) */}
             <button onClick={()=>setShowFiltrosMU(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosMU?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -6228,17 +6223,12 @@ export default function App(){
                 </div>
               </div>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
-                {[{l:"Concluído",v:qtdConcluido,c:EXEC_MAUUSO_STATUS.concluido.c,bg:EXEC_MAUUSO_STATUS.concluido.bg,i:"✅"},
-                  {l:"Aguardando Peças",v:qtdAguardPecas,c:EXEC_MAUUSO_STATUS.aguardando_pecas.c,bg:EXEC_MAUUSO_STATUS.aguardando_pecas.bg,i:"⏳"},
-                  {l:"Pendente Setor de Compras",v:qtdPendCompras,c:EXEC_MAUUSO_STATUS.pendente_compras.c,bg:EXEC_MAUUSO_STATUS.pendente_compras.bg,i:"🛒"},
-                  {l:"Aguard. Disponibilidade Cliente",v:qtdAguardCliente,c:EXEC_MAUUSO_STATUS.aguardando_disponibilidade_cliente.c,bg:EXEC_MAUUSO_STATUS.aguardando_disponibilidade_cliente.bg,i:"📅"}].map((k,i)=>(
-                  <div key={i} className="card" style={{padding:"8px 10px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:8,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:19,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
-                  </div>
-                ))}
-              </div>
+              <KpiBIHeader subtitulo="Indicadores de Execução" kpis={[
+                  {l:"Concluído",v:qtdConcluido,i:"✅"},
+                  {l:"Aguardando Peças",v:qtdAguardPecas,i:"⏳"},
+                  {l:"Pendente Setor de Compras",v:qtdPendCompras,i:"🛒"},
+                  {l:"Aguard. Disponibilidade Cliente",v:qtdAguardCliente,i:"📅"},
+                ]}/>
 
               <button onClick={()=>setShowFiltrosExecMU(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosExecMU?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
                 <span style={{fontSize:11}}>🔍</span>
