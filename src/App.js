@@ -2342,10 +2342,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📊 Macro — {janLabel}</div>
     <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
       <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo}</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo} · {janLabel}</span>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:6,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
       {[
@@ -2353,10 +2352,10 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#166534"},
         {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#B45309"},
       ].map((k,i)=>(
-        <div key={i} style={{padding:"16px 18px",background:k.c}}>
+        <div key={i} style={{padding:"14px 16px",background:k.c}}>
           <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{fontSize:26,fontWeight:800,color:"#FFF",lineHeight:1,marginTop:4}}>{k.v}</div>
-          <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:4}}>{k.sub}</div>
+          <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
+          <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:2}}>{k.sub}</div>
         </div>
       ))}
     </div>
