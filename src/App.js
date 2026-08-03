@@ -1878,7 +1878,15 @@ function UsersModal({users,onClose,onSaveUser,onDeleteUser}){
 
 // ── GRÁFICOS (Chart.js carregado sob demanda) ─────────────────────────────────
 const loadChartLib = () => new Promise((resolve,reject)=>{
-  if(window.Chart) return resolve(window.Chart);
+  const loadDatalabels=(Chart)=>new Promise((res)=>{
+    if(window.ChartDataLabels){ try{Chart.register(window.ChartDataLabels);}catch(e){} return res(Chart); }
+    const sc=document.createElement("script");
+    sc.src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js";
+    sc.onload=()=>{ try{if(window.ChartDataLabels)Chart.register(window.ChartDataLabels);}catch(e){} res(Chart); };
+    sc.onerror=()=>res(Chart);
+    document.body.appendChild(sc);
+  });
+  if(window.Chart) return loadDatalabels(window.Chart).then(resolve);
   // Tentar CDN principal
   const tryLoad=(src)=>new Promise((res,rej)=>{
     const sc=document.createElement("script");
@@ -1886,8 +1894,8 @@ const loadChartLib = () => new Promise((resolve,reject)=>{
     document.body.appendChild(sc);
   });
   tryLoad("https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js")
-    .then(resolve)
-    .catch(()=>tryLoad("https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js").then(resolve).catch(reject));
+    .then(Chart=>loadDatalabels(Chart).then(resolve))
+    .catch(()=>tryLoad("https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js").then(Chart=>loadDatalabels(Chart).then(resolve)).catch(reject));
 });
 function ChartCanvas({type,data,options,height=240}){
   const ref=useRef(null); const inst=useRef(null);
@@ -2431,7 +2439,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         {aprovCounts.some(a=>a.total>0)&&<ChartCanvas type="doughnut" height={170} data={{
           labels:aprovCounts.map(a=>a.label),
           datasets:[{data:aprovCounts.map(a=>a.total),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}},datalabels:{color:"#FFF",font:{weight:900,size:12},formatter:(v,ctx)=>{if(!v)return"";const tot=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(v/tot*100):0;return `${v}\n${pct}%`;}}}}}/>}
       </div>
     </div>
 
