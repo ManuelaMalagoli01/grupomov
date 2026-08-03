@@ -2979,6 +2979,7 @@ export default function App(){
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
   const [muSearch,setMuSearch]=useState(""); const [muFrom,setMuFrom]=useState(""); const [muTo,setMuTo]=useState(""); const [muMes,setMuMes]=useState(""); const [muAno,setMuAno]=useState(""); const [muAprov,setMuAprov]=useState("todos"); const [muStatus,setMuStatus]=useState("todos"); const [showFiltrosMU,setShowFiltrosMU]=useState(false); const [muExpandido,setMuExpandido]=useState({}); const [muGrupoColapsado,setMuGrupoColapsado]=useState({});
+  const [muPeriodo,setMuPeriodo]=useState("mes"); const [muRefIso,setMuRefIso]=useState(TODAY_STR);
   const [relExpandido,setRelExpandido]=useState({});
   const [afSearch,setAfSearch]=useState(""); const [afFrom,setAfFrom]=useState(""); const [afTo,setAfTo]=useState(""); const [afMes,setAfMes]=useState(""); const [afAno,setAfAno]=useState(""); const [afAprov,setAfAprov]=useState("todos");
   const [empSearch,setEmpSearch]=useState(""); const [empFrom,setEmpFrom]=useState(""); const [empTo,setEmpTo]=useState(""); const [empMes,setEmpMes]=useState(""); const [empAno,setEmpAno]=useState("");
@@ -5991,6 +5992,15 @@ export default function App(){
           const pend=lista.filter(p=>!p.processoStatus||p.processoStatus==="pendente").length;
           const andamento=lista.filter(p=>p.processoStatus==="em_andamento").length;
           const conc=lista.filter(p=>p.processoStatus==="concluido").length;
+          // Navegador de período (Diário/Semanal/Mensal/Tudo)
+          const refMU=new Date(muRefIso+"T12:00:00");
+          let janDeMU,janAteMU,janLabelMU;
+          if(muPeriodo==="dia"){ janDeMU=janAteMU=fmtDate(refMU); janLabelMU=fmtDataBR(janDeMU); }
+          else if(muPeriodo==="semana"){ const s=new Date(refMU); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeMU=fmtDate(s); janAteMU=fmtDate(e); janLabelMU=`${fmtDataBR(janDeMU)} - ${fmtDataBR(janAteMU)}`; }
+          else if(muPeriodo==="mes"){ const s=new Date(refMU.getFullYear(),refMU.getMonth(),1); const e=new Date(refMU.getFullYear(),refMU.getMonth()+1,0); janDeMU=fmtDate(s); janAteMU=fmtDate(e); janLabelMU=`${MESES[refMU.getMonth()]}/${refMU.getFullYear()}`; }
+          else { janDeMU=null; janAteMU=null; janLabelMU="Tudo"; }
+          const naJanelaMU=(d)=>{ if(muPeriodo==="tudo")return true; if(!d)return false; return d>=janDeMU&&d<=janAteMU; };
+          const navegarMU=(dir)=>{ const d=new Date(muRefIso+"T12:00:00"); if(muPeriodo==="dia")d.setDate(d.getDate()+dir); else if(muPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(muPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setMuRefIso(fmtDate(d)); };
           const applyFilter=(r,d=r.date||"")=>{
             if(muSearch){const q=muSearch.toLowerCase();if(!((r.empresa||"").toLowerCase().includes(q)||(r.patrimonio||"").toLowerCase().includes(q)||(r.relatorio||"").toLowerCase().includes(q)||(r.numMauUso||"").toLowerCase().includes(q)||(r.chamado||"").toLowerCase().includes(q)||(r.ov||"").toLowerCase().includes(q)||(r.ticket||"").toLowerCase().includes(q)))return false;}
             if(muFrom&&d<muFrom)return false;
@@ -5999,10 +6009,21 @@ export default function App(){
             if(muAno&&!d.startsWith(muAno))return false;
             if(muAprov&&muAprov!=="todos"&&(r.aprovCliente||"aguardando_retorno")!==muAprov)return false;
             if(muStatus&&muStatus!=="todos"&&(r.processoStatus||"pendente")!==muStatus)return false;
+            if(muPeriodo!=="tudo"){const dj=r.dataEnvio||r.date;if(!dj||!(dj>=janDeMU&&dj<=janAteMU))return false;}
             return true;
           };
           const listaFil=lista.filter(applyFilter);
           const hasFilterMU=muSearch||muFrom||muTo||muMes||muAno||(muAprov&&muAprov!=="todos")||(muStatus&&muStatus!=="todos");
+          const noPeriodoMU=lista.filter(p=>naJanelaMU(p.dataEnvio||p.date));
+          const comEnvioMU=noPeriodoMU.filter(p=>p.date&&p.dataEnvio);
+          const slaValoresMU=comEnvioMU.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
+          const slaMedioMU=slaValoresMU.length?Math.round(slaValoresMU.reduce((a,v)=>a+v,0)/slaValoresMU.length):null;
+          const valorTotalPeriodoMU=noPeriodoMU.reduce((a,p)=>a+parseVal(p.valor),0);
+          const valorConcPeriodoMU=noPeriodoMU.filter(p=>p.processoStatus==="concluido").reduce((a,p)=>a+parseVal(p.valor),0);
+          const convMU=valorTotalPeriodoMU>0?Math.round(valorConcPeriodoMU/valorTotalPeriodoMU*1000)/10:null;
+          const btnPerMU=(k,l)=>(
+            <button key={k} onClick={()=>setMuPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:muPeriodo===k?"2px solid #C62828":"1.5px solid #E2E8F0",background:muPeriodo===k?"#FFF0F0":"#FFF",color:muPeriodo===k?"#C62828":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+          );
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>⚠️ Mau Uso {showArqMU&&<span style={{fontSize:11,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{showArqMU?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
@@ -6019,6 +6040,20 @@ export default function App(){
                 {l:"Em Andamento",v:andamento,i:"🟡"},
                 {l:"Concluídos",v:conc,i:"✅"},
               ]}/>
+
+            <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{display:"flex",gap:6}}>{btnPerMU("dia","Diário")}{btnPerMU("semana","Semanal")}{btnPerMU("mes","Mensal")}{btnPerMU("tudo","Tudo")}</div>
+              {(slaMedioMU!==null||convMU!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
+                {slaMedioMU!==null&&<span title="Dias médios da abertura até o envio ao cliente, no período" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaMedioMU}d</span>}
+                {convMU!==null&&<span title="% concluído/faturado (valor) no período" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 {convMU}%</span>}
+              </div>}
+              {muPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
+                <button onClick={()=>navegarMU(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabelMU}</div>
+                <button onClick={()=>navegarMU(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                <button onClick={()=>setMuRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+              </div>}
+            </div>
 
             {/* Filtros (colapsável) */}
             <button onClick={()=>setShowFiltrosMU(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosMU?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
