@@ -5996,7 +5996,7 @@ export default function App(){
           let janDeMU,janAteMU,janLabelMU;
           if(muPeriodo==="dia"){ janDeMU=janAteMU=fmtDate(refMU); janLabelMU=fmtDataBR(janDeMU); }
           else if(muPeriodo==="semana"){ const s=new Date(refMU); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeMU=fmtDate(s); janAteMU=fmtDate(e); janLabelMU=`${fmtDataBR(janDeMU)} - ${fmtDataBR(janAteMU)}`; }
-          else if(muPeriodo==="mes"){ const s=new Date(refMU.getFullYear(),refMU.getMonth(),1); const e=new Date(refMU.getFullYear(),refMU.getMonth()+1,0); janDeMU=fmtDate(s); janAteMU=fmtDate(e); janLabelMU=`${MESES[refMU.getMonth()]}/${refMU.getFullYear()}`; }
+          else if(muPeriodo==="mes"){ const s=new Date(refMU.getFullYear(),refMU.getMonth(),1); const e=new Date(refMU.getFullYear(),refMU.getMonth()+1,0); janDeMU=fmtDate(s); janAteMU=fmtDate(e); janLabelMU=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refMU.getMonth()]}/${refMU.getFullYear()}`; }
           else { janDeMU=null; janAteMU=null; janLabelMU="Tudo"; }
           const naJanelaMU=(d)=>{ if(muPeriodo==="tudo")return true; if(!d)return false; return d>=janDeMU&&d<=janAteMU; };
           const navegarMU=(dir)=>{ const d=new Date(muRefIso+"T12:00:00"); if(muPeriodo==="dia")d.setDate(d.getDate()+dir); else if(muPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(muPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setMuRefIso(fmtDate(d)); };
