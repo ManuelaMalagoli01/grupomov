@@ -125,9 +125,9 @@ const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
 const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi silva","lucas pimentel","gustavo","manuela"];
 const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEYS.some(k=>n.includes(k)):false;};
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
-const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Bateria","Carregador","Usinagem/Soldagem","Pintura","Outros"];
-const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Usinagem":"Usinagem/Soldagem","Soldagem":"Usinagem/Soldagem","Bateria e Mecânica":"Mecânica","Bateria/Carregador":"Bateria","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria","Pedro Pimentel":"Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Usinagem/Soldagem"};
+const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Soldagem/Usinagem","Bateria/Carregador","Pintura","Outros"];
+const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Bateria e Mecânica":"Mecânica","Elétrica/Pintura":"Elétrica"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(isOutroTec(a.tecnico))return "Outros";
@@ -135,7 +135,7 @@ const servicoEfetivoOficina=(a)=>{
   return a.servico;
 };
 const CATS_PORSERV_OFICINA=SERVICOS_OFICINA;
-const SERVICO_COR={"Mecânica":"#1565C0","Hidráulica":"#00838F","Elétrica":"#F5C200","Bateria":"#C62828","Carregador":"#E67E00","Usinagem/Soldagem":"#6A1B9A","Pintura":"#1A7A3C","Outros":"#37474F"};
+const SERVICO_COR={"Mecânica":"#1565C0","Hidráulica":"#00838F","Elétrica":"#F5C200","Bateria":"#C62828","Carregador":"#E67E00","Bateria/Carregador":"#C62828","Usinagem/Soldagem":"#6A1B9A","Soldagem/Usinagem":"#6A1B9A","Pintura":"#1A7A3C","Outros":"#37474F"};
 const SAS_VENDAS_MODELOS = {
   "Empilhadeiras Contrabalançadas Elétricas": ["STRONG 3RL 18","STRONG 4RL 25","STRONG 4RL 30","STRONG 4RD 38","STRONG 4RQ 30","STRONG 4RQ 35","STRONG 4RQ 50","STRONG 4RL 80"],
   "Empilhadeiras Retráteis": ["ER16","ERN20 Pro N","ERN20 B"],
