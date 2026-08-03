@@ -2439,7 +2439,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         {aprovCounts.some(a=>a.total>0)&&<ChartCanvas type="doughnut" height={170} data={{
           labels:aprovCounts.map(a=>a.label),
           datasets:[{data:aprovCounts.map(a=>a.total),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}},datalabels:{color:"#FFF",font:{weight:900,size:12},formatter:(v,ctx)=>{if(!v)return"";const tot=ctx.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(v/tot*100):0;return `${v}\n${pct}%`;}}}}}/>}
+        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}},datalabels:{display:false}}}}/>}
       </div>
     </div>
 
