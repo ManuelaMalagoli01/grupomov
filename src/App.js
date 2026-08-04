@@ -5610,66 +5610,6 @@ export default function App(){
             </div>
           </>}
 
-          {/* Por Técnico detalhado */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
-            {techAtivos.map(tech=>{
-              const d=byTech[tech];
-              const color=techColor(tech);
-              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
-              return(
-                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
-                    <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>
-                      {tech}
-                    </div>
-                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
-                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
-                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
-                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
-                    </div>
-                  </div>
-                  {/* Barra de progresso */}
-                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
-                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width .5s"}}/>
-                  </div>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
-                      <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
-                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
-          </div>
-
-          {/* Por OS */}
-          {osList.length>0&&<>
-            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
-            <div className="card" style={{overflow:"hidden",marginBottom:20}}>
-              <div className="tbl-wrap"><table>
-                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% do Total</th><th>Patrimônio</th></tr></thead>
-                <tbody>{osList.map(os=>{
-                  const d=byOS[os];
-                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
-                  return(<tr key={os}>
-                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
-                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
-                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
-                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
-                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
-                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
-                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
-                  </tr>);
-                })}</tbody>
-              </table></div>
-            </div>
-          </>}
-
           {/* ── FECHAMENTO MENSAL DA OFICINA ── */}
           {(()=>{
             const oficinaAtual="1340";
@@ -5753,6 +5693,66 @@ export default function App(){
               </div>
             </div>);
           })()}
+          {/* Por Técnico detalhado */}
+          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+            {techAtivos.map(tech=>{
+              const d=byTech[tech];
+              const color=techColor(tech);
+              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+              return(
+                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
+                    <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>
+                      {tech}
+                    </div>
+                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
+                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
+                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
+                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
+                    </div>
+                  </div>
+                  {/* Barra de progresso */}
+                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3,transition:"width .5s"}}/>
+                  </div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
+                      <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
+                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
+          </div>
+
+          {/* Por OS */}
+          {osList.length>0&&<>
+            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
+            <div className="card" style={{overflow:"hidden",marginBottom:20}}>
+              <div className="tbl-wrap"><table>
+                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% do Total</th><th>Patrimônio</th></tr></thead>
+                <tbody>{osList.map(os=>{
+                  const d=byOS[os];
+                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+                  return(<tr key={os}>
+                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
+                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
+                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
+                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
+                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
+                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
+                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
+                  </tr>);
+                })}</tbody>
+              </table></div>
+            </div>
+          </>}
+
         </div>
           );
         })()}
@@ -10940,64 +10940,6 @@ export default function App(){
             </div>
           </>}
 
-          {/* Por Técnico detalhado */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
-            {techAtivos.map(tech=>{
-              const d=byTech[tech];
-              const color=techColor(tech);
-              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
-              return(
-                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
-                    <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>{tech}
-                    </div>
-                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
-                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
-                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
-                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
-                    </div>
-                  </div>
-                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
-                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3}}/>
-                  </div>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
-                      <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
-                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
-          </div>
-
-          {/* Por OS */}
-          {osList.length>0&&<>
-            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
-            <div className="card" style={{overflow:"hidden",marginBottom:20}}>
-              <div className="tbl-wrap"><table>
-                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% Total</th><th>Patrimônio</th></tr></thead>
-                <tbody>{osList.map(os=>{
-                  const d=byOS[os];
-                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
-                  return(<tr key={os}>
-                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
-                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
-                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
-                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
-                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
-                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
-                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
-                  </tr>);
-                })}</tbody>
-              </table></div>
-            </div>
-          </>}
-
           {/* ── FECHAMENTO MENSAL DA OFICINA 150 ── */}
           {(()=>{
             const oficinaAtual="150";
@@ -11081,6 +11023,64 @@ export default function App(){
               </div>
             </div>);
           })()}
+          {/* Por Técnico detalhado */}
+          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+            {techAtivos.map(tech=>{
+              const d=byTech[tech];
+              const color=techColor(tech);
+              const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+              return(
+                <div key={tech} className="card" style={{padding:16,borderLeft:`5px solid ${color}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
+                    <div style={{fontWeight:800,fontSize:14,display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>{tech}
+                    </div>
+                    <div style={{display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
+                      <span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:700,padding:"4px 12px",borderRadius:6}}>📋 {d.aps.length} apontamentos</span>
+                      <span style={{background:"#FFFBF0",color:"#C47D00",fontWeight:700,padding:"4px 12px",borderRadius:6}}>⏱ {fmtMin(d.mins)}</span>
+                      <span style={{background:"#F5F5F5",color:"#555",fontWeight:700,padding:"4px 12px",borderRadius:6}}>{pct}% do total</span>
+                    </div>
+                  </div>
+                  <div style={{height:6,background:"#F0F0F0",borderRadius:3,marginBottom:10,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:color,borderRadius:3}}/>
+                  </div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {CATS_PORSERV_OFICINA.filter(s=>d.porServ[s]>0).map(serv=>(
+                      <span key={serv} style={{background:"#F0F4FF",border:"1px solid #DBEAFE",borderRadius:6,padding:"3px 10px",fontSize:11,color:"#1565C0",fontWeight:600}}>
+                        {serv} <b style={{color:"#1A1A1A"}}>({d.porServ[serv]})</b>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {apMes.length===0&&<div style={{color:"#CCC",textAlign:"center",padding:40,fontSize:13}}>Sem apontamentos no período.</div>}
+          </div>
+
+          {/* Por OS */}
+          {osList.length>0&&<>
+            <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>🗂 Detalhamento por OS</div>
+            <div className="card" style={{overflow:"hidden",marginBottom:20}}>
+              <div className="tbl-wrap"><table>
+                <thead><tr><th>OS</th><th>Técnico</th><th>Serviço</th><th>Qtd</th><th>Horas</th><th>% Total</th><th>Patrimônio</th></tr></thead>
+                <tbody>{osList.map(os=>{
+                  const d=byOS[os];
+                  const pct=totalMin>0?Math.round(d.mins/totalMin*100):0;
+                  return(<tr key={os}>
+                    <td style={{fontWeight:700,color:"#1565C0"}}>{os}</td>
+                    <td><span style={{display:"inline-flex",alignItems:"center",gap:5}}><span style={{width:8,height:8,borderRadius:"50%",background:techColor(d.tecnico),display:"inline-block"}}/>{d.tecnico}</span></td>
+                    <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{d.servico}</span></td>
+                    <td style={{textAlign:"center",fontWeight:700}}>{d.aps.length}</td>
+                    <td><span style={{color:"#C47D00",fontWeight:700}}>{fmtMin(d.mins)}</span></td>
+                    <td><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,height:6,background:"#F0F0F0",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"#1565C0",borderRadius:3}}/></div><span style={{fontSize:11,fontWeight:700,minWidth:30}}>{pct}%</span></div></td>
+                    <td style={{fontSize:11,color:"#888"}}>{[...new Set(d.aps.map(a=>a.patrimonio).filter(Boolean))].join(", ")||"—"}</td>
+                  </tr>);
+                })}</tbody>
+              </table></div>
+            </div>
+          </>}
+
         </div>
           );
         })()}
