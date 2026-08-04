@@ -5669,10 +5669,93 @@ export default function App(){
               </table></div>
             </div>
           </>}
+
+          {/* ── FECHAMENTO MENSAL DA OFICINA ── */}
+          {(()=>{
+            const oficinaAtual="1340";
+            const fmLista=(fechamentoMensal||[]).filter(f=>f&&f.oficina===oficinaAtual);
+            const salvarFM=()=>{
+              if(!fmData||!fmPat){alert("Preencha ao menos Data de Fechamento e Patrimônio.");return;}
+              const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
+              setFechamentoMensal(p=>[row,...(p||[])]);
+              db.save("fechamento_mensal_oficina",row.id,row);
+              setFmPat("");setFmOs("");setFmMediaHora("");
+              notify("✅ Fechamento registrado!");
+            };
+            const hoje=new Date();
+            const serieFM=[];
+            for(let i=7;i>=0;i--){
+              let de,ate,lab;
+              if(fechamentoPeriodo==="semana"){
+                const d=new Date(hoje);d.setDate(d.getDate()-i*7-d.getDay());
+                const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
+                de=fmtDate(s);ate=fmtDate(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
+              } else {
+                const d=new Date(hoje);d.setDate(1);d.setMonth(d.getMonth()-i);
+                const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
+                de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+              }
+              serieFM.push({lab,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
+            }
+            const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
+            const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
+            return(<div style={{marginTop:20}}>
+              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
+              </div>
+              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+                  <div style={{fontSize:12,color:"#94A3B8"}}>{fmLista.length} fechamento(s) registrado(s){mediaHoraGeral!==null&&` · média geral ${mediaHoraGeral}h`}</div>
+                  <button onClick={()=>setShowNovoFechamento(p=>!p)} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
+                </div>
+                {showNovoFechamento&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",marginBottom:16,padding:14,background:"#F8FAFC",borderRadius:10}}>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data de Fechamento</label><input type="date" value={fmData} onChange={e=>setFmData(e.target.value)}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={fmServico} onChange={e=>setFmServico(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{FM_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Patrimônio</label><input type="text" placeholder="PAT" value={fmPat} onChange={e=>setFmPat(e.target.value)} style={{width:100}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>OS</label><input type="text" placeholder="Nº OS" value={fmOs} onChange={e=>setFmOs(e.target.value)} style={{width:100}}/></div>
+                  <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Média Hora Trabalhada</label><input type="text" placeholder="Ex: 3,5" value={fmMediaHora} onChange={e=>setFmMediaHora(e.target.value)} style={{width:110}}/></div>
+                  <BtnY onClick={salvarFM}>Salvar</BtnY>
+                </div>}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                  <div className="card" style={{padding:16}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontWeight:800,fontSize:12,color:"#334155"}}>Fechamentos — {fechamentoPeriodo==="semana"?"por semana":"por mês"}</div>
+                      <div style={{display:"flex",gap:4}}>
+                        <button onClick={()=>setFechamentoPeriodo("semana")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="semana"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="semana"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="semana"?"#1565C0":"#64748B",cursor:"pointer"}}>Semanal</button>
+                        <button onClick={()=>setFechamentoPeriodo("mes")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="mes"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="mes"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="mes"?"#1565C0":"#64748B",cursor:"pointer"}}>Mensal</button>
+                      </div>
+                    </div>
+                    <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
+                  </div>
+                  <div className="card" style={{padding:16}}>
+                    <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
+                    {fmLista.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem registros</div>:
+                    <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+                  </div>
+                </div>
+                <div className="card" style={{overflow:"hidden"}}>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Data</th><th>Serviço</th><th>Patrimônio</th><th>OS</th><th>Média Hora</th><th></th></tr></thead>
+                    <tbody>{fmLista.slice(0,50).map(f=>(
+                      <tr key={f.id}>
+                        <td>{fmtDataBR(f.data)}</td>
+                        <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{f.servico}</span></td>
+                        <td style={{fontWeight:700}}>{f.patrimonio}</td>
+                        <td>{f.os||"—"}</td>
+                        <td>{f.mediaHora?`${f.mediaHora}h`:"—"}</td>
+                        <td><button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                  {fmLista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:24,fontSize:12}}>Nenhum fechamento registrado</div>}
+                </div>
+              </div>
+            </div>);
+          })()}
         </div>
           );
         })()}
-
 
         {/* ── PENDÊNCIAS HEBERT (Manuela + Hebert) ── */}
                 {tab==="pendencias_hebert"&&(user.id==="manuela"||user.id==="gustavo"||user.id==="hebert_s")&&(()=>{
@@ -10472,89 +10555,6 @@ export default function App(){
                 </div>
               )}
 
-              {/* ── FECHAMENTO MENSAL DA OFICINA ── */}
-              {(()=>{
-                const oficinaAtual="1340";
-                const fmLista=(fechamentoMensal||[]).filter(f=>f&&f.oficina===oficinaAtual);
-                const salvarFM=()=>{
-                  if(!fmData||!fmPat){alert("Preencha ao menos Data de Fechamento e Patrimônio.");return;}
-                  const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
-                  setFechamentoMensal(p=>[row,...(p||[])]);
-                  db.save("fechamento_mensal_oficina",row.id,row);
-                  setFmPat("");setFmOs("");setFmMediaHora("");
-                  notify("✅ Fechamento registrado!");
-                };
-                const hoje=new Date();
-                const serieFM=[];
-                for(let i=7;i>=0;i--){
-                  let de,ate,lab;
-                  if(fechamentoPeriodo==="semana"){
-                    const d=new Date(hoje);d.setDate(d.getDate()-i*7-d.getDay());
-                    const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
-                    de=fmtDate(s);ate=fmtDate(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
-                  } else {
-                    const d=new Date(hoje);d.setDate(1);d.setMonth(d.getMonth()-i);
-                    const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
-                    de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
-                  }
-                  serieFM.push({lab,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
-                }
-                const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
-                const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
-                return(<div style={{marginTop:20}}>
-                  <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-                    <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
-                  </div>
-                  <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
-                      <div style={{fontSize:12,color:"#94A3B8"}}>{fmLista.length} fechamento(s) registrado(s){mediaHoraGeral!==null&&` · média geral ${mediaHoraGeral}h`}</div>
-                      <button onClick={()=>setShowNovoFechamento(p=>!p)} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
-                    </div>
-                    {showNovoFechamento&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",marginBottom:16,padding:14,background:"#F8FAFC",borderRadius:10}}>
-                      <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data de Fechamento</label><input type="date" value={fmData} onChange={e=>setFmData(e.target.value)}/></div>
-                      <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={fmServico} onChange={e=>setFmServico(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{FM_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
-                      <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Patrimônio</label><input type="text" placeholder="PAT" value={fmPat} onChange={e=>setFmPat(e.target.value)} style={{width:100}}/></div>
-                      <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>OS</label><input type="text" placeholder="Nº OS" value={fmOs} onChange={e=>setFmOs(e.target.value)} style={{width:100}}/></div>
-                      <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Média Hora Trabalhada</label><input type="text" placeholder="Ex: 3,5" value={fmMediaHora} onChange={e=>setFmMediaHora(e.target.value)} style={{width:110}}/></div>
-                      <BtnY onClick={salvarFM}>Salvar</BtnY>
-                    </div>}
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
-                      <div className="card" style={{padding:16}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                          <div style={{fontWeight:800,fontSize:12,color:"#334155"}}>Fechamentos — {fechamentoPeriodo==="semana"?"por semana":"por mês"}</div>
-                          <div style={{display:"flex",gap:4}}>
-                            <button onClick={()=>setFechamentoPeriodo("semana")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="semana"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="semana"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="semana"?"#1565C0":"#64748B",cursor:"pointer"}}>Semanal</button>
-                            <button onClick={()=>setFechamentoPeriodo("mes")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="mes"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="mes"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="mes"?"#1565C0":"#64748B",cursor:"pointer"}}>Mensal</button>
-                          </div>
-                        </div>
-                        <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
-                      </div>
-                      <div className="card" style={{padding:16}}>
-                        <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
-                        {fmLista.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem registros</div>:
-                        <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
-                      </div>
-                    </div>
-                    <div className="card" style={{overflow:"hidden"}}>
-                      <div className="tbl-wrap"><table>
-                        <thead><tr><th>Data</th><th>Serviço</th><th>Patrimônio</th><th>OS</th><th>Média Hora</th><th></th></tr></thead>
-                        <tbody>{fmLista.slice(0,50).map(f=>(
-                          <tr key={f.id}>
-                            <td>{fmtDataBR(f.data)}</td>
-                            <td><span style={{background:"#F0F4FF",color:"#1565C0",fontWeight:600,padding:"2px 8px",borderRadius:5,fontSize:11}}>{f.servico}</span></td>
-                            <td style={{fontWeight:700}}>{f.patrimonio}</td>
-                            <td>{f.os||"—"}</td>
-                            <td>{f.mediaHora?`${f.mediaHora}h`:"—"}</td>
-                            <td><button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
-                          </tr>
-                        ))}</tbody>
-                      </table></div>
-                      {fmLista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:24,fontSize:12}}>Nenhum fechamento registrado</div>}
-                    </div>
-                  </div>
-                </div>);
-              })()}
             </div>
           );
         })()}
