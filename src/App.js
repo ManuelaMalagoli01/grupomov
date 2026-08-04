@@ -7,6 +7,11 @@ const SUPA_KEY = "sb_publishable_RZaBuoZXGvPNTZaqGjHMlQ_kMH_dTVG";
 let __dbErrShown=false;
 const __saveQueues={};
 let __deleteQueue=Promise.resolve();
+// Rastreia salvamentos locais recentes (table::id -> timestamp) para proteger contra
+// eventos de tempo real chegando fora de ordem (ex: INSERT antigo chegando depois de um
+// UPDATE mais novo) e sobrescrevendo uma edição recém-feita com dados antigos.
+const __recentLocalSaves={};
+const RECENT_SAVE_WINDOW_MS=10000;
 const db = {
   async get(table) {
     try {
@@ -29,6 +34,7 @@ const db = {
     } catch(e) { console.error("DB get error:", e); return []; }
   },
   save(table, id, data) {
+    __recentLocalSaves[table+"::"+id]=Date.now();
     // Enfileira gravações do MESMO registro (mesma tabela+id) para que sempre sejam
     // enviadas ao servidor em ordem, evitando que uma grava mais antiga (ex: criação)
     // chegue depois de uma mais nova (ex: edição do serviço) e sobrescreva o resultado.
@@ -3506,6 +3512,10 @@ export default function App(){
       const row=rec&&rec.data!==undefined?rec.data:rec;
       const id=rec&&rec.id!==undefined?rec.id:(row&&row.id);
       if(!id)return;
+      if(eventType!=="DELETE"){
+        const lastLocal=__recentLocalSaves[table+"::"+id];
+        if(lastLocal&&(Date.now()-lastLocal)<RECENT_SAVE_WINDOW_MS) return; // protege edição recente contra eco de tempo real fora de ordem
+      }
       setter(prev=>{
         const arr=Array.isArray(prev)?prev:[];
         if(eventType==="DELETE"){ const delId=(oldRec&&oldRec.id)||id; return arr.filter(x=>x.id!==delId); }
