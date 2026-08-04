@@ -5580,6 +5580,55 @@ export default function App(){
             ))}
           </div>
 
+          {/* Painel estilo BI: gauge + rosca de serviços */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+            <div className="card" style={{padding:20,textAlign:"center"}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>👷 Técnicos Ativos no Período</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:8}}>{techAtivos.length} de {TECHS_NO_DASH.length} técnico(s) do quadro</div>
+              <div style={{position:"relative",height:130}}>
+                <ChartCanvas type="doughnut" height={200} data={{datasets:[{data:[pctTecAtivos,100-pctTecAtivos],backgroundColor:[pctTecAtivos>=70?"#166534":pctTecAtivos>=40?"#B45309":"#B91C1C","#E2E8F0"],borderWidth:0}]}} options={{responsive:true,maintainAspectRatio:false,circumference:180,rotation:270,cutout:"72%",plugins:{legend:{display:false},tooltip:{enabled:false}}}}/>
+                <div style={{position:"absolute",top:60,left:0,right:0,textAlign:"center"}}>
+                  <div style={{fontSize:30,fontWeight:900,color:"#1F2937"}}>{pctTecAtivos}%</div>
+                </div>
+              </div>
+            </div>
+            <div className="card" style={{padding:20}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Manutenções Realizadas por Serviço</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:8}}>Distribuição de apontamentos por tipo de serviço</div>
+              {servAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
+              <ChartCanvas type="doughnut" height={190} data={{
+                labels:servAtivos,
+                datasets:[{data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:servAtivos.map(servCor),borderWidth:2,borderColor:"#FFF"}]
+              }} options={{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
+            </div>
+          </div>
+
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período selecionado (1h = 60min)</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
+          </div>
+          {servAtivos.length>0&&<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartServTech} options={chartOptsStacked()} height={220}/>
+              </div>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartHorasServTech} options={chartOptsStacked()} height={220}/>
+              </div>
+            </div>
+            <div className="card" style={{padding:20,marginBottom:16}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
+              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
+            </div>
+          </>}
+
           {/* ── FECHAMENTO MENSAL DA OFICINA ── */}
           {(()=>{
             const oficinaAtual="1340";
@@ -5669,55 +5718,6 @@ export default function App(){
               </div>
             </div>);
           })()}
-          {/* Painel estilo BI: gauge + rosca de serviços */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-            <div className="card" style={{padding:20,textAlign:"center"}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>👷 Técnicos Ativos no Período</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:8}}>{techAtivos.length} de {TECHS_NO_DASH.length} técnico(s) do quadro</div>
-              <div style={{position:"relative",height:130}}>
-                <ChartCanvas type="doughnut" height={200} data={{datasets:[{data:[pctTecAtivos,100-pctTecAtivos],backgroundColor:[pctTecAtivos>=70?"#166534":pctTecAtivos>=40?"#B45309":"#B91C1C","#E2E8F0"],borderWidth:0}]}} options={{responsive:true,maintainAspectRatio:false,circumference:180,rotation:270,cutout:"72%",plugins:{legend:{display:false},tooltip:{enabled:false}}}}/>
-                <div style={{position:"absolute",top:60,left:0,right:0,textAlign:"center"}}>
-                  <div style={{fontSize:30,fontWeight:900,color:"#1F2937"}}>{pctTecAtivos}%</div>
-                </div>
-              </div>
-            </div>
-            <div className="card" style={{padding:20}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Manutenções Realizadas por Serviço</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:8}}>Distribuição de apontamentos por tipo de serviço</div>
-              {servAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem dados no período</div>:
-              <ChartCanvas type="doughnut" height={190} data={{
-                labels:servAtivos,
-                datasets:[{data:servAtivos.map(s=>byServ[s].qtd),backgroundColor:servAtivos.map(servCor),borderWidth:2,borderColor:"#FFF"}]
-              }} options={{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>}
-            </div>
-          </div>
-
-          <div className="card" style={{padding:20,marginBottom:16}}>
-            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período selecionado (1h = 60min)</div>
-            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
-            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
-          </div>
-          {servAtivos.length>0&&<>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-              <div className="card" style={{padding:20}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
-                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                <ChartCanvas type="bar" data={chartServTech} options={chartOptsStacked()} height={220}/>
-              </div>
-              <div className="card" style={{padding:20}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
-                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                <ChartCanvas type="bar" data={chartHorasServTech} options={chartOptsStacked()} height={220}/>
-              </div>
-            </div>
-            <div className="card" style={{padding:20,marginBottom:16}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · barras translúcidas = horas</div>
-              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
-            </div>
-          </>}
-
           {/* Por Técnico detalhado */}
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
@@ -10932,6 +10932,39 @@ export default function App(){
             ))}
           </div>
 
+          {/* Gráficos */}
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período (1h = 60min)</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
+          </div>
+          <div className="card" style={{padding:20,marginBottom:16}}>
+            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
+            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
+            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
+            <ChartCanvas type="bar" data={chartApon} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}}} height={Math.max(140,techAtivos.length*32)}/>}
+          </div>
+          {servAtivos.length>0&&<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartServTech150} options={chartOptsStacked150()} height={220}/>
+              </div>
+              <div className="card" style={{padding:20}}>
+                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
+                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
+                <ChartCanvas type="bar" data={chartHorasServTech150} options={chartOptsStacked150()} height={220}/>
+              </div>
+            </div>
+            <div className="card" style={{padding:20,marginBottom:16}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
+              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · translúcidas = horas</div>
+              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
+            </div>
+          </>}
+
           {/* ── FECHAMENTO MENSAL DA OFICINA 150 ── */}
           {(()=>{
             const oficinaAtual="150";
@@ -11021,39 +11054,6 @@ export default function App(){
               </div>
             </div>);
           })()}
-          {/* Gráficos */}
-          <div className="card" style={{padding:20,marginBottom:16}}>
-            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas Trabalhadas por Técnico</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Ranking do período (1h = 60min)</div>
-            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
-            <ChartCanvas type="bar" data={chartHoras} options={chartOptsHoriz()} height={Math.max(140,techAtivos.length*32)}/>}
-          </div>
-          <div className="card" style={{padding:20,marginBottom:16}}>
-            <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📋 Apontamentos por Técnico</div>
-            <div style={{fontSize:11,color:"#888",marginBottom:12}}>Quantidade de registros no período</div>
-            {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período</div>:
-            <ChartCanvas type="bar" data={chartApon} options={{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{display:false},ticks:{font:{size:11}}},x:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}}} height={Math.max(140,techAtivos.length*32)}/>}
-          </div>
-          {servAtivos.length>0&&<>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
-              <div className="card" style={{padding:20}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Qtd de Serviços por Técnico</div>
-                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                <ChartCanvas type="bar" data={chartServTech150} options={chartOptsStacked150()} height={220}/>
-              </div>
-              <div className="card" style={{padding:20}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>⏱ Horas por Serviço por Técnico</div>
-                <div style={{fontSize:11,color:"#888",marginBottom:12}}>Cada cor = um tipo de serviço (empilhado)</div>
-                <ChartCanvas type="bar" data={chartHorasServTech150} options={chartOptsStacked150()} height={220}/>
-              </div>
-            </div>
-            <div className="card" style={{padding:20,marginBottom:16}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Serviços Realizados — Qtd e Horas</div>
-              <div style={{fontSize:11,color:"#888",marginBottom:12}}>Barras sólidas = quantidade · translúcidas = horas</div>
-              <ChartCanvas type="bar" data={chartServ} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:10},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:{color:"#F0F0F0"},ticks:{precision:0,font:{size:11}}}},animation:{duration:600}}} height={Math.max(180,servAtivos.length*35)}/>
-            </div>
-          </>}
-
           {/* Por Técnico detalhado */}
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
