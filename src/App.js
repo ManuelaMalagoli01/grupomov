@@ -3075,6 +3075,7 @@ export default function App(){
   const [fmFiltroServico,setFmFiltroServico]=useState("todos");
   const [fmFiltroDe,setFmFiltroDe]=useState("");
   const [fmFiltroAte,setFmFiltroAte]=useState("");
+  const [showDetalhamentoOficina,setShowDetalhamentoOficina]=useState(false);
   const FM_SERVICOS=["Carregador","Bateria","Estrado","Peças Reparadas","Peças Fabricadas","Máquinas"];
   const [showNovoServFechado,setShowNovoServFechado]=useState(false);
   const [sfData,setSfData]=useState(TODAY_STR);
@@ -5719,7 +5720,11 @@ export default function App(){
             </div>);
           })()}
           {/* Por Técnico detalhado */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
+          <button onClick={()=>setShowDetalhamentoOficina(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",borderLeft:"4px solid #1A1A1A",background:showDetalhamentoOficina?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showDetalhamentoOficina?14:24,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+            <span style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>👷 Detalhamento por Técnico e por OS</span>
+            <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showDetalhamentoOficina?"▲ Ocultar":"▼ Mostrar"}</span>
+          </button>
+          {showDetalhamentoOficina&&<>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
             {techAtivos.map(tech=>{
               const d=byTech[tech];
@@ -5776,6 +5781,7 @@ export default function App(){
                 })}</tbody>
               </table></div>
             </div>
+          </>}
           </>}
 
         </div>
@@ -11055,7 +11061,11 @@ export default function App(){
             </div>);
           })()}
           {/* Por Técnico detalhado */}
-          <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:12}}>👷 Detalhamento por Técnico</div>
+          <button onClick={()=>setShowDetalhamentoOficina(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",borderLeft:"4px solid #1A1A1A",background:showDetalhamentoOficina?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showDetalhamentoOficina?14:24,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+            <span style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>👷 Detalhamento por Técnico e por OS</span>
+            <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showDetalhamentoOficina?"▲ Ocultar":"▼ Mostrar"}</span>
+          </button>
+          {showDetalhamentoOficina&&<>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
             {techAtivos.map(tech=>{
               const d=byTech[tech];
@@ -11110,6 +11120,7 @@ export default function App(){
                 })}</tbody>
               </table></div>
             </div>
+          </>}
           </>}
 
         </div>
