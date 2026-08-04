@@ -2924,6 +2924,7 @@ export default function App(){
   const [dashOfi150To,setDashOfi150To]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
+  const [relSelecionados,setRelSelecionados]=useState([]);
   const [showFiltrosRel,setShowFiltrosRel]=useState(false);
   const [execMauUso,setExecMauUso]=useState([]);
   const [modalExecMU,setModalExecMU]=useState(false);
@@ -4892,6 +4893,20 @@ export default function App(){
               <select value={relFiltroStatus} onChange={e=>setRelFiltroStatus(e.target.value)} style={{fontSize:11,padding:"6px 8px",borderRadius:8,border:"1.5px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
               {(relFiltroData||relFiltroDataDe||relFiltroDataAte||relFiltroEmp||relFiltroPat||relFiltroRelatorio||relFiltroTech!=="todos"||relFiltroCidade||relFiltroAtend!=="todos"||relFiltroStatus!=="todos")&&<button onClick={()=>{setRelFiltroData("");setRelFiltroDataDe("");setRelFiltroDataAte("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroRelatorio("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
+
+            {relSelecionados.length>0&&<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"8px 14px",background:"#F0FDF4",border:"1.5px solid #86EFAC",borderRadius:10}}>
+              <span style={{fontSize:12,fontWeight:700,color:"#166534"}}>{relSelecionados.length} selecionado(s)</span>
+              <button onClick={()=>{
+                relSelecionados.forEach(id=>{
+                  const r=(reports||[]).find(x=>x.id===id);
+                  if(!r||r.arquivado)return;
+                  updateReport(id,{arquivado:true,status:(r.status==="mau_uso"||r.status==="a_faturar")?r.status:(r.atendimento==="corretivo"?"corretiva_concluida":"preventiva_concluida")});
+                });
+                notify(`✅ ${relSelecionados.length} relatório(s) marcado(s) como concluído!`);
+                setRelSelecionados([]);
+              }} style={{padding:"6px 14px",borderRadius:20,background:"#166534",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>✅ Marcar selecionados como Concluído</button>
+              <button onClick={()=>setRelSelecionados([])} style={{padding:"6px 12px",borderRadius:20,background:"#FFF",color:"#64748B",border:"1px solid #E2E8F0",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar seleção</button>
+            </div>}
             {/* Cards */}
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:10}}>
@@ -4911,6 +4926,7 @@ export default function App(){
                     <div style={{background:isMauUso||isAFaturar?"#FFF":undefined,borderRadius:isMauUso||isAFaturar?8:0,overflow:"hidden"}}>
                     <div style={{padding:"7px 10px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:5}}>
                       <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                        <input type="checkbox" checked={relSelecionados.includes(r.id)} onChange={e=>setRelSelecionados(p=>e.target.checked?[...p,r.id]:p.filter(id=>id!==r.id))} style={{marginRight:2}}/>
                         <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stColor,borderRadius:20,padding:"2px 9px"}}>{st.l}</span>
                         {alerta.label&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:alertColor,borderRadius:20,padding:"2px 8px"}}>{urgenteR?"🔴 ":""}{alerta.label}</span>}
                       </div>
