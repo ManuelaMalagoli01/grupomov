@@ -78,15 +78,23 @@ const db = {
     let okCount=0; const falhas=[];
     for(let i=0;i<rows.length;i+=chunkSize){
       const chunk=rows.slice(i,i+chunkSize).map(d=>({id:d.id,data:d}));
-      try{
-        const res=await fetch(`${SUPA_URL}/rest/v1/${table}`,{
-          method:"POST", cache:"no-store",
-          headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"},
-          body:JSON.stringify(chunk)
-        });
-        if(!res.ok){ const t=await res.text(); console.error("DB saveBatch error:",table,res.status,t); falhas.push({status:res.status,body:t,count:chunk.length}); }
-        else okCount+=chunk.length;
-      }catch(e){ console.error("DB saveBatch error:",e); falhas.push({error:e.message,count:chunk.length}); }
+      const chunkPromise=(async()=>{
+        try{
+          const res=await fetch(`${SUPA_URL}/rest/v1/${table}`,{
+            method:"POST", cache:"no-store",
+            headers:{"apikey":SUPA_KEY,"Authorization":`Bearer ${SUPA_KEY}`,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"},
+            body:JSON.stringify(chunk)
+          });
+          if(!res.ok){ const t=await res.text(); console.error("DB saveBatch error:",table,res.status,t); falhas.push({status:res.status,body:t,count:chunk.length}); }
+          else okCount+=chunk.length;
+        }catch(e){ console.error("DB saveBatch error:",e); falhas.push({error:e.message,count:chunk.length}); }
+      })();
+      // Registra cada id deste chunk na mesma fila usada por save(), para que uma edição
+      // individual feita logo em seguida (ex: mudar o Serviço de uma linha recém-importada)
+      // sempre espere esta gravação em lote terminar antes de aplicar sua própria mudança,
+      // em vez de correr o risco do lote (mais lento) chegar depois e apagar a edição.
+      chunk.forEach(({id})=>{ __saveQueues[table+"::"+id]=chunkPromise; });
+      await chunkPromise;
     }
     if(falhas.length>0){
       const falhouCount=falhas.reduce((s,f)=>s+f.count,0);
