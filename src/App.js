@@ -122,7 +122,7 @@ const USERS = [
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
-const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi silva","lucas pimentel","gustavo","manuela"];
+const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi silva","lucas pimentel","gustavo","manuela","gaty"];
 const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEYS.some(k=>n.includes(k)):false;};
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Soldagem/Usinagem","Bateria/Carregador","Pintura","Outros"];
