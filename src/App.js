@@ -4480,6 +4480,62 @@ export default function App(){
             </div>
           </div>);
         })()}
+        {modalAF&&(()=>{
+          const AF_EMPTY={emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:""};
+          const [form,setForm]=useState(editAF?{...AF_EMPTY,...editAF}:AF_EMPTY);
+          const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const salvar=()=>{
+            if(!form.cliente){alert("Informe o Cliente.");return;}
+            if(editAF){
+              const merged={...editAF,...form};
+              setProcessosAF(p=>p.map(x=>x.id===editAF.id?merged:x));
+              db.save("processos_af",editAF.id,merged);
+            }else{
+              const row={...form,id:`AF${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),processoStatus:"pendente"};
+              setProcessosAF(p=>[row,...p]);
+              db.save("processos_af",row.id,row);
+            }
+            notify("✅ Registro salvo!"); setModalAF(false); setEditAF(null);
+          };
+          return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+            <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{editAF?"✏️ Editar":"💰 Novo"} Registro A Faturar</div><button onClick={()=>{setModalAF(false);setEditAF(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Emissão</label><input type="date" value={form.emissao||""} onChange={e=>upd("emissao",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>OV</label><input type="text" value={form.ov||""} onChange={e=>upd("ov",e.target.value)} placeholder="Nº OV" style={inp}/></div>
+                  <div><label style={lbl}>Ticket</label><input type="text" value={form.ticket||""} onChange={e=>upd("ticket",e.target.value)} style={inp}/></div>
+                </div>
+                <div><label style={lbl}>Cliente</label><input type="text" value={form.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Nome do cliente" style={inp}/></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Total NF (Valor)</label><input type="text" value={form.valor||""} onChange={e=>upd("valor",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                  <div><label style={lbl}>Tipo</label><select value={form.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select></div>
+                  <div><label style={lbl}>Vendedor</label><select value={form.vendedor} onChange={e=>upd("vendedor",e.target.value)} style={inp}>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Status</label><select value={form.statusAF} onChange={e=>upd("statusAF",e.target.value)} style={inp}>{Object.entries(AF_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select></div>
+                  <div><label style={lbl}>Empresa</label><select value={form.empresaGrupo} onChange={e=>upd("empresaGrupo",e.target.value)} style={inp}>{AF_EMPRESAS.map(e=><option key={e}>{e}</option>)}</select></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Relatório</label><input type="text" value={form.relatorio||""} onChange={e=>upd("relatorio",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Data Relatório</label><input type="date" value={form.dataRelatorio||""} onChange={e=>upd("dataRelatorio",e.target.value)} style={inp}/></div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div><label style={lbl}>Recebido Manutenção</label><input type="text" value={form.recebidoManut||""} onChange={e=>upd("recebidoManut",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Novo Cliente</label><input type="text" value={form.novoCliente||""} onChange={e=>upd("novoCliente",e.target.value)} style={inp}/></div>
+                </div>
+                <div><label style={lbl}>Data Envio Faturamento</label><input type="date" value={form.dataEnvioFat||""} onChange={e=>upd("dataEnvioFat",e.target.value)} style={{...inp,maxWidth:220}}/></div>
+                <div><label style={lbl}>Descrição</label><textarea value={form.descricao||""} onChange={e=>upd("descricao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
+                  <BtnG onClick={()=>{setModalAF(false);setEditAF(null);}}>Cancelar</BtnG>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          </div>);
+        })()}
         {dificuldadeModal&&dificuldadeEdit&&(()=>{
           const d=dificuldadeEdit;
           const upd=(k,v)=>setDificuldadeEdit(p=>({...p,[k]:v}));
@@ -4767,7 +4823,6 @@ export default function App(){
         {modalUsers&&<UsersModal users={users} onClose={()=>setModalUsers(false)} onSaveUser={saveUser} onDeleteUser={deleteUser}/>}
         {modalImport&&<ImportExcelModal onClose={()=>setModalImport(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()}));setReports(p=>[...stamp,...p]);db.saveBatch("relatorios",stamp);setModalImport(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
         {modalMU&&<ProcessoModal onClose={()=>{setModalMU(false);setEditMU(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editMU){setProcessosMU(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_mu",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosMU(p=>[dd,...p]);db.save("processos_mu",dd.id,dd);notify("✅ Processo Mau Uso salvo!");}setEditMU(null);setModalMU(false);}} tipo="mau_uso" initial={editMU}/>}
-        {modalAF&&<ProcessoModal onClose={()=>{setModalAF(false);setEditAF(null);}} onSave={d=>{const dd={...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editAF){setProcessosAF(p=>p.map(x=>x.id===dd.id?dd:x));db.save("processos_af",dd.id,dd);notify("✅ Atualizado!");}else{setProcessosAF(p=>[dd,...p]);db.save("processos_af",dd.id,dd);notify("✅ Processo A Faturar salvo!");}setEditAF(null);setModalAF(false);}} tipo="a_faturar" initial={editAF}/>}
         {modalEmp&&<EmpModal onClose={()=>{setModalEmp(false);setEditEmp(null);}} onSave={d=>{const dd=editEmp?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editEmp)setEmprestimos(p=>p.map(x=>x.id===dd.id?dd:x));else setEmprestimos(p=>[dd,...p]);db.save("emprestimos",dd.id,dd);notify("✅ Salvo!");}} initial={editEmp}/>}
         {modalSaida&&<SaidaModal onClose={()=>{setModalSaida(false);setEditSaida(null);}} onSave={d=>{const dd=editSaida?d:{...d,registradoPor:d.registradoPor||user.name,registradoEm:d.registradoEm||new Date().toISOString()};if(editSaida)setSaidaEntrada(p=>p.map(x=>x.id===dd.id?dd:x));else setSaidaEntrada(p=>[dd,...p]);db.save("saida_entrada",dd.id,dd);notify("✅ Salvo!");}} initial={editSaida}/>}
   </>);
@@ -6619,7 +6674,7 @@ export default function App(){
                 <BtnImport onClick={()=>setModalImportAF(true)}/>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}])}/>
-                <BtnY onClick={()=>{const row={id:`AF${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:"",processoStatus:"pendente"};setProcessosAF(p=>[row,...p]);db.save("processos_af",row.id,row);notify("✅ Linha adicionada!");}}>+ Nova Linha</BtnY>
+                <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Registro</BtnY>
               </div>
             </div>
 
@@ -6687,6 +6742,7 @@ export default function App(){
                           <td style={td}><select value={p.empresaGrupo||""} onChange={e=>updateAF(p.id,{empresaGrupo:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_EMPRESAS.map(v=><option key={v}>{v}</option>)}</select></td>
                           <td style={td}><input type="text" defaultValue={p.descricao||""} onBlur={e=>e.target.value!==(p.descricao||"")&&updateAF(p.id,{descricao:e.target.value})} style={{...inp,width:170,fontStyle:"italic",color:"#64748B"}}/></td>
                           <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar em janela" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 8px",fontSize:11,marginRight:4}}>✏️</button>
                             <button onClick={()=>updateAF(p.id,{processoStatus:p.processoStatus==="arquivado"?"pendente":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#F1F5F9",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:11,marginRight:4}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm("Excluir este registro?")){setProcessosAF(pr=>pr.filter(x=>x.id!==p.id));db.delete("processos_af",p.id);}}} title="Excluir" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:11,fontWeight:700}}>✕</button>
                           </td>
