@@ -173,6 +173,8 @@ const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
 const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const TECH_SERVICO_FIXO_NORM = Object.fromEntries(Object.entries(TECH_SERVICO_FIXO).map(([k,v])=>[normalizeTec(k),v]));
+const getServicoFixo = (tecnico) => TECH_SERVICO_FIXO_NORM[normalizeTec(tecnico)];
 const TECNICO_SERVICO_AUTO=[
   {match:"joao",servico:"Pintura"},
   {match:"andre",servico:"Pintura"},
@@ -5080,13 +5082,13 @@ export default function App(){
                     {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
-                        const alvo1340=(apontamentos||[]).filter(a=>a&&!a.servico&&TECH_SERVICO_FIXO[a.tecnico]);
-                        const alvo150=(apontamentos150||[]).filter(a=>a&&!a.servico&&TECH_SERVICO_FIXO[a.tecnico]);
+                        const alvo1340=(apontamentos||[]).filter(a=>a&&!a.servico&&getServicoFixo(a.tecnico));
+                        const alvo150=(apontamentos150||[]).filter(a=>a&&!a.servico&&getServicoFixo(a.tecnico));
                         const total=alvo1340.length+alvo150.length;
                         if(total===0){alert("Nenhum apontamento sem serviço com técnico mapeado foi encontrado (Oficina 1340 e 150).");return;}
                         if(window.confirm(`Preencher automaticamente o Serviço de ${total} apontamento(s) (${alvo1340.length} da Oficina 1340 + ${alvo150.length} da 150) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
-                          alvo1340.forEach(a=>updateApon(a.id,{servico:TECH_SERVICO_FIXO[a.tecnico]}));
-                          alvo150.forEach(a=>updateApon150(a.id,{servico:TECH_SERVICO_FIXO[a.tecnico]}));
+                          alvo1340.forEach(a=>updateApon(a.id,{servico:getServicoFixo(a.tecnico)}));
+                          alvo150.forEach(a=>updateApon150(a.id,{servico:getServicoFixo(a.tecnico)}));
                           notify(`✅ ${total} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
                         }
                       }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🪄 Preencher Serviços por Técnico</button>
