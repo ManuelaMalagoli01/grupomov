@@ -4303,13 +4303,13 @@ export default function App(){
                   <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
                     <span>⛽ Combustível: <b>{fmt(comb)}</b></span>
                     <span>🍽️ Alimentação: <b>{fmt(alim)}</b></span>
-                    <span style={{color:"#94A3B8"}}>⏱️ Mão de obra (à parte, {hrs.toFixed(2)}h × R$280): <b>{fmt(mo)}</b></span>
+                    <span style={{color:"#94A3B8"}}>⏱️ Mão de obra (entra no custo, {hrs.toFixed(2)}h × R$280): <b>{fmt(mo)}</b></span>
                   </div>
                 </div>
                   </>);})()}
 
                 <div style={sec}>⚠️ Retrabalhos (até 10)</div>
-                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. O gasto do retrabalho (combustível + alimentação) entra como <b>negativo</b> no card. As horas do retrabalho somam na <b>mão de obra</b> (à parte, não entram no custo).</div>
+                <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>Mesmo com retrabalho a entrega técnica e a garantia continuam ativas. O gasto do retrabalho (combustível + alimentação) entra como <b>negativo</b> no card. As horas do retrabalho somam na <b>mão de obra</b>, que também entra no custo/líquido.</div>
                 {(d.retrabalhos||[]).map((r,i)=>{
                   const parseH=(s)=>{if(!s)return 0;s=String(s).trim();if(s.includes(":")){const[h,m]=s.split(":").map(Number);return (h||0)+(m||0)/60;}return pvv(s);};
                   const tot=pvv(r.gastoCombustivel)+pvv(r.gastoAlimentacao);
@@ -8293,14 +8293,13 @@ export default function App(){
           const custoCombustivel=(x)=>{const v=pv(x.gastoCombustivel);return (v>=0&&v<=50000)?v:0;};
           const gastoAlimSan=(x)=>{const a=pv(x.gastoAlimentacao);return (a>=0&&a<=50000)?a:0;};
           const horasCaso=(x)=>{const h=parseHrs(x.horasTrab);const hBase=(h>=0&&h<=100)?h:0;return hBase+horasRetrabalho(x);};
-          const custoMaoObra=(x)=>horasCaso(x)*VALOR_HORA; // à parte
+          const custoMaoObra=(x)=>horasCaso(x)*VALOR_HORA; // agora soma no custo do atendimento / líquido
           // Retrabalho: combustível + alimentação continuam como NEGATIVO no custo; horas somam na mão de obra
           const horasRetrabalho=(x)=>((x.retrabalhos||[]).reduce((a,r)=>{const h=parseHrs(r.horasTrab);return a+((h>=0&&h<=100)?h:0);},0));
           const gastoRetrabalhoUn=(r)=>{const c=pv(r.gastoCombustivel),al=pv(r.gastoAlimentacao);return (c<=50000?c:0)+(al<=50000?al:0);};
           const gastosRetrabalhos=(x)=>((x.retrabalhos||[]).reduce((a,r)=>a+gastoRetrabalhoUn(r),0));
-          // Custo do atendimento (o que aparece no dash/gráfico): combustível + alimentação + retrabalhos
-          // Mão de obra fica à PARTE (as duas visões existem no card)
-          const custoAtendimento=(x)=>custoCombustivel(x)+gastoAlimSan(x)+gastosRetrabalhos(x);
+          // Custo do atendimento (o que aparece no dash/gráfico e no líquido): combustível + alimentação + retrabalhos + mão de obra
+          const custoAtendimento=(x)=>custoCombustivel(x)+gastoAlimSan(x)+gastosRetrabalhos(x)+custoMaoObra(x);
           // COMISSÕES
           const comissaoSaneada=(x)=>{const nf=pv(x.valor),c=pv(x.comissao);if(!x.comissao||x.comissao==="")return nf*0.01;if(nf>0&&c>nf*0.05)return nf*0.01;return c;};
           const recEntregaTec=(x)=>comissaoSaneada(x);   // 1% BRUTO entrega técnica
@@ -8308,7 +8307,7 @@ export default function App(){
           const recGarantia=(x)=>recGarantiaSaneada(x); // 1% fim garantia (futuro)
           const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor);
           const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
-          // 1% BRUTO e 1% LÍQUIDO (líquido = bruto - combustível - alimentação - retrabalhos; horas FORA)
+          // 1% BRUTO e 1% LÍQUIDO (líquido = bruto - combustível - alimentação - retrabalhos - mão de obra)
           const comissaoBruta=(x)=>recEntregaTec(x);
           const comissaoLiquida=(x)=>comissaoBruta(x)-custoAtendimento(x);
           const statusPreventiva=(x)=>{
@@ -8393,7 +8392,7 @@ export default function App(){
                 totRecGarantia>0&&{l:"A Receber — Garantia",v:fmtR(totRecGarantia),sub:"futuro (após 6 meses)",c:"#0D9488",i:"🛡️"},
                 totRecPreventiva>0&&{l:"A Receber — Preventivas",v:fmtR(totRecPreventiva),sub:"futuro (se cliente optar)",c:"#7E22CE",i:"🛠️"},
                 {l:"Custo Atendimento",v:fmtR(totalCustoAtend),sub:"combust.+alim.+retrab.",c:"#C62828",i:"📉"},
-                {l:"⏱️ Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280 (à parte)",c:"#E67E00",i:"⏱️"},
+                {l:"⏱️ Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280 (incluída no custo)",c:"#E67E00",i:"⏱️"},
                 {l:"1% Líquido",v:fmtR(totRecEntrega-totalCustoAtend),sub:"1% bruto − custo atend.",c:(totRecEntrega-totalCustoAtend)>=0?"#15803D":"#C62828",i:"📈"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
               ].filter(Boolean).map((k,i)=>(
@@ -8437,7 +8436,7 @@ export default function App(){
                   <div><span style={{color:"#0369A1",fontWeight:800}}>1% bruto {fmtR(totRecEntrega)}</span></div>
                   <div><span style={{color:"#15803D",fontWeight:800}}>1% líquido {fmtR(ganhoLiq)}</span> <span style={{color:"#15803D"}}>({pctGanho.toFixed(1)}%)</span></div>
                   <div><span style={{color:"#C62828",fontWeight:800}}>Custo atend. {fmtR(custoTot)}</span> <span style={{color:"#C62828"}}>({pctGasto.toFixed(1)}%)</span></div>
-                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — cálculo à parte</div>
+                  <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — incluída no custo/líquido</div>
                 </div></>);})()}
               </div>
             </div>
@@ -8497,7 +8496,7 @@ export default function App(){
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Bruto (serviço)</span><div style={{fontWeight:800,color:"#0369A1"}}>{fmtR(comBruta)}</div></div>
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>1% Líquido</span><div style={{fontWeight:800,color:comLiq>=0?"#15803D":"#C62828"}}>{fmtR(comLiq)}</div></div>
                         <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Custo atendimento</span><div style={{fontWeight:700,color:"#C62828"}}>−{fmtR(custoAtend)}</div></div>
-                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⏱️ Mão de obra (à parte)</span><div style={{fontWeight:700,color:"#E67E00"}}>{fmtR(maoObra)}</div></div>
+                        <div><span style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>⏱️ Mão de obra (no custo)</span><div style={{fontWeight:700,color:"#E67E00"}}>{fmtR(maoObra)}</div></div>
                       </div>
                       <div style={{fontSize:9,color:"#94A3B8",background:"#FAFAFA",borderRadius:6,padding:"4px 8px"}}>⛽ {fmtR(custoCombustivel(x))} · 🍽️ {fmtR(gastoAlimSan(x))}{retrabNeg>0?` · 🔁 retrabalho −${fmtR(retrabNeg)}`:""}{horasCaso(x)>0?` · ⏱️ ${horasCaso(x).toFixed(2)}h${horasRetrabalho(x)>0?` (${horasRetrabalho(x).toFixed(2)}h retrab.)`:""}`:""}{x.ticket?` · 🎫 ${x.ticket}`:""}</div>
                       {(x.equipamentos||[]).filter(Boolean).length>0&&<div style={{fontSize:10,color:"#475569",paddingTop:6,borderTop:"1px solid #F1F5F9"}}>🔧 {(x.equipamentos||[]).filter(Boolean).join(" · ")}</div>}
