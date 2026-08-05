@@ -141,7 +141,7 @@ const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEY
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Soldagem/Usinagem","Bateria/Carregador","Pintura","Outros"];
 const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Bateria e Mecânica":"Mecânica","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","Gaty":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(isOutroTec(a.tecnico))return "Outros";
@@ -5080,11 +5080,14 @@ export default function App(){
                     {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
-                        const alvo=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico&&autoServicoPorTecnico(a.tecnico));
-                        if(alvo.length===0){alert("Nenhum apontamento sem serviço com técnico mapeado (João, Andre, Pedro Souza, Pedro Pimentel, Lucio, Davi, Reginaldo, Junio, Eduardo, Matheus, Hebert, Guilherme) foi encontrado.");return;}
-                        if(window.confirm(`Preencher automaticamente o Serviço de ${alvo.length} apontamento(s) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
-                          alvo.forEach(a=>updateApon(a.id,{servico:autoServicoPorTecnico(a.tecnico)}));
-                          notify(`✅ ${alvo.length} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
+                        const alvo1340=(apontamentos||[]).filter(a=>a&&!a.servico&&TECH_SERVICO_FIXO[a.tecnico]);
+                        const alvo150=(apontamentos150||[]).filter(a=>a&&!a.servico&&TECH_SERVICO_FIXO[a.tecnico]);
+                        const total=alvo1340.length+alvo150.length;
+                        if(total===0){alert("Nenhum apontamento sem serviço com técnico mapeado foi encontrado (Oficina 1340 e 150).");return;}
+                        if(window.confirm(`Preencher automaticamente o Serviço de ${total} apontamento(s) (${alvo1340.length} da Oficina 1340 + ${alvo150.length} da 150) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
+                          alvo1340.forEach(a=>updateApon(a.id,{servico:TECH_SERVICO_FIXO[a.tecnico]}));
+                          alvo150.forEach(a=>updateApon150(a.id,{servico:TECH_SERVICO_FIXO[a.tecnico]}));
+                          notify(`✅ ${total} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
                         }
                       }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🪄 Preencher Serviços por Técnico</button>
                       <button onClick={()=>{
