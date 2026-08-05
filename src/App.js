@@ -5673,7 +5673,7 @@ export default function App(){
                 const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
                 de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
               }
-              serieFM.push({lab,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
+              serieFM.push({lab,de,ate,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
             }
             const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
             const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
@@ -5710,7 +5710,7 @@ export default function App(){
                         <button onClick={()=>setFechamentoPeriodo("mes")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="mes"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="mes"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="mes"?"#1565C0":"#64748B",cursor:"pointer"}}>Mensal</button>
                       </div>
                     </div>
-                    <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
+                    <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:serieFM.map(s=>(fmFiltroDe===s.de&&fmFiltroAte===s.ate)?"#F5C200":"#166534"),borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,onClick:(evt,els)=>{if(els&&els.length){const idx=els[0].index;const b=serieFM[idx];if(fmFiltroDe===b.de&&fmFiltroAte===b.ate){setFmFiltroDe("");setFmFiltroAte("");}else{setFmFiltroDe(b.de);setFmFiltroAte(b.ate);}}},plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
                   </div>
                   <div className="card" style={{padding:16}}>
                     <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
@@ -11014,7 +11014,7 @@ export default function App(){
                 const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
                 de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
               }
-              serieFM.push({lab,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
+              serieFM.push({lab,de,ate,qtd:fmLista.filter(f=>f.data&&f.data>=de&&f.data<=ate).length});
             }
             const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
             const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
@@ -11051,7 +11051,7 @@ export default function App(){
                         <button onClick={()=>setFechamentoPeriodo("mes")} style={{fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:6,border:fechamentoPeriodo==="mes"?"1.5px solid #1565C0":"1.5px solid #E2E8F0",background:fechamentoPeriodo==="mes"?"#EFF6FF":"#FFF",color:fechamentoPeriodo==="mes"?"#1565C0":"#64748B",cursor:"pointer"}}>Mensal</button>
                       </div>
                     </div>
-                    <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
+                    <ChartCanvas type="bar" height={190} data={{labels:serieFM.map(s=>s.lab),datasets:[{label:"Fechamentos",data:serieFM.map(s=>s.qtd),backgroundColor:serieFM.map(s=>(fmFiltroDe===s.de&&fmFiltroAte===s.ate)?"#F5C200":"#166534"),borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,onClick:(evt,els)=>{if(els&&els.length){const idx=els[0].index;const b=serieFM[idx];if(fmFiltroDe===b.de&&fmFiltroAte===b.ate){setFmFiltroDe("");setFmFiltroAte("");}else{setFmFiltroDe(b.de);setFmFiltroAte(b.ate);}}},plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
                   </div>
                   <div className="card" style={{padding:16}}>
                     <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
