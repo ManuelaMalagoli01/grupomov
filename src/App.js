@@ -1531,7 +1531,7 @@ function ImportAponModal({onClose,onImport,label,oficina}){
   const fileRef=useRef();
   const pick=k=>o=>{const keys=Object.keys(o);const f=keys.find(x=>x.trim().toLowerCase().includes(k.toLowerCase()));return f?o[f]:"";};
   // Automação: serviço padrão por técnico na Oficina 1340 (definido pela usuária — demais técnicos ficam em branco p/ preenchimento manual)
-  const autoServico=(tecNome)=>oficina==="1340"?autoServicoPorTecnico(tecNome):"";
+  const autoServico=(tecNome)=>getServicoFixo(tecNome)||"";
   const HEADER_KEYWORDS=["técnico","tecnico","o.s","os","dia","mês","mes","ano","inicial","início","inicio","termin","total","pat","observ","serviç","servic","modelo","data"];
   const scoreRow=(row)=>row.reduce((acc,cell)=>{ const s=String(cell||"").trim().toLowerCase(); if(!s)return acc; return acc+(HEADER_KEYWORDS.some(k=>s.includes(k))?1:0); },0);
   const onFile=async(f)=>{
@@ -1632,7 +1632,7 @@ function ImportAponModal({onClose,onImport,label,oficina}){
       patrimonio:String(pick("nº do pat")(o)||pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
       tecnico:tecnicoVal,
       modelo:String(pick("modelo")(o)||""),
-      servico:autoServico(tecnicoVal), // preenchido automaticamente p/ técnicos mapeados (Oficina 1340); demais ficam em branco p/ inserção manual
+      servico:autoServico(tecnicoVal), // preenchido automaticamente p/ técnicos com regra fixa; demais ficam em branco p/ inserção manual
       inicio:inicioT,
       termino:terminoT,
       total:toDuracao(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
@@ -3414,7 +3414,7 @@ export default function App(){
           if(!a)return a;
           let novo=a;
           if(!novo.servico){
-            const auto=autoServicoPorTecnico(novo.tecnico);
+            const auto=getServicoFixo(novo.tecnico);
             if(auto)novo={...novo,servico:auto};
           }
           if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
@@ -3475,7 +3475,7 @@ export default function App(){
           if(!a)return a;
           let novo=a;
           if(!novo.servico){
-            const auto=autoServicoPorTecnico(novo.tecnico);
+            const auto=getServicoFixo(novo.tecnico);
             if(auto)novo={...novo,servico:auto};
           }
           if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
@@ -5254,7 +5254,7 @@ export default function App(){
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>{setAponNovaTech(e.target.value);const auto=autoServicoPorTecnico(e.target.value);if(auto)setAponNovaServ(auto);}} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>{setAponNovaTech(e.target.value);const auto=getServicoFixo(e.target.value);if(auto)setAponNovaServ(auto);}} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Serviço</label><select value={aponNovaServ} onChange={e=>setAponNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:aponNovaServ?"#1565C0":"#AAA"}}><option value="">— Selecionar depois —</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={aponNovaInicio} onChange={e=>setAponNovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={aponNovaTermino} onChange={e=>setAponNovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
