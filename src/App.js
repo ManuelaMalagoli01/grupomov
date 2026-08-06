@@ -8378,21 +8378,7 @@ export default function App(){
               </div>
             </div>
 
-            {alertasPrev.length>0&&(()=>{
-              const nomes=[...new Set(alertasPrev.map(x=>x.cliente||x.nome||"Cliente"))];
-              return(<div className="card" style={{padding:0,marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA",overflow:"hidden"}}>
-                <button onClick={()=>setShowAlertaPrev(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"7px 12px",border:"none",background:"transparent",cursor:"pointer",fontFamily:"inherit"}}>
-                  <span style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:800,color:"#C2410C"}}>
-                    <span style={{fontSize:12}}>🔔</span> Contatar cliente sobre preventiva
-                    <span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 8px"}}>{nomes.length}</span>
-                  </span>
-                  <span style={{fontSize:9,color:"#C2410C"}}>{showAlertaPrev?"▲ ocultar":"▼ ver lista"}</span>
-                </button>
-                {showAlertaPrev&&<div style={{padding:"0 12px 8px",display:"flex",flexWrap:"wrap",gap:5}}>
-                  {nomes.map((n,i)=><span key={i} style={{fontSize:10,fontWeight:600,color:"#7C2D12",background:"#FFEDD5",borderRadius:8,padding:"3px 9px"}}>{n}</span>)}
-                </div>}
-              </div>);
-            })()}
+
 
             <KpiBIHeader subtitulo="Indicadores de Entrega Técnica" kpis={[
                 {l:"Entregas",v:lista.length,sub:`${doMes.length} este mês`,i:"🚚"},
@@ -8442,6 +8428,23 @@ export default function App(){
                 </div></>);})()}
               </div>
             </div>
+
+            {alertasPrev.length>0&&(()=>{
+              const nomes=[...new Set(alertasPrev.map(x=>x.cliente||x.nome||"Cliente"))];
+              return(<div className="card" style={{padding:0,marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA",overflow:"hidden"}}>
+                <button onClick={()=>setShowAlertaPrev(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"7px 12px",border:"none",background:"transparent",cursor:"pointer",fontFamily:"inherit"}}>
+                  <span style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:800,color:"#C2410C"}}>
+                    <span style={{fontSize:12}}>🔔</span> Contatar cliente sobre preventiva
+                    <span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 8px"}}>{nomes.length}</span>
+                  </span>
+                  <span style={{fontSize:9,color:"#C2410C"}}>{showAlertaPrev?"▲ ocultar":"▼ ver lista"}</span>
+                </button>
+                {showAlertaPrev&&<div style={{padding:"0 12px 8px",display:"flex",flexWrap:"wrap",gap:5}}>
+                  {nomes.map((n,i)=><span key={i} style={{fontSize:10,fontWeight:600,color:"#7C2D12",background:"#FFEDD5",borderRadius:8,padding:"3px 9px"}}>{n}</span>)}
+                </div>}
+              </div>);
+            })()}
+
 
             {(()=>{const temFiltro=entregaSearch||entregaFiltro!=="todos"||entregaDe||entregaAte||entregaMes;return(<>
             <button onClick={()=>setShowFiltroEntrega(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltroEntrega?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
