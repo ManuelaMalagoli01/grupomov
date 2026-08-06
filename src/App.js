@@ -172,7 +172,7 @@ const REGIONS = {
 const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
-const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const TECH_SERVICO_FIXO_NORM = Object.fromEntries(Object.entries(TECH_SERVICO_FIXO).map(([k,v])=>[normalizeTec(k),v]));
 const getServicoFixo = (tecnico) => TECH_SERVICO_FIXO_NORM[normalizeTec(tecnico)];
 const TECNICO_SERVICO_AUTO=[
@@ -5137,8 +5137,9 @@ export default function App(){
                     {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
-                        const alvo1340=(apontamentos||[]).filter(a=>a&&!a.servico&&getServicoFixo(a.tecnico));
-                        const alvo150=(apontamentos150||[]).filter(a=>a&&!a.servico&&getServicoFixo(a.tecnico));
+                        const semServicoOk=(a)=>!a.servico||!String(a.servico).trim();
+                        const alvo1340=(apontamentos||[]).filter(a=>a&&semServicoOk(a)&&getServicoFixo(a.tecnico));
+                        const alvo150=(apontamentos150||[]).filter(a=>a&&semServicoOk(a)&&getServicoFixo(a.tecnico));
                         const total=alvo1340.length+alvo150.length;
                         if(total===0){alert("Nenhum apontamento sem serviço com técnico mapeado foi encontrado (Oficina 1340 e 150).");return;}
                         if(window.confirm(`Preencher automaticamente o Serviço de ${total} apontamento(s) (${alvo1340.length} da Oficina 1340 + ${alvo150.length} da 150) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
