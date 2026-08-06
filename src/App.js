@@ -141,7 +141,7 @@ const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEY
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Soldagem/Usinagem","Bateria/Carregador","Pintura","Outros"];
 const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Bateria e Mecânica":"Mecânica","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","Gaty":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","Gaty":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem","Junior Ferreira":"Soldagem/Usinagem"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(isOutroTec(a.tecnico))return "Outros";
@@ -174,7 +174,14 @@ const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert S
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
 const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const TECH_SERVICO_FIXO_NORM = Object.fromEntries(Object.entries(TECH_SERVICO_FIXO).map(([k,v])=>[normalizeTec(k),v]));
-const getServicoFixo = (tecnico) => TECH_SERVICO_FIXO_NORM[normalizeTec(tecnico)];
+const TECH_SERVICO_FIXO_ENTRIES = Object.entries(TECH_SERVICO_FIXO_NORM);
+const getServicoFixo = (tecnico) => {
+  const n=normalizeTec(tecnico);
+  if(!n)return undefined;
+  if(TECH_SERVICO_FIXO_NORM[n])return TECH_SERVICO_FIXO_NORM[n];
+  const found=TECH_SERVICO_FIXO_ENTRIES.find(([k])=>n.includes(k)||k.includes(n));
+  return found?found[1]:undefined;
+};
 const TECNICO_SERVICO_AUTO=[
   {match:"joao",servico:"Pintura"},
   {match:"andre",servico:"Pintura"},
