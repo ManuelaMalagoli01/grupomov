@@ -8285,13 +8285,13 @@ export default function App(){
             if(entregaFiltro==="aguarda1000"&&!(x.prev500Aprov&&!x.prev1000Aprov))return false;
             if(entregaFiltro==="completa"&&!(x.prev100Aprov&&x.prev500Aprov&&x.prev1000Aprov))return false;
             if(["pendente100","aguarda500","aguarda1000","completa"].includes(entregaFiltro)&&statusPreventiva(x).k!==entregaFiltro)return false;
-            const ds=x.dataSolicitacao||"";
+            const ds=x.dataEntrega||x.dataSolicitacao||"";
             if(entregaDe&&ds<entregaDe)return false;
             if(entregaAte&&ds>entregaAte)return false;
             if(entregaMes&&ds.slice(5,7)!==entregaMes)return false;
             if(entregaSearch){const q=entregaSearch.toLowerCase();if(!((x.cliente||"").toLowerCase().includes(q)||(x.nome||"").toLowerCase().includes(q)||(x.nf||"").toLowerCase().includes(q)||(x.chamado||"").toLowerCase().includes(q)||(x.mov||"").toLowerCase().includes(q)||(x.email||"").toLowerCase().includes(q)||(x.tecnico||"").toLowerCase().includes(q)))return false;}
             return true;
-          }).sort((a,b)=>String(b.dataSolicitacao||"").localeCompare(String(a.dataSolicitacao||"")));
+          }).sort((a,b)=>String(b.dataEntrega||b.dataSolicitacao||"").localeCompare(String(a.dataEntrega||a.dataSolicitacao||"")));
           // Fim de garantia = 6 meses após a data de entrega técnica
           const calcGarantia=(dataEntrega)=>{if(!dataEntrega)return "";const d=new Date(dataEntrega+"T12:00:00");d.setMonth(d.getMonth()+6);return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;};
           // ── MODELO DE RECEITA (serviço, não mercadoria) ──
@@ -8340,7 +8340,7 @@ export default function App(){
           const totalGasolina=totalCombustivelR; // compat
           const totalCombustivel=totalCombustivelR; // compat
           const mesAtual=hoje.slice(0,7);
-          const doMes=lista.filter(x=>(x.dataSolicitacao||"").startsWith(mesAtual));
+          const doMes=lista.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(mesAtual));
           const garantiaAtiva=lista.filter(x=>!x.arquivado&&((x.fimGarantia&&x.fimGarantia>=hoje)||(x.retrabalhos||[]).length>0||x.retrabalho)).length;
           const comRetrabalho=lista.filter(x=>(x.retrabalhos||[]).length>0||x.retrabalho).length;
           // Alertas de preventiva: clientes de entrega tecnica devem fazer preventivas — alerta mensal
@@ -8353,7 +8353,7 @@ export default function App(){
             return semPrev||diasSemContato>=30;
           });
           // Grafico: receita x comissao x gastos por mes (ultimos 6)
-          const meses=[...new Set(lista.map(x=>(x.dataSolicitacao||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
+          const meses=[...new Set(lista.map(x=>(x.dataEntrega||x.dataSolicitacao||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
           const MESN=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
           const th={padding:"7px 8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#FFF",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",background:"#1A1A1A",position:"sticky",top:0,zIndex:2};
           const td={padding:"5px 8px",borderBottom:"1px solid #F1F5F9",fontSize:11,verticalAlign:"middle"};
@@ -8414,10 +8414,10 @@ export default function App(){
                 <ChartCanvas type="bar" height={200} data={{
                   labels:meses.map(m=>{const[y,mo]=m.split("-");return `${MESN[parseInt(mo)-1]}/${y.slice(2)}`;}),
                   datasets:[
-                    {label:"1% Entrega",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recEntregaTec(x),0)),backgroundColor:"#0369A1",borderRadius:4,stack:"rec"},
-                    {label:"1% Garantia (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
-                    {label:"Preventivas (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
-                    {label:"Custo atendimento",data:meses.map(m=>lista.filter(x=>(x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoAtendimento(x),0)),backgroundColor:"#C62828",borderRadius:4,stack:"gasto"},
+                    {label:"1% Entrega",data:meses.map(m=>lista.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recEntregaTec(x),0)),backgroundColor:"#0369A1",borderRadius:4,stack:"rec"},
+                    {label:"1% Garantia (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recGarantia(x),0)),backgroundColor:"#0D9488",borderRadius:4,stack:"rec"},
+                    {label:"Preventivas (futuro)",data:meses.map(m=>lista.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+recPreventivas(x),0)),backgroundColor:"#7E22CE",borderRadius:4,stack:"rec"},
+                    {label:"Custo atendimento",data:meses.map(m=>lista.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+custoAtendimento(x),0)),backgroundColor:"#C62828",borderRadius:4,stack:"gasto"},
                   ]
                 }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:9},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},stacked:true},y:{beginAtZero:true,stacked:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`},grid:{color:"#F0F0F0"}}}}}/>}
               </div>
@@ -8491,7 +8491,7 @@ export default function App(){
                   const recTotal=receitaBruta(x);
                   return(<div key={x.id} className="card" style={{padding:0,overflow:"hidden",opacity:x.arquivado?0.55:1,borderLeft:`4px solid ${garAtiva?"#0D9488":"#1565C0"}`}}>
                     <div style={{padding:"9px 12px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
-                      <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.cliente||"Cliente"}</div><div style={{fontSize:10,color:"#94A3B8"}}>{fmtDataBR(x.dataSolicitacao)} · NF {x.nf||"—"}</div></div>
+                      <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{x.cliente||"Cliente"}</div><div style={{fontSize:10,color:"#94A3B8"}}>Solic. {fmtDataBR(x.dataSolicitacao)}{x.dataEntrega?` · 🚚 Entrega ${fmtDataBR(x.dataEntrega)}`:""} · NF {x.nf||"—"}</div></div>
                       <div style={{display:"flex",gap:3,flexShrink:0}}>
                         <button onClick={()=>{setEntregaEdit({...x});setEntregaModal(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✏️</button>
                         <button onClick={()=>updateEntrega(x.id,{arquivado:!x.arquivado})} title={x.arquivado?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>{x.arquivado?"📤":"🗄️"}</button>
