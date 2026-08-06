@@ -1427,16 +1427,16 @@ const BtnImport = ({onClick}) => (
 const DASH_KPI_COLORS=["#1F2937","#1D4E89","#166534","#B45309","#7E22CE","#B91C1C"];
 const KpiBIHeader = ({subtitulo, kpis}) => (
   <>
-    <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-      <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— {subtitulo}</span>
+    <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"7px 12px",display:"flex",alignItems:"center",gap:8}}>
+      <span style={{fontSize:10,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+      <span style={{fontSize:9,fontWeight:700,color:"#CBD5E1"}}>— {subtitulo}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:2,marginBottom:20,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:2,marginBottom:18,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
       {kpis.filter(Boolean).map((k,i)=>(
-        <div key={i} style={{padding:"14px 16px",background:k.c||DASH_KPI_COLORS[i%DASH_KPI_COLORS.length]}}>
-          <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.i?`${k.i} `:""}{k.l}</div>
-          <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
-          {k.sub&&<div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:2}}>{k.sub}</div>}
+        <div key={i} style={{padding:"10px 13px",background:k.c||DASH_KPI_COLORS[i%DASH_KPI_COLORS.length]}}>
+          <div style={{fontSize:8,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.5}}>{k.i?`${k.i} `:""}{k.l}</div>
+          <div style={{fontSize:17,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
+          {k.sub&&<div style={{fontSize:10,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:1}}>{k.sub}</div>}
         </div>
       ))}
     </div>
@@ -8381,15 +8381,15 @@ export default function App(){
             {alertasPrev.length>0&&(()=>{
               const nomes=[...new Set(alertasPrev.map(x=>x.cliente||x.nome||"Cliente"))];
               return(<div className="card" style={{padding:0,marginBottom:14,background:"#FFF7ED",border:"1.5px solid #FED7AA",overflow:"hidden"}}>
-                <button onClick={()=>setShowAlertaPrev(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"10px 14px",border:"none",background:"transparent",cursor:"pointer",fontFamily:"inherit"}}>
-                  <span style={{display:"flex",alignItems:"center",gap:8,fontSize:12,fontWeight:800,color:"#C2410C"}}>
-                    <span style={{fontSize:14}}>🔔</span> Contatar cliente sobre preventiva
-                    <span style={{fontSize:11,fontWeight:800,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 9px"}}>{nomes.length}</span>
+                <button onClick={()=>setShowAlertaPrev(p=>!p)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"7px 12px",border:"none",background:"transparent",cursor:"pointer",fontFamily:"inherit"}}>
+                  <span style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:800,color:"#C2410C"}}>
+                    <span style={{fontSize:12}}>🔔</span> Contatar cliente sobre preventiva
+                    <span style={{fontSize:10,fontWeight:800,color:"#FFF",background:"#EA580C",borderRadius:20,padding:"1px 8px"}}>{nomes.length}</span>
                   </span>
-                  <span style={{fontSize:10,color:"#C2410C"}}>{showAlertaPrev?"▲ ocultar":"▼ ver lista"}</span>
+                  <span style={{fontSize:9,color:"#C2410C"}}>{showAlertaPrev?"▲ ocultar":"▼ ver lista"}</span>
                 </button>
-                {showAlertaPrev&&<div style={{padding:"0 14px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
-                  {nomes.map((n,i)=><span key={i} style={{fontSize:11,fontWeight:600,color:"#7C2D12",background:"#FFEDD5",borderRadius:8,padding:"4px 11px"}}>{n}</span>)}
+                {showAlertaPrev&&<div style={{padding:"0 12px 8px",display:"flex",flexWrap:"wrap",gap:5}}>
+                  {nomes.map((n,i)=><span key={i} style={{fontSize:10,fontWeight:600,color:"#7C2D12",background:"#FFEDD5",borderRadius:8,padding:"3px 9px"}}>{n}</span>)}
                 </div>}
               </div>);
             })()}
