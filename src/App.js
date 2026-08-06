@@ -8380,21 +8380,21 @@ export default function App(){
 
 
 
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:16}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:20}}>
               {[
                 {l:"Entregas",v:lista.length,sub:`${doMes.length} este mês`,c:"#1565C0",i:"🚚"},
                 {l:"Receita Realizada",v:fmtR(totRecEntrega),sub:"1% entrega (recebido)",c:"#1A7A3C",i:"💰"},
                 totRecGarantia>0&&{l:"A Receber — Garantia",v:fmtR(totRecGarantia),sub:"futuro (após 6 meses)",c:"#0D9488",i:"🛡️"},
                 totRecPreventiva>0&&{l:"A Receber — Preventivas",v:fmtR(totRecPreventiva),sub:"futuro (se cliente optar)",c:"#7E22CE",i:"🛠️"},
-                {l:"Custo Combustível/Alimentação",v:fmtR(totalCustoLogistico),sub:"+ retrabalho",c:"#C2410C",i:"⛽"},
+                {l:"Combustível/Alimentação",v:fmtR(totalCustoLogistico),sub:"custo + retrabalho",c:"#C2410C",i:"⛽"},
                 {l:"Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280",c:"#7E22CE",i:"⏱️"},
-                {l:"1% Líquido",v:fmtR(totRecEntrega-totalCustoAtend),sub:"bruto − combust./alim. − mão de obra",c:(totRecEntrega-totalCustoAtend)>=0?"#15803D":"#C62828",i:(totRecEntrega-totalCustoAtend)>=0?"📈":"📉"},
+                {l:"1% Líquido",v:fmtR(totRecEntrega-totalCustoAtend),sub:"bruto − custos",c:(totRecEntrega-totalCustoAtend)>=0?"#15803D":"#C62828",i:(totRecEntrega-totalCustoAtend)>=0?"📈":"📉"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
               ].filter(Boolean).map((k,i)=>(
-                <div key={i} className="card" style={{padding:"10px 13px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5}}>{k.i} {k.l}</div>
-                  <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?15:20,fontWeight:900,color:k.c,marginTop:3,lineHeight:1.1}}>{k.v}</div>
-                  {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:2}}>{k.sub}</div>}
+                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{k.i} {k.l}</div>
+                  <div style={{fontSize:k.v&&String(k.v).startsWith("R$")?17:22,fontWeight:900,color:k.c,lineHeight:1.15}}>{k.v}</div>
+                  {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:4}}>{k.sub}</div>}
                 </div>
               ))}
             </div>
