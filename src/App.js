@@ -8341,7 +8341,7 @@ export default function App(){
           const totalCombustivel=totalCombustivelR; // compat
           const mesAtual=hoje.slice(0,7);
           const doMes=lista.filter(x=>(x.dataSolicitacao||"").startsWith(mesAtual));
-          const garantiaAtiva=lista.filter(x=>x.fimGarantia&&x.fimGarantia>=hoje).length;
+          const garantiaAtiva=lista.filter(x=>!x.arquivado&&((x.fimGarantia&&x.fimGarantia>=hoje)||(x.retrabalhos||[]).length>0||x.retrabalho)).length;
           const comRetrabalho=lista.filter(x=>(x.retrabalhos||[]).length>0||x.retrabalho).length;
           // Alertas de preventiva: clientes de entrega tecnica devem fazer preventivas — alerta mensal
           const alertasPrev=lista.filter(x=>{
@@ -8479,7 +8479,7 @@ export default function App(){
             {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>🚚</div><div style={{fontSize:14,fontWeight:600}}>Nenhuma entrega técnica — clique em "+ Nova Solicitação"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:12}}>
                 {filtrada.map(x=>{
-                  const garAtiva=x.fimGarantia&&x.fimGarantia>=hoje;
+                  const garAtiva=(x.fimGarantia&&x.fimGarantia>=hoje)||(x.retrabalhos||[]).length>0||x.retrabalho;
                   const stPrev=statusPreventiva(x);
                   const nRetrab=(x.retrabalhos||[]).length;
                   const temRetrab=nRetrab>0||x.retrabalho;
@@ -8502,7 +8502,7 @@ export default function App(){
                       <div style={{background:stPrev.bg,color:stPrev.c,borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:800,textAlign:"center"}}>{stPrev.l}</div>
                       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                         <span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0369A1",borderRadius:10,padding:"2px 9px"}}>🔧 Entrega Técnica</span>
-                        {garAtiva&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0D9488",borderRadius:10,padding:"2px 9px"}}>🛡️ Garantia até {fmtDataBR(x.fimGarantia)}</span>}
+                        {garAtiva&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#0D9488",borderRadius:10,padding:"2px 9px"}}>🛡️ Garantia{x.fimGarantia?` até ${fmtDataBR(x.fimGarantia)}`:" ativa"}</span>}
                         {temRetrab&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:"#C62828",borderRadius:10,padding:"2px 9px"}}>⚠️ {nRetrab||1} retrabalho{(nRetrab||1)>1?"s":""}</span>}
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
