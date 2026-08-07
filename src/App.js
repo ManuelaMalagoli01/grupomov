@@ -8328,10 +8328,12 @@ export default function App(){
           const recGarantiaSaneada=(x)=>{const nf=pv(x.valor),c=pv(x.comissaoValor);if(!x.comissaoValor||x.comissaoValor==="")return nf*0.01;if(nf>0&&c>nf*0.05)return nf*0.01;return c;};
           const recGarantia=(x)=>recGarantiaSaneada(x); // 1% fim garantia (futuro)
           const recPreventivas=(x)=>pv(x.prev100Valor)+pv(x.prev500Valor)+pv(x.prev1000Valor);
+          const recPreventivasExecutadas=(x)=>(x.prev100Aprov?pv(x.prev100Valor):0)+(x.prev500Aprov?pv(x.prev500Valor):0)+(x.prev1000Aprov?pv(x.prev1000Valor):0);
+          const qtdPreventivasExecutadas=(x)=>(x.prev100Aprov?1:0)+(x.prev500Aprov?1:0)+(x.prev1000Aprov?1:0);
           const receitaBruta=(x)=>recEntregaTec(x)+recGarantia(x)+recPreventivas(x);
           // 1% BRUTO e 1% LÍQUIDO (líquido = bruto - combustível - alimentação - retrabalhos - mão de obra)
           const comissaoBruta=(x)=>recEntregaTec(x);
-          const comissaoLiquida=(x)=>comissaoBruta(x)-custoAtendimento(x);
+          const comissaoLiquida=(x)=>comissaoBruta(x)+recPreventivasExecutadas(x)-custoAtendimento(x);
           const statusPreventiva=(x)=>{
             if(x.prev1000Aprov)return {k:"completa",l:"🏆 Preventiva de garantia completa",c:"#15803D",bg:"#DCFCE7"};
             if(x.prev500Aprov)return {k:"aguarda1000",l:"✅ 500h concluída · aguardando 1000h",c:"#0D9488",bg:"#F0FDFA"};
@@ -8342,6 +8344,8 @@ export default function App(){
           const totRecEntrega=filtrada.reduce((a,x)=>a+recEntregaTec(x),0);
           const totRecGarantia=filtrada.reduce((a,x)=>a+recGarantia(x),0);
           const totRecPreventiva=filtrada.reduce((a,x)=>a+recPreventivas(x),0);
+          const totPrevExecValor=filtrada.reduce((a,x)=>a+recPreventivasExecutadas(x),0);
+          const totPrevExecQtd=filtrada.reduce((a,x)=>a+qtdPreventivasExecutadas(x),0);
           const totalReceita=totRecEntrega+totRecGarantia+totRecPreventiva;
           const totalComissaoLiq=filtrada.reduce((a,x)=>a+comissaoLiquida(x),0);
           const totalCombustivelR=filtrada.reduce((a,x)=>a+custoCombustivel(x),0);
@@ -8410,7 +8414,7 @@ export default function App(){
                 totRecPreventiva>0&&{l:"A Receber — Preventivas",v:fmtR(totRecPreventiva),sub:"futuro (se cliente optar)",c:"#7E22CE",i:"🛠️"},
                 {l:"Combustível/Alimentação",v:fmtR(totalCustoLogistico),sub:"custo + retrabalho",c:"#C2410C",i:"⛽"},
                 {l:"Mão de Obra",v:fmtR(totalMaoObra),sub:"horas × R$280",c:"#7E22CE",i:"⏱️"},
-                {l:"1% Líquido",v:fmtR(totRecEntrega-totalCustoAtend),sub:"bruto − custos",c:(totRecEntrega-totalCustoAtend)>=0?"#15803D":"#C62828",i:(totRecEntrega-totalCustoAtend)>=0?"📈":"📉"},
+                {l:"1% Líquido",v:fmtR(totRecEntrega+totPrevExecValor-totalCustoAtend),sub:"bruto + preventivas exec. − custos",c:(totRecEntrega+totPrevExecValor-totalCustoAtend)>=0?"#15803D":"#C62828",i:(totRecEntrega+totPrevExecValor-totalCustoAtend)>=0?"📈":"📉"},
                 {l:"Garantia Ativa",v:garantiaAtiva,sub:"6 meses",c:"#0D9488",i:"🛡️"},
               ].filter(Boolean).map((k,i)=>(
                 <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
@@ -8456,6 +8460,16 @@ export default function App(){
                   <div><span style={{color:"#C62828",fontWeight:800}}>Custo atend. {fmtR(custoTot)}</span> <span style={{color:"#C62828"}}>({pctGasto.toFixed(1)}%)</span></div>
                   <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>⏱️ Mão de obra {fmtR(totalMaoObra)} — incluída no custo/líquido</div>
                 </div></>);})()}
+              </div>
+            </div>
+
+            <div className="card" style={{padding:"12px 16px",marginBottom:14,background:"#F5F3FF",border:"1.5px solid #DDD6FE"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#5B21B6"}}>🛠️ Preventivas Executadas — {janLabelET}</div>
+                <div style={{display:"flex",gap:16}}>
+                  <div><span style={{fontSize:9,fontWeight:700,color:"#7E22CE",textTransform:"uppercase"}}>Quantidade</span><div style={{fontSize:16,fontWeight:900,color:"#5B21B6"}}>{totPrevExecQtd}</div></div>
+                  <div><span style={{fontSize:9,fontWeight:700,color:"#7E22CE",textTransform:"uppercase"}}>Valor (entra no líquido)</span><div style={{fontSize:16,fontWeight:900,color:"#5B21B6"}}>{fmtR(totPrevExecValor)}</div></div>
+                </div>
               </div>
             </div>
 
