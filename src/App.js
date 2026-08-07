@@ -3268,6 +3268,7 @@ export default function App(){
   const [entregaEdit,setEntregaEdit]=useState(null);
   const [entregaModal,setEntregaModal]=useState(false);
   const [entregaSearch,setEntregaSearch]=useState(""); const [entregaFiltro,setEntregaFiltro]=useState("todos");
+  const [entregaPeriodo,setEntregaPeriodo]=useState("tudo"); const [entregaRefIso,setEntregaRefIso]=useState(TODAY_STR);
   const [entregaDe,setEntregaDe]=useState(""); const [entregaAte,setEntregaAte]=useState(""); const [entregaMes,setEntregaMes]=useState(""); const [entregaEmpresa,setEntregaEmpresa]=useState("");
   const [showFiltroEntrega,setShowFiltroEntrega]=useState(false);
   const [showAlertaPrev,setShowAlertaPrev]=useState(false);
@@ -8277,6 +8278,17 @@ export default function App(){
           };
           const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const hoje=TODAY_STR;
+          // Navegador de período (Semanal/Mensal/Anual/Tudo)
+          const refET=new Date(entregaRefIso+"T12:00:00");
+          let janDeET,janAteET,janLabelET;
+          if(entregaPeriodo==="semana"){ const s=new Date(refET); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeET=fmtDate(s); janAteET=fmtDate(e); janLabelET=`${fmtDataBR(janDeET)} - ${fmtDataBR(janAteET)}`; }
+          else if(entregaPeriodo==="mes"){ const s=new Date(refET.getFullYear(),refET.getMonth(),1); const e=new Date(refET.getFullYear(),refET.getMonth()+1,0); janDeET=fmtDate(s); janAteET=fmtDate(e); janLabelET=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refET.getMonth()]}/${refET.getFullYear()}`; }
+          else if(entregaPeriodo==="ano"){ janDeET=`${refET.getFullYear()}-01-01`; janAteET=`${refET.getFullYear()}-12-31`; janLabelET=`${refET.getFullYear()}`; }
+          else { janDeET=null; janAteET=null; janLabelET="Tudo"; }
+          const navegarET=(dir)=>{ const d=new Date(entregaRefIso+"T12:00:00"); if(entregaPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(entregaPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} else if(entregaPeriodo==="ano")d.setFullYear(d.getFullYear()+dir); setEntregaRefIso(fmtDate(d)); };
+          const btnPerET=(k,l)=>(
+            <button key={k} onClick={()=>setEntregaPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:entregaPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:entregaPeriodo===k?"#EFF6FF":"#FFF",color:entregaPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+          );
           const filtrada=lista.filter(x=>{
             if(entregaFiltro==="retrabalho"&&!x.retrabalho)return false;
             if(entregaFiltro==="garantia_ativa"){const fg=x.fimGarantia;if(!fg||fg<hoje)return false;}
@@ -8286,6 +8298,7 @@ export default function App(){
             if(entregaFiltro==="completa"&&!(x.prev100Aprov&&x.prev500Aprov&&x.prev1000Aprov))return false;
             if(["pendente100","aguarda500","aguarda1000","completa"].includes(entregaFiltro)&&statusPreventiva(x).k!==entregaFiltro)return false;
             const ds=x.dataEntrega||x.dataSolicitacao||"";
+            if(entregaPeriodo!=="tudo"&&(!ds||ds<janDeET||ds>janAteET))return false;
             if(entregaDe&&ds<entregaDe)return false;
             if(entregaAte&&ds>entregaAte)return false;
             if(entregaMes&&ds.slice(5,7)!==entregaMes)return false;
@@ -8379,7 +8392,15 @@ export default function App(){
               </div>
             </div>
 
-
+            <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{display:"flex",gap:6}}>{btnPerET("semana","Semanal")}{btnPerET("mes","Mensal")}{btnPerET("ano","Anual")}{btnPerET("tudo","Tudo")}</div>
+              {entregaPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
+                <button onClick={()=>navegarET(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabelET}</div>
+                <button onClick={()=>navegarET(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                <button onClick={()=>setEntregaRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+              </div>}
+            </div>
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:20}}>
               {[
