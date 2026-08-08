@@ -5146,13 +5146,14 @@ export default function App(){
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
                         const semServicoOk=(a)=>!a.servico||!String(a.servico).trim();
-                        const alvo1340=(apontamentos||[]).filter(a=>a&&semServicoOk(a)&&getServicoFixo(a.tecnico));
-                        const alvo150=(apontamentos150||[]).filter(a=>a&&semServicoOk(a)&&getServicoFixo(a.tecnico));
+                        const servicoOuOutros=(a)=>getServicoFixo(a.tecnico)||(a.tecnico&&String(a.tecnico).trim()?"Outros":undefined);
+                        const alvo1340=(apontamentos||[]).filter(a=>a&&semServicoOk(a)&&servicoOuOutros(a));
+                        const alvo150=(apontamentos150||[]).filter(a=>a&&semServicoOk(a)&&servicoOuOutros(a));
                         const total=alvo1340.length+alvo150.length;
                         if(total===0){alert("Nenhum apontamento sem serviço com técnico mapeado foi encontrado (Oficina 1340 e 150).");return;}
                         if(window.confirm(`Preencher automaticamente o Serviço de ${total} apontamento(s) (${alvo1340.length} da Oficina 1340 + ${alvo150.length} da 150) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
-                          alvo1340.forEach(a=>updateApon(a.id,{servico:getServicoFixo(a.tecnico)}));
-                          alvo150.forEach(a=>updateApon150(a.id,{servico:getServicoFixo(a.tecnico)}));
+                          alvo1340.forEach(a=>updateApon(a.id,{servico:servicoOuOutros(a)}));
+                          alvo150.forEach(a=>updateApon150(a.id,{servico:servicoOuOutros(a)}));
                           notify(`✅ ${total} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
                         }
                       }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🪄 Preencher Serviços por Técnico</button>
