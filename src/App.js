@@ -136,12 +136,12 @@ const USERS = [
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
 const OFICINA_150_TECHS = ["Matheus","Pedro Souza","Pedro Pimentel"];
-const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi silva","lucas pimentel","gustavo","manuela","gaty"];
+const OFICINA_TECHS_OUTROS_KEYS = ["gracielle","thiago lino","guilherme denison","guilherme guedes","alexandre","davi","lucas pimentel","gustavo","manuela","gaty","paulo","jeferson"];
 const isOutroTec=(t)=>{const n=normalizeTec(t);return n?OFICINA_TECHS_OUTROS_KEYS.some(k=>n.includes(k)):false;};
 const OFICINA_TECHS_OUTROS = ["Gracielle","Thiago Lino","Guilherme Denison","Alexandre","Davi Silva","Lucas Pimentel","Gustavo","Manuela"];
 const SERVICOS_OFICINA = ["Mecânica","Hidráulica","Elétrica","Soldagem/Usinagem","Bateria/Carregador","Pintura","Outros"];
 const SERVICO_OFICINA_MIGRACAO = {"Pequenos Reparos":"Outros","Outros Serviços":"Outros","Bateria e Mecânica":"Mecânica","Elétrica/Pintura":"Elétrica"};
-const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi Silva":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","Gaty":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem","Junior Ferreira":"Soldagem/Usinagem"};
+const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherme Denison":"Outros","Alexandre":"Outros","Davi":"Outros","Lucas Pimentel":"Outros","Gustavo":"Outros","Manuela":"Outros","Gaty":"Outros","Paulo":"Outros","Jeferson":"Outros","André Rodrigues":"Pintura","João Silva":"Pintura","Pedro Souza":"Bateria/Carregador","Pedro Pimentel":"Bateria/Carregador","Lúcio Silva":"Mecânica","Reginaldo Souza":"Mecânica","Eduardo Oliveira":"Mecânica","Junio Ferreira":"Soldagem/Usinagem","Junior Ferreira":"Soldagem/Usinagem"};
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(isOutroTec(a.tecnico))return "Outros";
@@ -330,7 +330,7 @@ const classificarSetor=(tecnico)=>{
   if(!n)return "1340";
   return SETOR_150_TECHS.some(t=>n.includes(t))?"150":"1340";
 };
-const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Davi Silva","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe"];
+const OFICINA_TECHS = ["João Silva","André Rodrigues","Lúcio Silva","Junio Ferreira","Reginaldo Souza","Hebert Santos","Eduardo Oliveira","Pedro Souza","Pedro Pimentel","Matheus Felipe"];
 // Planejamento Hebert = todos menos Matheus/Pedro Souza/Pedro Pimentel
 const OFICINA_TECHS_HEBERT = OFICINA_TECHS.filter(t=>!["Pedro Souza","Pedro Pimentel","Matheus Felipe"].includes(t));
 // Planejamento Matheus = só esses três
