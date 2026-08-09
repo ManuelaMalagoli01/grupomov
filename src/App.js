@@ -3095,9 +3095,13 @@ export default function App(){
   const [fmOs,setFmOs]=useState("");
   const [fmMediaHora,setFmMediaHora]=useState("");
   const [fechamentoPeriodo,setFechamentoPeriodo]=useState("mes");
+  const [showFechamentoMensal,setShowFechamentoMensal]=useState(true);
+  const [fmEditId,setFmEditId]=useState(null);
   const [fmFiltroServico,setFmFiltroServico]=useState("todos");
   const [fmFiltroDe,setFmFiltroDe]=useState("");
   const [fmFiltroAte,setFmFiltroAte]=useState("");
+  const [fmPeriodo,setFmPeriodo]=useState("mes");
+  const [fmRefIso,setFmRefIso]=useState(TODAY_STR);
   const [showDetalhamentoOficina,setShowDetalhamentoOficina]=useState(false);
   const FM_SERVICOS=["Carregador","Bateria","Estrado","Peças Reparadas","Peças Fabricadas","Máquinas"];
   const [showNovoServFechado,setShowNovoServFechado]=useState(false);
@@ -5724,12 +5728,22 @@ export default function App(){
             const fmLista=(fechamentoMensal||[]).filter(f=>f&&f.oficina===oficinaAtual&&(fmFiltroServico==="todos"||f.servico===fmFiltroServico)&&(!fmFiltroDe||f.data>=fmFiltroDe)&&(!fmFiltroAte||f.data<=fmFiltroAte));
             const salvarFM=()=>{
               if(!fmData||!fmPat){alert("Preencha ao menos Data de Fechamento e Patrimônio.");return;}
-              const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
-              setFechamentoMensal(p=>[row,...(p||[])]);
-              db.save("fechamento_mensal_oficina",row.id,row);
+              if(fmEditId){
+                const changes={data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora};
+                setFechamentoMensal(p=>(p||[]).map(f=>f.id===fmEditId?{...f,...changes}:f));
+                const atual=(fechamentoMensal||[]).find(f=>f.id===fmEditId);
+                if(atual)db.save("fechamento_mensal_oficina",fmEditId,{...atual,...changes});
+                notify("✅ Fechamento atualizado!");
+                setFmEditId(null);
+              } else {
+                const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                setFechamentoMensal(p=>[row,...(p||[])]);
+                db.save("fechamento_mensal_oficina",row.id,row);
+                notify("✅ Fechamento registrado!");
+              }
               setFmPat("");setFmOs("");setFmMediaHora("");
-              notify("✅ Fechamento registrado!");
             };
+            const iniciarEdicaoFM=(f)=>{setFmEditId(f.id);setFmData(f.data||TODAY_STR);setFmServico(f.servico||FM_SERVICOS[0]);setFmPat(f.patrimonio||"");setFmOs(f.os||"");setFmMediaHora(f.mediaHora||"");setShowNovoFechamento(true);};
             const hoje=new Date();
             const serieFM=[];
             for(let i=7;i>=0;i--){
@@ -5747,29 +5761,51 @@ export default function App(){
             }
             const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
             const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
+            const refFM=new Date(fmRefIso+"T12:00:00");
+            let fmLabel;
+            if(fmPeriodo==="semana"){ const s=new Date(refFM); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); fmLabel=`${fmtDataBR(fmtDate(s))} - ${fmtDataBR(fmtDate(e))}`; }
+            else if(fmPeriodo==="mes"){ fmLabel=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refFM.getMonth()]}/${refFM.getFullYear()}`; }
+            else fmLabel="Tudo";
+            const aplicarPeriodoFM=(per,ref)=>{
+              const r=new Date(ref+"T12:00:00");
+              if(per==="semana"){ const s=new Date(r); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); setFmFiltroDe(fmtDate(s)); setFmFiltroAte(fmtDate(e)); }
+              else if(per==="mes"){ const s=new Date(r.getFullYear(),r.getMonth(),1); const e=new Date(r.getFullYear(),r.getMonth()+1,0); setFmFiltroDe(fmtDate(s)); setFmFiltroAte(fmtDate(e)); }
+              else { setFmFiltroDe(""); setFmFiltroAte(""); }
+            };
+            const navegarFM=(dir)=>{ const d=new Date(fmRefIso+"T12:00:00"); if(fmPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(fmPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} const novoIso=fmtDate(d); setFmRefIso(novoIso); aplicarPeriodoFM(fmPeriodo,novoIso); };
+            const btnPerFM=(k,l)=>(<button key={k} onClick={()=>{setFmPeriodo(k);aplicarPeriodoFM(k,fmRefIso);}} style={{padding:"6px 14px",borderRadius:20,border:fmPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:fmPeriodo===k?"#EFF6FF":"#FFF",color:fmPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>);
             return(<div style={{marginTop:20}}>
-              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
-              </div>
-              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16}}>
+              <button onClick={()=>setShowFechamentoMensal(p=>!p)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#1A1A1A",borderRadius:showFechamentoMensal?"10px 10px 0 0":"10px",padding:"8px 14px",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                <span style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                  <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
+                </span>
+                <span style={{fontSize:11,color:"#CBD5E1"}}>{showFechamentoMensal?"▲ ocultar":"▼ mostrar"}</span>
+              </button>
+              {showFechamentoMensal&&<div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
                   <div style={{fontSize:12,color:"#94A3B8"}}>{fmLista.length} fechamento(s) registrado(s){mediaHoraGeral!==null&&` · média geral ${mediaHoraGeral}h`}</div>
-                  <button onClick={()=>setShowNovoFechamento(p=>!p)} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
+                  <button onClick={()=>{if(showNovoFechamento){setShowNovoFechamento(false);setFmEditId(null);setFmPat("");setFmOs("");setFmMediaHora("");}else{setShowNovoFechamento(true);}}} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
                 </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:14}}>
                   <select value={fmFiltroServico} onChange={e=>setFmFiltroServico(e.target.value)} style={{fontSize:12}}><option value="todos">Serviço: Todos</option>{FM_SERVICOS.map(s=><option key={s} value={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fmFiltroDe} onChange={e=>setFmFiltroDe(e.target.value)} style={{fontSize:12}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fmFiltroAte} onChange={e=>setFmFiltroAte(e.target.value)} style={{fontSize:12}}/></div>
-                  {(fmFiltroServico!=="todos"||fmFiltroDe||fmFiltroAte)&&<button onClick={()=>{setFmFiltroServico("todos");setFmFiltroDe("");setFmFiltroAte("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                  {btnPerFM("semana","Semanal")}{btnPerFM("mes","Mensal")}{btnPerFM("tudo","Tudo")}
+                  {fmPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <button onClick={()=>navegarFM(-1)} style={{width:26,height:26,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                    <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A",minWidth:120,textAlign:"center"}}>{fmLabel}</div>
+                    <button onClick={()=>navegarFM(1)} style={{width:26,height:26,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                    <button onClick={()=>{setFmRefIso(TODAY_STR);aplicarPeriodoFM(fmPeriodo,TODAY_STR);}} style={{padding:"5px 10px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+                  </div>}
+                  {fmFiltroServico!=="todos"&&<button onClick={()=>setFmFiltroServico("todos")} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Serviço</button>}
                 </div>
                 {showNovoFechamento&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",marginBottom:16,padding:14,background:"#F8FAFC",borderRadius:10}}>
+                  {fmEditId&&<div style={{fontSize:10,fontWeight:700,color:"#1565C0",width:"100%"}}>✏️ Editando fechamento</div>}
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data de Fechamento</label><input type="date" value={fmData} onChange={e=>setFmData(e.target.value)}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={fmServico} onChange={e=>setFmServico(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{FM_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Patrimônio</label><input type="text" placeholder="PAT" value={fmPat} onChange={e=>setFmPat(e.target.value)} style={{width:100}}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>OS</label><input type="text" placeholder="Nº OS" value={fmOs} onChange={e=>setFmOs(e.target.value)} style={{width:100}}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Média Hora Trabalhada</label><input type="text" placeholder="Ex: 3,5" value={fmMediaHora} onChange={e=>setFmMediaHora(e.target.value)} style={{width:110}}/></div>
-                  <BtnY onClick={salvarFM}>Salvar</BtnY>
+                  <BtnY onClick={salvarFM}>{fmEditId?"Salvar Alterações":"Salvar"}</BtnY>
                 </div>}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
                   <div className="card" style={{padding:16}}>
@@ -5798,13 +5834,16 @@ export default function App(){
                         <td style={{fontWeight:700}}>{f.patrimonio}</td>
                         <td>{f.os||"—"}</td>
                         <td>{f.mediaHora?`${f.mediaHora}h`:"—"}</td>
-                        <td><button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                          <button onClick={()=>iniciarEdicaoFM(f)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,marginRight:4}}>✏️</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button>
+                        </td>
                       </tr>
                     ))}</tbody>
                   </table></div>
                   {fmLista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:24,fontSize:12}}>Nenhum fechamento registrado</div>}
                 </div>
-              </div>
+              </div>}
             </div>);
           })()}
           {/* Por Técnico detalhado */}
@@ -11106,12 +11145,22 @@ export default function App(){
             const fmLista=(fechamentoMensal||[]).filter(f=>f&&f.oficina===oficinaAtual&&(fmFiltroServico==="todos"||f.servico===fmFiltroServico)&&(!fmFiltroDe||f.data>=fmFiltroDe)&&(!fmFiltroAte||f.data<=fmFiltroAte));
             const salvarFM=()=>{
               if(!fmData||!fmPat){alert("Preencha ao menos Data de Fechamento e Patrimônio.");return;}
-              const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
-              setFechamentoMensal(p=>[row,...(p||[])]);
-              db.save("fechamento_mensal_oficina",row.id,row);
+              if(fmEditId){
+                const changes={data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora};
+                setFechamentoMensal(p=>(p||[]).map(f=>f.id===fmEditId?{...f,...changes}:f));
+                const atual=(fechamentoMensal||[]).find(f=>f.id===fmEditId);
+                if(atual)db.save("fechamento_mensal_oficina",fmEditId,{...atual,...changes});
+                notify("✅ Fechamento atualizado!");
+                setFmEditId(null);
+              } else {
+                const row={id:`FM${Date.now()}_${Math.floor(Math.random()*9999)}`,oficina:oficinaAtual,data:fmData,servico:fmServico,patrimonio:fmPat,os:fmOs,mediaHora:fmMediaHora,registradoPor:user.name,registradoEm:new Date().toISOString()};
+                setFechamentoMensal(p=>[row,...(p||[])]);
+                db.save("fechamento_mensal_oficina",row.id,row);
+                notify("✅ Fechamento registrado!");
+              }
               setFmPat("");setFmOs("");setFmMediaHora("");
-              notify("✅ Fechamento registrado!");
             };
+            const iniciarEdicaoFM150=(f)=>{setFmEditId(f.id);setFmData(f.data||TODAY_STR);setFmServico(f.servico||FM_SERVICOS[0]);setFmPat(f.patrimonio||"");setFmOs(f.os||"");setFmMediaHora(f.mediaHora||"");setShowNovoFechamento(true);};
             const hoje=new Date();
             const serieFM=[];
             for(let i=7;i>=0;i--){
@@ -11129,29 +11178,51 @@ export default function App(){
             }
             const porServicoFM=FM_SERVICOS.map(s=>({s,qtd:fmLista.filter(x=>x.servico===s).length}));
             const mediaHoraGeral=fmLista.length?(fmLista.reduce((a,f)=>a+(parseFloat(String(f.mediaHora).replace(",","."))||0),0)/fmLista.length).toFixed(1):null;
+            const refFM=new Date(fmRefIso+"T12:00:00");
+            let fmLabel;
+            if(fmPeriodo==="semana"){ const s=new Date(refFM); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); fmLabel=`${fmtDataBR(fmtDate(s))} - ${fmtDataBR(fmtDate(e))}`; }
+            else if(fmPeriodo==="mes"){ fmLabel=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refFM.getMonth()]}/${refFM.getFullYear()}`; }
+            else fmLabel="Tudo";
+            const aplicarPeriodoFM=(per,ref)=>{
+              const r=new Date(ref+"T12:00:00");
+              if(per==="semana"){ const s=new Date(r); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); setFmFiltroDe(fmtDate(s)); setFmFiltroAte(fmtDate(e)); }
+              else if(per==="mes"){ const s=new Date(r.getFullYear(),r.getMonth(),1); const e=new Date(r.getFullYear(),r.getMonth()+1,0); setFmFiltroDe(fmtDate(s)); setFmFiltroAte(fmtDate(e)); }
+              else { setFmFiltroDe(""); setFmFiltroAte(""); }
+            };
+            const navegarFM=(dir)=>{ const d=new Date(fmRefIso+"T12:00:00"); if(fmPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(fmPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} const novoIso=fmtDate(d); setFmRefIso(novoIso); aplicarPeriodoFM(fmPeriodo,novoIso); };
+            const btnPerFM=(k,l)=>(<button key={k} onClick={()=>{setFmPeriodo(k);aplicarPeriodoFM(k,fmRefIso);}} style={{padding:"6px 14px",borderRadius:20,border:fmPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:fmPeriodo===k?"#EFF6FF":"#FFF",color:fmPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>);
             return(<div style={{marginTop:20}}>
-              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
-              </div>
-              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
+              <button onClick={()=>setShowFechamentoMensal(p=>!p)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#1A1A1A",borderRadius:showFechamentoMensal?"10px 10px 0 0":"10px",padding:"8px 14px",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+                <span style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                  <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Fechamento Mensal da Oficina</span>
+                </span>
+                <span style={{fontSize:11,color:"#CBD5E1"}}>{showFechamentoMensal?"▲ ocultar":"▼ mostrar"}</span>
+              </button>
+              {showFechamentoMensal&&<div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
                   <div style={{fontSize:12,color:"#94A3B8"}}>{fmLista.length} fechamento(s) registrado(s){mediaHoraGeral!==null&&` · média geral ${mediaHoraGeral}h`}</div>
-                  <button onClick={()=>setShowNovoFechamento(p=>!p)} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
+                  <button onClick={()=>{if(showNovoFechamento){setShowNovoFechamento(false);setFmEditId(null);setFmPat("");setFmOs("");setFmMediaHora("");}else{setShowNovoFechamento(true);}}} className="btn btn-primary" style={{padding:"7px 14px",fontSize:11}}>{showNovoFechamento?"✕ Fechar":"+ Registrar Fechamento"}</button>
                 </div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:14}}>
                   <select value={fmFiltroServico} onChange={e=>setFmFiltroServico(e.target.value)} style={{fontSize:12}}><option value="todos">Serviço: Todos</option>{FM_SERVICOS.map(s=><option key={s} value={s}>{s}</option>)}</select>
-                  <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={fmFiltroDe} onChange={e=>setFmFiltroDe(e.target.value)} style={{fontSize:12}}/></div>
-                  <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={fmFiltroAte} onChange={e=>setFmFiltroAte(e.target.value)} style={{fontSize:12}}/></div>
-                  {(fmFiltroServico!=="todos"||fmFiltroDe||fmFiltroAte)&&<button onClick={()=>{setFmFiltroServico("todos");setFmFiltroDe("");setFmFiltroAte("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                  {btnPerFM("semana","Semanal")}{btnPerFM("mes","Mensal")}{btnPerFM("tudo","Tudo")}
+                  {fmPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <button onClick={()=>navegarFM(-1)} style={{width:26,height:26,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                    <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A",minWidth:120,textAlign:"center"}}>{fmLabel}</div>
+                    <button onClick={()=>navegarFM(1)} style={{width:26,height:26,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                    <button onClick={()=>{setFmRefIso(TODAY_STR);aplicarPeriodoFM(fmPeriodo,TODAY_STR);}} style={{padding:"5px 10px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+                  </div>}
+                  {fmFiltroServico!=="todos"&&<button onClick={()=>setFmFiltroServico("todos")} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar Serviço</button>}
                 </div>
                 {showNovoFechamento&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end",marginBottom:16,padding:14,background:"#F8FAFC",borderRadius:10}}>
+                  {fmEditId&&<div style={{fontSize:10,fontWeight:700,color:"#1565C0",width:"100%"}}>✏️ Editando fechamento</div>}
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Data de Fechamento</label><input type="date" value={fmData} onChange={e=>setFmData(e.target.value)}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Serviço</label><select value={fmServico} onChange={e=>setFmServico(e.target.value)} style={{fontWeight:700,color:"#1565C0"}}>{FM_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Patrimônio</label><input type="text" placeholder="PAT" value={fmPat} onChange={e=>setFmPat(e.target.value)} style={{width:100}}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>OS</label><input type="text" placeholder="Nº OS" value={fmOs} onChange={e=>setFmOs(e.target.value)} style={{width:100}}/></div>
                   <div><label style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",display:"block",marginBottom:3}}>Média Hora Trabalhada</label><input type="text" placeholder="Ex: 3,5" value={fmMediaHora} onChange={e=>setFmMediaHora(e.target.value)} style={{width:110}}/></div>
-                  <BtnY onClick={salvarFM}>Salvar</BtnY>
+                  <BtnY onClick={salvarFM}>{fmEditId?"Salvar Alterações":"Salvar"}</BtnY>
                 </div>}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
                   <div className="card" style={{padding:16}}>
@@ -11180,13 +11251,16 @@ export default function App(){
                         <td style={{fontWeight:700}}>{f.patrimonio}</td>
                         <td>{f.os||"—"}</td>
                         <td>{f.mediaHora?`${f.mediaHora}h`:"—"}</td>
-                        <td><button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
+                        <td style={{whiteSpace:"nowrap"}}>
+                          <button onClick={()=>iniciarEdicaoFM150(f)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10,marginRight:4}}>✏️</button>
+                          <button onClick={()=>{if(window.confirm("Excluir?"))fechamentoCrud.del(f.id);}} style={{background:"#DC2626",border:"none",borderRadius:5,color:"#FFF",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button>
+                        </td>
                       </tr>
                     ))}</tbody>
                   </table></div>
                   {fmLista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:24,fontSize:12}}>Nenhum fechamento registrado</div>}
                 </div>
-              </div>
+              </div>}
             </div>);
           })()}
           {/* Por Técnico detalhado */}
