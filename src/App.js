@@ -3946,7 +3946,7 @@ export default function App(){
                 ))}
                 <div style={{gridColumn:"span 2",display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4}}>
                   <BtnG onClick={()=>{setUberModal(false);setUberEdit(null);}}>Cancelar</BtnG>
-                  <BtnY onClick={()=>{const d=uberEdit;if(!d?.solicitante){alert("Informe o solicitante.");return;}if(d.id){updateUber(d.id,d);}else{const row={...d,id:`UBR${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),status:"pendente",arquivado:false};setUberPedidos(p=>[row,...p]);db.save("uber",row.id,row);}notify("✅ Salvo!");setUberModal(false);setUberEdit(null);}}>Salvar</BtnY>
+                  <BtnY onClick={()=>{const d=uberEdit;if(!d?.solicitante){alert("Informe o solicitante.");return;}if(d.id){updateUber(d.id,d);}else{const row={...d,id:`UBR${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),status:"pendente",arquivado:false};setUberPedidos(p=>[row,...p]);db.save("uber_pedidos",row.id,row);}notify("✅ Salvo!");setUberModal(false);setUberEdit(null);}}>Salvar</BtnY>
                 </div>
               </div>
             </div>
@@ -7500,7 +7500,7 @@ export default function App(){
                 <button onClick={()=>setShowArqUber(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqUber?"#1A1A1A":"#FFF",color:showArqUber?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqUber?"Ocultar":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"uber_grupomov",[{key:"data",label:"Data"},{key:"solicitante",label:"Solicitante"},{key:"motivo",label:"Motivo"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"endereco",label:"Endereço"},{key:"valor",label:"Valor"},{key:"status",label:"Status"}])}/>
                 <BtnImport onClick={()=>setModalImportUber(true)}/>
-                <BtnY onClick={()=>{setUberEdit({data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:""});setUberModal(true);}}>+ Novo Pedido</BtnY>
+                <BtnY onClick={()=>{const row={id:`UBR${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,solicitante:"",empresa:"",patrimonio:"",relatorio:"",motivo:"",valor:"",endereco:"",obs:"",status:"pendente",arquivado:false};setUberPedidos(p=>[row,...p]);db.save("uber_pedidos",row.id,row);notify("✅ Pedido criado — preencha direto no card!");}}>+ Novo Pedido</BtnY>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
@@ -7535,16 +7535,23 @@ export default function App(){
                       </div>
                     </div>
                     <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                        <div><div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{p.solicitante||<span style={{color:"#CCC"}}>Solicitante</span>}</div><div style={{fontSize:11,color:"#94A3B8"}}>{p.data||"—"} · {p.empresa||"—"}</div></div>
-                        <div style={{fontSize:16,fontWeight:900,color:"#14532D"}}>{p.valor?`R$ ${p.valor}`:"—"}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                        <div style={{flex:1,minWidth:0}}>
+                          <input type="text" value={p.solicitante||""} onChange={e=>updateUber(p.id,{solicitante:e.target.value})} placeholder="Solicitante" style={{fontSize:14,fontWeight:800,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0,width:"100%",marginBottom:3}}/>
+                          <div style={{display:"flex",alignItems:"center",gap:5}}>
+                            <input type="date" value={p.data||""} onChange={e=>updateUber(p.id,{data:e.target.value})} style={{fontSize:11,color:"#94A3B8",border:"none",background:"transparent",outline:"none",padding:0}}/>
+                            <span style={{fontSize:11,color:"#94A3B8"}}>·</span>
+                            <input type="text" value={p.empresa||""} onChange={e=>updateUber(p.id,{empresa:e.target.value})} placeholder="Empresa" style={{fontSize:11,color:"#94A3B8",border:"none",background:"transparent",outline:"none",padding:0,width:100}}/>
+                          </div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:2}}><span style={{fontSize:13,fontWeight:900,color:"#14532D"}}>R$</span><input type="text" value={p.valor||""} onChange={e=>updateUber(p.id,{valor:e.target.value})} placeholder="0,00" style={{fontSize:16,fontWeight:900,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0,width:80,textAlign:"right"}}/></div>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:8,columnGap:10,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
                         <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>Motivo</div><input type="text" value={p.motivo||""} onChange={e=>updateUber(p.id,{motivo:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
-                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>PAT · Relatório</div><div style={{fontSize:12,fontWeight:600,color:"#1A1A1A"}}>{p.patrimonio||"—"}{p.relatorio&&` · ${p.relatorio}`}</div></div>
+                        <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase",marginBottom:2}}>PAT · Relatório</div><div style={{display:"flex",gap:4}}><input type="text" value={p.patrimonio||""} onChange={e=>updateUber(p.id,{patrimonio:e.target.value})} placeholder="PAT" style={{width:"50%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/><input type="text" value={p.relatorio||""} onChange={e=>updateUber(p.id,{relatorio:e.target.value})} placeholder="Relatório" style={{width:"50%",fontSize:12,fontWeight:600,color:"#1A1A1A",border:"none",background:"transparent",outline:"none",padding:0}}/></div></div>
                       </div>
-                      {p.endereco&&<div style={{fontSize:11,color:"#64748B",paddingTop:8,borderTop:"1px solid #F1F5F9"}}>📍 {p.endereco}</div>}
-                      {p.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic"}}>{p.obs}</div>}
+                      <div style={{paddingTop:8,borderTop:"1px solid #F1F5F9"}}><input type="text" value={p.endereco||""} onChange={e=>updateUber(p.id,{endereco:e.target.value})} placeholder="📍 Endereço" style={{width:"100%",fontSize:11,color:"#64748B",border:"none",background:"transparent",outline:"none",padding:0}}/></div>
+                      <input type="text" value={p.obs||""} onChange={e=>updateUber(p.id,{obs:e.target.value})} placeholder="Observação" style={{width:"100%",fontSize:11,color:"#64748B",fontStyle:"italic",border:"none",background:"transparent",outline:"none",padding:0}}/>
                       <div style={{fontSize:10,color:"#CBD5E1",textAlign:"right"}}>{p.registradoPor||""}</div>
                     </div>
                   </div>);
