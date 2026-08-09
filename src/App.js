@@ -3103,7 +3103,7 @@ export default function App(){
   const [fmPeriodo,setFmPeriodo]=useState("mes");
   const [fmRefIso,setFmRefIso]=useState(TODAY_STR);
   const [showDetalhamentoOficina,setShowDetalhamentoOficina]=useState(false);
-  const FM_SERVICOS=["Carregador","Bateria","Estrado","Peças Reparadas","Peças Fabricadas","Máquinas"];
+  const FM_SERVICOS=["Carregador","Bateria","Estrado","Peças Reparadas","Peças Fabricadas","Máquinas","Paleteira Manual","Carrinho de Bateria"];
   const [showNovoServFechado,setShowNovoServFechado]=useState(false);
   const [sfData,setSfData]=useState(TODAY_STR);
   const [sfOs,setSfOs]=useState("");
@@ -5821,7 +5821,7 @@ export default function App(){
                   <div className="card" style={{padding:16}}>
                     <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
                     {fmLista.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem registros</div>:
-                    <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+                    <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488","#DB2777","#65A30D"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
                   </div>
                 </div>
                 <div className="card" style={{overflow:"hidden"}}>
@@ -11238,7 +11238,7 @@ export default function App(){
                   <div className="card" style={{padding:16}}>
                     <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>Por Tipo de Serviço</div>
                     {fmLista.length===0?<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Sem registros</div>:
-                    <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
+                    <ChartCanvas type="doughnut" height={190} data={{labels:porServicoFM.map(p=>p.s),datasets:[{data:porServicoFM.map(p=>p.qtd),backgroundColor:["#1565C0","#C62828","#B45309","#166534","#6D28D9","#0D9488","#DB2777","#65A30D"],borderWidth:2,borderColor:"#FFF"}]}} options={{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:9,usePointStyle:true}}}}}/>}
                   </div>
                 </div>
                 <div className="card" style={{overflow:"hidden"}}>
