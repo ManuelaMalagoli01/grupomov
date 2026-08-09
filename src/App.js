@@ -145,7 +145,6 @@ const TECH_SERVICO_FIXO = {"Gracielle":"Outros","Thiago Lino":"Outros","Guilherm
 const servicoEfetivoOficina=(a)=>{
   if(!a)return undefined;
   if(isOutroTec(a.tecnico))return "Outros";
-  if(TECH_SERVICO_FIXO[a.tecnico])return TECH_SERVICO_FIXO[a.tecnico];
   return a.servico;
 };
 const CATS_PORSERV_OFICINA=SERVICOS_OFICINA;
@@ -1639,7 +1638,7 @@ function ImportAponModal({onClose,onImport,label,oficina}){
       patrimonio:String(pick("nº do pat")(o)||pick("pat")(o)||pick("patrimonio")(o)||pick("patrimônio")(o)||""),
       tecnico:tecnicoVal,
       modelo:String(pick("modelo")(o)||""),
-      servico:autoServico(tecnicoVal), // preenchido automaticamente p/ técnicos com regra fixa; demais ficam em branco p/ inserção manual
+      servico:"", // sempre em branco na importação — técnicos são versáteis, serviço é escolhido manualmente
       inicio:inicioT,
       termino:terminoT,
       total:toDuracao(String(pick("total hora")(o)||pick("total")(o)||pick("horas")(o)||""))||calcHoras(inicioT,terminoT),
@@ -3427,10 +3426,6 @@ export default function App(){
         const corrigidos=apRows.map(a=>{
           if(!a)return a;
           let novo=a;
-          if(!novo.servico){
-            const auto=getServicoFixo(novo.tecnico);
-            if(auto)novo={...novo,servico:auto};
-          }
           if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
             novo={...novo,servico:SERVICO_OFICINA_MIGRACAO[novo.servico]};
           }
@@ -3488,10 +3483,6 @@ export default function App(){
         const corrigidos150=ap150Rows.map(a=>{
           if(!a)return a;
           let novo=a;
-          if(!novo.servico){
-            const auto=getServicoFixo(novo.tecnico);
-            if(auto)novo={...novo,servico:auto};
-          }
           if(novo.servico&&SERVICO_OFICINA_MIGRACAO[novo.servico]){
             novo={...novo,servico:SERVICO_OFICINA_MIGRACAO[novo.servico]};
           }
@@ -3666,14 +3657,16 @@ export default function App(){
   const fechamentoCrud=mkCrud("fechamento_mensal_oficina",setFechamentoMensal);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
-  const updateApon=(id,changes)=>{
+  const updateApon=(id,changes,fallbackRow)=>{
     let saved=null;
     setApontamentos(prev=>{
       const updated=(prev||[]).map(r=>r.id===id?{...r,...changes}:r);
       saved=updated.find(r=>r.id===id);
+      if(!saved&&fallbackRow){ saved={...fallbackRow,...changes}; return [...updated,saved]; }
       return updated;
     });
     if(saved)return db.save("apontamentos_oficina",id,saved);
+    if(fallbackRow)return db.save("apontamentos_oficina",id,{...fallbackRow,...changes});
     return Promise.resolve({ok:false,error:"registro não encontrado localmente"});
   };
   const addApon=()=>{ const row={id:`APO${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,os:"",patrimonio:"",tecnico:OFICINA_TECHS[0],servico:"",inicio:"",termino:"",total:"",oficina:"1340",obs:"",relatorio:"",arquivado:false}; setApontamentos(p=>[...p,row]); db.save("apontamentos_oficina",row.id,row); notify("✅ Linha adicionada!"); };
@@ -5100,7 +5093,7 @@ export default function App(){
               const atual=(apontamentos150||[]).find(r=>r.id===a.id)||a;
               return db.save("apontamentos_150",a.id,{...atual,...changes});
             }else{
-              return updateApon(a.id,changes);
+              return updateApon(a.id,changes,a);
             }
           };
           const delAponUnified=(a)=>{
@@ -5162,20 +5155,6 @@ export default function App(){
                   <div style={{position:"relative"}}>
                     <button onClick={()=>setShowFerramentasApon(p=>!p)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #E5E7EB",background:showFerramentasApon?"#1A1A1A":"#FFF",color:showFerramentasApon?"#FFF":"#475569",fontSize:11,cursor:"pointer",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>⚙️ Ferramentas <span style={{fontSize:8}}>{showFerramentasApon?"▲":"▼"}</span></button>
                     {showFerramentasApon&&<div style={{position:"absolute",top:"110%",right:0,background:"#FFF",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,.18)",border:"1px solid #E5E7EB",zIndex:50,minWidth:260,overflow:"hidden"}}>
-                      <button onClick={()=>{
-                        setShowFerramentasApon(false);
-                        const semServicoOk=(a)=>!a.servico||!String(a.servico).trim();
-                        const servicoOuOutros=(a)=>getServicoFixo(a.tecnico)||(a.tecnico&&String(a.tecnico).trim()?"Outros":undefined);
-                        const alvo1340=(apontamentos||[]).filter(a=>a&&semServicoOk(a)&&servicoOuOutros(a));
-                        const alvo150=(apontamentos150||[]).filter(a=>a&&semServicoOk(a)&&servicoOuOutros(a));
-                        const total=alvo1340.length+alvo150.length;
-                        if(total===0){alert("Nenhum apontamento sem serviço com técnico mapeado foi encontrado (Oficina 1340 e 150).");return;}
-                        if(window.confirm(`Preencher automaticamente o Serviço de ${total} apontamento(s) (${alvo1340.length} da Oficina 1340 + ${alvo150.length} da 150) com base no técnico? Só afeta registros com Serviço em branco — nada que já foi preenchido manualmente será alterado.`)){
-                          alvo1340.forEach(a=>updateApon(a.id,{servico:servicoOuOutros(a)}));
-                          alvo150.forEach(a=>updateApon150(a.id,{servico:servicoOuOutros(a)}));
-                          notify(`✅ ${total} apontamento(s) preenchido(s) automaticamente pelo técnico!`);
-                        }
-                      }} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",border:"none",borderBottom:"1px solid #F1F5F9",background:"#FFF",color:"#1A1A1A",fontSize:12,cursor:"pointer"}}>🪄 Preencher Serviços por Técnico</button>
                       <button onClick={()=>{
                         setShowFerramentasApon(false);
                         const semServico=(apontamentos||[]).filter(a=>a&&a.oficina!=="150"&&!a.servico);
@@ -5283,7 +5262,7 @@ export default function App(){
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={aponNovaData} onChange={e=>setAponNovaData(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>OS</label><input type="text" value={aponNovaOS} onChange={e=>setAponNovaOS(e.target.value)} placeholder="OS-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:80}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>PAT</label><input type="text" value={aponNovaPat} onChange={e=>setAponNovaPat(e.target.value)} placeholder="PAT-001" style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:90}}/></div>
-                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>{setAponNovaTech(e.target.value);const auto=getServicoFixo(e.target.value);if(auto)setAponNovaServ(auto);}} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={aponNovaTech} onChange={e=>setAponNovaTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Serviço</label><select value={aponNovaServ} onChange={e=>setAponNovaServ(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:aponNovaServ?"#1565C0":"#AAA"}}><option value="">— Selecionar depois —</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Início</label><input type="time" value={aponNovaInicio} onChange={e=>setAponNovaInicio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                     <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Término</label><input type="time" value={aponNovaTermino} onChange={e=>setAponNovaTermino(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
@@ -5340,7 +5319,8 @@ export default function App(){
                           const res=await updateAponUnified(a,{servico:novoValor});
                           if(!res||res.ok===false){
                             const dupCount=combinado.filter(x=>x&&x.id===a.id).length;
-                            alert(`❌ O Serviço NÃO foi salvo para esta linha (ID: ${a.id}).\nTécnico: ${a.tecnico||"—"} · OS: ${a.os||"—"} · Data: ${fmtDataBR(a.data)}${dupCount>1?`\n⚠️ Encontrei ${dupCount} linhas com esse MESMO ID — pode ser um registro duplicado.`:""}\nTire um print desta mensagem e envie — isso ajuda a achar a causa exata.`);
+                            const detalhe=res?.status?`\nErro ${res.status}: ${String(res.body||res.error||"").slice(0,200)}`:(res?.error?`\nErro: ${res.error}`:"");
+                            alert(`❌ O Serviço NÃO foi salvo para esta linha (ID: ${a.id}).\nTécnico: ${a.tecnico||"—"} · OS: ${a.os||"—"} · Data: ${fmtDataBR(a.data)}${dupCount>1?`\n⚠️ Encontrei ${dupCount} linhas com esse MESMO ID — pode ser um registro duplicado.`:""}${detalhe}\nTire um print desta mensagem e envie — isso ajuda a achar a causa exata.`);
                           }
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
