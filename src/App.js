@@ -3126,6 +3126,8 @@ export default function App(){
   const [showFerramentasApon,setShowFerramentasApon]=useState(false);
   const [ofiNovaFrom,setOfiNovaFrom]=useState("");
   const [ofiNovaTo,setOfiNovaTo]=useState("");
+  const [ofiPeriodo,setOfiPeriodo]=useState("tudo");
+  const [ofiRefIso,setOfiRefIso]=useState(TODAY_STR);
   const [apontamentos,setApontamentos]=useState([]);
   const [showArqApon,setShowArqApon]=useState(false);
   const [showFiltrosApon,setShowFiltrosApon]=useState(false);
@@ -5069,6 +5071,19 @@ export default function App(){
             ...(apontamentos||[]).map(a=>a?({...a,_tabela:"apontamentos_oficina"}):a),
             ...(apontamentos150||[]).map(a=>a?({...a,_tabela:"apontamentos_150"}):a),
           ];
+          const refOfi=new Date(ofiRefIso+"T12:00:00");
+          let ofiLabel;
+          if(ofiPeriodo==="semana"){ const s=new Date(refOfi); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); ofiLabel=`${fmtDataBR(fmtDate(s))} - ${fmtDataBR(fmtDate(e))}`; }
+          else if(ofiPeriodo==="mes"){ ofiLabel=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refOfi.getMonth()]}/${refOfi.getFullYear()}`; }
+          else ofiLabel="Tudo";
+          const aplicarPeriodoOfi=(per,ref)=>{
+            const r=new Date(ref+"T12:00:00");
+            if(per==="semana"){ const s=new Date(r); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); setOfiNovaFrom(fmtDate(s)); setOfiNovaTo(fmtDate(e)); }
+            else if(per==="mes"){ const s=new Date(r.getFullYear(),r.getMonth(),1); const e=new Date(r.getFullYear(),r.getMonth()+1,0); setOfiNovaFrom(fmtDate(s)); setOfiNovaTo(fmtDate(e)); }
+            else { setOfiNovaFrom(""); setOfiNovaTo(""); }
+          };
+          const navegarOfi=(dir)=>{ const d=new Date(ofiRefIso+"T12:00:00"); if(ofiPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(ofiPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} const novoIso=fmtDate(d); setOfiRefIso(novoIso); aplicarPeriodoOfi(ofiPeriodo,novoIso); };
+          const btnPerOfi=(k,l)=>(<button key={k} onClick={()=>{setOfiPeriodo(k);aplicarPeriodoOfi(k,ofiRefIso);}} style={{padding:"6px 12px",borderRadius:20,border:ofiPeriodo===k?"2px solid #1565C0":"1.5px solid #E0E0E0",background:ofiPeriodo===k?"#EFF6FF":"#FFF",color:ofiPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>);
           const lista=combinado.filter(a=>a&&(showArqApon||!a.arquivado)).filter(a=>{
             if(ofiNovaFrom&&(a.data||"")<ofiNovaFrom)return false;
             if(ofiNovaTo&&(a.data||"")>ofiNovaTo)return false;
@@ -5286,12 +5301,17 @@ export default function App(){
               </button>
               {showFiltrosApon&&<div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={ofiNovaFrom} onChange={e=>setOfiNovaFrom(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={ofiNovaTo} onChange={e=>setOfiNovaTo(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}/></div>
+                <div style={{display:"flex",gap:6}}>{btnPerOfi("semana","Semanal")}{btnPerOfi("mes","Mensal")}{btnPerOfi("tudo","Tudo")}</div>
+                {ofiPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <button onClick={()=>navegarOfi(-1)} style={{width:26,height:26,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                  <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A",minWidth:120,textAlign:"center"}}>{ofiLabel}</div>
+                  <button onClick={()=>navegarOfi(1)} style={{width:26,height:26,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                  <button onClick={()=>{setOfiRefIso(TODAY_STR);aplicarPeriodoOfi(ofiPeriodo,TODAY_STR);}} style={{padding:"5px 10px",borderRadius:20,border:"1px solid #E0E0E0",background:"#F8F9FA",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+                </div>}
                 <select value={ofiNovaTech} onChange={e=>setOfiNovaTech(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos técnicos</option>{OFICINA_TECHS.map(t=><option key={t}>{t}</option>)}</select>
                 <select value={ofiNovaServ} onChange={e=>setOfiNovaServ(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF"}}><option value="todos">Todos serviços</option>{SERVICOS_OFICINA.map(s=><option key={s}>{s}</option>)}</select>
                 <select value={ofiNovaSetor} onChange={e=>setOfiNovaSetor(e.target.value)} style={{fontSize:12,padding:"6px 9px",borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",fontWeight:700}}><option value="todos">🏭 Todos os setores</option><option value="1340">Oficina 1340</option><option value="150">Oficina 150</option></select>
-                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos"||ofiNovaSetor!=="todos")&&<button onClick={()=>{setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");setOfiNovaSetor("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos"||ofiNovaSetor!=="todos")&&<button onClick={()=>{setOfiPeriodo("tudo");setOfiNovaFrom("");setOfiNovaTo("");setOfiNovaOS("");setOfiNovaTech("todos");setOfiNovaServ("todos");setOfiNovaSetor("todos");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
             </div>
             {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📝</div>Clique em "+ Novo Apontamento" para começar</div>):(
