@@ -5098,9 +5098,9 @@ export default function App(){
             if(tabela==="apontamentos_150"){
               setApontamentos150(prev=>(prev||[]).map(r=>r.id===a.id?{...r,...changes}:r));
               const atual=(apontamentos150||[]).find(r=>r.id===a.id)||a;
-              db.save("apontamentos_150",a.id,{...atual,...changes});
+              return db.save("apontamentos_150",a.id,{...atual,...changes});
             }else{
-              updateApon(a.id,changes);
+              return updateApon(a.id,changes);
             }
           };
           const delAponUnified=(a)=>{
@@ -5337,7 +5337,11 @@ export default function App(){
                         <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
                           const novoValor=e.target.value;
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
-                          updateAponUnified(a,{servico:novoValor});
+                          const res=await updateAponUnified(a,{servico:novoValor});
+                          if(!res||res.ok===false){
+                            const dupCount=combinado.filter(x=>x&&x.id===a.id).length;
+                            alert(`❌ O Serviço NÃO foi salvo para esta linha (ID: ${a.id}).\nTécnico: ${a.tecnico||"—"} · OS: ${a.os||"—"} · Data: ${fmtDataBR(a.data)}${dupCount>1?`\n⚠️ Encontrei ${dupCount} linhas com esse MESMO ID — pode ser um registro duplicado.`:""}\nTire um print desta mensagem e envie — isso ajuda a achar a causa exata.`);
+                          }
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
                         <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
