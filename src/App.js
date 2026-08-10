@@ -487,6 +487,11 @@ const EXEC_MAUUSO_STATUS = {
   pendente_compras:{l:"🛒 Pendente Setor de Compras",c:"#B45309",bg:"#FFF8F0"},
   aguardando_pecas:{l:"⏳ Aguardando Peças",c:"#C62828",bg:"#FFF0F0"},
   aguardando_disponibilidade_cliente:{l:"📅 Aguardando Disponibilidade do Cliente",c:"#7E22CE",bg:"#F6EEFB"},
+  pendente_diretoria:{l:"🏛️ Pendente Diretoria",c:"#92400E",bg:"#FFF7E6"},
+  pendente_cliente:{l:"👤 Pendente Cliente",c:"#B91C1C",bg:"#FEF2F2"},
+  aprovado:{l:"✔️ Aprovado",c:"#166534",bg:"#F0FDF4"},
+  aguardando_cliente:{l:"⏱️ Aguardando Cliente",c:"#0D9488",bg:"#F0FDFA"},
+  em_andamento:{l:"🔧 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},
 };
 const EXEC_MAUUSO_STATUS_KEYS = Object.keys(EXEC_MAUUSO_STATUS);
 const SAS_PECAS_STATUS = {
