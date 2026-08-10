@@ -503,6 +503,7 @@ const REL_STATUS = {
   "Preventiva pendente peças": {color:"#E67E00", bg:"#FFF8F0"},
   "Corretiva concluída":       {color:"#1A7A3C", bg:"#F0FFF5"},
   "Corretiva pendente peças":  {color:"#E67E00", bg:"#FFF8F0"},
+  "Reanálise Manuela":         {color:"#7E22CE", bg:"#F5F3FF"},
 };
 const REL_STATUS_KEYS = Object.keys(REL_STATUS);
 const isPendentePecas = s => s==="Preventiva pendente peças" || s==="Corretiva pendente peças";
