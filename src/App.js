@@ -4487,28 +4487,27 @@ export default function App(){
             </div>
           </div>);
         })()}
-        {modalAF&&(()=>{
-          const AF_EMPTY={emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:""};
-          const [form,setForm]=useState(editAF?{...AF_EMPTY,...editAF}:AF_EMPTY);
-          const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+        {modalAF&&editAF&&(()=>{
+          const upd=(k,v)=>setEditAF(p=>({...p,[k]:v}));
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const isNovo=!editAF.id;
           const salvar=()=>{
-            if(!form.cliente){alert("Informe o Cliente.");return;}
-            if(editAF){
-              const merged={...editAF,...form};
-              setProcessosAF(p=>p.map(x=>x.id===editAF.id?merged:x));
-              db.save("processos_af",editAF.id,merged);
+            if(!editAF.cliente){alert("Informe o Cliente.");return;}
+            if(!isNovo){
+              setProcessosAF(p=>p.map(x=>x.id===editAF.id?editAF:x));
+              db.save("processos_af",editAF.id,editAF);
             }else{
-              const row={...form,id:`AF${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),processoStatus:"pendente"};
+              const row={...editAF,id:`AF${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),processoStatus:"pendente"};
               setProcessosAF(p=>[row,...p]);
               db.save("processos_af",row.id,row);
             }
             notify("✅ Registro salvo!"); setModalAF(false); setEditAF(null);
           };
+          const form=editAF;
           return(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
             <div style={{background:"#FFF",borderRadius:16,width:"100%",maxWidth:640,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
-              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{editAF?"✏️ Editar":"💰 Novo"} Registro A Faturar</div><button onClick={()=>{setModalAF(false);setEditAF(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
+              <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}><div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"💰 Novo":"✏️ Editar"} Registro A Faturar</div><button onClick={()=>{setModalAF(false);setEditAF(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button></div>
               <div style={{padding:20,display:"flex",flexDirection:"column",gap:14}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
                   <div><label style={lbl}>Emissão</label><input type="date" value={form.emissao||""} onChange={e=>upd("emissao",e.target.value)} style={inp}/></div>
@@ -6728,7 +6727,7 @@ export default function App(){
                 <BtnImport onClick={()=>setModalImportAF(true)}/>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}])}/>
-                <BtnY onClick={()=>{setEditAF(null);setModalAF(true);}}>+ Novo Registro</BtnY>
+                <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
               </div>
             </div>
 
