@@ -2235,6 +2235,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const emNegociacao=all.filter(p=>aprovDe(p)==="em_negociacao");
   const negados=all.filter(p=>aprovDe(p)==="negado_cliente");
   const aprovados=all.filter(p=>aprovDe(p)==="aprovado_cliente");
+  const pendentesCombo=all.filter(p=>aprovDe(p)==="aguardando_retorno"||aprovDe(p)==="negado_cliente");
+  const emNegociacaoCombo=all.filter(p=>aprovDe(p)==="em_negociacao"||aprovDe(p)==="aprovado_cliente");
 
   const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
     key:k,label:s.l,total:all.filter(p=>aprovDe(p)===k).length,
@@ -2374,11 +2376,12 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
       <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo} · {janLabel}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:6,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:2,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
       {[
         {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1D4E89"},
         {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#166534"},
-        {l:"Aguardando Retorno do Cliente",v:pendentes.length,sub:fmtR(soma(pendentes)),c:"#B45309"},
+        {l:"Pendente",v:pendentesCombo.length,sub:fmtR(soma(pendentesCombo)),c:"#B45309"},
+        {l:"Em Negociação",v:emNegociacaoCombo.length,sub:fmtR(soma(emNegociacaoCombo)),c:"#1565C0"},
       ].map((k,i)=>(
         <div key={i} style={{padding:"14px 16px",background:k.c}}>
           <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
@@ -2386,6 +2389,12 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
           <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:2}}>{k.sub}</div>
         </div>
       ))}
+    </div>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
+      <span style={{fontSize:10,fontWeight:700,color:"#B45309",background:"#FFF8F0",border:"1px solid #FDE4C0",borderRadius:20,padding:"4px 11px"}}>⏳ Aguardando Retorno: {pendentes.length}</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFF0F0",border:"1px solid #FBD0D0",borderRadius:20,padding:"4px 11px"}}>❌ Negado pelo Cliente: {negados.length}</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:20,padding:"4px 11px"}}>🤝 Em Negociação: {emNegociacao.length}</span>
+      <span style={{fontSize:10,fontWeight:700,color:"#0D9488",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:20,padding:"4px 11px"}}>✅ Aprovado/Aguard. Faturamento: {aprovados.length}</span>
     </div>
     <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>📊 Total Geral (Tudo — todos os períodos)</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:32}}>
