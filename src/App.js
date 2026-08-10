@@ -5688,12 +5688,13 @@ export default function App(){
             <div className="card" style={{padding:20,textAlign:"center"}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>👷 Técnicos Ativos no Período</div>
               <div style={{fontSize:11,color:"#888",marginBottom:8}}>{techAtivos.length} de {TECHS_NO_DASH.length} técnico(s) do quadro</div>
+              {techAtivos.length===0?<div style={{textAlign:"center",color:"#CCC",padding:30,fontSize:12}}>Sem apontamentos no período selecionado</div>:
               <div style={{position:"relative",height:130}}>
                 <ChartCanvas type="doughnut" height={200} data={{datasets:[{data:[pctTecAtivos,100-pctTecAtivos],backgroundColor:[pctTecAtivos>=70?"#166534":pctTecAtivos>=40?"#B45309":"#B91C1C","#E2E8F0"],borderWidth:0}]}} options={{responsive:true,maintainAspectRatio:false,circumference:180,rotation:270,cutout:"72%",plugins:{legend:{display:false},tooltip:{enabled:false}}}}/>
                 <div style={{position:"absolute",top:60,left:0,right:0,textAlign:"center"}}>
                   <div style={{fontSize:30,fontWeight:900,color:"#1F2937"}}>{pctTecAtivos}%</div>
                 </div>
-              </div>
+              </div>}
             </div>
             <div className="card" style={{padding:20}}>
               <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔧 Manutenções Realizadas por Serviço</div>
