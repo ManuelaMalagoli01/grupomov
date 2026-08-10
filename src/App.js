@@ -5316,10 +5316,11 @@ export default function App(){
                         <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
                           const novoValor=e.target.value;
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
-                          const res=await updateAponUnified(a,{servico:novoValor});
-                          if(!res||res.ok===false){
+                          let res,erroJs=null;
+                          try{ res=await updateAponUnified(a,{servico:novoValor}); }catch(err){ erroJs=err; }
+                          if(erroJs||!res||res.ok===false){
                             const dupCount=combinado.filter(x=>x&&x.id===a.id).length;
-                            const detalhe=res?.status?`\nErro ${res.status}: ${String(res.body||res.error||"").slice(0,200)}`:(res?.error?`\nErro: ${res.error}`:"");
+                            const detalhe=erroJs?`\nExceção JS: ${erroJs.message||erroJs}`:(res?.status?`\nErro ${res.status}: ${String(res.body||res.error||"").slice(0,200)}`:(res?.error?`\nErro: ${res.error}`:"\n(res=undefined — sem detalhe retornado)"));
                             alert(`❌ O Serviço NÃO foi salvo para esta linha (ID: ${a.id}).\nTécnico: ${a.tecnico||"—"} · OS: ${a.os||"—"} · Data: ${fmtDataBR(a.data)}${dupCount>1?`\n⚠️ Encontrei ${dupCount} linhas com esse MESMO ID — pode ser um registro duplicado.`:""}${detalhe}\nTire um print desta mensagem e envie — isso ajuda a achar a causa exata.`);
                           }
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
