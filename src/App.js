@@ -289,6 +289,15 @@ const AF_STATUS = {
   nao_aprovado:{l:"Não aprovado",c:"#C62828",bg:"#FFF0F0"},
 };
 const AF_TIPO = ["Venda","Serviço","Peça"];
+const COT_SERVICOS = ["Orçamento","Venda de Peças","Mau Uso","Ferramenta Técnica","Atendimento Frota"];
+const COT_TIPO_REF = ["OV","MU","Relatório"];
+const COT_STATUS = {
+  concluido:{l:"✅ Concluído",c:"#166534",bg:"#F0FDF4"},
+  aguardando_compras:{l:"🛒 Aguardando Setor de Compras",c:"#B45309",bg:"#FFF8F0"},
+  aguardando_fornecedor:{l:"⏳ Aguardando Retorno Fornecedor",c:"#C62828",bg:"#FFF0F0"},
+};
+const COT_STATUS_KEYS = Object.keys(COT_STATUS);
+const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
 const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
@@ -2718,6 +2727,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
         <Btn k="sas_vendas" l="💰 SAS Vendas"/>
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
+        <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
       </>}
       <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Serviços</div>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -2736,6 +2746,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="dashboard_prospeccao" l="📊 Dash Prospecção"/>
       <Btn k="sas_vendas" l="💰 SAS Vendas"/>
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
+      <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
     </div>
   );
@@ -2898,7 +2909,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3012,6 +3023,7 @@ export default function App(){
   const [muEnvioAte,setMuEnvioAte]=useState("");
   const [muFiltroModo,setMuFiltroModo]=useState("envio");
   const [showArqAF,setShowArqAF]=useState(false);
+  const [showArqCot,setShowArqCot]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
@@ -3163,6 +3175,7 @@ export default function App(){
   const [aponForm,setAponForm]=useState({data:TODAY_STR,os:"",patrimonio:"",tecnico:"",servico:"",inicio:"",termino:"",total:"",oficina:"1340",relatorio:"",obs:""});
   const [apontamentos150,setApontamentos150]=useState([]);
   const [dificuldadesTec,setDificuldadesTec]=useState([]);
+  const [cotacoesPecas,setCotacoesPecas]=useState([]);
   const [showArqDificuldade,setShowArqDificuldade]=useState(false);
   const [dificuldadeModal,setDificuldadeModal]=useState(false);
   const [dificuldadeEdit,setDificuldadeEdit]=useState(null);
@@ -3317,6 +3330,8 @@ export default function App(){
   const [editMU,setEditMU]=useState(null);
   const [modalAF,setModalAF]=useState(false);
   const [editAF,setEditAF]=useState(null);
+  const [modalCot,setModalCot]=useState(false);
+  const [editCot,setEditCot]=useState(null);
   const [modalEmp,setModalEmp]=useState(null);
   const [modalSaida,setModalSaida]=useState(null);
   const [editEmp,setEditEmp]=useState(null);
@@ -3482,6 +3497,8 @@ export default function App(){
       if(fechMensalRows.length>0) setFechamentoMensal(fechMensalRows);
       const dificuldadeRows=await safeGet("dificuldades_tecnicos");
       if(dificuldadeRows.length>0) setDificuldadesTec(dificuldadeRows);
+      const cotacaoRows=await safeGet("cotacoes_pecas");
+      if(cotacaoRows.length>0) setCotacoesPecas(cotacaoRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3535,7 +3552,7 @@ export default function App(){
       vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados, dificuldades_tecnicos:setDificuldadesTec, fechamento_mensal_oficina:setFechamentoMensal,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
-      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro,
+      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas,
     };
     const applyChange=(table,eventType,rec,oldRec)=>{
       const setter=setters[table]; if(!setter)return;
@@ -3670,6 +3687,7 @@ export default function App(){
   const escalaCrud=mkCrud("escala_diaria",setEscalaDiaria);
   const dificuldadeCrud=mkCrud("dificuldades_tecnicos",setDificuldadesTec);
   const fechamentoCrud=mkCrud("fechamento_mensal_oficina",setFechamentoMensal);
+  const cotacaoCrud=mkCrud("cotacoes_pecas",setCotacoesPecas);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes,fallbackRow)=>{
@@ -4863,7 +4881,7 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
       user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
@@ -6704,6 +6722,163 @@ export default function App(){
                   </table>
                 </div></div>
               )}
+            </div>
+          );
+        })()}
+
+        {tab==="cotacao_pecas"&&(()=>{
+          const lista=(cotacoesPecas||[]).filter(c=>c&&(showArqCot?c.arquivado:!c.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const totConcluido=lista.filter(c=>c.status==="concluido").length;
+          const totCompras=lista.filter(c=>c.status==="aguardando_compras").length;
+          const totFornecedor=lista.filter(c=>c.status==="aguardando_fornecedor").length;
+          const totalPecas=lista.reduce((a,c)=>a+(c.pecas||[]).length,0);
+          const totalValor=lista.reduce((a,c)=>a+(c.pecas||[]).reduce((s,p)=>s+parseVal(p.valor),0),0);
+          const abrirNovo=()=>{setEditCot({servico:COT_SERVICOS[0],tipoRef:"OV",refNum:"",cliente:"",ticket:"",data:TODAY_STR,local:"",prazo:"",obs:"",status:"aguardando_compras",pecas:[{...COT_PECA_VAZIA}]});setModalCot(true);};
+          const abrirEditar=(c)=>{setEditCot({...c,pecas:c.pecas&&c.pecas.length?c.pecas:[{...COT_PECA_VAZIA}]});setModalCot(true);};
+          return(
+            <div style={{marginLeft:210,padding:24}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🧾 Cotação de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} cotação(ões) · {totalPecas} peça(s) · {fmtR(totalValor)}</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqCot(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqCot?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <BtnY onClick={abrirNovo}>+ Nova Cotação</BtnY>
+                </div>
+              </div>
+              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores Cotação de Peças</span>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:2,marginBottom:20,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+                {[
+                  {l:"Concluído",v:totConcluido,c:"#166534"},
+                  {l:"Aguardando Setor de Compras",v:totCompras,c:"#B45309"},
+                  {l:"Aguardando Retorno Fornecedor",v:totFornecedor,c:"#C62828"},
+                  {l:"Valor Total Cotado",v:fmtR(totalValor),c:"#1565C0"},
+                ].map((k,i)=>(
+                  <div key={i} style={{padding:"14px 16px",background:k.c}}>
+                    <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
+                    <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
+                  </div>
+                ))}
+              </div>
+              {(()=>{
+                const meses=[...new Set(lista.map(c=>(c.data||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
+                const dataConc=meses.map(m=>lista.filter(c=>c.status==="concluido"&&(c.data||"").startsWith(m)).length);
+                const mesLabel=m=>{const[y,mo]=m.split("-");return `${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo,10)-1]}/${y.slice(2)}`;};
+                return meses.length>0?(
+                  <div className="card" style={{padding:16,marginBottom:20}}>
+                    <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>📊 Cotações Concluídas por Mês</div>
+                    <ChartCanvas type="bar" height={190} data={{labels:meses.map(mesLabel),datasets:[{label:"Concluídas",data:dataConc,backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
+                  </div>
+                ):null;
+              })()}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14}}>
+                {lista.map(c=>{
+                  const st=COT_STATUS[c.status]||COT_STATUS.aguardando_compras;
+                  const somaPecas=(c.pecas||[]).reduce((s,p)=>s+parseVal(p.valor),0);
+                  return(
+                    <div key={c.id} className="card" style={{padding:0,overflow:"hidden",borderLeft:`4px solid ${st.c}`}}>
+                      <div style={{padding:"12px 14px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{c.servico||"—"}</div>
+                            <div style={{fontSize:11,color:"#94A3B8"}}>{c.tipoRef||"OV"} {c.refNum||"—"} · {fmtDataBR(c.data)}</div>
+                            {c.cliente&&<div style={{fontSize:11,color:"#1565C0",fontWeight:700}}>👤 {c.cliente}</div>}
+                          </div>
+                          <select value={c.status} onChange={e=>cotacaoCrud.update(c.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{COT_STATUS_KEYS.map(k=><option key={k} value={k}>{COT_STATUS[k].l}</option>)}</select>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:10,fontSize:11,paddingTop:8,borderTop:"1px solid #F1F5F9",marginBottom:8}}>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Ticket</div><div style={{fontWeight:600}}>{c.ticket||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Local de Cotação</div><div style={{fontWeight:600}}>{c.local||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Prazo</div><div style={{fontWeight:600}}>{c.prazo||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Total Peças</div><div style={{fontWeight:800,color:"#166534"}}>{fmtR(somaPecas)}</div></div>
+                        </div>
+                        <div style={{fontSize:10,fontWeight:700,color:"#7E22CE",textTransform:"uppercase",marginBottom:4}}>🔩 Peças ({(c.pecas||[]).length})</div>
+                        <div style={{maxHeight:110,overflowY:"auto"}}>
+                          {(c.pecas||[]).map((p,i)=>(
+                            <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"3px 0",borderBottom:i<(c.pecas.length-1)?"1px dashed #F1F5F9":"none"}}>
+                              <span style={{color:"#334155"}}>{p.nome||"—"}</span><span style={{fontWeight:700,color:"#1A1A1A"}}>{fmtR(parseVal(p.valor))}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {c.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",marginTop:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{c.obs}</div>}
+                      </div>
+                      <div style={{display:"flex",borderTop:"1px solid #F1F5F9"}}>
+                        <button onClick={()=>abrirEditar(c)} style={{flex:1,padding:"8px",border:"none",background:"#EFF6FF",color:"#1565C0",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Editar</button>
+                        <button onClick={()=>cotacaoCrud.update(c.id,{arquivado:!c.arquivado})} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#F8FAFC",color:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{c.arquivado?"📤 Desarquivar":"🗄️ Arquivar"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir esta cotação?"))cotacaoCrud.del(c.id);}} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#FEF2F2",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕ Excluir</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {lista.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"#CCC",padding:60,fontSize:13}}>Nenhuma cotação {showArqCot?"arquivada":"registrada"}</div>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {modalCot&&editCot&&(()=>{
+          const upd=(k,v)=>setEditCot(p=>({...p,[k]:v}));
+          const updPeca=(i,k,v)=>setEditCot(p=>{const np=[...(p.pecas||[])];np[i]={...np[i],[k]:v};return {...p,pecas:np};});
+          const addPeca=()=>setEditCot(p=>{const arr=p.pecas||[];if(arr.length>=20){alert("Máximo de 20 peças por cotação.");return p;}return {...p,pecas:[...arr,{...COT_PECA_VAZIA}]};});
+          const rmPeca=(i)=>setEditCot(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{...COT_PECA_VAZIA}]};});
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const isNovo=!editCot.id;
+          const salvar=()=>{
+            if(!editCot.refNum){alert(`Informe o número do ${editCot.tipoRef||"OV"}.`);return;}
+            const pecasValidas=(editCot.pecas||[]).filter(p=>p.nome||p.valor);
+            if(isNovo){
+              cotacaoCrud.add({...editCot,pecas:pecasValidas});
+            }else{
+              cotacaoCrud.update(editCot.id,{...editCot,pecas:pecasValidas});
+              notify("✅ Cotação atualizada!");
+            }
+            setModalCot(false);setEditCot(null);
+          };
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalCot(false);setEditCot(null);}}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:620,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"🧾 Nova":"✏️ Editar"} Cotação de Peças</div>
+                  <button onClick={()=>{setModalCot(false);setEditCot(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+                </div>
+                <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+                  <div><label style={lbl}>Serviço</label><select value={editCot.servico} onChange={e=>upd("servico",e.target.value)} style={inp}>{COT_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div><label style={lbl}>Cliente</label><input type="text" value={editCot.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Nome do cliente" style={inp}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"110px 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Tipo</label><select value={editCot.tipoRef} onChange={e=>upd("tipoRef",e.target.value)} style={inp}>{COT_TIPO_REF.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div><label style={lbl}>{editCot.tipoRef||"OV"} nº</label><input type="text" value={editCot.refNum||""} onChange={e=>upd("refNum",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Ticket</label><input type="text" value={editCot.ticket||""} onChange={e=>upd("ticket",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Data</label><input type="date" value={editCot.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Local de Cotação</label><input type="text" value={editCot.local||""} onChange={e=>upd("local",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Prazo da Cotação</label><input type="text" value={editCot.prazo||""} onChange={e=>upd("prazo",e.target.value)} placeholder="Ex: 5 dias" style={inp}/></div>
+                  </div>
+                  <div><label style={lbl}>Status</label><select value={editCot.status} onChange={e=>upd("status",e.target.value)} style={inp}>{COT_STATUS_KEYS.map(k=><option key={k} value={k}>{COT_STATUS[k].l}</option>)}</select></div>
+                  <div style={{background:"#F5F3FF",border:"1.5px solid #DDD6FE",borderRadius:10,padding:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#5B21B6",textTransform:"uppercase"}}>🔩 Peças ({(editCot.pecas||[]).length}/20)</div>
+                      <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {(editCot.pecas||[]).map((p,i)=>(
+                        <div key={i} style={{display:"flex",gap:8,alignItems:"center"}}>
+                          <input type="text" value={p.nome||""} onChange={e=>updPeca(i,"nome",e.target.value)} placeholder="Nome da peça" style={{...inp,flex:2}}/>
+                          <input type="text" value={p.valor||""} onChange={e=>updPeca(i,"valor",e.target.value)} placeholder="R$ 0,00" style={{...inp,flex:1}}/>
+                          <button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:32,height:32,fontSize:14}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div><label style={lbl}>Observação</label><textarea value={editCot.obs||""} onChange={e=>upd("obs",e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></div>
+                </div>
+                <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
+                  <button onClick={()=>{setModalCot(false);setEditCot(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
             </div>
           );
         })()}
