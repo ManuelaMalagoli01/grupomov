@@ -2733,6 +2733,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
+      <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
       <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
     </div>
@@ -2885,6 +2886,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="mau_uso" l="⚠️ Mau Uso"/>
         <SubBtn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
+        <SubBtn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
         <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       </div>}
