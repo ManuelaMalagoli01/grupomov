@@ -6729,6 +6729,8 @@ export default function App(){
         })()}
 
         {tab==="cotacao_pecas"&&(()=>{
+          const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const lista=(cotacoesPecas||[]).filter(c=>c&&(showArqCot?c.arquivado:!c.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const totConcluido=lista.filter(c=>c.status==="concluido").length;
           const totCompras=lista.filter(c=>c.status==="aguardando_compras").length;
