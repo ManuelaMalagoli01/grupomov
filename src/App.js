@@ -288,7 +288,7 @@ const AF_STATUS = {
   env_faturamento:{l:"Env. Faturamento",c:"#1A7A3C",bg:"#F0FFF5"},
   nao_aprovado:{l:"Não aprovado",c:"#C62828",bg:"#FFF0F0"},
 };
-const AF_TIPO = ["Venda","Serviço"];
+const AF_TIPO = ["Venda","Serviço","Peça"];
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
 const COM_ORIGEM_LEAD = ["Cliente Mov","Indicação de Clientes","Lead SAS","Prospecção Ativa (visita)","Prospecção Passiva","Redes Sociais","Site MOV"];
@@ -4535,6 +4535,18 @@ export default function App(){
                   <div><label style={lbl}>Tipo</label><select value={form.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div><label style={lbl}>Vendedor</label><select value={form.vendedor} onChange={e=>upd("vendedor",e.target.value)} style={inp}>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select></div>
                 </div>
+                {form.tipo==="Peça"&&<div style={{padding:14,background:"#F5F3FF",borderRadius:10,border:"1.5px solid #DDD6FE"}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#5B21B6",marginBottom:10,textTransform:"uppercase"}}>🔩 Dados da Peça</div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                    <div><label style={lbl}>Código</label><input type="text" value={form.pecaCodigo||""} onChange={e=>upd("pecaCodigo",e.target.value)} placeholder="Código da peça" style={inp}/></div>
+                    <div><label style={lbl}>Nome</label><input type="text" value={form.pecaNome||""} onChange={e=>upd("pecaNome",e.target.value)} placeholder="Nome da peça" style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Quantidade</label><input type="text" value={form.pecaQtd||""} onChange={e=>upd("pecaQtd",e.target.value)} placeholder="0" style={inp}/></div>
+                    <div><label style={lbl}>Cotação (Valor)</label><input type="text" value={form.pecaCotacao||""} onChange={e=>upd("pecaCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                    <div><label style={lbl}>Data da Cotação</label><input type="date" value={form.pecaDataCotacao||""} onChange={e=>upd("pecaDataCotacao",e.target.value)} style={inp}/></div>
+                  </div>
+                </div>}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                   <div><label style={lbl}>Status</label><select value={form.statusAF} onChange={e=>upd("statusAF",e.target.value)} style={inp}>{Object.entries(AF_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select></div>
                   <div><label style={lbl}>Empresa</label><select value={form.empresaGrupo} onChange={e=>upd("empresaGrupo",e.target.value)} style={inp}>{AF_EMPRESAS.map(e=><option key={e}>{e}</option>)}</select></div>
@@ -6734,7 +6746,7 @@ export default function App(){
           const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 6px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
           const th={padding:"8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
           const td={padding:"2px 4px",borderBottom:"1px solid #F1F5F9"};
-          const COLS=[{key:"emissao",label:"Emissão",label2:"Data Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"recebidoManut",label:"Receb. Manut."},{key:"novoCliente",label:"Novo Cliente"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}];
+          const COLS=[{key:"emissao",label:"Emissão",label2:"Data Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"recebidoManut",label:"Receb. Manut."},{key:"novoCliente",label:"Novo Cliente"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"pecaCodigo",label:"Cód. Peça"},{key:"pecaNome",label:"Nome Peça"},{key:"pecaQtd",label:"Qtd Peça"},{key:"pecaCotacao",label:"Cotação Peça"},{key:"pecaDataCotacao",label:"Data Cotação"},{key:"descricao",label:"Descrição"}];
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 A Faturar — Prospecções</div>
@@ -6742,8 +6754,8 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportAF(true)}/>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"descricao",label:"Descrição"}])}/>
-                <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
+                <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"pecaCodigo",label:"Cód. Peça"},{key:"pecaNome",label:"Nome Peça"},{key:"pecaQtd",label:"Qtd Peça"},{key:"pecaCotacao",label:"Cotação Peça"},{key:"pecaDataCotacao",label:"Data Cotação"},{key:"descricao",label:"Descrição"}])}/>
+                <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:"",pecaCodigo:"",pecaNome:"",pecaQtd:"",pecaCotacao:"",pecaDataCotacao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
               </div>
             </div>
 
