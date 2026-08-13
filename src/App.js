@@ -297,6 +297,14 @@ const COT_STATUS = {
   aguardando_fornecedor:{l:"⏳ Aguardando Retorno Fornecedor",c:"#C62828",bg:"#FFF0F0"},
 };
 const COT_STATUS_KEYS = Object.keys(COT_STATUS);
+const ENVIO_PECA_TIPO_MANUT = ["OV","REL","CH"];
+const ENVIO_PECA_STATUS = {
+  almoxarifado:{l:"📦 Almoxarifado",c:"#546E7A",bg:"#ECEFF1"},
+  enviada_fornecedor:{l:"🚚 Enviada ao Fornecedor",c:"#B45309",bg:"#FFF8F0"},
+  retorno_fornecedor:{l:"↩️ Retorno do Fornecedor",c:"#1565C0",bg:"#EFF6FF"},
+  entregue_cliente:{l:"✅ Entregue ao Cliente",c:"#166534",bg:"#F0FDF4"},
+};
+const ENVIO_PECA_STATUS_KEYS = Object.keys(ENVIO_PECA_STATUS);
 const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
@@ -2659,7 +2667,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
 
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","dashboard_mau_uso","dashboard_a_faturar"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
@@ -2728,12 +2736,14 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <Btn k="sas_vendas" l="💰 SAS Vendas"/>
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
         <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
+        <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
       </>}
       <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Serviços</div>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
       <Btn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
+        <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
       <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
     </div>
@@ -2748,6 +2758,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="sas_vendas" l="💰 SAS Vendas"/>
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
       <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
+        <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
     </div>
   );
@@ -2887,6 +2898,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="execucao_mau_uso" l="🔩 Execução Mau Uso"/>
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
         <SubBtn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
+        <SubBtn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
         <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
         <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       </div>}
@@ -2911,7 +2923,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3026,6 +3038,7 @@ export default function App(){
   const [muFiltroModo,setMuFiltroModo]=useState("envio");
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqCot,setShowArqCot]=useState(false);
+  const [showArqEnvioPeca,setShowArqEnvioPeca]=useState(false);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
@@ -3178,6 +3191,7 @@ export default function App(){
   const [apontamentos150,setApontamentos150]=useState([]);
   const [dificuldadesTec,setDificuldadesTec]=useState([]);
   const [cotacoesPecas,setCotacoesPecas]=useState([]);
+  const [envioPecas,setEnvioPecas]=useState([]);
   const [showArqDificuldade,setShowArqDificuldade]=useState(false);
   const [dificuldadeModal,setDificuldadeModal]=useState(false);
   const [dificuldadeEdit,setDificuldadeEdit]=useState(null);
@@ -3501,6 +3515,8 @@ export default function App(){
       if(dificuldadeRows.length>0) setDificuldadesTec(dificuldadeRows);
       const cotacaoRows=await safeGet("cotacoes_pecas");
       if(cotacaoRows.length>0) setCotacoesPecas(cotacaoRows);
+      const envioPecaRows=await safeGet("envio_pecas_fornecedor");
+      if(envioPecaRows.length>0) setEnvioPecas(envioPecaRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3554,7 +3570,7 @@ export default function App(){
       vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados, dificuldades_tecnicos:setDificuldadesTec, fechamento_mensal_oficina:setFechamentoMensal,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
-      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas,
+      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas,
     };
     const applyChange=(table,eventType,rec,oldRec)=>{
       const setter=setters[table]; if(!setter)return;
@@ -3690,6 +3706,7 @@ export default function App(){
   const dificuldadeCrud=mkCrud("dificuldades_tecnicos",setDificuldadesTec);
   const fechamentoCrud=mkCrud("fechamento_mensal_oficina",setFechamentoMensal);
   const cotacaoCrud=mkCrud("cotacoes_pecas",setCotacoesPecas);
+  const envioPecaCrud=mkCrud("envio_pecas_fornecedor",setEnvioPecas);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes,fallbackRow)=>{
@@ -4883,7 +4900,7 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
       user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
@@ -6884,6 +6901,75 @@ export default function App(){
                   <button onClick={()=>{setModalCot(false);setEditCot(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
                   <BtnY onClick={salvar}>Salvar</BtnY>
                 </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab==="envio_pecas_fornecedor"&&(()=>{
+          const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const lista=(envioPecas||[]).filter(e=>e&&(showArqEnvioPeca?e.arquivado:!e.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const porStatus=k=>lista.filter(e=>e.status===k).length;
+          const addLinha=()=>{
+            const row={id:`ENVP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,cliente:"",peca:"",codigo:"",unidade:"",tipoManut:"OV",refManut:"",fornecedor:"",valor:"",nfRecebida:"",nfEmitida:"",dataRetorno:"",status:"almoxarifado",arquivado:false};
+            setEnvioPecas(p=>[row,...(p||[])]);
+            db.save("envio_pecas_fornecedor",row.id,row);
+          };
+          const upd=(id,changes)=>envioPecaCrud.update(id,changes);
+          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
+          return(
+            <div style={{marginLeft:210,padding:24}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📦 Acompanhamento de Envio de Peças ao Fornecedor</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqEnvioPeca(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqEnvioPeca?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                </div>
+              </div>
+              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16}}>
+                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}> — Indicadores Envio de Peças</span>
+              </div>
+              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16}}>
+                  {ENVIO_PECA_STATUS_KEYS.map(k=>(
+                    <div key={k} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${ENVIO_PECA_STATUS[k].c}`}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{ENVIO_PECA_STATUS[k].l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:ENVIO_PECA_STATUS[k].c,lineHeight:1.15}}>{porStatus(k)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Cliente</th><th>Peça</th><th>Código</th><th>Unidade</th><th>Manutenção</th><th>Fornecedor</th><th>Valor</th><th>NF Recebida</th><th>NF Emitida p/ Envio</th><th>Data Retorno</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    {lista.map(e=>{
+                      const st=ENVIO_PECA_STATUS[e.status]||ENVIO_PECA_STATUS.almoxarifado;
+                      return(
+                        <tr key={e.id}>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={e.data||""} onChange={ev=>upd(e.id,{data:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.cliente||""} onChange={ev=>upd(e.id,{cliente:ev.target.value})} placeholder="Cliente" style={{...inpCell,minWidth:120}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.peca||""} onChange={ev=>upd(e.id,{peca:ev.target.value})} placeholder="Peça" style={{...inpCell,minWidth:120}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.codigo||""} onChange={ev=>upd(e.id,{codigo:ev.target.value})} placeholder="Código" style={{...inpCell,width:90}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.unidade||""} onChange={ev=>upd(e.id,{unidade:ev.target.value})} placeholder="Unidade" style={{...inpCell,width:90}}/></td>
+                          <td style={{padding:"6px 8px"}}><div style={{display:"flex",gap:4}}><select value={e.tipoManut||"OV"} onChange={ev=>upd(e.id,{tipoManut:ev.target.value})} style={{...inpCell,width:64}}>{ENVIO_PECA_TIPO_MANUT.map(t=><option key={t}>{t}</option>)}</select><input type="text" value={e.refManut||""} onChange={ev=>upd(e.id,{refManut:ev.target.value})} placeholder="nº" style={{...inpCell,width:80}}/></div></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.fornecedor||""} onChange={ev=>upd(e.id,{fornecedor:ev.target.value})} placeholder="Fornecedor" style={{...inpCell,minWidth:120}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.valor||""} onChange={ev=>upd(e.id,{valor:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.nfRecebida||""} onChange={ev=>upd(e.id,{nfRecebida:ev.target.value})} placeholder="Nº NF" style={{...inpCell,width:90}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={e.nfEmitida||""} onChange={ev=>upd(e.id,{nfEmitida:ev.target.value})} placeholder="Nº NF" style={{...inpCell,width:90}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={e.dataRetorno||""} onChange={ev=>upd(e.id,{dataRetorno:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px"}}><select value={e.status} onChange={ev=>upd(e.id,{status:ev.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{ENVIO_PECA_STATUS_KEYS.map(k=><option key={k} value={k}>{ENVIO_PECA_STATUS[k].l}</option>)}</select></td>
+                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>upd(e.id,{arquivado:!e.arquivado})} title={e.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{e.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))envioPecaCrud.del(e.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqEnvioPeca?"arquivado":""}</div>}
               </div>
             </div>
           );
