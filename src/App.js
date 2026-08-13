@@ -6748,22 +6748,24 @@ export default function App(){
                   <BtnY onClick={abrirNovo}>+ Nova Cotação</BtnY>
                 </div>
               </div>
-              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16,display:"flex",alignItems:"center",gap:8}}>
+              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16}}>
                 <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores Cotação de Peças</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}> — Indicadores Cotação de Peças</span>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:2,marginBottom:20,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
-                {[
-                  {l:"Concluído",v:totConcluido,c:"#166534"},
-                  {l:"Aguardando Setor de Compras",v:totCompras,c:"#B45309"},
-                  {l:"Aguardando Retorno Fornecedor",v:totFornecedor,c:"#C62828"},
-                  {l:"Valor Total Cotado",v:fmtR(totalValor),c:"#1565C0"},
-                ].map((k,i)=>(
-                  <div key={i} style={{padding:"14px 16px",background:k.c}}>
-                    <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-                    <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
-                  </div>
-                ))}
+              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16}}>
+                  {[
+                    {l:"Concluído",v:totConcluido,c:"#166534",i:"✅"},
+                    {l:"Aguardando Setor de Compras",v:totCompras,c:"#B45309",i:"🛒"},
+                    {l:"Aguardando Retorno Fornecedor",v:totFornecedor,c:"#C62828",i:"⏳"},
+                    {l:"Valor Total Cotado",v:fmtR(totalValor),c:"#1565C0",i:"💰"},
+                  ].map((k,i)=>(
+                    <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{k.i} {k.l}</div>
+                      <div style={{fontSize:String(k.v).startsWith("R$")?17:22,fontWeight:900,color:k.c,lineHeight:1.15}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
               {(()=>{
                 const meses=[...new Set(lista.map(c=>(c.data||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
