@@ -2986,6 +2986,7 @@ export default function App(){
   const [dashOfi150To,setDashOfi150To]=useState("");
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
+  const [relNivelFiltro,setRelNivelFiltro]=useState("todos");
   const [relSelecionados,setRelSelecionados]=useState([]);
   const [showFiltrosRel,setShowFiltrosRel]=useState(false);
   const [execMauUso,setExecMauUso]=useState([]);
@@ -4937,6 +4938,8 @@ export default function App(){
           const totalSemPendencia=alertasCalc.filter(a=>a&&a.level==="ok").length;
           const totalMauUso=todosFiltrados.filter(r=>r.status==="mau_uso").length;
           const totalAFaturar=todosFiltrados.filter(r=>r.status==="a_faturar").length;
+          const listaComAlerta=lista.map(r=>({r,alerta:analisarAlertaPreventivo(r)||{level:"neutro",label:"",achados:[]}}));
+          const listaFiltradaNivel=relNivelFiltro==="todos"?listaComAlerta:listaComAlerta.filter(x=>x.alerta.level===relNivelFiltro);
 
           return(<div style={{animation:"fadeIn .3s ease"}}>
             {/* Header */}
@@ -5009,14 +5012,35 @@ export default function App(){
                 <BtnY onClick={()=>{setEditReport(null);setModalReport(true);}}>+ Novo Relatório</BtnY>
               </div>
             </div>
-            {/* KPIs */}
-            <KpiBIHeader subtitulo="Indicadores de Relatórios" kpis={[
-                {l:"Total",v:lista.length,i:"📋"},
-                {l:"Urgente",v:totalUrgente,i:"🔴"},
-                {l:"Moderado",v:totalModerado,i:"🟠"},
-                {l:"Sem Pendência",v:totalSemPendencia,i:"🟢"},
-                {l:"Concluído/Arquivado",v:totalConc,i:"✅",sub:(totalMauUso>0||totalAFaturar>0)?`${totalMauUso} mau uso · ${totalAFaturar} a faturar`:null},
-              ]}/>
+            {/* KPIs — estilo ponto+número (redesign) */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:14}}>
+              {[
+                {l:"Total",v:lista.length,dot:"#94A3B8",sub:"na fila"},
+                {l:"Urgente",v:totalUrgente,dot:"#DC2626",sub:totalUrgente>0?`${Math.round(totalUrgente/(lista.length||1)*100)}% da fila`:null},
+                {l:"Moderado",v:totalModerado,dot:"#D97706",sub:null},
+                {l:"Sem Pendência",v:totalSemPendencia,dot:"#16A34A",sub:null},
+                {l:"Concluído/Arquivado",v:totalConc,dot:"#1A1A1A",sub:(totalMauUso>0||totalAFaturar>0)?`${totalMauUso} mau uso · ${totalAFaturar} a faturar`:null},
+              ].map((k,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                    <span style={{width:7,height:7,borderRadius:"50%",background:k.dot,display:"inline-block"}}/>
+                    <span style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4}}>{k.l}</span>
+                  </div>
+                  <div style={{fontSize:26,fontWeight:900,color:"#1A1A1A",lineHeight:1}}>{k.v}</div>
+                  {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:3}}>{k.sub}</div>}
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+              {[
+                {k:"todos",l:`Todos ${lista.length}`},
+                {k:"urgente",l:`Urgente ${totalUrgente}`},
+                {k:"moderado",l:`Moderado ${totalModerado}`},
+                {k:"ok",l:`Sem pendência ${totalSemPendencia}`},
+              ].map(f=>(
+                <button key={f.k} onClick={()=>setRelNivelFiltro(f.k)} style={{padding:"8px 16px",borderRadius:10,border:relNivelFiltro===f.k?"none":"1.5px solid #E2E8F0",background:relNivelFiltro===f.k?"#1A1A1A":"#FFF",color:relNivelFiltro===f.k?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{f.l}</button>
+              ))}
+            </div>
 
             {/* Filtros */}
             <button onClick={()=>setShowFiltrosRel(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosRel?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
@@ -5054,19 +5078,18 @@ export default function App(){
               <button onClick={()=>setRelSelecionados([])} style={{padding:"6px 12px",borderRadius:20,background:"#FFF",color:"#64748B",border:"1px solid #E2E8F0",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar seleção</button>
             </div>}
             {/* Cards */}
-            {lista.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
+            {listaFiltradaNivel.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:10}}>
-                {lista.map(r=>{
+                {listaFiltradaNivel.map(({r,alerta})=>{
                   const isCorr=r.atendimento==="corretivo";
                   const st=escSt(r.status);
                   const stColor=st.c||st.color||"#888";
                   const isPendencia=(r.status||"").includes("pendente_pecas");
-                  const alerta=analisarAlertaPreventivo(r)||{level:"neutro",label:"",achados:[]};
-                  const alertColor={urgente:"#FF1744",moderado:"#FF6D00",ok:"#00C853",neutro:"#94A3B8"}[alerta.level];
+                  const alertColor={urgente:"#DC2626",moderado:"#D97706",ok:"#16A34A",neutro:"#94A3B8"}[alerta.level];
                   const urgenteR=alerta.level==="urgente";
                   const isMauUso=r.status==="mau_uso";
                   const isAFaturar=r.status==="a_faturar";
-                  return(<div key={r.id} className="card" style={{padding:isMauUso||isAFaturar?5:0,overflow:"hidden",opacity:r.arquivado?0.55:1,background:isMauUso?"#F97316":isAFaturar?"#0D2E63":undefined,border:isMauUso?"3px solid #C2410C":isAFaturar?"3px solid #0D2E63":urgenteR?"1.5px solid #C62828":undefined,animation:isMauUso?"pulseUrgente 1.4s ease-in-out infinite":urgenteR?"pulseUrgente 2s ease-in-out infinite":undefined,boxShadow:isMauUso?"0 0 0 2px #FDBA74":isAFaturar?"0 0 0 2px #1E3A8A":undefined}}>
+                  return(<div key={r.id} className="card" style={{padding:isMauUso||isAFaturar?5:0,overflow:"hidden",opacity:r.arquivado?0.55:1,background:isMauUso?"#F97316":isAFaturar?"#0D2E63":undefined,borderTop:isMauUso||isAFaturar?undefined:`3px solid ${alertColor}`,border:isMauUso?"3px solid #C2410C":isAFaturar?"3px solid #0D2E63":undefined,animation:isMauUso?"pulseUrgente 1.4s ease-in-out infinite":urgenteR?"pulseUrgente 2s ease-in-out infinite":undefined,boxShadow:isMauUso?"0 0 0 2px #FDBA74":isAFaturar?"0 0 0 2px #1E3A8A":undefined}}>
                     {isMauUso&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>⚠️ MAU USO — ATENÇÃO ⚠️</div>}
                     {isAFaturar&&<div style={{padding:"5px 10px",fontSize:11,fontWeight:900,color:"#FFF",textAlign:"center",letterSpacing:.5}}>💰 A FATURAR</div>}
                     <div style={{background:isMauUso||isAFaturar?"#FFF":undefined,borderRadius:isMauUso||isAFaturar?8:0,overflow:"hidden"}}>
@@ -5074,7 +5097,7 @@ export default function App(){
                       <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
                         <input type="checkbox" checked={relSelecionados.includes(r.id)} onChange={e=>setRelSelecionados(p=>e.target.checked?[...p,r.id]:p.filter(id=>id!==r.id))} style={{marginRight:2}}/>
                         <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:stColor,borderRadius:20,padding:"2px 9px"}}>{st.l}</span>
-                        {alerta.label&&<span style={{fontSize:9,fontWeight:800,color:"#FFF",background:alertColor,borderRadius:20,padding:"2px 8px"}}>{urgenteR?"🔴 ":""}{alerta.label}</span>}
+                        {alerta.label&&<span style={{fontSize:9,fontWeight:800,color:alertColor,background:alertColor+"1A",borderRadius:20,padding:"3px 10px"}}>{alerta.label}</span>}
                       </div>
                       <div style={{display:"flex",gap:3}}>
                         <button onClick={()=>gerarPDFCard(`Relatório - ${r.cliente||r.empresa||"Sem Cliente"}`,[["Cliente",r.cliente||r.empresa],["Data",fmtDataBR(r.data||r.dataAtendimento)],["Técnico",r.tecnico],["Cidade",r.cidade],["Tipo",isCorr?"Corretivo":"Preventivo"],["PAT",r.patrimonio],["Modelo",r.modelo],["Horímetro",r.horimetro],["Relatório",r.relatorio],["Chamado",r.chamado],["Início",r.horaInicio],["Fim",r.horaFim],["Total",r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)],["Serviços",(r.servicos||[]).join(", ")],["Status",st.l],["Pendências",r.pendencias],["Observação",r.obs]],`PAT ${r.patrimonio||"—"} · ${fmtDataBR(r.data||r.dataAtendimento)}`)} title="Gerar PDF" style={{background:"#F5C200",border:"none",borderRadius:5,color:"#1A1A1A",cursor:"pointer",padding:"2px 6px",fontSize:9,fontWeight:700}}>📄</button>
