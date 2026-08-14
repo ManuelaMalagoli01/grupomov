@@ -6757,7 +6757,7 @@ export default function App(){
           const abrirNovo=()=>{setEditCot({servico:COT_SERVICOS[0],tipoRef:"OV",refNum:"",cliente:"",ticket:"",data:TODAY_STR,local:"",prazo:"",obs:"",status:"aguardando_compras",pecas:[{...COT_PECA_VAZIA}]});setModalCot(true);};
           const abrirEditar=(c)=>{setEditCot({...c,pecas:c.pecas&&c.pecas.length?c.pecas:[{...COT_PECA_VAZIA}]});setModalCot(true);};
           return(
-            <div style={{marginLeft:210,padding:24}}>
+            <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🧾 Cotação de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} cotação(ões) · {totalPecas} peça(s) · {fmtR(totalValor)}</div></div>
                 <div style={{display:"flex",gap:8}}>
@@ -6918,7 +6918,7 @@ export default function App(){
           const upd=(id,changes)=>envioPecaCrud.update(id,changes);
           const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
           return(
-            <div style={{marginLeft:210,padding:24}}>
+            <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📦 Acompanhamento de Envio de Peças ao Fornecedor</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
