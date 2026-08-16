@@ -7451,18 +7451,23 @@ export default function App(){
                             <div style={{display:"flex",flexDirection:"column",gap:8}}>
                               {doDia.map((a,i)=>{
                                 const sc=statusChip(a.status);
+                                const ct=corTecnico(a.tecnico);
+                                const editarClick=()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);};
                                 return(
-                                  <div key={i} className="card" style={{padding:10,cursor:"pointer"}} onClick={()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);}}>
-                                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
-                                      <span style={{width:20,height:20,borderRadius:"50%",background:corTecnico(a.tecnico)+"22",color:corTecnico(a.tecnico),fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
-                                      <span style={{fontSize:11,fontWeight:800,color:corTecnico(a.tecnico),whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
+                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
+                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
+                                      <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+                                        <span style={{width:20,height:20,borderRadius:"50%",background:ct+"33",color:ct,fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
+                                        <span style={{fontSize:11,fontWeight:800,color:ct,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
+                                      </div>
+                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:6,color:ct,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
                                     </div>
                                     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
-                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
+                                    <div style={{fontSize:10,color:"#64748B",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
                                     <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
                                       <span style={{fontSize:9,fontWeight:700,color:sc.c,background:sc.bg,borderRadius:20,padding:"2px 8px"}}>{sc.l}</span>
                                       <span style={{fontSize:9,fontWeight:700,color:"#64748B"}}>{(a.type||"preventivo")==="corretivo"?"Corretiva":"Preventiva"}</span>
-                                      {a.relatorio&&<span style={{fontSize:9,color:"#CBD5E1"}}>Rel. {a.relatorio}</span>}
+                                      {a.relatorio&&<span style={{fontSize:9,color:"#94A3B8"}}>Rel. {a.relatorio}</span>}
                                     </div>
                                   </div>
                                 );
@@ -7487,11 +7492,16 @@ export default function App(){
                             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
                               {doTec.map((a,i)=>{
                                 const sc=statusChip(a.status);
+                                const ct=corTecnico(t);
+                                const editarClick=()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);};
                                 return(
-                                  <div key={i} className="card" style={{padding:10}}>
-                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>{fmtDataBR(a.data)}</div>
+                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
+                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}>
+                                      <div style={{fontSize:10,color:"#64748B"}}>{fmtDataBR(a.data)}</div>
+                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:6,color:ct,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
+                                    </div>
                                     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
-                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
+                                    <div style={{fontSize:10,color:"#64748B",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
                                     <span style={{fontSize:9,fontWeight:700,color:sc.c,background:sc.bg,borderRadius:20,padding:"2px 8px"}}>{sc.l}</span>
                                   </div>
                                 );
