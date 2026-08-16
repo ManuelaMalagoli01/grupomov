@@ -7707,19 +7707,24 @@ export default function App(){
                                 const st=escSt(it.s.status);
                                 const editarClick=(ev)=>{ev.stopPropagation();const key=`${it.tech}__${dt}`;setEditSlot({key,si:it.si,slot:it.s,tipo:"tecnico",tech:it.tech});setEditSlotForm({...it.s,tecnico:it.tech});};
                                 return(
-                                  <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer",flexShrink:0}}>
-                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
-                                      <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
-                                      <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
-                                        {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px"}}>+{it.s.tecnicosAdicionais.length}</span>}
-                                        <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${color}77`,borderRadius:5,color,cursor:"pointer",padding:"1px 5px",fontSize:8,fontWeight:700}}>✏️</button>
+                                  <div key={ii} style={{padding:10,borderRadius:12,background:color+"14",borderLeft:`4px solid ${color}`,flexShrink:0}}>
+                                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
+                                      <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+                                        <span style={{width:20,height:20,borderRadius:"50%",background:color+"33",color,fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(it.tech)}</span>
+                                        <b style={{color,fontSize:11,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
+                                        {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px",flexShrink:0}}>+{it.s.tecnicosAdicionais.length}</span>}
+                                      </div>
+                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${color}55`,borderRadius:6,color,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
+                                    </div>
+                                    <div onClick={()=>setAgpSelectedDay(dt)} style={{cursor:"pointer"}}>
+                                      <div style={{color:"#1A1A1A",fontWeight:800,fontSize:13,marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
+                                      <div style={{color:"#64748B",fontSize:10,marginBottom:6,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
+                                      <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+                                        <span style={{fontSize:9,fontWeight:700,color:"#FFF",background:st.c,borderRadius:20,padding:"2px 8px"}}>{st.l}</span>
+                                        <span style={{fontSize:9,fontWeight:700,color:"#64748B"}}>{(it.s.type||"preventivo")==="corretivo"?"Corretiva":"Preventiva"}</span>
+                                        {it.s.relatorio&&<span style={{fontSize:9,color:"#94A3B8"}}>Rel. {it.s.relatorio}</span>}
                                       </div>
                                     </div>
-                                    <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
-                                    <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
-                                    <div style={{fontSize:9,fontWeight:800,color:(it.s.type||"preventivo")==="corretivo"?"#C62828":"#1565C0"}}>{(it.s.type||"preventivo")==="corretivo"?"🔧 Corretivo":"🔵 Preventivo"}</div>
-                                    <div style={{display:"inline-block",fontSize:9,fontWeight:700,color:"#FFF",background:st.c,borderRadius:8,padding:"1px 7px",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{st.l}</div>
-                                    {it.s.relatorio&&<div style={{color:"#334155",fontSize:9.5,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Rel. {it.s.relatorio}</div>}
                                   </div>
                                 );
                               })}
