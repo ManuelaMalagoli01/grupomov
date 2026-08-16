@@ -3388,6 +3388,7 @@ export default function App(){
   const [agpWeekRefIso,setAgpWeekRefIso]=useState(TODAY_STR);
   const [agpTechChip,setAgpTechChip]=useState(null);
   const [agpMostrarTodosTecs,setAgpMostrarTodosTecs]=useState(false);
+  const [agpMostrarTodosTecsMes,setAgpMostrarTodosTecsMes]=useState(false);
   const [agTech,setAgTech]=useState(ALL_TECHS[0]);
   const [agDate,setAgDate]=useState("");
   const [agEmpresa,setAgEmpresa]=useState("");
@@ -7625,12 +7626,40 @@ export default function App(){
               </div>
               </div>}
 
-              {/* Calendário mensal (estilo Google Agenda) */}
+              {/* Calendário mensal */}
+              {(()=>{
+                const techsNoMes=techs.filter(t=>{
+                  for(let d=1; d<=diasNoMes; d++){
+                    const dt=`${ym}-${String(d).padStart(2,"0")}`;
+                    if((schedule[`${t}__${dt}`]||[]).length>0)return true;
+                  }
+                  return false;
+                }).sort((a,b)=>{
+                  const cnt=(t)=>{let n=0;for(let d=1;d<=diasNoMes;d++){const dt=`${ym}-${String(d).padStart(2,"0")}`;n+=(schedule[`${t}__${dt}`]||[]).length;}return n;};
+                  return cnt(b)-cnt(a);
+                });
+                const contagemMes=(t)=>{let n=0;for(let d=1;d<=diasNoMes;d++){const dt=`${ym}-${String(d).padStart(2,"0")}`;n+=(schedule[`${t}__${dt}`]||[]).length;}return n;};
+                const tecsVisiveisMes=agpMostrarTodosTecsMes?techsNoMes:techsNoMes.slice(0,6);
+                return(<>
+                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14,overflowX:"auto",paddingBottom:4}}>
+                  <span style={{fontSize:10,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",whiteSpace:"nowrap",marginRight:4}}>Técnico</span>
+                  {agpTech!=="todos"&&<button onClick={()=>setAgpTech("todos")} style={{padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:"#FFF",color:"#64748B",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>Todos</button>}
+                  {tecsVisiveisMes.map(t=>{
+                    const ct=corTecnico(t);
+                    return(
+                      <button key={t} onClick={()=>setAgpTech(agpTech===t?"todos":t)} style={{padding:"7px 14px",borderRadius:10,border:agpTech===t?"none":"1.5px solid #E2E8F0",background:agpTech===t?ct+"22":"#FFF",color:agpTech===t?ct:"#1A1A1A",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{width:20,height:20,borderRadius:"50%",background:ct+"22",color:ct,fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
+                        {primeiroNome(t)} <span style={{opacity:.6}}>{contagemMes(t)}</span>
+                      </button>
+                    );
+                  })}
+                  {techsNoMes.length>6&&<button onClick={()=>setAgpMostrarTodosTecsMes(p=>!p)} style={{padding:"7px 14px",borderRadius:10,border:"1.5px dashed #E2E8F0",background:"#F8FAFC",color:"#64748B",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{agpMostrarTodosTecsMes?"◂ menos":`+${techsNoMes.length-6} técnicos`}</button>}
+                </div>
               <div className="card" style={{padding:0,overflow:"hidden"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#FFFBEB",borderBottom:"1px solid #FDE68A"}}>
-                  <button onClick={()=>{let m=agpMonth-1,y=agpYear;if(m<0){m=11;y--;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,color:"#92400E",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>‹</button>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid #E2E8F0"}}>
+                  <button onClick={()=>{let m=agpMonth-1,y=agpYear;if(m<0){m=11;y--;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1.5px solid #E2E8F0",borderRadius:8,color:"#64748B",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>‹</button>
                   <div style={{fontSize:15,fontWeight:800,color:"#1A1A1A"}}>{MESES[agpMonth]} {agpYear}</div>
-                  <button onClick={()=>{let m=agpMonth+1,y=agpYear;if(m>11){m=0;y++;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1px solid #FDE68A",borderRadius:8,color:"#92400E",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>›</button>
+                  <button onClick={()=>{let m=agpMonth+1,y=agpYear;if(m>11){m=0;y++;}setAgpMonth(m);setAgpYear(y);}} style={{background:"#FFF",border:"1.5px solid #E2E8F0",borderRadius:8,color:"#64748B",cursor:"pointer",fontSize:14,padding:"5px 12px",fontWeight:700}}>›</button>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4"}}>
                   {"Seg Ter Qua Qui Sex".split(" ").map(d=><div key={d} style={{textAlign:"center",padding:"6px 2px",fontSize:10,fontWeight:700,color:"#64748B"}}>{d}</div>)}
@@ -7705,6 +7734,8 @@ export default function App(){
               {agpTech!=="todos"&&<div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,fontSize:11,color:"#888"}}>
                 <span style={{display:"inline-flex",alignItems:"center",gap:4}}><span style={{width:12,height:12,borderRadius:3,background:"#F1F5F9",border:"2px solid #94A3B8",display:"inline-block"}}/> dias com <b>{agpTech}</b> já escalado (ocupado)</span>
               </div>}
+              </>);
+              })()}
 
               {/* Modal de detalhes do dia selecionado */}
               {agpSelectedDay&&(()=>{
