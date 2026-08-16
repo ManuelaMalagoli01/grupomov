@@ -173,6 +173,8 @@ const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert S
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
 const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
 const iniciais=(nome)=>{const p=String(nome||"").trim().split(/\s+/).filter(Boolean);return p.length===0?"?":p.length===1?p[0].slice(0,2).toUpperCase():(p[0][0]+p[1][0]).toUpperCase();};
+const TECH_COLOR_PALETTE=["#DC2626","#1565C0","#166534","#B45309","#7E22CE","#0D9488","#BE185D","#4338CA","#C2410C","#0369A1","#15803D","#9333EA","#B91C1C","#0891B2","#A16207"];
+const corTecnico=(nome)=>{const s=String(nome||"");let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return TECH_COLOR_PALETTE[h%TECH_COLOR_PALETTE.length];};
 const primeiroNome=(nome)=>String(nome||"").trim().split(/\s+/)[0]||"";
 const TECH_SERVICO_FIXO_NORM = Object.fromEntries(Object.entries(TECH_SERVICO_FIXO).map(([k,v])=>[normalizeTec(k),v]));
 const TECH_SERVICO_FIXO_ENTRIES = Object.entries(TECH_SERVICO_FIXO_NORM);
@@ -7373,7 +7375,8 @@ export default function App(){
                   <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🗓 Agenda — Técnicos Externos</div>
                   <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{techsList.length} técnico(s)</div>
                 </div>
-                <div style={{display:"flex",gap:6}}>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  {!isReadOnlyAgenda(user)&&<button onClick={()=>setShowNovoAtend(true)} style={{padding:"9px 18px",borderRadius:10,background:"#F5C200",border:"none",fontWeight:800,fontSize:12,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)",marginRight:6}}>+ Novo Atendimento</button>}
                   <button onClick={()=>setAgpView("semana")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="semana"?"none":"1.5px solid #E2E8F0",background:agpView==="semana"?"#1A1A1A":"#FFF",color:agpView==="semana"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Semana</button>
                   <button onClick={()=>setAgpView("mes")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="mes"?"none":"1.5px solid #E2E8F0",background:agpView==="mes"?"#1A1A1A":"#FFF",color:agpView==="mes"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mês</button>
                   <button onClick={()=>setAgpView("tecnico")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="tecnico"?"none":"1.5px solid #E2E8F0",background:agpView==="tecnico"?"#1A1A1A":"#FFF",color:agpView==="tecnico"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Por técnico</button>
@@ -7427,7 +7430,7 @@ export default function App(){
                     {agpTechChip&&<button onClick={()=>setAgpTechChip(null)} style={{padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:"#FFF",color:"#64748B",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>Todos</button>}
                     {tecsVisiveis.map(t=>(
                       <button key={t} onClick={()=>setAgpTechChip(agpTechChip===t?null:t)} style={{padding:"7px 14px",borderRadius:10,border:agpTechChip===t?"none":"1.5px solid #E2E8F0",background:agpTechChip===t?"#FDE68A":"#FFF",color:"#1A1A1A",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6}}>
-                        <span style={{width:20,height:20,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
+                        <span style={{width:20,height:20,borderRadius:"50%",background:corTecnico(t)+"22",color:corTecnico(t),fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
                         {primeiroNome(t)} <span style={{opacity:.6}}>{contagemPorTech(t)}</span>
                       </button>
                     ))}
@@ -7451,8 +7454,8 @@ export default function App(){
                                 return(
                                   <div key={i} className="card" style={{padding:10,cursor:"pointer"}} onClick={()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);}}>
                                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
-                                      <span style={{width:20,height:20,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
-                                      <span style={{fontSize:11,fontWeight:700,color:"#334155",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
+                                      <span style={{width:20,height:20,borderRadius:"50%",background:corTecnico(a.tecnico)+"22",color:corTecnico(a.tecnico),fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
+                                      <span style={{fontSize:11,fontWeight:800,color:corTecnico(a.tecnico),whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
                                     </div>
                                     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
                                     <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
@@ -7477,8 +7480,8 @@ export default function App(){
                         return(
                           <div key={t}>
                             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                              <span style={{width:24,height:24,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
-                              <span style={{fontSize:14,fontWeight:800,color:"#1A1A1A"}}>{t}</span>
+                              <span style={{width:24,height:24,borderRadius:"50%",background:corTecnico(t)+"22",color:corTecnico(t),fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
+                              <span style={{fontSize:14,fontWeight:800,color:corTecnico(t)}}>{t}</span>
                               <span style={{fontSize:11,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:20,padding:"2px 9px"}}>{doTec.length} atend.</span>
                             </div>
                             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
@@ -7528,9 +7531,8 @@ export default function App(){
                 {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<button onClick={()=>{setAgpRegion("todas");setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");setAgpData("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
 
-              {/* Novo Atendimento */}
+              {/* Ler PDF */}
               {!isReadOnlyAgenda(user)&&<div style={{display:"flex",gap:8,marginBottom:14}}>
-                <button onClick={()=>setShowNovoAtend(true)} style={{padding:"10px 20px",borderRadius:12,background:"#F5C200",border:"none",fontWeight:800,fontSize:13,color:"#1A1A1A",cursor:"pointer",boxShadow:"0 2px 8px rgba(245,194,0,.3)"}}>+ Novo Atendimento</button>
                 <label style={{padding:"10px 18px",borderRadius:12,border:"none",background:"#8B5CF6",fontSize:13,cursor:"pointer",color:"#FFF",fontWeight:700,fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:5,boxShadow:"0 2px 8px rgba(139,92,246,.35)"}}>
                   📄 Ler PDF
                   <input type="file" accept=".pdf" style={{display:"none"}} onChange={async e=>{
