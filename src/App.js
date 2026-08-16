@@ -7452,7 +7452,7 @@ export default function App(){
                               {doDia.map((a,i)=>{
                                 const sc=statusChip(a.status);
                                 const ct=corTecnico(a.tecnico);
-                                const editarClick=()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);};
+                                const editarClick=()=>{const key=`${a.tecnico}__${a.data}`;setEditSlot({key,si:a._idx,slot:a,tipo:"tecnico",tech:a.tecnico});setEditSlotForm({...a,tecnico:a.tecnico});};
                                 return(
                                   <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
@@ -7493,7 +7493,7 @@ export default function App(){
                               {doTec.map((a,i)=>{
                                 const sc=statusChip(a.status);
                                 const ct=corTecnico(t);
-                                const editarClick=()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);};
+                                const editarClick=()=>{const key=`${a.tecnico}__${a.data}`;setEditSlot({key,si:a._idx,slot:a,tipo:"tecnico",tech:a.tecnico});setEditSlotForm({...a,tecnico:a.tecnico});};
                                 return(
                                   <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}>
@@ -7676,11 +7676,15 @@ export default function App(){
                               {items.map((it,ii)=>{
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
+                                const editarClick=(ev)=>{ev.stopPropagation();const key=`${it.tech}__${dt}`;setEditSlot({key,si:it.si,slot:it.s,tipo:"tecnico",tech:it.tech});setEditSlotForm({...it.s,tecnico:it.tech});};
                                 return(
                                   <div key={ii} onClick={()=>setAgpSelectedDay(dt)} title={`${it.tech} — ${it.s.client||""}`} style={{fontSize:11.5,padding:"8px 10px",borderRadius:8,background:color+"3D",borderLeft:`6px solid ${color}`,cursor:"pointer",flexShrink:0}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
                                       <b style={{color,fontSize:11.5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
-                                      {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px",flexShrink:0}}>+{it.s.tecnicosAdicionais.length}</span>}
+                                      <div style={{display:"flex",alignItems:"center",gap:3,flexShrink:0}}>
+                                        {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px"}}>+{it.s.tecnicosAdicionais.length}</span>}
+                                        <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${color}77`,borderRadius:5,color,cursor:"pointer",padding:"1px 5px",fontSize:8,fontWeight:700}}>✏️</button>
+                                      </div>
                                     </div>
                                     <div style={{color:"#1A1A1A",fontWeight:800,fontSize:11,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
                                     <div style={{color:"#1E293B",fontSize:10,fontWeight:700,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>PAT {it.s.patrimonio||"—"}{it.s.cidade?` · ${it.s.cidade}`:""}</div>
