@@ -5239,9 +5239,9 @@ export default function App(){
           };
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div className="card" style={{marginBottom:16,overflow:"hidden",borderTop:"4px solid #F5C200"}}>
-              <div style={{padding:"10px 14px",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:900,fontSize:18,color:"#1A1A1A"}}>📋 OS Oficina / Apontamento — Hebert</div><div style={{fontSize:11,color:"#B45309",marginTop:2,fontWeight:700}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{padding:"14px 18px",background:"#F8FAFC",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:14}}>
+                <div><div style={{fontWeight:900,fontSize:18,color:"#1A1A1A"}}>📋 OS Oficina / Apontamento — Hebert</div><div style={{fontSize:11,color:"#B45309",marginTop:3,fontWeight:700}}>{lista.length} registro(s) · ⏱ {totalStr}{qtdSelecionados>0?` · ${qtdSelecionados} selecionado(s)`:""}</div></div>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
                   {qtdSelecionados>0&&<button onClick={excluirSelecionados} style={{padding:"7px 14px",borderRadius:8,border:"none",background:"#DC2626",color:"#FFF",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir ({qtdSelecionados})</button>}
                   <button onClick={()=>setShowArqApon(p=>!p)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid #E5E7EB",background:showArqApon?"#1A1A1A":"#FFF",color:showArqApon?"#FFF":"#475569",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqApon?"Ocultar":"Arquivados"}</button>
                   <div style={{position:"relative"}}>
@@ -5364,13 +5364,13 @@ export default function App(){
                   </div>
                 </div>
               </div>}
-              <button onClick={()=>setShowFiltrosApon(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosApon?"#FFF":"#F8FAFC",cursor:"pointer",margin:"10px 18px",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <button onClick={()=>setShowFiltrosApon(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosApon?"#FFF":"#F8FAFC",cursor:"pointer",margin:"14px 18px",fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
                 <span style={{fontSize:11}}>🔍</span>
                 <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
                 {(ofiNovaFrom||ofiNovaTo||ofiNovaOS||ofiNovaTech!=="todos"||ofiNovaServ!=="todos")&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
                 <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosApon?"▲":"▼"}</span>
               </button>
-              {showFiltrosApon&&<div style={{padding:"10px 18px",background:"#F8F9FA",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              {showFiltrosApon&&<div style={{padding:"14px 18px",background:"#F8F9FA",display:"flex",gap:12,flexWrap:"wrap",alignItems:"center",marginBottom:6}}>
                 <div style={{position:"relative",flex:1,minWidth:160}}><span style={{position:"absolute",left:8,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={ofiNovaOS} onChange={e=>setOfiNovaOS(e.target.value)} placeholder="Buscar OS, PAT..." style={{width:"100%",padding:"6px 10px 6px 26px",fontSize:12,borderRadius:8,border:"1px solid #E0E0E0",background:"#FFF",boxSizing:"border-box"}}/></div>
                 <div style={{display:"flex",gap:6}}>{btnPerOfi("semana","Semanal")}{btnPerOfi("mes","Mensal")}{btnPerOfi("tudo","Tudo")}</div>
                 {ofiPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -5389,9 +5389,9 @@ export default function App(){
               <div className="card" style={{overflow:"hidden"}}><div style={{overflowX:"auto",overflowY:"auto",maxHeight:620}}>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead style={{position:"sticky",top:0,zIndex:2}}><tr style={{background:"#1A1A1A"}}>
-                    <th style={{padding:"10px 12px",width:1}}><input type="checkbox" checked={idsVisiveis.length>0&&qtdSelecionados===idsVisiveis.length} onChange={toggleSelecionarTodos} style={{cursor:"pointer",width:15,height:15}}/></th>
+                    <th style={{padding:"13px 14px",width:1}}><input type="checkbox" checked={idsVisiveis.length>0&&qtdSelecionados===idsVisiveis.length} onChange={toggleSelecionarTodos} style={{cursor:"pointer",width:15,height:15}}/></th>
                     {["Data","OS","PAT","Setor","Técnico","Serviço","Início","Término","Total","Obs","Registrado Por",""].map((h,i)=>(
-                      <th key={i} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
+                      <th key={i} style={{padding:"13px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -5399,13 +5399,13 @@ export default function App(){
                       const cor=SERVICO_COR[a.servico]||"#94A3B8";
                       const setorA=classificarSetor(a.tecnico);
                       return(<tr key={a.id} style={{borderBottom:"1px solid #F0F0F0",background:aponSelecionados[a.id]?"#FFFBEB":a.arquivado?"#FAFAFA":idx%2===0?"#FFF":"#F8FFFE",opacity:a.arquivado?0.55:1}}>
-                        <td style={{padding:"10px 12px"}}><input type="checkbox" checked={!!aponSelecionados[a.id]} onChange={()=>setAponSelecionados(prev=>{const novo={...prev};if(novo[a.id])delete novo[a.id];else novo[a.id]=true;return novo;})} style={{cursor:"pointer",width:15,height:15}}/></td>
-                        <td style={{padding:"10px 12px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
-                        <td style={{padding:"10px 12px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
-                        <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
-                        <td style={{padding:"10px 12px"}}><span style={{fontSize:9,fontWeight:800,padding:"2px 8px",borderRadius:10,background:setorA==="150"?"#F3E8FF":"#EFF6FF",color:setorA==="150"?"#7C3AED":"#1565C0"}}>{setorA}</span></td>
-                        <td style={{padding:"10px 12px",fontWeight:600}}>{a.tecnico||"—"}</td>
-                        <td style={{padding:"10px 12px"}}><select value={a.servico||""} onChange={async e=>{
+                        <td style={{padding:"12px 14px"}}><input type="checkbox" checked={!!aponSelecionados[a.id]} onChange={()=>setAponSelecionados(prev=>{const novo={...prev};if(novo[a.id])delete novo[a.id];else novo[a.id]=true;return novo;})} style={{cursor:"pointer",width:15,height:15}}/></td>
+                        <td style={{padding:"12px 14px",whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A"}}>{fmtDataBR(a.data)}</td>
+                        <td style={{padding:"12px 14px",fontWeight:800,color:"#1565C0"}}>{a.os||"—"}</td>
+                        <td style={{padding:"12px 14px",fontSize:12,color:"#555"}}>{a.patrimonio||"—"}</td>
+                        <td style={{padding:"12px 14px"}}><span style={{fontSize:9,fontWeight:800,padding:"2px 8px",borderRadius:10,background:setorA==="150"?"#F3E8FF":"#EFF6FF",color:setorA==="150"?"#7C3AED":"#1565C0"}}>{setorA}</span></td>
+                        <td style={{padding:"12px 14px",fontWeight:600}}>{a.tecnico||"—"}</td>
+                        <td style={{padding:"12px 14px"}}><select value={a.servico||""} onChange={async e=>{
                           const novoValor=e.target.value;
                           notify(novoValor?`⏳ Salvando: ${novoValor}...`:"⏳ Limpando serviço...");
                           let res,erroJs=null;
@@ -5416,12 +5416,12 @@ export default function App(){
                             alert(`❌ O Serviço NÃO foi salvo para esta linha (ID: ${a.id}).\nTécnico: ${a.tecnico||"—"} · OS: ${a.os||"—"} · Data: ${fmtDataBR(a.data)}${dupCount>1?`\n⚠️ Encontrei ${dupCount} linhas com esse MESMO ID — pode ser um registro duplicado.`:""}${detalhe}\nTire um print desta mensagem e envie — isso ajuda a achar a causa exata.`);
                           }
                         }} style={{fontSize:11,fontWeight:700,color:a.servico?cor:"#AAA",background:a.servico?cor+"18":"#F5F5F5",borderRadius:20,padding:"3px 10px",whiteSpace:"nowrap",border:"none",cursor:"pointer"}}><option value="">— Selecionar —</option>{SERVICOS_OFICINA.map(sv=><option key={sv} value={sv}>{sv}</option>)}</select></td>
-                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
-                        <td style={{padding:"10px 12px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
-                        <td style={{padding:"10px 12px",textAlign:"center"}}><span className="total-cell-amarelo" style={{fontSize:13,fontWeight:900,borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap",display:"inline-block"}}>{a.total||"—"}</span></td>
-                        <td style={{padding:"10px 12px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
-                        <td style={{padding:"10px 12px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
-                        <td style={{padding:"10px 12px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:8}}>
+                        <td style={{padding:"12px 14px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.inicio||"—"}</td>
+                        <td style={{padding:"12px 14px",fontSize:12,color:"#555",whiteSpace:"nowrap"}}>{a.termino||"—"}</td>
+                        <td style={{padding:"12px 14px",textAlign:"center"}}><span className="total-cell-amarelo" style={{fontSize:13,fontWeight:900,borderRadius:8,padding:"4px 10px",whiteSpace:"nowrap",display:"inline-block"}}>{a.total||"—"}</span></td>
+                        <td style={{padding:"12px 14px",fontSize:11,color:"#888",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.obs||"—"}</td>
+                        <td style={{padding:"12px 14px",fontSize:10,color:"#AAA",whiteSpace:"nowrap"}}>{a.registradoPor||"—"}</td>
+                        <td style={{padding:"12px 14px",whiteSpace:"nowrap"}}><div style={{display:"flex",gap:8}}>
                           <button onClick={()=>{setAponNovaData(a.data||TODAY_STR);setAponNovaOS(a.os||"");setAponNovaPat(a.patrimonio||"");setAponNovaTech(a.tecnico||OFICINA_TECHS[0]);setAponNovaServ(a.servico||"");setAponNovaInicio(a.inicio||"");setAponNovaTermino(a.termino||"");setAponNovaObs(a.obs||"");setEditingAponId(a.id);setShowNovoApon(true);}} title="Editar" style={{background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"6px 9px",fontSize:13}}>✏️ Editar</button>
                           <button onClick={()=>updateAponUnified(a,{arquivado:!a.arquivado})} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#F5F5F5",border:"1px solid #E0E0E0",borderRadius:6,cursor:"pointer",padding:"6px 9px",fontSize:12}}>{a.arquivado?"📤":"🗄️"}</button>
                           <button onClick={()=>{if(window.confirm(`Excluir permanentemente o apontamento da OS ${a.os||"—"} (${fmtDataBR(a.data)})? Essa ação não pode ser desfeita.`))delAponUnified(a);}} title="Excluir permanentemente" style={{background:"#FFF0F0",border:"1px solid #FFCDD2",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"6px 9px",fontSize:11,fontWeight:700}}>✕</button>
@@ -5430,8 +5430,8 @@ export default function App(){
                     })}
                   </tbody>
                   <tfoot><tr style={{background:"#1A1A1A"}}>
-                    <td colSpan={9} style={{padding:"10px 12px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
-                    <td style={{padding:"10px 12px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
+                    <td colSpan={9} style={{padding:"12px 14px",fontSize:11,fontWeight:700,color:"#94A3B8"}}>{lista.length} registro(s)</td>
+                    <td style={{padding:"12px 14px",textAlign:"center"}}><span style={{fontSize:13,fontWeight:900,color:"#F5C200",background:"rgba(245,194,0,.12)",border:"1px solid rgba(245,194,0,.3)",borderRadius:8,padding:"4px 10px"}}>{totalStr}</span></td>
                     <td colSpan={3}/>
                   </tr></tfoot>
                 </table></div></div>
