@@ -172,6 +172,8 @@ const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
 const normalizeTec=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+const iniciais=(nome)=>{const p=String(nome||"").trim().split(/\s+/).filter(Boolean);return p.length===0?"?":p.length===1?p[0].slice(0,2).toUpperCase():(p[0][0]+p[1][0]).toUpperCase();};
+const primeiroNome=(nome)=>String(nome||"").trim().split(/\s+/)[0]||"";
 const TECH_SERVICO_FIXO_NORM = Object.fromEntries(Object.entries(TECH_SERVICO_FIXO).map(([k,v])=>[normalizeTec(k),v]));
 const TECH_SERVICO_FIXO_ENTRIES = Object.entries(TECH_SERVICO_FIXO_NORM);
 const getServicoFixo = (tecnico) => {
@@ -3380,6 +3382,10 @@ export default function App(){
   const [agpYear,setAgpYear]=useState(TODAY.getFullYear());
   const [agpSelectedDay,setAgpSelectedDay]=useState(null);
   const [showFiltrosAgp,setShowFiltrosAgp]=useState(false);
+  const [agpView,setAgpView]=useState("semana");
+  const [agpWeekRefIso,setAgpWeekRefIso]=useState(TODAY_STR);
+  const [agpTechChip,setAgpTechChip]=useState(null);
+  const [agpMostrarTodosTecs,setAgpMostrarTodosTecs]=useState(false);
   const [agTech,setAgTech]=useState(ALL_TECHS[0]);
   const [agDate,setAgDate]=useState("");
   const [agEmpresa,setAgEmpresa]=useState("");
@@ -7367,8 +7373,136 @@ export default function App(){
                   <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🗓 Agenda — Técnicos Externos</div>
                   <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{techsList.length} técnico(s)</div>
                 </div>
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={()=>setAgpView("semana")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="semana"?"none":"1.5px solid #E2E8F0",background:agpView==="semana"?"#1A1A1A":"#FFF",color:agpView==="semana"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Semana</button>
+                  <button onClick={()=>setAgpView("mes")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="mes"?"none":"1.5px solid #E2E8F0",background:agpView==="mes"?"#1A1A1A":"#FFF",color:agpView==="mes"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mês</button>
+                  <button onClick={()=>setAgpView("tecnico")} style={{padding:"8px 16px",borderRadius:10,border:agpView==="tecnico"?"none":"1.5px solid #E2E8F0",background:agpView==="tecnico"?"#1A1A1A":"#FFF",color:agpView==="tecnico"?"#FFF":"#334155",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Por técnico</button>
+                </div>
               </div>
 
+              {(agpView==="semana"||agpView==="tecnico")&&(()=>{
+                const refD=new Date(agpWeekRefIso+"T12:00:00");
+                const segD=new Date(refD); segD.setDate(refD.getDate()-((refD.getDay()+6)%7));
+                const diasSemana=Array.from({length:5},(_,i)=>{const d=new Date(segD);d.setDate(segD.getDate()+i);return d;});
+                const sexD=diasSemana[4];
+                const isoOf=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+                const nomesDia=["Seg","Ter","Qua","Qui","Sex"];
+                // monta lista de atendimentos da semana, com técnico e data
+                const atendSemana=[];
+                Object.keys(schedule).forEach(key=>{
+                  const idx=key.indexOf("__"); if(idx<0)return;
+                  const tec=key.slice(0,idx), data=key.slice(idx+2);
+                  if(data<isoOf(segD)||data>isoOf(sexD))return;
+                  (schedule[key]||[]).forEach((a,i)=>{ if(a) atendSemana.push({...a,tecnico:tec,data,_idx:i}); });
+                });
+                const techsNaSemana=Array.from(new Set(atendSemana.map(a=>a.tecnico))).sort((a,b)=>atendSemana.filter(x=>x.tecnico===b).length-atendSemana.filter(x=>x.tecnico===a).length);
+                const contagemPorTech=t=>atendSemana.filter(a=>a.tecnico===t).length;
+                const atendFiltrada=agpTechChip?atendSemana.filter(a=>a.tecnico===agpTechChip):atendSemana;
+                const totalFaturar=atendSemana.filter(a=>a.status==="a_faturar").length;
+                const tecsVisiveis=agpMostrarTodosTecs?techsNaSemana:techsNaSemana.slice(0,5);
+                const cardStatusBg={concluida:"#F0FDF4",a_faturar:"#FFF8F0",entrega_tecnica:"#F6EAFB"};
+                const statusChip=(st)=>{
+                  if(st==="a_faturar")return{l:"A faturar",c:"#B45309",bg:"#FFF8F0"};
+                  if(st==="entrega_tecnica")return{l:"Entrega técnica",c:"#7B1FA2",bg:"#F6EAFB"};
+                  if((st||"").includes("concluid"))return{l:"Concluída",c:"#166534",bg:"#F0FDF4"};
+                  if((st||"").includes("pendente"))return{l:"Pendente peças",c:"#B45309",bg:"#FFF8F0"};
+                  if((st||"").includes("cancelad"))return{l:"Cancelada",c:"#C62828",bg:"#FFF0F0"};
+                  return{l:ESCALA_STATUS[st]?.l||"Agendada",c:"#1565C0",bg:"#F0F4FF"};
+                };
+                return(<>
+                  <div className="card" style={{padding:"10px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <button onClick={()=>{const d=new Date(agpWeekRefIso+"T12:00:00");d.setDate(d.getDate()-7);setAgpWeekRefIso(isoOf(d));}} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                      <div style={{fontSize:14,fontWeight:800,color:"#1A1A1A",minWidth:220,textAlign:"center"}}>{segD.getDate()} – {sexD.getDate()} de {["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"][sexD.getMonth()]} de {sexD.getFullYear()}</div>
+                      <button onClick={()=>{const d=new Date(agpWeekRefIso+"T12:00:00");d.setDate(d.getDate()+7);setAgpWeekRefIso(isoOf(d));}} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                    </div>
+                    <div style={{display:"flex",gap:14,fontSize:11,color:"#64748B"}}>
+                      <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#166534",marginRight:5}}/>Concluída</span>
+                      <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#B45309",marginRight:5}}/>A faturar</span>
+                    </div>
+                  </div>
+
+                  <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:16,overflowX:"auto",paddingBottom:4}}>
+                    <span style={{fontSize:10,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",whiteSpace:"nowrap",marginRight:4}}>Técnico</span>
+                    {agpTechChip&&<button onClick={()=>setAgpTechChip(null)} style={{padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:"#FFF",color:"#64748B",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>Todos</button>}
+                    {tecsVisiveis.map(t=>(
+                      <button key={t} onClick={()=>setAgpTechChip(agpTechChip===t?null:t)} style={{padding:"7px 14px",borderRadius:10,border:agpTechChip===t?"none":"1.5px solid #E2E8F0",background:agpTechChip===t?"#FDE68A":"#FFF",color:"#1A1A1A",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{width:20,height:20,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
+                        {primeiroNome(t)} <span style={{opacity:.6}}>{contagemPorTech(t)}</span>
+                      </button>
+                    ))}
+                    {techsNaSemana.length>5&&<button onClick={()=>setAgpMostrarTodosTecs(p=>!p)} style={{padding:"7px 14px",borderRadius:10,border:"1.5px dashed #E2E8F0",background:"#F8FAFC",color:"#64748B",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{agpMostrarTodosTecs?"◂ menos":`+${techsNaSemana.length-5} técnicos`}</button>}
+                  </div>
+
+                  {agpView==="semana"?(
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14,overflowX:"auto"}}>
+                      {diasSemana.map((d,di)=>{
+                        const iso=isoOf(d);
+                        const doDia=atendFiltrada.filter(a=>a.data===iso).sort((a,b)=>(a.tecnico||"").localeCompare(b.tecnico||""));
+                        return(
+                          <div key={iso} style={{minWidth:200}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,paddingBottom:6,borderBottom:"2px solid #1A1A1A"}}>
+                              <div><span style={{fontSize:18,fontWeight:900,color:"#1A1A1A"}}>{d.getDate()}</span><span style={{fontSize:10,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",marginLeft:5}}>{nomesDia[di]}</span></div>
+                              {doDia.length>0&&<span style={{fontSize:10,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:20,padding:"2px 8px"}}>{doDia.length} atend.</span>}
+                            </div>
+                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                              {doDia.map((a,i)=>{
+                                const sc=statusChip(a.status);
+                                return(
+                                  <div key={i} className="card" style={{padding:10,cursor:"pointer"}} onClick={()=>{setAgTech(a.tecnico);setAgDate(a.data);setAgEmpresa(a.client||"");setAgCidade(a.cidade||"");setAgPat(a.patrimonio||"");setAgRelatorio(a.relatorio||"");setAgObs(a.obs||"");setAgTipo(a.type||"preventivo");setAgStatus(a.status||"agendada");setAgEntrada(a.horaEntrada||"");setAgSaida(a.horaSaida||"");setShowNovoAtend(true);}}>
+                                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
+                                      <span style={{width:20,height:20,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
+                                      <span style={{fontSize:11,fontWeight:700,color:"#334155",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
+                                    </div>
+                                    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
+                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
+                                    <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+                                      <span style={{fontSize:9,fontWeight:700,color:sc.c,background:sc.bg,borderRadius:20,padding:"2px 8px"}}>{sc.l}</span>
+                                      <span style={{fontSize:9,fontWeight:700,color:"#64748B"}}>{(a.type||"preventivo")==="corretivo"?"Corretiva":"Preventiva"}</span>
+                                      {a.relatorio&&<span style={{fontSize:9,color:"#CBD5E1"}}>Rel. {a.relatorio}</span>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {doDia.length===0&&<div style={{fontSize:11,color:"#CBD5E1",textAlign:"center",padding:16}}>—</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ):(
+                    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+                      {(agpTechChip?[agpTechChip]:techsNaSemana).map(t=>{
+                        const doTec=atendSemana.filter(a=>a.tecnico===t).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+                        return(
+                          <div key={t}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                              <span style={{width:24,height:24,borderRadius:"50%",background:"#EEF2FF",color:"#4338CA",fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{iniciais(t)}</span>
+                              <span style={{fontSize:14,fontWeight:800,color:"#1A1A1A"}}>{t}</span>
+                              <span style={{fontSize:11,fontWeight:700,color:"#64748B",background:"#F1F5F9",borderRadius:20,padding:"2px 9px"}}>{doTec.length} atend.</span>
+                            </div>
+                            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10}}>
+                              {doTec.map((a,i)=>{
+                                const sc=statusChip(a.status);
+                                return(
+                                  <div key={i} className="card" style={{padding:10}}>
+                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:2}}>{fmtDataBR(a.data)}</div>
+                                    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
+                                    <div style={{fontSize:10,color:"#94A3B8",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
+                                    <span style={{fontSize:9,fontWeight:700,color:sc.c,background:sc.bg,borderRadius:20,padding:"2px 8px"}}>{sc.l}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>);
+              })()}
+
+              {agpView==="mes"&&(<>
               {/* Filtros */}
               <button onClick={()=>setShowFiltrosAgp(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosAgp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
                 <span style={{fontSize:11}}>🔍</span>
@@ -7602,6 +7736,7 @@ export default function App(){
                   </div>
                 );
               })()}
+              </>)}
             </div>
           );
         })()}
