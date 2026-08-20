@@ -292,7 +292,7 @@ const AF_STATUS = {
   env_faturamento:{l:"Env. Faturamento",c:"#1A7A3C",bg:"#F0FFF5"},
   nao_aprovado:{l:"Não aprovado",c:"#C62828",bg:"#FFF0F0"},
 };
-const AF_TIPO = ["Venda","Serviço","Peça"];
+const AF_TIPO = ["Venda","Serviço","Peça","Orçamento"];
 const COT_SERVICOS = ["Orçamento","Venda de Peças","Mau Uso","Ferramenta Técnica","Atendimento Frota"];
 const COT_TIPO_REF = ["OV","MU","Relatório"];
 const COT_STATUS = {
@@ -7158,7 +7158,8 @@ export default function App(){
             return true;
           });
           const hasF=afStatus!=="todos"||afTipo!=="todos"||afVendedor!=="todos"||afFrom||afTo||afSearch;
-          const soma=(arr)=>arr.reduce((a,p)=>a+val(p.valor),0);
+          const soma=(arr)=>arr.filter(p=>p.tipo!=="Orçamento").reduce((a,p)=>a+val(p.valor),0);
+          const somaOrcamento=(arr)=>arr.filter(p=>p.tipo==="Orçamento").reduce((a,p)=>a+val(p.valor),0);
           const noMes=(p)=>(p.emissao||p.date||"").startsWith(mesRef);
           const naSemana=(p)=>{const d=p.emissao||p.date||"";return d>=semDe&&d<=semAte;};
           const envFat=(p)=>stDe(p)==="env_faturamento";
@@ -7212,6 +7213,21 @@ export default function App(){
               <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Venda</div><div style={{fontSize:14,fontWeight:800,color:"#334155"}}>{fmtR(soma(aprovVenda))}</div></div>
               <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Serviço</div><div style={{fontSize:14,fontWeight:800,color:"#334155"}}>{fmtR(soma(aprovServ))}</div></div>
             </div>
+            {(()=>{
+              const orcamentosLista=lista.filter(p=>p.tipo==="Orçamento");
+              if(orcamentosLista.length===0)return null;
+              return(
+                <div className="card" style={{padding:"12px 16px",marginBottom:14,background:"#FFFBEB",border:"1.5px solid #FDE68A"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                    <div style={{fontSize:11,fontWeight:800,color:"#92400E"}}>📝 Orçamentos — {orcamentosLista.length} registro(s)</div>
+                    <div style={{display:"flex",alignItems:"center",gap:16}}>
+                      <div style={{fontSize:18,fontWeight:900,color:"#92400E"}}>{fmtR(somaOrcamento(lista))}</div>
+                      <div style={{fontSize:10,color:"#B45309",fontStyle:"italic"}}>não soma no total até virar Venda</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Cliente, OV, relatório, ticket..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
@@ -10067,7 +10083,7 @@ export default function App(){
 
         {tab==="dashboard_a_faturar"&&(
           <DashboardProcessoSimples
-            lista={(processosAF||[]).map(p=>{
+            lista={(processosAF||[]).filter(p=>p&&p.tipo!=="Orçamento").map(p=>{
               const mapaAprov={aguardando_aprovacao:"aguardando_retorno",aprovado_pend_conclusao:"aprovado_cliente",env_faturamento:"cobrado_faturado",nao_aprovado:"negado_cliente"};
               return {...p,
                 empresa:p.empresaGrupo||p.cliente||p.empresa||"",
