@@ -3050,6 +3050,8 @@ export default function App(){
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqCot,setShowArqCot]=useState(false);
   const [showArqEnvioPeca,setShowArqEnvioPeca]=useState(false);
+  const [modalEnvioPeca,setModalEnvioPeca]=useState(false);
+  const [editEnvioPeca,setEditEnvioPeca]=useState(null);
   const [showArqOrc,setShowArqOrc]=useState(false);
   const [orcPeriodo,setOrcPeriodo]=useState("tudo");
   const [orcRefIso,setOrcRefIso]=useState(TODAY_STR);
@@ -6955,20 +6957,15 @@ export default function App(){
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const lista=(envioPecas||[]).filter(e=>e&&(showArqEnvioPeca?e.arquivado:!e.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const porStatus=k=>lista.filter(e=>e.status===k).length;
-          const addLinha=()=>{
-            const row={id:`ENVP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,cliente:"",peca:"",codigo:"",unidade:"",tipoManut:"OV",refManut:"",fornecedor:"",valor:"",nfRecebida:"",nfEmitida:"",dataRetorno:"",status:"almoxarifado",arquivado:false};
-            setEnvioPecas(p=>[row,...(p||[])]);
-            db.save("envio_pecas_fornecedor",row.id,row);
-          };
-          const upd=(id,changes)=>envioPecaCrud.update(id,changes);
-          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
+          const abrirNovo=()=>{setEditEnvioPeca({data:TODAY_STR,cliente:"",peca:"",codigo:"",unidade:"",tipoManut:"OV",refManut:"",fornecedor:"",valor:"",nfRecebida:"",nfEmitida:"",dataRetorno:"",status:"almoxarifado"});setModalEnvioPeca(true);};
+          const abrirEditar=(e)=>{setEditEnvioPeca({...e});setModalEnvioPeca(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📦 Acompanhamento de Envio de Peças ao Fornecedor</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqEnvioPeca(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqEnvioPeca?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                  <BtnY onClick={abrirNovo}>+ Novo Registro</BtnY>
                 </div>
               </div>
               <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16}}>
@@ -6985,36 +6982,95 @@ export default function App(){
                   ))}
                 </div>
               </div>
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Cliente</th><th>Peça</th><th>Código</th><th>Unidade</th><th>Manutenção</th><th>Fornecedor</th><th>Valor</th><th>NF Recebida</th><th>NF Emitida p/ Envio</th><th>Data Retorno</th><th>Status</th><th></th></tr></thead>
-                  <tbody>
-                    {lista.map(e=>{
-                      const st=ENVIO_PECA_STATUS[e.status]||ENVIO_PECA_STATUS.almoxarifado;
-                      return(
-                        <tr key={e.id}>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={e.data||""} onChange={ev=>upd(e.id,{data:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.cliente||""} onChange={ev=>upd(e.id,{cliente:ev.target.value})} placeholder="Cliente" style={{...inpCell,minWidth:120}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.peca||""} onChange={ev=>upd(e.id,{peca:ev.target.value})} placeholder="Peça" style={{...inpCell,minWidth:120}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.codigo||""} onChange={ev=>upd(e.id,{codigo:ev.target.value})} placeholder="Código" style={{...inpCell,width:90}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.unidade||""} onChange={ev=>upd(e.id,{unidade:ev.target.value})} placeholder="Unidade" style={{...inpCell,width:90}}/></td>
-                          <td style={{padding:"6px 8px"}}><div style={{display:"flex",gap:4}}><select value={e.tipoManut||"OV"} onChange={ev=>upd(e.id,{tipoManut:ev.target.value})} style={{...inpCell,width:64}}>{ENVIO_PECA_TIPO_MANUT.map(t=><option key={t}>{t}</option>)}</select><input type="text" value={e.refManut||""} onChange={ev=>upd(e.id,{refManut:ev.target.value})} placeholder="nº" style={{...inpCell,width:80}}/></div></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.fornecedor||""} onChange={ev=>upd(e.id,{fornecedor:ev.target.value})} placeholder="Fornecedor" style={{...inpCell,minWidth:120}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.valor||""} onChange={ev=>upd(e.id,{valor:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.nfRecebida||""} onChange={ev=>upd(e.id,{nfRecebida:ev.target.value})} placeholder="Nº NF" style={{...inpCell,width:90}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={e.nfEmitida||""} onChange={ev=>upd(e.id,{nfEmitida:ev.target.value})} placeholder="Nº NF" style={{...inpCell,width:90}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={e.dataRetorno||""} onChange={ev=>upd(e.id,{dataRetorno:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px"}}><select value={e.status} onChange={ev=>upd(e.id,{status:ev.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{ENVIO_PECA_STATUS_KEYS.map(k=><option key={k} value={k}>{ENVIO_PECA_STATUS[k].l}</option>)}</select></td>
-                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
-                            <button onClick={()=>upd(e.id,{arquivado:!e.arquivado})} title={e.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{e.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))envioPecaCrud.del(e.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table></div>
-                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqEnvioPeca?"arquivado":""}</div>}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
+                {lista.map(e=>{
+                  const st=ENVIO_PECA_STATUS[e.status]||ENVIO_PECA_STATUS.almoxarifado;
+                  return(
+                    <div key={e.id} className="card" style={{padding:0,overflow:"hidden",borderLeft:`4px solid ${st.c}`}}>
+                      <div style={{padding:"12px 14px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{e.peca||"—"}</div>
+                            <div style={{fontSize:11,color:"#94A3B8"}}>{e.tipoManut||"OV"} {e.refManut||"—"} · {fmtDataBR(e.data)}</div>
+                            {e.cliente&&<div style={{fontSize:11,color:"#1565C0",fontWeight:700}}>👤 {e.cliente}</div>}
+                          </div>
+                          <select value={e.status} onChange={ev=>envioPecaCrud.update(e.id,{status:ev.target.value})} style={{fontSize:10,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{ENVIO_PECA_STATUS_KEYS.map(k=><option key={k} value={k}>{ENVIO_PECA_STATUS[k].l}</option>)}</select>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:10,fontSize:11,paddingTop:8,borderTop:"1px solid #F1F5F9",marginBottom:8}}>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Código</div><div style={{fontWeight:600}}>{e.codigo||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Unidade</div><div style={{fontWeight:600}}>{e.unidade||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Fornecedor</div><div style={{fontWeight:600}}>{e.fornecedor||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Valor</div><div style={{fontWeight:800,color:"#166534"}}>{fmtR(parseFloat((e.valor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0)}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>NF Recebida</div><div style={{fontWeight:600}}>{e.nfRecebida||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>NF Emitida</div><div style={{fontWeight:600}}>{e.nfEmitida||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Data Retorno</div><div style={{fontWeight:600}}>{e.dataRetorno?fmtDataBR(e.dataRetorno):"—"}</div></div>
+                        </div>
+                      </div>
+                      <div style={{display:"flex",borderTop:"1px solid #F1F5F9"}}>
+                        <button onClick={()=>abrirEditar(e)} style={{flex:1,padding:"8px",border:"none",background:"#EFF6FF",color:"#1565C0",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Editar</button>
+                        <button onClick={()=>envioPecaCrud.update(e.id,{arquivado:!e.arquivado})} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#F8FAFC",color:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{e.arquivado?"📤 Desarquivar":"🗄️ Arquivar"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir este registro?"))envioPecaCrud.del(e.id);}} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#FEF2F2",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕ Excluir</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {lista.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"#CCC",padding:60,fontSize:13}}>Nenhum registro {showArqEnvioPeca?"arquivado":""}</div>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {modalEnvioPeca&&editEnvioPeca&&(()=>{
+          const upd=(k,v)=>setEditEnvioPeca(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const isNovo=!editEnvioPeca.id;
+          const salvar=()=>{
+            if(!editEnvioPeca.peca){alert("Informe a Peça.");return;}
+            if(isNovo){
+              envioPecaCrud.add(editEnvioPeca);
+            }else{
+              envioPecaCrud.update(editEnvioPeca.id,editEnvioPeca);
+              notify("✅ Registro atualizado!");
+            }
+            setModalEnvioPeca(false);setEditEnvioPeca(null);
+          };
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalEnvioPeca(false);setEditEnvioPeca(null);}}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:620,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"📦 Novo":"✏️ Editar"} Envio de Peça</div>
+                  <button onClick={()=>{setModalEnvioPeca(false);setEditEnvioPeca(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+                </div>
+                <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Data</label><input type="date" value={editEnvioPeca.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Cliente</label><input type="text" value={editEnvioPeca.cliente||""} onChange={e=>upd("cliente",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Peça</label><input type="text" value={editEnvioPeca.peca||""} onChange={e=>upd("peca",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Código</label><input type="text" value={editEnvioPeca.codigo||""} onChange={e=>upd("codigo",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Unidade</label><input type="text" value={editEnvioPeca.unidade||""} onChange={e=>upd("unidade",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"110px 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Tipo</label><select value={editEnvioPeca.tipoManut||"OV"} onChange={e=>upd("tipoManut",e.target.value)} style={inp}>{ENVIO_PECA_TIPO_MANUT.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div><label style={lbl}>{editEnvioPeca.tipoManut||"OV"} nº</label><input type="text" value={editEnvioPeca.refManut||""} onChange={e=>upd("refManut",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Fornecedor</label><input type="text" value={editEnvioPeca.fornecedor||""} onChange={e=>upd("fornecedor",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Valor</label><input type="text" value={editEnvioPeca.valor||""} onChange={e=>upd("valor",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                    <div><label style={lbl}>NF Recebida</label><input type="text" value={editEnvioPeca.nfRecebida||""} onChange={e=>upd("nfRecebida",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>NF Emitida p/ Envio</label><input type="text" value={editEnvioPeca.nfEmitida||""} onChange={e=>upd("nfEmitida",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Data de Retorno</label><input type="date" value={editEnvioPeca.dataRetorno||""} onChange={e=>upd("dataRetorno",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Status</label><select value={editEnvioPeca.status} onChange={e=>upd("status",e.target.value)} style={inp}>{ENVIO_PECA_STATUS_KEYS.map(k=><option key={k} value={k}>{ENVIO_PECA_STATUS[k].l}</option>)}</select></div>
+                  </div>
+                </div>
+                <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
+                  <button onClick={()=>{setModalEnvioPeca(false);setEditEnvioPeca(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
               </div>
             </div>
           );
