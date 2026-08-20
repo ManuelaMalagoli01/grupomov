@@ -7217,12 +7217,12 @@ export default function App(){
               const orcamentosLista=lista.filter(p=>p.tipo==="Orçamento");
               if(orcamentosLista.length===0)return null;
               return(
-                <div className="card" style={{padding:"12px 16px",marginBottom:14,background:"#FFFBEB",border:"1.5px solid #FDE68A"}}>
+                <div style={{padding:"14px 18px",marginBottom:14,background:"#EA580C",borderRadius:12,boxShadow:"0 2px 10px rgba(234,88,12,.3)"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                    <div style={{fontSize:11,fontWeight:800,color:"#92400E"}}>📝 Orçamentos — {orcamentosLista.length} registro(s)</div>
-                    <div style={{display:"flex",alignItems:"center",gap:16}}>
-                      <div style={{fontSize:18,fontWeight:900,color:"#92400E"}}>{fmtR(somaOrcamento(lista))}</div>
-                      <div style={{fontSize:10,color:"#B45309",fontStyle:"italic"}}>não soma no total até virar Venda</div>
+                    <div style={{fontSize:12,fontWeight:900,color:"#FFF"}}>📝 Orçamentos — {orcamentosLista.length} registro(s)</div>
+                    <div style={{display:"flex",alignItems:"center",gap:14}}>
+                      <div style={{fontSize:20,fontWeight:900,color:"#FFF"}}>{fmtR(somaOrcamento(lista))}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:"#FFEDD5"}}>não soma no total até virar Venda</div>
                     </div>
                   </div>
                 </div>
