@@ -309,6 +309,8 @@ const ENVIO_PECA_STATUS = {
   entregue_cliente:{l:"✅ Entregue ao Cliente",c:"#166534",bg:"#F0FDF4"},
 };
 const ENVIO_PECA_STATUS_KEYS = Object.keys(ENVIO_PECA_STATUS);
+const ORC_TIPO_REF = ["OV","OC","REL","OS"];
+const ORC_LOCAIS_COTACAO = ["Portal","Fornecedor Direto","Loja Física","Outro"];
 const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
@@ -2671,7 +2673,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
 
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","dashboard_mau_uso","dashboard_a_faturar"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
@@ -2741,6 +2743,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
         <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
+        <Btn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
       </>}
       <div style={{padding:"7px 16px 3px 16px",fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:1}}>Serviços</div>
       <Btn k="mau_uso" l="⚠️ Mau Uso"/>
@@ -2748,6 +2751,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="a_faturar" l="💰 A Faturar"/>
       <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
+        <Btn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
       <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
       <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
     </div>
@@ -2763,6 +2767,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="sas_pecas" l="🔩 Solicitação de Peças"/>
       <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
+        <Btn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
       <Btn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
     </div>
   );
@@ -2903,6 +2908,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="a_faturar" l="💰 A Faturar"/>
         <SubBtn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <SubBtn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
+        <SubBtn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
         <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
         <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       </div>}
@@ -2927,7 +2933,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3044,6 +3050,9 @@ export default function App(){
   const [showArqAF,setShowArqAF]=useState(false);
   const [showArqCot,setShowArqCot]=useState(false);
   const [showArqEnvioPeca,setShowArqEnvioPeca]=useState(false);
+  const [showArqOrc,setShowArqOrc]=useState(false);
+  const [orcPeriodo,setOrcPeriodo]=useState("tudo");
+  const [orcRefIso,setOrcRefIso]=useState(TODAY_STR);
   const [showArqEmp,setShowArqEmp]=useState(false);
   const [showArqSaida,setShowArqSaida]=useState(false);
   // ── Filtros de pesquisa por aba ──
@@ -3197,6 +3206,7 @@ export default function App(){
   const [dificuldadesTec,setDificuldadesTec]=useState([]);
   const [cotacoesPecas,setCotacoesPecas]=useState([]);
   const [envioPecas,setEnvioPecas]=useState([]);
+  const [orcamentoPecas,setOrcamentoPecas]=useState([]);
   const [showArqDificuldade,setShowArqDificuldade]=useState(false);
   const [dificuldadeModal,setDificuldadeModal]=useState(false);
   const [dificuldadeEdit,setDificuldadeEdit]=useState(null);
@@ -3527,6 +3537,8 @@ export default function App(){
       if(cotacaoRows.length>0) setCotacoesPecas(cotacaoRows);
       const envioPecaRows=await safeGet("envio_pecas_fornecedor");
       if(envioPecaRows.length>0) setEnvioPecas(envioPecaRows);
+      const orcamentoPecaRows=await safeGet("orcamento_pecas");
+      if(orcamentoPecaRows.length>0) setOrcamentoPecas(orcamentoPecaRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -3580,7 +3592,7 @@ export default function App(){
       vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados, dificuldades_tecnicos:setDificuldadesTec, fechamento_mensal_oficina:setFechamentoMensal,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
-      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas,
+      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas, orcamento_pecas:setOrcamentoPecas,
     };
     const applyChange=(table,eventType,rec,oldRec)=>{
       const setter=setters[table]; if(!setter)return;
@@ -3717,6 +3729,7 @@ export default function App(){
   const fechamentoCrud=mkCrud("fechamento_mensal_oficina",setFechamentoMensal);
   const cotacaoCrud=mkCrud("cotacoes_pecas",setCotacoesPecas);
   const envioPecaCrud=mkCrud("envio_pecas_fornecedor",setEnvioPecas);
+  const orcamentoPecaCrud=mkCrud("orcamento_pecas",setOrcamentoPecas);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes,fallbackRow)=>{
@@ -4910,7 +4923,7 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
       user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
@@ -7002,6 +7015,120 @@ export default function App(){
                   </tbody>
                 </table></div>
                 {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqEnvioPeca?"arquivado":""}</div>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab==="orcamento_pecas"&&(()=>{
+          const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado));
+          const refOrc=new Date(orcRefIso+"T12:00:00");
+          let janDeOrc,janAteOrc,orcLabel;
+          if(orcPeriodo==="semana"){ const s=new Date(refOrc); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeOrc=fmtDate(s); janAteOrc=fmtDate(e); orcLabel=`${fmtDataBR(janDeOrc)} - ${fmtDataBR(janAteOrc)}`; }
+          else if(orcPeriodo==="mes"){ const s=new Date(refOrc.getFullYear(),refOrc.getMonth(),1); const e=new Date(refOrc.getFullYear(),refOrc.getMonth()+1,0); janDeOrc=fmtDate(s); janAteOrc=fmtDate(e); orcLabel=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refOrc.getMonth()]}/${refOrc.getFullYear()}`; }
+          else { janDeOrc=null; janAteOrc=null; orcLabel="Tudo"; }
+          const navegarOrc=(dir)=>{ const d=new Date(orcRefIso+"T12:00:00"); if(orcPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(orcPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setOrcRefIso(fmtDate(d)); };
+          const btnPerOrc=(k,l)=>(<button key={k} onClick={()=>setOrcPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:orcPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:orcPeriodo===k?"#EFF6FF":"#FFF",color:orcPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>);
+          const listaPeriodo=lista.filter(o=>{ if(orcPeriodo==="tudo")return true; const d=o.data||""; return d&&d>=janDeOrc&&d<=janAteOrc; });
+          const totQtd=listaPeriodo.reduce((a,o)=>a+(parseInt(o.quantidade,10)||0),0);
+          const totCompra=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorCompra),0);
+          const totRevenda=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorRevenda),0);
+          const totMargem=totRevenda-totCompra;
+          const addLinha=()=>{
+            const row={id:`ORC${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,tipoRef:"OV",refNum:"",peca:"",codigo:"",quantidade:"",localCotacao:ORC_LOCAIS_COTACAO[0],ticket:"",dataCotacao:"",valorCompra:"",valorRevenda:"",arquivado:false};
+            setOrcamentoPecas(p=>[row,...(p||[])]);
+            db.save("orcamento_pecas",row.id,row);
+          };
+          const upd=(id,changes)=>orcamentoPecaCrud.update(id,changes);
+          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
+          // série semanal/mensal para o gráfico (últimos 8 períodos)
+          const serieOrc=[];
+          for(let i=7;i>=0;i--){
+            let de,ate,lab;
+            if(orcPeriodo==="semana"){
+              const d=new Date();d.setDate(d.getDate()-i*7-d.getDay());
+              const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
+              de=fmtDate(s);ate=fmtDate(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
+            } else {
+              const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);
+              const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
+              de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+            }
+            const doPer=lista.filter(o=>o.data&&o.data>=de&&o.data<=ate);
+            serieOrc.push({lab,margem:doPer.reduce((a,o)=>a+(parseVal(o.valorRevenda)-parseVal(o.valorCompra)),0)});
+          }
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💵 Orçamento de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqOrc(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqOrc?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <BtnExcel onClick={()=>exportCSV(listaPeriodo,"orcamento_pecas",[{key:"data",label:"Data"},{key:"tipoRef",label:"Tipo"},{key:"refNum",label:"Número"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Quantidade"},{key:"localCotacao",label:"Local de Cotação"},{key:"ticket",label:"Ticket"},{key:"dataCotacao",label:"Data da Cotação"},{key:"valorCompra",label:"Valor de Compra"},{key:"valorRevenda",label:"Valor de Revenda"}])}/>
+                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                </div>
+              </div>
+
+              <div className="card" style={{padding:"10px 12px",marginTop:16,marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{display:"flex",gap:6}}>{btnPerOrc("semana","Semanal")}{btnPerOrc("mes","Mensal")}{btnPerOrc("tudo","Tudo")}</div>
+                {orcPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
+                  <button onClick={()=>navegarOrc(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                  <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{orcLabel}</div>
+                  <button onClick={()=>navegarOrc(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                  <button onClick={()=>setOrcRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+                </div>}
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:20}}>
+                {[
+                  {l:"Peças no Período",v:listaPeriodo.length,sub:`${totQtd} unidade(s)`,c:"#1565C0",i:"🔩"},
+                  {l:"Valor de Compra",v:fmtR(totCompra),sub:null,c:"#B45309",i:"🛒"},
+                  {l:"Valor de Revenda",v:fmtR(totRevenda),sub:null,c:"#0D9488",i:"💰"},
+                  {l:"Margem",v:fmtR(totMargem),sub:totCompra>0?`${((totMargem/totCompra)*100).toFixed(1)}% sobre compra`:null,c:totMargem>=0?"#15803D":"#C62828",i:totMargem>=0?"📈":"📉"},
+                ].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                    <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{k.i} {k.l}</div>
+                    <div style={{fontSize:String(k.v).startsWith("R$")?17:22,fontWeight:900,color:k.c,lineHeight:1.15}}>{k.v}</div>
+                    {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:4}}>{k.sub}</div>}
+                  </div>
+                ))}
+              </div>
+
+              <div className="card" style={{padding:16,marginBottom:20}}>
+                <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>📊 Margem — {orcPeriodo==="semana"?"por semana":orcPeriodo==="mes"?"por mês":"últimos períodos"}</div>
+                <ChartCanvas type="bar" height={190} data={{labels:serieOrc.map(s=>s.lab),datasets:[{label:"Margem",data:serieOrc.map(s=>s.margem),backgroundColor:serieOrc.map(s=>s.margem>=0?"#166534":"#C62828"),borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#F5F5F5"}}}}}/>
+              </div>
+
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Referência</th><th>Peça</th><th>Código</th><th>Qtd</th><th>Local de Cotação</th><th>Ticket</th><th>Data Cotação</th><th>Valor Compra</th><th>Valor Revenda</th><th>Margem</th><th></th></tr></thead>
+                  <tbody>
+                    {listaPeriodo.map(o=>{
+                      const margem=parseVal(o.valorRevenda)-parseVal(o.valorCompra);
+                      return(
+                        <tr key={o.id}>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={o.data||""} onChange={ev=>upd(o.id,{data:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px"}}><div style={{display:"flex",gap:4}}><select value={o.tipoRef||"OV"} onChange={ev=>upd(o.id,{tipoRef:ev.target.value})} style={{...inpCell,width:64}}>{ORC_TIPO_REF.map(t=><option key={t}>{t}</option>)}</select><input type="text" value={o.refNum||""} onChange={ev=>upd(o.id,{refNum:ev.target.value})} placeholder="nº" style={{...inpCell,width:80}}/></div></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={o.peca||""} onChange={ev=>upd(o.id,{peca:ev.target.value})} placeholder="Peça" style={{...inpCell,minWidth:120}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={o.codigo||""} onChange={ev=>upd(o.id,{codigo:ev.target.value})} placeholder="Código" style={{...inpCell,width:90}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={o.quantidade||""} onChange={ev=>upd(o.id,{quantidade:ev.target.value})} placeholder="0" style={{...inpCell,width:60}}/></td>
+                          <td style={{padding:"6px 8px"}}><select value={o.localCotacao||ORC_LOCAIS_COTACAO[0]} onChange={ev=>upd(o.id,{localCotacao:ev.target.value})} style={{...inpCell,width:130}}>{ORC_LOCAIS_COTACAO.map(l=><option key={l}>{l}</option>)}</select></td>
+                          <td style={{padding:"6px 8px"}}>{o.localCotacao==="Portal"?<input type="text" value={o.ticket||""} onChange={ev=>upd(o.id,{ticket:ev.target.value})} placeholder="Ticket" style={{...inpCell,width:90}}/>:<span style={{color:"#CBD5E1",fontSize:11}}>—</span>}</td>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={o.dataCotacao||""} onChange={ev=>upd(o.id,{dataCotacao:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={o.valorCompra||""} onChange={ev=>upd(o.id,{valorCompra:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={o.valorRevenda||""} onChange={ev=>upd(o.id,{valorRevenda:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
+                          <td style={{padding:"6px 8px",fontWeight:800,color:margem>=0?"#166534":"#C62828",fontSize:12,whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
+                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>upd(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{o.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))orcamentoPecaCrud.del(o.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {listaPeriodo.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqOrc?"arquivado":"no período"}</div>}
               </div>
             </div>
           );
