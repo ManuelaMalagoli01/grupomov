@@ -569,6 +569,80 @@ const loadExcelJS = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar gerador de Excel"));
   document.body.appendChild(sc);
 });
+// Gera um dashboard profissional em Excel (KPIs + abas detalhadas por categoria), com a identidade visual GRUPO MOV
+const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas})=>{
+  const ExcelJS = await loadExcelJS();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Grupo MOV";
+  workbook.created = new Date();
+
+  const PRETO = "FF1A1A1A", DOURADO = "FFF5C200", BRANCO = "FFFFFFFF", CINZA_CLARO = "FFF8FAFC", CINZA_BORDA = "FFE2E8F0";
+  const corHex = (c)=>"FF"+String(c||"1565C0").replace("#","").toUpperCase();
+
+  // ── Aba Dashboard ──
+  const wsDash = workbook.addWorksheet("Dashboard");
+  wsDash.columns = [{width:4},{width:26},{width:20},{width:20},{width:20},{width:20}];
+  wsDash.mergeCells("A1:F2");
+  const cellTitulo = wsDash.getCell("A1");
+  cellTitulo.value = `GRUPO MOV  —  ${titulo}`;
+  cellTitulo.font = {bold:true, size:16, color:{argb:DOURADO}};
+  cellTitulo.fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
+  cellTitulo.alignment = {vertical:"middle", horizontal:"left", indent:1};
+  wsDash.mergeCells("A3:F3");
+  const cellPeriodo = wsDash.getCell("A3");
+  cellPeriodo.value = `Período: ${periodoLabel} — Gerado em ${new Date().toLocaleString("pt-BR")}`;
+  cellPeriodo.font = {italic:true, size:10, color:{argb:"FF64748B"}};
+
+  let rowKpi = 5;
+  kpis.forEach((k,i)=>{
+    const col = String.fromCharCode(66+ (i%4)); // B,C,D,E
+    if(i>0 && i%4===0) rowKpi += 4;
+    const r0 = rowKpi;
+    wsDash.mergeCells(`${col}${r0}:${col}${r0+1}`);
+    const cLbl = wsDash.getCell(`${col}${r0}`);
+    cLbl.value = k.label;
+    cLbl.font = {bold:true, size:9, color:{argb:BRANCO}};
+    cLbl.fill = {type:"pattern", pattern:"solid", fgColor:{argb:corHex(k.cor)}};
+    cLbl.alignment = {vertical:"middle", horizontal:"center", wrapText:true};
+    wsDash.mergeCells(`${col}${r0+2}:${col}${r0+3}`);
+    const cVal = wsDash.getCell(`${col}${r0+2}`);
+    cVal.value = k.valor;
+    cVal.font = {bold:true, size:16, color:{argb:corHex(k.cor)}};
+    cVal.alignment = {vertical:"middle", horizontal:"center"};
+    cVal.border = {bottom:{style:"medium", color:{argb:corHex(k.cor)}}};
+  });
+
+  // ── Uma aba por categoria (registros detalhados) ──
+  abas.forEach(aba=>{
+    if(!aba.registros || aba.registros.length===0) return;
+    const ws = workbook.addWorksheet(aba.nome.slice(0,31));
+    ws.columns = aba.colunas.map(c=>({header:c.label, key:c.key, width:c.width||18}));
+    const headerRow = ws.getRow(1);
+    headerRow.eachCell(cell=>{
+      cell.font = {bold:true, size:10, color:{argb:BRANCO}};
+      cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
+      cell.alignment = {vertical:"middle", horizontal:"center"};
+      cell.border = {bottom:{style:"thin", color:{argb:DOURADO}}};
+    });
+    headerRow.height = 20;
+    aba.registros.forEach((reg,i)=>{
+      const row = ws.addRow(aba.colunas.reduce((acc,c)=>{acc[c.key]=c.get?c.get(reg):reg[c.key];return acc;},{}));
+      row.eachCell(cell=>{
+        cell.border = {bottom:{style:"thin", color:{argb:CINZA_BORDA}}};
+        cell.font = {size:10};
+      });
+      if(i%2===1) row.eachCell(cell=>{cell.fill={type:"pattern", pattern:"solid", fgColor:{argb:CINZA_CLARO}};});
+    });
+    ws.views = [{state:"frozen", ySplit:1}];
+  });
+
+  const buf = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${titulo.replace(/\s+/g,"_")}_${periodoLabel.replace(/[\/\s]+/g,"_")}.xlsx`; a.click();
+  URL.revokeObjectURL(url);
+};
 // Gera a Planilha de Comissão SAS preenchendo o MODELO OFICIAL do fabricante (estrutura/formatacao intactas, so preenche as celulas de dados)
 const gerarPlanilhaComissaoSas = async (registros, mes, ano, nomeRepresentante)=>{
   const ExcelJS = await loadExcelJS();
@@ -2367,12 +2441,40 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
         <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
       </div>
-      <button onClick={()=>{
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={async()=>{
+          try{
+            await gerarDashboardExcelProfissional({
+              titulo:`Dashboard ${titulo}`,
+              periodoLabel:janLabel,
+              kpis:[
+                {label:"Abertos no Período", valor:abertosJanela.length, cor:cor},
+                {label:"Concluído/Faturado", valor:concluidosJanela.length, cor:"#1A7A3C"},
+                {label:"Aguardando Retorno", valor:pendentes.length, cor:"#E67E00"},
+                {label:"Em Negociação", valor:emNegociacao.length, cor:"#1565C0"},
+              ],
+              abas:ABAS_MICRO.map(a=>({
+                nome:a.rotulo,
+                registros:a.registros,
+                colunas:[
+                  {key:"empresa", label:"Empresa", width:26, get:p=>p.empresa||""},
+                  {key:"num", label:"Nº", width:14, get:p=>p.numMauUso||p.ov||""},
+                  {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor)},
+                  {key:"status", label:"Status", width:22, get:p=>(APROV_STATUS[aprovDe(p)]||{}).l||""},
+                  {key:"abertura", label:"Data Abertura", width:16, get:p=>fmtDataBR(dataAbertura(p))||""},
+                  {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
+                ],
+              })),
+            });
+          }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
+        }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
+        <button onClick={()=>{
         const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
         if(reg.length===0){alert("Nenhum mau uso no período selecionado.");return;}
         const dados=reg.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(dataConclusaoDe(p))}));
         exportCSV(dados,`farol_${periodo}_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
       }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Exportar Farol ({janLabel})</button>
+      </div>
     </div>
 
     <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
