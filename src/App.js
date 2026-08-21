@@ -310,7 +310,7 @@ const ENVIO_PECA_STATUS = {
 };
 const ENVIO_PECA_STATUS_KEYS = Object.keys(ENVIO_PECA_STATUS);
 const ORC_TIPO_REF = ["OV","OC","REL","OS"];
-const ORC_LOCAIS_COTACAO = ["Portal","Fornecedor Direto","Loja Física","Outro"];
+const ORC_LOCAIS_COTACAO = ["Portal","Mastermaq MOV Compra","Fornecedor Direto","Loja Física","Outro"];
 const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
@@ -3155,6 +3155,8 @@ export default function App(){
   const [modalEnvioPeca,setModalEnvioPeca]=useState(false);
   const [editEnvioPeca,setEditEnvioPeca]=useState(null);
   const [showArqOrc,setShowArqOrc]=useState(false);
+  const [modalOrc,setModalOrc]=useState(false);
+  const [editOrc,setEditOrc]=useState(null);
   const [orcPeriodo,setOrcPeriodo]=useState("tudo");
   const [orcRefIso,setOrcRefIso]=useState(TODAY_STR);
   const [showArqEmp,setShowArqEmp]=useState(false);
@@ -7194,12 +7196,8 @@ export default function App(){
           const totCompra=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorCompra),0);
           const totRevenda=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorRevenda),0);
           const totMargem=totRevenda-totCompra;
-          const addLinha=()=>{
-            const row={id:`ORC${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,tipoRef:"OV",refNum:"",peca:"",codigo:"",quantidade:"",localCotacao:ORC_LOCAIS_COTACAO[0],ticket:"",dataCotacao:"",valorCompra:"",valorRevenda:"",arquivado:false};
-            setOrcamentoPecas(p=>[row,...(p||[])]);
-            db.save("orcamento_pecas",row.id,row);
-          };
-          const upd=(id,changes)=>orcamentoPecaCrud.update(id,changes);
+          const abrirNovo=()=>{setEditOrc({data:TODAY_STR,tipoRef:"OV",refNum:"",peca:"",codigo:"",quantidade:"",localCotacao:ORC_LOCAIS_COTACAO[0],dataCotacao:"",ticket:"",valorCompra:"",valorRevenda:""});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o});setModalOrc(true);};
           const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
           // série semanal/mensal para o gráfico (últimos 8 períodos)
           const serieOrc=[];
@@ -7223,8 +7221,8 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💵 Orçamento de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqOrc(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqOrc?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(listaPeriodo,"orcamento_pecas",[{key:"data",label:"Data"},{key:"tipoRef",label:"Tipo"},{key:"refNum",label:"Número"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Quantidade"},{key:"localCotacao",label:"Local de Cotação"},{key:"ticket",label:"Ticket"},{key:"dataCotacao",label:"Data da Cotação"},{key:"valorCompra",label:"Valor de Compra"},{key:"valorRevenda",label:"Valor de Revenda"}])}/>
-                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                  <BtnExcel onClick={()=>exportCSV(listaPeriodo,"orcamento_pecas",[{key:"data",label:"Data"},{key:"tipoRef",label:"Tipo"},{key:"refNum",label:"Número"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Quantidade"},{key:"localCotacao",label:"Local de Cotação"},{key:"dataCotacao",label:"Data da Cotação"},{key:"ticket",label:"Ticket"},{key:"valorCompra",label:"Valor de Compra"},{key:"valorRevenda",label:"Valor de Revenda"}])}/>
+                  <BtnY onClick={abrirNovo}>+ Novo Registro</BtnY>
                 </div>
               </div>
 
@@ -7260,25 +7258,26 @@ export default function App(){
 
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Referência</th><th>Peça</th><th>Código</th><th>Qtd</th><th>Local de Cotação</th><th>Ticket</th><th>Data Cotação</th><th>Valor Compra</th><th>Valor Revenda</th><th>Margem</th><th></th></tr></thead>
+                  <thead><tr><th>Data</th><th>Referência</th><th>Peça</th><th>Código</th><th>Qtd</th><th>Local de Cotação</th><th>Data Cotação</th><th>Ticket</th><th>Valor Compra</th><th>Valor Revenda</th><th>Margem</th><th></th></tr></thead>
                   <tbody>
                     {listaPeriodo.map(o=>{
                       const margem=parseVal(o.valorRevenda)-parseVal(o.valorCompra);
                       return(
                         <tr key={o.id}>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={o.data||""} onChange={ev=>upd(o.id,{data:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px"}}><div style={{display:"flex",gap:4}}><select value={o.tipoRef||"OV"} onChange={ev=>upd(o.id,{tipoRef:ev.target.value})} style={{...inpCell,width:64}}>{ORC_TIPO_REF.map(t=><option key={t}>{t}</option>)}</select><input type="text" value={o.refNum||""} onChange={ev=>upd(o.id,{refNum:ev.target.value})} placeholder="nº" style={{...inpCell,width:80}}/></div></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={o.peca||""} onChange={ev=>upd(o.id,{peca:ev.target.value})} placeholder="Peça" style={{...inpCell,minWidth:120}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={o.codigo||""} onChange={ev=>upd(o.id,{codigo:ev.target.value})} placeholder="Código" style={{...inpCell,width:90}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={o.quantidade||""} onChange={ev=>upd(o.id,{quantidade:ev.target.value})} placeholder="0" style={{...inpCell,width:60}}/></td>
-                          <td style={{padding:"6px 8px"}}><select value={o.localCotacao||ORC_LOCAIS_COTACAO[0]} onChange={ev=>upd(o.id,{localCotacao:ev.target.value})} style={{...inpCell,width:130}}>{ORC_LOCAIS_COTACAO.map(l=><option key={l}>{l}</option>)}</select></td>
-                          <td style={{padding:"6px 8px"}}>{o.localCotacao==="Portal"?<input type="text" value={o.ticket||""} onChange={ev=>upd(o.id,{ticket:ev.target.value})} placeholder="Ticket" style={{...inpCell,width:90}}/>:<span style={{color:"#CBD5E1",fontSize:11}}>—</span>}</td>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={o.dataCotacao||""} onChange={ev=>upd(o.id,{dataCotacao:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={o.valorCompra||""} onChange={ev=>upd(o.id,{valorCompra:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={o.valorRevenda||""} onChange={ev=>upd(o.id,{valorRevenda:ev.target.value})} placeholder="R$ 0,00" style={{...inpCell,width:100}}/></td>
-                          <td style={{padding:"6px 8px",fontWeight:800,color:margem>=0?"#166534":"#C62828",fontSize:12,whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
-                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
-                            <button onClick={()=>upd(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{o.arquivado?"📤":"🗄️"}</button>
+                          <td style={{padding:"6px 10px"}}>{fmtDataBR(o.data)}</td>
+                          <td style={{padding:"6px 10px"}}>{o.tipoRef||"OV"} {o.refNum||"—"}</td>
+                          <td style={{padding:"6px 10px",fontWeight:600}}>{o.peca||"—"}</td>
+                          <td style={{padding:"6px 10px"}}>{o.codigo||"—"}</td>
+                          <td style={{padding:"6px 10px"}}>{o.quantidade||"—"}</td>
+                          <td style={{padding:"6px 10px"}}>{o.localCotacao||"—"}</td>
+                          <td style={{padding:"6px 10px"}}>{o.dataCotacao?fmtDataBR(o.dataCotacao):"—"}</td>
+                          <td style={{padding:"6px 10px"}}>{o.localCotacao==="Portal"?(o.ticket||"—"):<span style={{color:"#CBD5E1"}}>—</span>}</td>
+                          <td style={{padding:"6px 10px"}}>{fmtR(parseVal(o.valorCompra))}</td>
+                          <td style={{padding:"6px 10px"}}>{fmtR(parseVal(o.valorRevenda))}</td>
+                          <td style={{padding:"6px 10px",fontWeight:800,color:margem>=0?"#166534":"#C62828",whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
+                          <td style={{padding:"6px 10px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>abrirEditar(o)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>✏️</button>
+                            <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{o.arquivado?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm("Excluir esta linha?"))orcamentoPecaCrud.del(o.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
                           </td>
                         </tr>
@@ -7287,6 +7286,65 @@ export default function App(){
                   </tbody>
                 </table></div>
                 {listaPeriodo.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqOrc?"arquivado":"no período"}</div>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {modalOrc&&editOrc&&(()=>{
+          const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const upd=(k,v)=>setEditOrc(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const isNovo=!editOrc.id;
+          const margemPrev=parseVal(editOrc.valorRevenda)-parseVal(editOrc.valorCompra);
+          const salvar=()=>{
+            if(!editOrc.peca){alert("Informe a Peça.");return;}
+            if(isNovo){
+              orcamentoPecaCrud.add(editOrc);
+            }else{
+              orcamentoPecaCrud.update(editOrc.id,editOrc);
+              notify("✅ Registro atualizado!");
+            }
+            setModalOrc(false);setEditOrc(null);
+          };
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalOrc(false);setEditOrc(null);}}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:620,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"💵 Novo":"✏️ Editar"} Orçamento de Peça</div>
+                  <button onClick={()=>{setModalOrc(false);setEditOrc(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+                </div>
+                <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"grid",gridTemplateColumns:"110px 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipoRef||"OV"} onChange={e=>upd("tipoRef",e.target.value)} style={inp}>{ORC_TIPO_REF.map(t=><option key={t}>{t}</option>)}</select></div>
+                    <div><label style={lbl}>{editOrc.tipoRef||"OV"} nº</label><input type="text" value={editOrc.refNum||""} onChange={e=>upd("refNum",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Data</label><input type="date" value={editOrc.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Peça</label><input type="text" value={editOrc.peca||""} onChange={e=>upd("peca",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Código</label><input type="text" value={editOrc.codigo||""} onChange={e=>upd("codigo",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Quantidade</label><input type="text" value={editOrc.quantidade||""} onChange={e=>upd("quantidade",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:editOrc.localCotacao==="Portal"?"1fr 1fr 1fr":"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Local de Cotação</label><select value={editOrc.localCotacao||ORC_LOCAIS_COTACAO[0]} onChange={e=>upd("localCotacao",e.target.value)} style={inp}>{ORC_LOCAIS_COTACAO.map(l=><option key={l}>{l}</option>)}</select></div>
+                    <div><label style={lbl}>Data da Cotação</label><input type="date" value={editOrc.dataCotacao||""} onChange={e=>upd("dataCotacao",e.target.value)} style={inp}/></div>
+                    {editOrc.localCotacao==="Portal"&&<div><label style={lbl}>Ticket</label><input type="text" value={editOrc.ticket||""} onChange={e=>upd("ticket",e.target.value)} style={inp}/></div>}
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Valor de Compra</label><input type="text" value={editOrc.valorCompra||""} onChange={e=>upd("valorCompra",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                    <div><label style={lbl}>Valor de Revenda</label><input type="text" value={editOrc.valorRevenda||""} onChange={e=>upd("valorRevenda",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                  </div>
+                  <div style={{padding:"10px 14px",background:margemPrev>=0?"#F0FDF4":"#FEF2F2",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:11,fontWeight:700,color:"#64748B"}}>Margem prevista</span>
+                    <span style={{fontSize:16,fontWeight:900,color:margemPrev>=0?"#166534":"#C62828"}}>{fmtR(margemPrev)}</span>
+                  </div>
+                </div>
+                <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
+                  <button onClick={()=>{setModalOrc(false);setEditOrc(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
               </div>
             </div>
           );
