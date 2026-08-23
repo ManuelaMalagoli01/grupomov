@@ -3135,6 +3135,7 @@ export default function App(){
   const [relFiltroCidade,setRelFiltroCidade]=useState("");
   const [pdfLoading,setPdfLoading]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
+  const [muView,setMuView]=useState("kanban");
   // Dashboard Processos filters
   const [dashProcFMes,setDashProcFMes]=useState("");
   const [dashProcFAno,setDashProcFAno]=useState("");
@@ -6500,6 +6501,10 @@ export default function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>⚠️ Mau Uso {showArqMU&&<span style={{fontSize:11,fontWeight:700,color:"#888",background:"#F5F5F5",borderRadius:20,padding:"2px 10px",marginLeft:6}}>🗄️ Consulta de Arquivados</span>}</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{showArqMU?`${lista.length} arquivado(s) — use os filtros abaixo para localizar`:<>{lista.length} processo(s) · <span style={{color:"#C62828",fontWeight:700}}>{pend} pendentes</span></>}</div></div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{display:"flex",gap:4,background:"#F1F5F9",borderRadius:10,padding:3}}>
+                  <button onClick={()=>setMuView("kanban")} style={{padding:"6px 14px",borderRadius:8,border:"none",background:muView==="kanban"?"#FFF":"transparent",color:muView==="kanban"?"#1A1A1A":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",boxShadow:muView==="kanban"?"0 1px 3px rgba(0,0,0,.1)":"none"}}>🗂️ Kanban</button>
+                  <button onClick={()=>setMuView("planilha")} style={{padding:"6px 14px",borderRadius:8,border:"none",background:muView==="planilha"?"#FFF":"transparent",color:muView==="planilha"?"#1A1A1A":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",boxShadow:muView==="planilha"?"0 1px 3px rgba(0,0,0,.1)":"none"}}>📋 Planilha</button>
+                </div>
                 <BtnImport onClick={()=>setModalImportMU2(true)}/>
                 <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
@@ -6544,7 +6549,7 @@ export default function App(){
               <select value={muStatus} onChange={e=>setMuStatus(e.target.value)}><option value="todos">Status: Todos</option>{Object.entries(ST).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
               {hasFilterMU&&<button onClick={()=>{setMuSearch('');setMuFrom('');setMuTo('');setMuMes('');setMuAno('');setMuAprov('todos');setMuStatus('todos');}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
             </div>}
-            {listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
+            {muView==="kanban"?(listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
               <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:8,alignItems:"flex-start"}}>
               {["concluidos_status","aguardando_retorno","em_negociacao","aprovado_cliente","negado_cliente","cobrado_faturado","encerrado_sem_cobranca"].filter(k=>k==="concluidos_status"||listaFil.some(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===k)).map(grupoKey=>{
                 const grupo=listaFil.filter(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===grupoKey);
@@ -6672,6 +6677,42 @@ export default function App(){
                 </div>);
               })}
               </div>
+            )):(
+              listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
+                <div className="card" style={{overflow:"hidden"}}>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Data</th><th>Empresa</th><th>PAT</th><th>Relatório</th><th>Nº MU</th><th>Valor</th><th>Aprovação Cliente</th><th>Status</th><th>Aprovado</th><th></th></tr></thead>
+                    <tbody>
+                      {listaFil.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(p=>{
+                        const st=ST[p.processoStatus||"pendente"]||ST.pendente;
+                        const ap=APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{l:"—",c:"#64748B",bg:"#F5F5F5"};
+                        const slaD=p.date?diffDays(p.date):null;
+                        const emAberto=p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
+                        const urgenteRow=emAberto&&slaD!==null&&slaD>30;
+                        return(
+                          <tr key={p.id} style={{background:urgenteRow?"#FFF0F0":undefined}}>
+                            <td style={{padding:"8px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(p.date)||"—"}{urgenteRow&&<span title={`${slaD} dias sem retorno`} style={{marginLeft:5}}>🔴</span>}</td>
+                            <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{p.empresa||"—"}</td>
+                            <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{p.patrimonio||"—"}</td>
+                            <td style={{padding:"8px 10px"}}><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0,minWidth:80}}/></td>
+                            <td style={{padding:"8px 10px"}}><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0,minWidth:70}}/></td>
+                            <td style={{padding:"8px 10px"}}><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0,minWidth:90}}/></td>
+                            <td style={{padding:"8px 10px"}}><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{const nv=e.target.value;const ch={aprovCliente:nv};if(nv==="aprovado_cliente"&&!p.dataAprovacao)ch.dataAprovacao=TODAY_STR;if(nv==="negado_cliente"&&!p.dataNegado)ch.dataNegado=TODAY_STR;if(nv==="cobrado_faturado"&&!p.dataFaturamento)ch.dataFaturamento=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:700,color:ap.c,background:ap.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
+                            <td style={{padding:"8px 10px"}}><select value={p.processoStatus||"pendente"} onChange={e=>{const nv=e.target.value;const ch={processoStatus:nv};if(nv==="concluido"&&!p.dataConclusao)ch.dataConclusao=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option></select></td>
+                            <td style={{padding:"8px 10px"}}><span style={{fontSize:10,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span></td>
+                            <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
+                              <button onClick={()=>gerarPDFCard(`Mau Uso - ${p.empresa||"Sem Empresa"}`,[["Empresa",p.empresa],["Data",fmtDataBR(p.date)],["PAT",p.patrimonio],["Relatório",p.relatorio],["Nº Mau Uso",p.numMauUso],["Chamado",p.chamado],["Nota Débito",p.ov],["Ticket",p.ticket],["Valor",p.valor],["Status",st.l],["Observações",p.obs]],`PAT ${p.patrimonio||"—"} · ${fmtDataBR(p.date)}`)} title="PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
+                              <button onClick={()=>{setEditMU(p);setModalMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
+                              <button onClick={()=>updateMU(p.id,{processoStatus:p.processoStatus==="arquivado"?"em_andamento":"arquivado"})} title={p.processoStatus==="arquivado"?"Reabrir":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{p.processoStatus==="arquivado"?"📤":"🗄️"}</button>
+                              <button onClick={()=>{if(window.confirm("Excluir permanentemente?")){setProcessosMU(p2=>p2.filter(x=>x.id!==p.id));db.delete("processos_mu",p.id);}}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table></div>
+                </div>
+              )
             )}
           </div>);
         })()}
@@ -7813,14 +7854,20 @@ export default function App(){
                                 const sc=statusChip(a.status);
                                 const ct=corTecnico(a.tecnico);
                                 const editarClick=()=>{const key=`${a.tecnico}__${a.data}`;setEditSlot({key,si:a._idx,slot:a,tipo:"tecnico",tech:a.tecnico});setEditSlotForm({...a,tecnico:a.tecnico});};
+                                const excluirClick=()=>{if(window.confirm(`Excluir o atendimento de ${a.tecnico} em ${a.client||"—"}?`)){const key=`${a.tecnico}__${a.data}`;const arr=(schedule[key]||[]).filter((_,j)=>j!==a._idx);saveSched(key,arr);}};
+                                const arquivarClick=()=>{const key=`${a.tecnico}__${a.data}`;const arr=(schedule[key]||[]).map((s,j)=>j===a._idx?{...s,arquivado:!s.arquivado}:s);saveSched(key,arr);};
                                 return(
-                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
+                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`,opacity:a.arquivado?0.5:1}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
                                       <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
                                         <span style={{width:20,height:20,borderRadius:"50%",background:ct+"33",color:ct,fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(a.tecnico)}</span>
                                         <span style={{fontSize:11,fontWeight:800,color:ct,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{a.tecnico}</span>
                                       </div>
-                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:6,color:ct,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
+                                      <div style={{display:"flex",gap:3,flexShrink:0}}>
+                                        <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:5,color:ct,cursor:"pointer",padding:"2px 5px",fontSize:9}}>✏️</button>
+                                        <button onClick={arquivarClick} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#FFF",border:"1px solid #E2E8F0",borderRadius:5,color:"#64748B",cursor:"pointer",padding:"2px 5px",fontSize:9}}>{a.arquivado?"📤":"🗄️"}</button>
+                                        <button onClick={excluirClick} title="Excluir" style={{background:"#FFF",border:"1px solid #FCA5A5",borderRadius:5,color:"#DC2626",cursor:"pointer",padding:"2px 5px",fontSize:9}}>✕</button>
+                                      </div>
                                     </div>
                                     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
                                     <div style={{fontSize:10,color:"#64748B",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
@@ -7854,11 +7901,17 @@ export default function App(){
                                 const sc=statusChip(a.status);
                                 const ct=corTecnico(t);
                                 const editarClick=()=>{const key=`${a.tecnico}__${a.data}`;setEditSlot({key,si:a._idx,slot:a,tipo:"tecnico",tech:a.tecnico});setEditSlotForm({...a,tecnico:a.tecnico});};
+                                const excluirClick=()=>{if(window.confirm(`Excluir o atendimento em ${a.client||"—"}?`)){const key=`${a.tecnico}__${a.data}`;const arr=(schedule[key]||[]).filter((_,j)=>j!==a._idx);saveSched(key,arr);}};
+                                const arquivarClick=()=>{const key=`${a.tecnico}__${a.data}`;const arr=(schedule[key]||[]).map((s,j)=>j===a._idx?{...s,arquivado:!s.arquivado}:s);saveSched(key,arr);};
                                 return(
-                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`}}>
+                                  <div key={i} style={{padding:10,borderRadius:12,background:ct+"14",borderLeft:`4px solid ${ct}`,opacity:a.arquivado?0.5:1}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:2}}>
                                       <div style={{fontSize:10,color:"#64748B"}}>{fmtDataBR(a.data)}</div>
-                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:6,color:ct,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
+                                      <div style={{display:"flex",gap:3,flexShrink:0}}>
+                                        <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${ct}55`,borderRadius:5,color:ct,cursor:"pointer",padding:"2px 5px",fontSize:9}}>✏️</button>
+                                        <button onClick={arquivarClick} title={a.arquivado?"Desarquivar":"Arquivar"} style={{background:"#FFF",border:"1px solid #E2E8F0",borderRadius:5,color:"#64748B",cursor:"pointer",padding:"2px 5px",fontSize:9}}>{a.arquivado?"📤":"🗄️"}</button>
+                                        <button onClick={excluirClick} title="Excluir" style={{background:"#FFF",border:"1px solid #FCA5A5",borderRadius:5,color:"#DC2626",cursor:"pointer",padding:"2px 5px",fontSize:9}}>✕</button>
+                                      </div>
                                     </div>
                                     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:2}}>{a.client||"—"}</div>
                                     <div style={{fontSize:10,color:"#64748B",marginBottom:6}}>PAT {a.patrimonio||"—"}{a.cidade?` · ${a.cidade}`:""}</div>
