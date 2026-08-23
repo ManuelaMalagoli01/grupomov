@@ -569,8 +569,19 @@ const loadExcelJS = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar gerador de Excel"));
   document.body.appendChild(sc);
 });
-// Gera um dashboard profissional em Excel (KPIs + abas detalhadas por categoria), com a identidade visual GRUPO MOV
-const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas})=>{
+const renderChartParaImagem = async (type, data, options={}, w=700, h=360) => {
+  const Chart = await loadChartLib();
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,w,h);
+  const chart = new Chart(ctx, {type, data, options:{...options, responsive:false, animation:false, devicePixelRatio:1}});
+  const url = canvas.toDataURL("image/png");
+  chart.destroy();
+  return url;
+};
+// Gera um dashboard profissional em Excel (KPIs + graficos + abas detalhadas por categoria), com a identidade visual GRUPO MOV
+const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas, grafico})=>{
   const ExcelJS = await loadExcelJS();
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Grupo MOV";
@@ -611,6 +622,20 @@ const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas
     cVal.alignment = {vertical:"middle", horizontal:"center"};
     cVal.border = {bottom:{style:"medium", color:{argb:corHex(k.cor)}}};
   });
+
+  // ── Gráfico embutido (imagem renderizada via Chart.js) ──
+  if(grafico && grafico.data){
+    try{
+      const imgUrl = await renderChartParaImagem(grafico.type||"bar", grafico.data, grafico.options||{}, 760, 340);
+      const imgId = workbook.addImage({base64: imgUrl, extension:"png"});
+      const rowGrafico = rowKpi + 6;
+      wsDash.mergeCells(`B${rowGrafico}:F${rowGrafico}`);
+      const cGraf = wsDash.getCell(`B${rowGrafico}`);
+      cGraf.value = grafico.titulo || "Gráfico";
+      cGraf.font = {bold:true, size:12, color:{argb:PRETO}};
+      wsDash.addImage(imgId, {tl:{col:1, row:rowGrafico}, ext:{width:640, height:300}});
+    }catch(e){ /* se o grafico falhar, segue sem ele — nao trava a exportacao */ }
+  }
 
   // ── Uma aba por categoria (registros detalhados) ──
   abas.forEach(aba=>{
@@ -2465,6 +2490,19 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                   {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
                 ],
               })),
+              grafico:{
+                titulo:"Comparativo por Status",
+                type:"bar",
+                data:{
+                  labels:["Abertos","Concluído/Faturado","Aguardando Retorno","Em Negociação"],
+                  datasets:[{
+                    label:"Quantidade",
+                    data:[abertosJanela.length, concluidosJanela.length, pendentes.length, emNegociacao.length],
+                    backgroundColor:[cor, "#1A7A3C", "#E67E00", "#1565C0"],
+                  }],
+                },
+                options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}},
+              },
             });
           }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
         }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
@@ -6682,25 +6720,26 @@ export default function App(){
               listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
                 <div className="card" style={{overflow:"hidden"}}>
                   <div className="tbl-wrap"><table>
-                    <thead><tr><th>Data</th><th>Empresa</th><th>PAT</th><th>Relatório</th><th>Nº MU</th><th>ND</th><th>Valor</th><th>Aprovação Cliente</th><th>Status</th><th>Aprovado</th><th></th></tr></thead>
+                    <thead><tr style={{background:"#1A1A1A"}}><th style={{color:"#F5C200"}}>Data</th><th style={{color:"#F5C200"}}>Empresa</th><th style={{color:"#F5C200"}}>PAT</th><th style={{color:"#F5C200"}}>Relatório</th><th style={{color:"#F5C200"}}>Nº MU</th><th style={{color:"#F5C200"}}>ND</th><th style={{color:"#F5C200"}}>Valor</th><th style={{color:"#F5C200"}}>Aprovação Cliente</th><th style={{color:"#F5C200"}}>Status</th><th style={{color:"#F5C200"}}>Aprovado</th><th style={{color:"#F5C200"}}></th></tr></thead>
                     <tbody>
-                      {listaFil.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(p=>{
+                      {listaFil.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map((p,pi)=>{
                         const st=ST[p.processoStatus||"pendente"]||ST.pendente;
                         const ap=APROV_STATUS[p.aprovCliente||"aguardando_retorno"]||{l:"—",c:"#64748B",bg:"#F5F5F5"};
                         const slaD=p.date?diffDays(p.date):null;
                         const emAberto=p.processoStatus!=="concluido"&&p.processoStatus!=="arquivado";
                         const urgenteRow=emAberto&&slaD!==null&&slaD>30;
+                        const corBorda=p.processoStatus==="concluido"?"#1A7A3C":urgenteRow?"#C62828":ap.c;
                         return(
-                          <tr key={p.id} style={{background:urgenteRow?"#FFF0F0":undefined}}>
+                          <tr key={p.id} style={{background:urgenteRow?"#FFF5F5":pi%2===1?"#FAFBFC":"#FFF",borderLeft:`4px solid ${corBorda}`}}>
                             <td style={{padding:"8px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(p.date)||"—"}{urgenteRow&&<span title={`${slaD} dias sem retorno`} style={{marginLeft:5}}>🔴</span>}</td>
-                            <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{p.empresa||"—"}</td>
+                            <td style={{padding:"8px 10px",fontSize:12.5,fontWeight:800,color:"#1A1A1A"}}>{p.empresa||"—"}</td>
                             <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{p.patrimonio||"—"}</td>
                             <td style={{padding:"8px 10px"}}><input type="text" value={p.relatorio||""} onChange={e=>updateMU(p.id,{relatorio:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0,minWidth:80}}/></td>
                             <td style={{padding:"8px 10px"}}><input type="text" value={p.numMauUso||""} onChange={e=>updateMU(p.id,{numMauUso:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,border:"none",background:"transparent",outline:"none",padding:0,minWidth:70}}/></td>
                             <td style={{padding:"8px 10px"}}><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:(p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado")?800:400,color:(p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado")?"#6A1B9A":"#334155",border:"none",background:"transparent",outline:"none",padding:0,minWidth:80}}/></td>
-                            <td style={{padding:"8px 10px"}}><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:12,fontWeight:800,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0,minWidth:90}}/></td>
-                            <td style={{padding:"8px 10px"}}><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{const nv=e.target.value;const ch={aprovCliente:nv};if(nv==="aprovado_cliente"&&!p.dataAprovacao)ch.dataAprovacao=TODAY_STR;if(nv==="negado_cliente"&&!p.dataNegado)ch.dataNegado=TODAY_STR;if(nv==="cobrado_faturado"&&!p.dataFaturamento)ch.dataFaturamento=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:700,color:ap.c,background:ap.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
-                            <td style={{padding:"8px 10px"}}><select value={p.processoStatus||"pendente"} onChange={e=>{const nv=e.target.value;const ch={processoStatus:nv};if(nv==="concluido"&&!p.dataConclusao)ch.dataConclusao=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option></select></td>
+                            <td style={{padding:"8px 10px"}}><input type="text" value={p.valor||""} onChange={e=>updateMU(p.id,{valor:e.target.value})} placeholder="R$ 0,00" style={{width:"100%",fontSize:13,fontWeight:900,color:"#14532D",border:"none",background:"transparent",outline:"none",padding:0,minWidth:90}}/></td>
+                            <td style={{padding:"8px 10px"}}><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{const nv=e.target.value;const ch={aprovCliente:nv};if(nv==="aprovado_cliente"&&!p.dataAprovacao)ch.dataAprovacao=TODAY_STR;if(nv==="negado_cliente"&&!p.dataNegado)ch.dataNegado=TODAY_STR;if(nv==="cobrado_faturado"&&!p.dataFaturamento)ch.dataFaturamento=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:800,color:ap.c,background:ap.bg,borderRadius:20,padding:"4px 9px",border:`1px solid ${ap.c}44`,cursor:"pointer",whiteSpace:"nowrap"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
+                            <td style={{padding:"8px 10px"}}><select value={p.processoStatus||"pendente"} onChange={e=>{const nv=e.target.value;const ch={processoStatus:nv};if(nv==="concluido"&&!p.dataConclusao)ch.dataConclusao=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:800,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:`1px solid ${st.c}44`,cursor:"pointer",whiteSpace:"nowrap"}}><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option></select></td>
                             <td style={{padding:"8px 10px"}}><span style={{fontSize:10,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span></td>
                             <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
                               <button onClick={()=>gerarPDFCard(`Mau Uso - ${p.empresa||"Sem Empresa"}`,[["Empresa",p.empresa],["Data",fmtDataBR(p.date)],["PAT",p.patrimonio],["Relatório",p.relatorio],["Nº Mau Uso",p.numMauUso],["Chamado",p.chamado],["Nota Débito",p.ov],["Ticket",p.ticket],["Valor",p.valor],["Status",st.l],["Observações",p.obs]],`PAT ${p.patrimonio||"—"} · ${fmtDataBR(p.date)}`)} title="PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
