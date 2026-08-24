@@ -3090,10 +3090,6 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <GroupHeader label="SAS" icon="📄" open={sasGroupOpen} setOpen={setSasGroupOpen} ativa={sasGroupAtiva} badgeCount={bdg("sas")}/>
         {sasGroupOpen&&<div style={{background:"#FFFFFF"}}>
           <SubBtn k="entrega_tecnica" l="🚚 Entrega Técnica"/>
-          <SubBtn k="clientes_sas" l="🤝 Clientes / Prospecção"/>
-          <SubBtn k="dashboard_clientes_sas" l="📊 Dash Clientes SAS"/>
-          <SubBtn k="documentos_obrigatorios_sas" l="📚 Documentos Obrigatórios"/>
-          <SubBtn k="sas_vendas" l="💰 SAS Vendas"/>
           <SubBtn k="sas_pecas" l="🔩 Solicitação de Peças"/>
         </div>}
       </>}
