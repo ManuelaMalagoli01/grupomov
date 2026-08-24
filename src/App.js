@@ -591,7 +591,7 @@ const renderChartParaImagem = async (type, data, options={}, w=700, h=360, scale
   return url;
 };
 // Gera um dashboard profissional em Excel (KPIs + graficos + abas detalhadas por categoria), com a identidade visual GRUPO MOV
-const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas, grafico})=>{
+const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas, grafico, graficos})=>{
   const ExcelJS = await loadExcelJS();
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "Grupo MOV";
@@ -659,19 +659,23 @@ const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas
   });
   rowKpi += ROW_H;
 
-  // ── Gráfico embutido (imagem renderizada via Chart.js, alta resolução) ──
-  if(grafico && grafico.data){
+  // ── Gráficos embutidos (imagens renderizadas via Chart.js, alta resolução) ──
+  const listaGraficos = (graficos && graficos.length) ? graficos : (grafico ? [grafico] : []);
+  let rowAtual = rowKpi;
+  for(const g of listaGraficos){
+    if(!g || !g.data) continue;
     try{
-      const imgUrl = await renderChartParaImagem(grafico.type||"bar", grafico.data, grafico.options||{}, 780, 360, 3);
+      const imgUrl = await renderChartParaImagem(g.type||"bar", g.data, g.options||{}, 780, 300, 3);
       const imgId = workbook.addImage({base64: imgUrl, extension:"png"});
-      const rowGrafico = rowKpi + 2;
+      const rowGrafico = rowAtual + 2;
       wsDash.mergeCells(`B${rowGrafico}:F${rowGrafico}`);
       const cGraf = wsDash.getCell(`B${rowGrafico}`);
-      cGraf.value = grafico.titulo || "Gráfico";
+      cGraf.value = g.titulo || "Gráfico";
       cGraf.font = {name:FONTE, bold:true, size:13, color:{argb:PRETO}};
       cGraf.border = {bottom:{style:"medium", color:{argb:DOURADO}}};
       wsDash.getRow(rowGrafico).height = 22;
-      wsDash.addImage(imgId, {tl:{col:1, row:rowGrafico+0.3}, ext:{width:660, height:305}});
+      wsDash.addImage(imgId, {tl:{col:1, row:rowGrafico+0.3}, ext:{width:660, height:254}});
+      rowAtual = rowGrafico + 15;
     }catch(e){ /* se o grafico falhar, segue sem ele — nao trava a exportacao */ }
   }
 
@@ -2534,19 +2538,29 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                   {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
                 ],
               })),
-              grafico:{
-                titulo:"Comparativo por Status",
-                type:"bar",
-                data:{
-                  labels:["Abertos","Concluído/Faturado","Aguardando Retorno","Em Negociação"],
-                  datasets:[{
-                    label:"Quantidade",
-                    data:[abertosJanela.length, concluidosJanela.length, pendentes.length, emNegociacao.length],
-                    backgroundColor:[cor, "#1A7A3C", "#E67E00", "#1565C0"],
-                  }],
+              graficos:[
+                {
+                  titulo:"Concluído/Faturado × Aberto",
+                  type:"bar",
+                  data:{
+                    labels:serie.map(s=>s.lab),
+                    datasets:[
+                      {label:"Concluído/Faturado", data:serie.map(s=>s.concluido), backgroundColor:"#1A7A3C"},
+                      {label:"Aberto", data:serie.map(s=>s.aberto), backgroundColor:"#E67E00"},
+                    ],
+                  },
+                  options:{plugins:{legend:{position:"bottom"}}, scales:{y:{beginAtZero:true}}},
                 },
-                options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}},
-              },
+                slaEnvioValores.length>0?{
+                  titulo:"SLA — Criação × Envio ao Cliente",
+                  type:"bar",
+                  data:{
+                    labels:serie.map(s=>s.lab),
+                    datasets:[{label:"SLA médio (dias)", data:serie.map(s=>s.slaMedio), backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828")}],
+                  },
+                  options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+                }:null,
+              ].filter(Boolean),
             });
           }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
         }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
