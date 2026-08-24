@@ -6546,6 +6546,45 @@ export default function App(){
                 <BtnImport onClick={()=>setModalImportMU2(true)}/>
                 <button onClick={()=>setShowArqMU(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqMU?"#1A1A1A":"#FFF",color:showArqMU?"#FFF":"#555",fontSize:11,cursor:"pointer",fontWeight:600}}>📁 {showArqMU?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                 <BtnExcel onClick={()=>exportCSV(lista,"mau_uso_grupomov",[{key:"date",label:"Data"},{key:"empresa",label:"Empresa"},{key:"patrimonio",label:"PAT"},{key:"relatorio",label:"Relatório"},{key:"numMauUso",label:"Nº MU"},{key:"ov",label:"OV"},{key:"valor",label:"Valor"},{key:"processoStatus",label:"Status"},{key:"obs",label:"Obs"},{key:"modelo",label:"Modelo"}])}/>
+                <button onClick={async()=>{
+                  try{
+                    const grupos=["concluidos_status","aguardando_retorno","em_negociacao","aprovado_cliente","negado_cliente","cobrado_faturado","encerrado_sem_cobranca"];
+                    const infoGrupoDe=(k)=>k==="concluidos_status"?{l:"Concluídos"}:(APROV_STATUS[k]||{l:k});
+                    const base=listaFil.length?listaFil:lista;
+                    await gerarDashboardExcelProfissional({
+                      titulo:"Dashboard Mau Uso",
+                      periodoLabel:janLabelMU,
+                      kpis:[
+                        {label:"Total", valor:lista.length, cor:"#1A1A1A"},
+                        {label:"Pendentes", valor:pend, cor:"#C62828"},
+                        {label:"Em Andamento", valor:andamento, cor:"#1565C0"},
+                        {label:"Concluídos", valor:conc, cor:"#1A7A3C"},
+                      ],
+                      abas:grupos.map(k=>({
+                        nome:infoGrupoDe(k).l,
+                        registros:base.filter(p=>(p.processoStatus==="concluido"?"concluidos_status":(p.aprovCliente||"aguardando_retorno"))===k),
+                        colunas:[
+                          {key:"data", label:"Data", width:14, get:p=>fmtDataBR(p.date)||""},
+                          {key:"empresa", label:"Empresa", width:26, get:p=>p.empresa||""},
+                          {key:"pat", label:"PAT", width:12, get:p=>p.patrimonio||""},
+                          {key:"numMU", label:"Nº MU", width:16, get:p=>p.numMauUso||""},
+                          {key:"nd", label:"ND", width:14, get:p=>p.ov||""},
+                          {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor)},
+                          {key:"status", label:"Status", width:18, get:p=>(ST[p.processoStatus||"pendente"]||{}).l||""},
+                        ],
+                      })),
+                      grafico:{
+                        titulo:"Distribuição por Status",
+                        type:"bar",
+                        data:{
+                          labels:["Pendentes","Em Andamento","Concluídos"],
+                          datasets:[{label:"Quantidade", data:[pend, andamento, conc], backgroundColor:["#C62828","#1565C0","#1A7A3C"]}],
+                        },
+                        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}},
+                      },
+                    });
+                  }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
+                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
@@ -6719,7 +6758,7 @@ export default function App(){
               listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
                 <div className="card" style={{overflow:"hidden"}}>
                   <div className="tbl-wrap"><table>
-                    <thead><tr style={{background:"#1A1A1A"}}><th style={{color:"#F5C200"}}>Data</th><th style={{color:"#F5C200"}}>Empresa</th><th style={{color:"#F5C200"}}>PAT</th><th style={{color:"#F5C200"}}>Relatório</th><th style={{color:"#F5C200"}}>Nº MU</th><th style={{color:"#F5C200"}}>Valor</th><th style={{color:"#F5C200"}}>Ticket</th><th style={{color:"#F5C200"}}>Data de Envio</th><th style={{color:"#F5C200"}}>ND Gerada</th><th style={{color:"#F5C200"}}>Aprovação Cliente</th><th style={{color:"#F5C200"}}>Status</th><th style={{color:"#F5C200"}}>Aprovado</th><th style={{color:"#F5C200"}}></th></tr></thead>
+                    <thead><tr style={{background:"#1A1A1A"}}><th style={{color:"#F5C200"}}>Data</th><th style={{color:"#F5C200"}}>Empresa</th><th style={{color:"#F5C200"}}>PAT</th><th style={{color:"#F5C200"}}>Relatório</th><th style={{color:"#F5C200"}}>Nº MU</th><th style={{color:"#F5C200"}}>Valor</th><th style={{color:"#F5C200"}}>Ticket</th><th style={{color:"#F5C200"}}>Data de Envio</th><th style={{color:"#F5C200"}}>ND Gerada</th><th style={{color:"#F5C200"}}>Aprovação Cliente</th><th style={{color:"#F5C200"}}>Status</th><th style={{color:"#F5C200"}}></th></tr></thead>
                     <tbody>
                       {listaFil.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map((p,pi)=>{
                         const st=ST[p.processoStatus||"pendente"]||ST.pendente;
@@ -6741,7 +6780,6 @@ export default function App(){
                             <td style={{padding:"8px 10px"}}><input type="text" value={p.ov||""} onChange={e=>updateMU(p.id,{ov:e.target.value})} placeholder="—" style={{width:"100%",fontSize:12,fontWeight:(p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado")?800:400,color:(p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado")?"#6A1B9A":"#334155",border:"none",background:"transparent",outline:"none",padding:0,minWidth:80}}/></td>
                             <td style={{padding:"8px 10px"}}><select value={p.aprovCliente||"aguardando_retorno"} onChange={e=>{const nv=e.target.value;const ch={aprovCliente:nv};if(nv==="aprovado_cliente"&&!p.dataAprovacao)ch.dataAprovacao=TODAY_STR;if(nv==="negado_cliente"&&!p.dataNegado)ch.dataNegado=TODAY_STR;if(nv==="cobrado_faturado"&&!p.dataFaturamento)ch.dataFaturamento=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:800,color:ap.c,background:ap.bg,borderRadius:20,padding:"4px 9px",border:`1px solid ${ap.c}44`,cursor:"pointer",whiteSpace:"nowrap"}}>{Object.entries(APROV_STATUS).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select></td>
                             <td style={{padding:"8px 10px"}}><select value={p.processoStatus||"pendente"} onChange={e=>{const nv=e.target.value;const ch={processoStatus:nv};if(nv==="concluido"&&!p.dataConclusao)ch.dataConclusao=TODAY_STR;updateMU(p.id,ch);}} style={{fontSize:11,fontWeight:800,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:`1px solid ${st.c}44`,cursor:"pointer",whiteSpace:"nowrap"}}><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="arquivado">Arquivado</option></select></td>
-                            <td style={{padding:"8px 10px"}}><span style={{fontSize:10,fontWeight:700,color:p.aprovado==="sim"?"#14532D":"#7C2D2D",background:p.aprovado==="sim"?"#F0FFF5":"#FFF0F0",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{p.aprovado==="sim"?"Aprovado":"Não aprovado"}</span></td>
                             <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
                               <button onClick={()=>gerarPDFCard(`Mau Uso - ${p.empresa||"Sem Empresa"}`,[["Empresa",p.empresa],["Data",fmtDataBR(p.date)],["PAT",p.patrimonio],["Relatório",p.relatorio],["Nº Mau Uso",p.numMauUso],["Chamado",p.chamado],["Nota Débito",p.ov],["Ticket",p.ticket],["Valor",p.valor],["Status",st.l],["Observações",p.obs]],`PAT ${p.patrimonio||"—"} · ${fmtDataBR(p.date)}`)} title="PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
                               <button onClick={()=>{setEditMU(p);setModalMU(true);}} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
