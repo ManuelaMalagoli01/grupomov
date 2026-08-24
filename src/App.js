@@ -1006,22 +1006,29 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       let xx=M;
       doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
       doc.text(String(p.codigo||"—"),xx+COLW.cod/2,y+4,{align:"center"}); xx+=COLW.cod;
+      const qtd=parseFloat(p.quantidade)||0;
       doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,y+4,{align:"center"}); xx+=COLW.qtd;
       const cot=parseFloat((p.precoCotacao||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
-      totalCot+=cot; totalCons+=cons;
+      totalCot+=qtd*cot; totalCons+=qtd*cons;
       doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
       doc.text(localLines,xx+2,y+4); xx+=COLW.local;
       doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"});
       y+=alturaLinha;
       doc.line(M,y,M+W,y);
     });
-    // linhas verticais da tabela (desenhadas por cima, do topo do cabeçalho até o fim)
-    // Total
+    // Mão de Obra (se houver) + Total
+    const mdo=parseFloat((o.maoDeObra||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+    if(mdo>0){
+      y+=6; doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
+      doc.text("Mão de Obra:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y,{align:"right"});
+      doc.text(`R$ ${mdo.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y,{align:"right"});
+    }
+    y+=8;
     doc.setFont(undefined,"bold"); doc.setFontSize(9.5);
-    doc.text("Total:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y+5,{align:"right"});
-    doc.text(`R$ ${totalCons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y+5,{align:"right"});
-    y+=8; doc.line(M,y,M+W,y);
+    doc.text("Total:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y,{align:"right"});
+    doc.text(`R$ ${(totalCons+mdo).toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y,{align:"right"});
+    y+=3; doc.line(M,y,M+W,y);
     y+=8;
     // Observação
     doc.setFont(undefined,"bold"); doc.setFontSize(10);
@@ -7585,7 +7592,7 @@ export default function App(){
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
-          const totalDe=(o)=>(o.pecas||[]).reduce((a,p)=>a+parseVal(p.precoConsumidor),0);
+          const totalDe=(o)=>(o.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoConsumidor),0)+parseVal(o.maoDeObra);
           const totalGeral=lista.reduce((a,o)=>a+totalDe(o),0);
           const proximoNumero=()=>{
             const ano=new Date().getFullYear();
@@ -7593,7 +7600,7 @@ export default function App(){
             const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
             return `${ano}.${String(max+1).padStart(4,"0")}`;
           };
-          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:""});setModalOrc(true);};
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:""});setModalOrc(true);};
           const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -7675,7 +7682,10 @@ export default function App(){
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
           const isNovo=!editOrc.id;
-          const totalPrev=(editOrc.pecas||[]).reduce((a,p)=>a+parseVal(p.precoConsumidor),0);
+          const totalCompraPrev=(editOrc.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoCotacao),0);
+          const totalVendaPrev=(editOrc.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoConsumidor),0);
+          const margemPrev=totalVendaPrev-totalCompraPrev;
+          const totalPrev=totalVendaPrev+parseVal(editOrc.maoDeObra);
           const salvar=()=>{
             if(!editOrc.empresa){alert("Informe a Empresa.");return;}
             const pecasValidas=(editOrc.pecas||[]).filter(p=>p.nome||p.precoConsumidor);
@@ -7717,16 +7727,24 @@ export default function App(){
                     <div style={{overflowX:"auto"}}>
                     <table style={{width:"100%",borderCollapse:"collapse"}}>
                       <thead><tr>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",minWidth:220}}>Nome / Descrição</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Código</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:56}}>Qtd</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Preço Cotação</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:130}}>Local Cotação</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Preço Consumidor</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",minWidth:200}}>Nome / Descrição</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Código</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:50}}>Qtd</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Cotação</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Local Cotação</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Consumidor</th>
+                        <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#B45309",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Valor Compra</th>
+                        <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#0D9488",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Valor Venda</th>
+                        <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#166534",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Margem</th>
                         <th style={{width:32}}></th>
                       </tr></thead>
                       <tbody>
-                        {(editOrc.pecas||[]).map((p,i)=>(
+                        {(editOrc.pecas||[]).map((p,i)=>{
+                          const qtd=parseFloat(p.quantidade)||0;
+                          const vCompra=qtd*parseVal(p.precoCotacao);
+                          const vVenda=qtd*parseVal(p.precoConsumidor);
+                          const margem=vVenda-vCompra;
+                          return(
                           <tr key={i}>
                             <td style={{padding:"3px 6px"}}><textarea value={p.nome||""} onChange={e=>updPeca(i,"nome",e.target.value)} placeholder="Nome / descrição da peça" rows={2} style={{...inp,resize:"vertical",minHeight:36}}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.codigo||""} onChange={e=>updPeca(i,"codigo",e.target.value)} placeholder="Código" style={inp}/></td>
@@ -7734,15 +7752,25 @@ export default function App(){
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
+                            <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:700,color:"#B45309",whiteSpace:"nowrap"}}>{fmtR(vCompra)}</td>
+                            <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:700,color:"#0D9488",whiteSpace:"nowrap"}}>{fmtR(vVenda)}</td>
+                            <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:800,color:margem>=0?"#166534":"#C62828",whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
                             <td style={{padding:"3px 6px",textAlign:"center"}}><button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:28,height:28,fontSize:13}}>✕</button></td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                     </div>
-                    <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,paddingTop:10,borderTop:"1px solid #E9D5FF"}}>
-                      <span style={{fontSize:11,fontWeight:700,color:"#5B21B6",marginRight:10}}>Total (Preço Consumidor):</span>
-                      <span style={{fontSize:15,fontWeight:900,color:"#5B21B6"}}>{fmtR(totalPrev)}</span>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:12}}>
+                      <div><label style={lbl}>Mão de Obra</label><input type="text" value={editOrc.maoDeObra||""} onChange={e=>upd("maoDeObra",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3,marginTop:10,paddingTop:10,borderTop:"1px solid #E9D5FF"}}>
+                      <div style={{fontSize:11,color:"#94A3B8"}}>Valor de Compra: <b style={{color:"#B45309"}}>{fmtR(totalCompraPrev)}</b></div>
+                      <div style={{fontSize:11,color:"#94A3B8"}}>Valor de Venda: <b style={{color:"#0D9488"}}>{fmtR(totalVendaPrev)}</b></div>
+                      <div style={{fontSize:11,color:"#94A3B8"}}>Margem: <b style={{color:margemPrev>=0?"#166534":"#C62828"}}>{fmtR(margemPrev)}</b></div>
+                      {parseVal(editOrc.maoDeObra)>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Mão de Obra: <b style={{color:"#1565C0"}}>{fmtR(parseVal(editOrc.maoDeObra))}</b></div>}
+                      <div style={{fontSize:15,fontWeight:900,color:"#5B21B6",marginTop:4}}>Total: {fmtR(totalPrev)}</div>
                     </div>
                   </div>
                   <div><label style={lbl}>Observação</label><textarea value={editOrc.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
