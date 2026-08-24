@@ -716,6 +716,89 @@ const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas
   a.href = url; a.download = `${titulo.replace(/\s+/g,"_")}_${periodoLabel.replace(/[\/\s]+/g,"_")}.xlsx`; a.click();
   URL.revokeObjectURL(url);
 };
+// Farol Executivo — painel de UMA PAGINA SO, pra alimentacao diaria e envio direto a diretoria.
+// Junta Mau Uso + A Faturar + Entrega Tecnica num unico sheet, com indicador tipo farol (verde/amarelo/vermelho) por area.
+const gerarFarolExecutivo = async ({areas})=>{
+  const ExcelJS = await loadExcelJS();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Grupo MOV";
+  workbook.created = new Date();
+
+  const PRETO="FF1A1A1A", DOURADO="FFF5C200", BRANCO="FFFFFFFF", CINZA_TEXTO="FF64748B", CINZA_BORDA="FFE2E8F0";
+  const VERDE="FF1A7A3C", AMARELO="FFE67E00", VERMELHO="FFC62828";
+  const FONTE="Calibri";
+  const corFarol=(nivel)=>nivel==="verde"?VERDE:nivel==="amarelo"?AMARELO:VERMELHO;
+  const labelFarol=(nivel)=>nivel==="verde"?"NO PRAZO":nivel==="amarelo"?"ATENÇÃO":"CRÍTICO";
+
+  const ws = workbook.addWorksheet("Farol Executivo", {views:[{showGridLines:false}], pageSetup:{paperSize:9, orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:1, margins:{left:0.3,right:0.3,top:0.3,bottom:0.3,header:0,footer:0}}});
+  ws.columns = [{width:2.5},{width:22},{width:15},{width:15},{width:15},{width:15},{width:15},{width:15},{width:2.5}];
+
+  // ── Cabeçalho ──
+  ws.mergeCells("B2:H3");
+  const cTit = ws.getCell("B2");
+  cTit.value = "GRUPO MOV — FAROL EXECUTIVO";
+  cTit.font = {name:FONTE, bold:true, size:20, color:{argb:DOURADO}};
+  cTit.fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
+  cTit.alignment = {vertical:"middle", horizontal:"left", indent:1};
+  for(const c of ["B","C","D","E","F","G","H"]) ws.getCell(`${c}2`).fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
+  ws.getRow(2).height = 28; ws.getRow(3).height = 28;
+
+  ws.mergeCells("B4:H4");
+  const cData = ws.getCell("B4");
+  cData.value = `Atualizado em ${new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})} às ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`;
+  cData.font = {name:FONTE, italic:true, size:11, color:{argb:CINZA_TEXTO}};
+  ws.getRow(4).height = 22;
+
+  let row = 6;
+  areas.forEach(area=>{
+    const r0 = row;
+    // Faixa de status (farol) — coluna B, altura de 3 linhas
+    ws.mergeCells(`B${r0}:B${r0+2}`);
+    const cFarol = ws.getCell(`B${r0}`);
+    cFarol.value = `${area.nivel==="verde"?"🟢":area.nivel==="amarelo"?"🟡":"🔴"}\n${labelFarol(area.nivel)}`;
+    cFarol.font = {name:FONTE, bold:true, size:12, color:{argb:BRANCO}};
+    cFarol.fill = {type:"pattern", pattern:"solid", fgColor:{argb:corFarol(area.nivel)}};
+    cFarol.alignment = {vertical:"middle", horizontal:"center", wrapText:true};
+
+    // Nome da área
+    ws.mergeCells(`C${r0}:H${r0}`);
+    const cNome = ws.getCell(`C${r0}`);
+    cNome.value = `${area.icone}  ${area.nome}`;
+    cNome.font = {name:FONTE, bold:true, size:15, color:{argb:PRETO}};
+    cNome.alignment = {vertical:"middle", horizontal:"left", indent:1};
+    cNome.border = {bottom:{style:"thin", color:{argb:CINZA_BORDA}}};
+
+    // Métricas — uma linha, colunas C..H, com rich text (rótulo pequeno + valor grande destacado)
+    area.metricas.slice(0,6).forEach((m,i)=>{
+      const col = String.fromCharCode(67+i); // C..H
+      ws.mergeCells(`${col}${r0+1}:${col}${r0+2}`);
+      const cell = ws.getCell(`${col}${r0+1}`);
+      cell.value = {richText:[
+        {font:{name:FONTE,size:8,bold:true,color:{argb:"FF94A3B8"}}, text:`${m.label.toUpperCase()}\n`},
+        {font:{name:FONTE,size:15,bold:true,color:{argb:corHexLocal(m.cor)||PRETO}}, text:m.valor},
+      ]};
+      cell.alignment = {vertical:"middle", horizontal:"center", wrapText:true};
+    });
+
+    for(let rr=r0; rr<r0+3; rr++){
+      for(const col of ["B","C","D","E","F","G","H"]){
+        const cell = ws.getCell(`${col}${rr}`);
+        if(!cell.border) cell.border = {};
+        cell.border = {...cell.border, left:{style:"thin",color:{argb:CINZA_BORDA}}, right:{style:"thin",color:{argb:CINZA_BORDA}}};
+      }
+    }
+    ws.getRow(r0+3).height = 6; // respiro entre blocos
+    row = r0 + 4;
+  });
+
+  const buf = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `Farol_Executivo_GrupoMOV_${TODAY_STR}.xlsx`; a.click();
+  URL.revokeObjectURL(url);
+};
+const corHexLocal = (c)=>c?("FF"+String(c).replace("#","").toUpperCase()):null;
 // Gera a Planilha de Comissão SAS preenchendo o MODELO OFICIAL do fabricante (estrutura/formatacao intactas, so preenche as celulas de dados)
 const gerarPlanilhaComissaoSas = async (registros, mes, ano, nomeRepresentante)=>{
   const ExcelJS = await loadExcelJS();
@@ -10556,6 +10639,65 @@ export default function App(){
         })()}
 
         {/* ── DASHBOARD PROCESSOS (Mau Uso + A Faturar) ── */}
+        {(tab==="dashboard_mau_uso"||tab==="dashboard_a_faturar")&&(()=>{
+          const parseVal2=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
+          const fmtR2=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
+          const hojeStr=TODAY_STR;
+          const mesAtualStr=hojeStr.slice(0,7);
+
+          // ── Mau Uso ──
+          const muAtivos=(processosMU||[]).filter(p=>p&&p.processoStatus!=="arquivado"&&p.processoStatus!=="concluido"&&p.aprovCliente!=="cobrado_faturado");
+          const muPend=muAtivos.filter(p=>(p.aprovCliente||"aguardando_retorno")==="aguardando_retorno");
+          const muConcMes=(processosMU||[]).filter(p=>{const d=p.dataConclusao||p.dataFaturamento||"";return d.startsWith(mesAtualStr);});
+          const muPctPend=muAtivos.length?Math.round(muPend.length/muAtivos.length*100):0;
+          const muNivel=muPctPend>40?"vermelho":muPctPend>15?"amarelo":"verde";
+
+          // ── A Faturar ──
+          const afAtivos=(processosAF||[]).filter(p=>p&&p.processoStatus!=="arquivado");
+          const afAguard=afAtivos.filter(p=>(p.statusAF||"aguardando_aprovacao")==="aguardando_aprovacao");
+          const afEnvMes=afAtivos.filter(p=>(p.dataEnvioFat||"").startsWith(mesAtualStr));
+          const afValorAguard=afAguard.filter(p=>p.tipo!=="Orçamento").reduce((a,p)=>a+parseVal2(p.valor),0);
+          const afPctAguard=afAtivos.length?Math.round(afAguard.length/afAtivos.length*100):0;
+          const afNivel=afPctAguard>50?"vermelho":afPctAguard>25?"amarelo":"verde";
+
+          // ── Entrega Técnica ──
+          const etAtivos=(entregaTec||[]).filter(x=>x&&!x.arquivado);
+          const etParseVal=(v)=>{let s=String(v||"0").trim().replace(/[^\d.,-]/g,"");if(!s)return 0;if(s.includes(",")){s=s.replace(/\./g,"").replace(",",".");}else if((s.match(/\./g)||[]).length>1){s=s.replace(/\./g,"");}const n=parseFloat(s);return isNaN(n)?0:n;};
+          const etMes=etAtivos.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(mesAtualStr));
+          const etReceitaMes=etMes.reduce((a,x)=>a+etParseVal(x.valor)*0.01,0);
+          const etCustoMes=etMes.reduce((a,x)=>a+etParseVal(x.gastoCombustivel)+etParseVal(x.gastoAlimentacao)+(parseFloat(x.horasTrab)||0)*280,0);
+          const etLiquidoMes=etReceitaMes-etCustoMes;
+          const etGarantiaAtiva=etAtivos.filter(x=>(x.fimGarantia&&x.fimGarantia>=hojeStr)||(x.retrabalhos||[]).length>0||x.retrabalho).length;
+          const etNivel=etLiquidoMes<0?"vermelho":etLiquidoMes<1000?"amarelo":"verde";
+
+          return(<>
+          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
+            <button onClick={async()=>{
+              try{
+                await gerarFarolExecutivo({areas:[
+                  {nome:"Mau Uso", icone:"⚠️", nivel:muNivel, metricas:[
+                    {label:"Em aberto", valor:String(muAtivos.length), cor:"#1A1A1A"},
+                    {label:"Pendentes", valor:String(muPend.length), cor:muPend.length>0?"#C62828":"#1A7A3C"},
+                    {label:"% pendente", valor:`${muPctPend}%`, cor:muNivel==="vermelho"?"#C62828":muNivel==="amarelo"?"#E67E00":"#1A7A3C"},
+                    {label:"Concl. no mês", valor:String(muConcMes.length), cor:"#1A7A3C"},
+                  ]},
+                  {nome:"A Faturar", icone:"💰", nivel:afNivel, metricas:[
+                    {label:"Ativos", valor:String(afAtivos.length), cor:"#1A1A1A"},
+                    {label:"Aguard. aprovação", valor:String(afAguard.length), cor:afAguard.length>0?"#E67E00":"#1A7A3C"},
+                    {label:"Valor aguardando", valor:fmtR2(afValorAguard), cor:"#E67E00"},
+                    {label:"Enviado no mês", valor:String(afEnvMes.length), cor:"#1A7A3C"},
+                  ]},
+                  {nome:"Entrega Técnica (SAS)", icone:"🚚", nivel:etNivel, metricas:[
+                    {label:"Receita do mês", valor:fmtR2(etReceitaMes), cor:"#1A7A3C"},
+                    {label:"1% Líquido mês", valor:fmtR2(etLiquidoMes), cor:etLiquidoMes>=0?"#1A7A3C":"#C62828"},
+                    {label:"Garantia ativa", valor:String(etGarantiaAtiva), cor:"#0D9488"},
+                    {label:"Entregas no mês", valor:String(etMes.length), cor:"#1A1A1A"},
+                  ]},
+                ]});
+              }catch(err){ alert("Erro ao gerar o Farol: "+(err.message||err)); }
+            }} style={{padding:"10px 18px",borderRadius:10,border:"none",background:"#1A1A1A",color:"#F5C200",fontSize:12,cursor:"pointer",fontWeight:800,boxShadow:"0 2px 10px rgba(0,0,0,.2)"}}>🚦 Farol Executivo — 1 página (Excel)</button>
+          </div>
+
         {tab==="dashboard_mau_uso"&&(
           <DashboardProcessoSimples
             lista={processosMU}
@@ -10604,6 +10746,8 @@ export default function App(){
             }}
           />
         )}
+          </>);
+        })()}
 
         {tab==="sas"&&(()=>{
           const SERV={entrega_tecnica:{l:"🔧 Entrega Técnica",c:"#1565C0",bg:"#EFF6FF"},manutencao:{l:"⚙️ Manutenção",c:"#E67E00",bg:"#FFF8F0"},locacao:{l:"🏗️ Locação",c:"#1A7A3C",bg:"#F0FFF5"},outros:{l:"📦 Outros",c:"#888",bg:"#F5F5F5"}};
