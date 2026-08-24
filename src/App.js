@@ -3219,6 +3219,9 @@ export default function App(){
   const [pdfLoading,setPdfLoading]=useState(false);
   const [showArqMU,setShowArqMU]=useState(false);
   const [muView,setMuView]=useState("kanban");
+  const muTopScrollRef=useRef(null);
+  const muTableWrapRef=useRef(null);
+  const [muTableWidth,setMuTableWidth]=useState(0);
   // Dashboard Processos filters
   const [dashProcFMes,setDashProcFMes]=useState("");
   const [dashProcFAno,setDashProcFAno]=useState("");
@@ -6801,7 +6804,10 @@ export default function App(){
             )):(
               listaFil.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:4}}>⚠️</div><div style={{fontSize:12,fontWeight:600}}>{muSearch||muFrom||muTo||muMes||muAno?"Nenhum resultado":"Nenhum processo cadastrado"}</div></div>):(
                 <div className="card" style={{overflow:"hidden"}}>
-                  <div className="tbl-wrap"><table>
+                  <div ref={muTopScrollRef} onScroll={e=>{if(muTableWrapRef.current)muTableWrapRef.current.scrollLeft=e.target.scrollLeft;}} style={{overflowX:"auto",overflowY:"hidden",height:14}}>
+                    <div style={{width:muTableWidth,height:1}}/>
+                  </div>
+                  <div className="tbl-wrap" ref={el=>{muTableWrapRef.current=el;if(el&&el.scrollWidth!==muTableWidth)setMuTableWidth(el.scrollWidth);}} onScroll={e=>{if(muTopScrollRef.current)muTopScrollRef.current.scrollLeft=e.target.scrollLeft;}}><table>
                     <thead><tr style={{background:"#1A1A1A"}}><th style={{color:"#F5C200"}}>Data</th><th style={{color:"#F5C200"}}>Empresa</th><th style={{color:"#F5C200"}}>PAT</th><th style={{color:"#F5C200"}}>Relatório</th><th style={{color:"#F5C200"}}>Nº MU</th><th style={{color:"#F5C200"}}>Valor</th><th style={{color:"#F5C200"}}>Ticket</th><th style={{color:"#F5C200"}}>Data de Envio</th><th style={{color:"#F5C200"}}>ND Gerada</th><th style={{color:"#F5C200"}}>Aprovação Cliente</th><th style={{color:"#F5C200"}}>Status</th><th style={{color:"#F5C200"}}></th></tr></thead>
                     <tbody>
                       {listaFil.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map((p,pi)=>{
