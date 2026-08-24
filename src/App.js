@@ -7629,48 +7629,37 @@ export default function App(){
                 </div>
               </div>
 
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14,marginTop:16}}>
-                {lista.map(o=>{
-                  const tot=totalDe(o);
-                  const isReforma=o.tipo==="reforma";
-                  return(
-                    <div key={o.id} className="card" style={{padding:0,overflow:"hidden",borderLeft:`4px solid ${isReforma?"#7E22CE":"#1565C0"}`}}>
-                      <div style={{padding:"12px 14px"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{o.empresa||"—"}</div>
-                            <div style={{fontSize:11,color:"#94A3B8"}}>Orçamento {o.orcamentoNum||"—"} · {fmtDataBR(o.data)}</div>
-                          </div>
-                          <span style={{fontSize:9,fontWeight:700,color:isReforma?"#7E22CE":"#1565C0",background:isReforma?"#F5F3FF":"#EFF6FF",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{isReforma?"Reforma":"Peça Única"}</span>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:10,fontSize:11,paddingTop:8,borderTop:"1px solid #F1F5F9",marginBottom:8}}>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>PAT / Série</div><div style={{fontWeight:600}}>{o.patSerie||"—"}</div></div>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Nº OS</div><div style={{fontWeight:600}}>{o.numOS||"—"}</div></div>
-                          <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Produto</div><div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.produtoModelo||"—"}</div></div>
-                        </div>
-                        <div style={{fontSize:10,fontWeight:700,color:"#7E22CE",textTransform:"uppercase",marginBottom:4}}>🔩 Peças ({(o.pecas||[]).length})</div>
-                        <div style={{maxHeight:90,overflowY:"auto"}}>
-                          {(o.pecas||[]).map((p,i)=>(
-                            <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"3px 0",borderBottom:i<(o.pecas.length-1)?"1px dashed #F1F5F9":"none"}}>
-                              <span style={{color:"#334155",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:180}}>{p.nome||"—"}</span><span style={{fontWeight:700,color:"#1A1A1A"}}>{fmtR(parseVal(p.precoConsumidor))}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Total</span>
-                          <span style={{fontSize:16,fontWeight:900,color:"#166534"}}>{fmtR(tot)}</span>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",borderTop:"1px solid #F1F5F9"}}>
-                        <button onClick={()=>gerarPDFOrcamentoPecas(o)} style={{flex:1,padding:"8px",border:"none",background:"#FFFBEB",color:"#92400E",fontSize:11,fontWeight:700,cursor:"pointer"}}>📄 PDF</button>
-                        <button onClick={()=>abrirEditar(o)} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#EFF6FF",color:"#1565C0",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Editar</button>
-                        <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#F8FAFC",color:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{o.arquivado?"📤":"🗄️"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir este orçamento?"))orcamentoPecaCrud.del(o.id);}} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#FEF2F2",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕</button>
-                      </div>
-                    </div>
-                  );
-                })}
-                {lista.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"#CCC",padding:60,fontSize:13}}>Nenhum orçamento {showArqOrc?"arquivado":"registrado"}</div>}
+              <div className="card" style={{overflow:"hidden",marginTop:16}}>
+                <div className="tbl-wrap"><table>
+                  <thead><tr><th>Nº Orçamento</th><th>Tipo</th><th>Data</th><th>Empresa</th><th>Cidade</th><th>Produto</th><th>PAT/Série</th><th>Nº OS</th><th>Peças</th><th>Total</th><th></th></tr></thead>
+                  <tbody>
+                    {lista.map(o=>{
+                      const tot=totalDe(o);
+                      const isReforma=o.tipo==="reforma";
+                      return(
+                        <tr key={o.id} style={{opacity:o.arquivado?0.55:1}}>
+                          <td style={{padding:"8px 10px",fontWeight:700,color:"#1A1A1A",whiteSpace:"nowrap"}}>{o.orcamentoNum||"—"}</td>
+                          <td style={{padding:"8px 10px"}}><span style={{fontSize:9,fontWeight:700,color:isReforma?"#7E22CE":"#1565C0",background:isReforma?"#F5F3FF":"#EFF6FF",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{isReforma?"Reforma":"Peça Única"}</span></td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#64748B",whiteSpace:"nowrap"}}>{fmtDataBR(o.data)||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{o.empresa||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{o.cidade||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.produtoModelo||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{o.patSerie||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{o.numOS||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#7E22CE",fontWeight:700,textAlign:"center"}}>{(o.pecas||[]).length}</td>
+                          <td style={{padding:"8px 10px",fontSize:13,fontWeight:900,color:"#166534",whiteSpace:"nowrap"}}>{fmtR(tot)}</td>
+                          <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>gerarPDFOrcamentoPecas(o)} title="PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
+                            <button onClick={()=>abrirEditar(o)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
+                            <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{o.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir este orçamento?"))orcamentoPecaCrud.del(o.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum orçamento {showArqOrc?"arquivado":"registrado"}</div>}
               </div>
             </div>
           );
