@@ -7601,6 +7601,29 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📋 Orçamento de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} orçamento(s) · {fmtR(totalGeral)} no total</div></div>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqOrc(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqOrc?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <BtnExcel onClick={()=>{
+                    const linhas=[];
+                    lista.forEach(o=>{
+                      (o.pecas&&o.pecas.length?o.pecas:[{}]).forEach(p=>{
+                        linhas.push({
+                          orcamentoNum:o.orcamentoNum||"", tipo:o.tipo==="reforma"?"Reforma":"Peça Única", data:fmtDataBR(o.data)||"",
+                          empresa:o.empresa||"", telefone:o.telefone||"", cidade:o.cidade||"",
+                          produtoModelo:o.produtoModelo||"", patSerie:o.patSerie||"", numOS:o.numOS||"",
+                          pecaNome:p.nome||"", pecaCodigo:p.codigo||"", pecaQtd:p.quantidade||"",
+                          precoCotacao:p.precoCotacao||"", localCotacao:p.localCotacao||"", precoConsumidor:p.precoConsumidor||"",
+                          observacao:o.observacao||"",
+                        });
+                      });
+                    });
+                    exportCSV(linhas,"orcamento_pecas",[
+                      {key:"orcamentoNum",label:"Orçamento Nº"},{key:"tipo",label:"Tipo"},{key:"data",label:"Data"},
+                      {key:"empresa",label:"Empresa"},{key:"telefone",label:"Telefone"},{key:"cidade",label:"Cidade"},
+                      {key:"produtoModelo",label:"Produto (Marca/Modelo)"},{key:"patSerie",label:"PAT/Série"},{key:"numOS",label:"Nº OS"},
+                      {key:"pecaNome",label:"Nome da Peça"},{key:"pecaCodigo",label:"Código"},{key:"pecaQtd",label:"Quantidade"},
+                      {key:"precoCotacao",label:"Preço Cotação"},{key:"localCotacao",label:"Local Cotação"},{key:"precoConsumidor",label:"Preço Consumidor"},
+                      {key:"observacao",label:"Observação"},
+                    ]);
+                  }}/>
                   <button onClick={()=>abrirNovo("unica")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #1565C0",background:"#EFF6FF",color:"#1565C0",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Peça Única</button>
                   <BtnY onClick={()=>abrirNovo("reforma")}>+ Reforma</BtnY>
                 </div>
