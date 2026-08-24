@@ -989,9 +989,9 @@ const gerarPDFOrcamentoPecas = async (o)=>{
     doc.text("Peças do orçamento",M+91,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
-    // colunas: Nome(58) Qtd(18) Preço Cotação(28) Local Cotação(34) Preço Consumidor(28) -> soma 166... ajusta pra 182
-    const COLW={nome:56,qtd:16,cot:30,local:38,cons:30,obs:12};
-    const heads=[["Nome",COLW.nome],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons]];
+    // colunas: Nome(50) Código(22) Qtd(14) Preço Cotação(28) Local Cotação(34) Preço Consumidor(28) -> soma 176, cabe em 182
+    const COLW={nome:48,cod:22,qtd:14,cot:28,local:34,cons:28};
+    const heads=[["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons]];
     let xh=M;
     doc.setFontSize(8.5);
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
@@ -1005,6 +1005,7 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       if(y+alturaLinha>280){doc.addPage();y=20;}
       let xx=M;
       doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
+      doc.text(String(p.codigo||"—"),xx+COLW.cod/2,y+4,{align:"center"}); xx+=COLW.cod;
       doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,y+4,{align:"center"}); xx+=COLW.qtd;
       const cot=parseFloat((p.precoCotacao||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
@@ -1018,7 +1019,7 @@ const gerarPDFOrcamentoPecas = async (o)=>{
     // linhas verticais da tabela (desenhadas por cima, do topo do cabeçalho até o fim)
     // Total
     doc.setFont(undefined,"bold"); doc.setFontSize(9.5);
-    doc.text("Total:",M+COLW.nome+COLW.qtd+COLW.cot+COLW.local-2,y+5,{align:"right"});
+    doc.text("Total:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y+5,{align:"right"});
     doc.text(`R$ ${totalCons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y+5,{align:"right"});
     y+=8; doc.line(M,y,M+W,y);
     y+=8;
@@ -7592,8 +7593,8 @@ export default function App(){
             const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
             return `${ano}.${String(max+1).padStart(4,"0")}`;
           };
-          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:""});setModalOrc(true);};
-          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:""});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
@@ -7657,8 +7658,8 @@ export default function App(){
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const upd=(k,v)=>setEditOrc(p=>({...p,[k]:v}));
           const updPeca=(i,k,v)=>setEditOrc(p=>{const np=[...(p.pecas||[])];np[i]={...np[i],[k]:v};return {...p,pecas:np};});
-          const addPeca=()=>setEditOrc(p=>({...p,pecas:[...(p.pecas||[]),{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]}));
-          const rmPeca=(i)=>setEditOrc(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]};});
+          const addPeca=()=>setEditOrc(p=>({...p,pecas:[...(p.pecas||[]),{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]}));
+          const rmPeca=(i)=>setEditOrc(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]};});
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
           const isNovo=!editOrc.id;
@@ -7701,20 +7702,31 @@ export default function App(){
                       <div style={{fontSize:10,fontWeight:800,color:"#5B21B6",textTransform:"uppercase"}}>🔩 Peças do Orçamento ({(editOrc.pecas||[]).length})</div>
                       <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"2fr 0.6fr 1fr 1.2fr 1fr 32px",gap:6,fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4,paddingLeft:2}}>
-                      <span>Nome</span><span>Qtd</span><span>Preço Cotação</span><span>Local Cotação</span><span>Preço Consumidor</span><span></span>
-                    </div>
-                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                      {(editOrc.pecas||[]).map((p,i)=>(
-                        <div key={i} style={{display:"grid",gridTemplateColumns:"2fr 0.6fr 1fr 1.2fr 1fr 32px",gap:6,alignItems:"center"}}>
-                          <input type="text" value={p.nome||""} onChange={e=>updPeca(i,"nome",e.target.value)} placeholder="Nome da peça" style={inp}/>
-                          <input type="text" value={p.quantidade||""} onChange={e=>updPeca(i,"quantidade",e.target.value)} style={inp}/>
-                          <input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/>
-                          <input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/>
-                          <input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/>
-                          <button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:32,height:32,fontSize:14}}>✕</button>
-                        </div>
-                      ))}
+                    <div style={{overflowX:"auto"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse"}}>
+                      <thead><tr>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",minWidth:220}}>Nome / Descrição</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Código</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:56}}>Qtd</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Preço Cotação</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:130}}>Local Cotação</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Preço Consumidor</th>
+                        <th style={{width:32}}></th>
+                      </tr></thead>
+                      <tbody>
+                        {(editOrc.pecas||[]).map((p,i)=>(
+                          <tr key={i}>
+                            <td style={{padding:"3px 6px"}}><textarea value={p.nome||""} onChange={e=>updPeca(i,"nome",e.target.value)} placeholder="Nome / descrição da peça" rows={2} style={{...inp,resize:"vertical",minHeight:36}}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="text" value={p.codigo||""} onChange={e=>updPeca(i,"codigo",e.target.value)} placeholder="Código" style={inp}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="text" value={p.quantidade||""} onChange={e=>updPeca(i,"quantidade",e.target.value)} style={inp}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
+                            <td style={{padding:"3px 6px",textAlign:"center"}}><button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:28,height:28,fontSize:13}}>✕</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                     </div>
                     <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,paddingTop:10,borderTop:"1px solid #E9D5FF"}}>
                       <span style={{fontSize:11,fontWeight:700,color:"#5B21B6",marginRight:10}}>Total (Preço Consumidor):</span>
