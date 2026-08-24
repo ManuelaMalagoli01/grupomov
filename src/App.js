@@ -9531,6 +9531,45 @@ export default function App(){
                 <button onClick={()=>setShowArqEntrega(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqEntrega?"#1A1A1A":"#FFF",color:showArqEntrega?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqEntrega?"✕ Ativos":"Arquivados"}</button>
                 <BtnImport onClick={()=>setModalImportEntrega(true)}/>
                 <BtnExcel onClick={()=>exportCSV(lista,"entrega_tecnica",[{key:"dataSolicitacao",label:"Data"},{key:"nf",label:"NF"},{key:"valor",label:"Valor NF"},{key:"comissao",label:"Comissão 1%"},{key:"cliente",label:"Cliente"},{key:"nome",label:"Contato"},{key:"tecnico",label:"Técnico"},{key:"dataEntrega",label:"Data Entrega"},{key:"mov",label:"Rel. MOV"},{key:"chamado",label:"Chamado"},{key:"fimGarantia",label:"Fim Garantia"},{key:"retrabalho",label:"Retrabalho"},{key:"obs",label:"Obs"}])}/>
+                <button onClick={async()=>{
+                  try{
+                    const porTecnico={};
+                    filtrada.forEach(x=>{const t=x.tecnico||"Sem técnico"; (porTecnico[t]=porTecnico[t]||[]).push(x);});
+                    const tecnicosOrdenados=Object.keys(porTecnico).sort((a,b)=>porTecnico[b].reduce((s,x)=>s+recEntregaTec(x),0)-porTecnico[a].reduce((s,x)=>s+recEntregaTec(x),0));
+                    await gerarDashboardExcelProfissional({
+                      titulo:"Dashboard Entrega Técnica",
+                      periodoLabel:janLabelET,
+                      kpis:[
+                        {label:"Receita Realizada", valor:fmtR(totRecEntrega), cor:"#1A7A3C"},
+                        {label:"A Receber — Garantia", valor:fmtR(totRecGarantia), cor:"#0D9488"},
+                        {label:"1% Líquido", valor:fmtR(totRecEntrega+totPrevExecValor-totalCustoAtend), cor:(totRecEntrega+totPrevExecValor-totalCustoAtend)>=0?"#15803D":"#C62828"},
+                        {label:"Garantia Ativa", valor:garantiaAtiva, cor:"#0D9488"},
+                      ],
+                      abas:tecnicosOrdenados.map(t=>({
+                        nome:t.slice(0,31),
+                        registros:porTecnico[t],
+                        colunas:[
+                          {key:"data", label:"Data", width:14, get:x=>fmtDataBR(x.dataSolicitacao)||""},
+                          {key:"cliente", label:"Cliente", width:24, get:x=>x.cliente||""},
+                          {key:"nf", label:"NF", width:12, get:x=>x.nf||""},
+                          {key:"valor", label:"Valor NF (R$)", width:16, get:x=>pv(x.valor), money:true},
+                          {key:"comissao1", label:"1% Entrega (R$)", width:16, get:x=>recEntregaTec(x), money:true},
+                          {key:"dataEntrega", label:"Data Entrega", width:14, get:x=>fmtDataBR(x.dataEntrega)||""},
+                          {key:"garantia", label:"Fim Garantia", width:14, get:x=>fmtDataBR(x.fimGarantia)||""},
+                        ],
+                      })),
+                      grafico:{
+                        titulo:"Receita por Técnico",
+                        type:"bar",
+                        data:{
+                          labels:tecnicosOrdenados.slice(0,8),
+                          datasets:[{label:"Receita (R$)", data:tecnicosOrdenados.slice(0,8).map(t=>porTecnico[t].reduce((s,x)=>s+recEntregaTec(x),0)), backgroundColor:"#1565C0"}],
+                        },
+                        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+                      },
+                    });
+                  }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
+                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:12,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
                 <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
             </div>
