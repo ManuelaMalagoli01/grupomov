@@ -934,6 +934,106 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
     doc.save(`Proposta_${(p.numero||"sas_vendas").replace(/[^a-zA-Z0-9]+/g,"_")}.pdf`);
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
 };
+// Gera o PDF de Orcamento de Pecas, espelhando o modelo oficial GRUPO MOV (peca unica ou reforma)
+const gerarPDFOrcamentoPecas = async (o)=>{
+  try{
+    const jsPDF=await loadJsPDF();
+    const doc=new jsPDF();
+    const M=14, W=182; // margem e largura util (210mm - 2*14)
+    let y=16;
+    // Cabeçalho: logo + dados da empresa + numero do orçamento
+    doc.addImage(LOGO_MOV,"PNG",M,10,26,16);
+    doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(20,20,20);
+    doc.text("grupomov.com.br",105,13,{align:"center"});
+    doc.setFont(undefined,"normal"); doc.setFontSize(8.5);
+    doc.text("Tel(s).: (31) 3495-1486 - Administração / Peças",105,18,{align:"center"});
+    doc.text("(31) 3317-3915 - Manutenção - 9 8793-1719 - Plantão",105,22.5,{align:"center"});
+    doc.text("suporte@grupomov.com.br / Belo Horizonte - MG",105,27,{align:"center"});
+    doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(20,20,20);
+    doc.text("Orçamento",196,15,{align:"right"});
+    doc.setTextColor(200,20,20); doc.setFontSize(14);
+    doc.text(o.orcamentoNum||"—",196,22,{align:"right"});
+    y=32;
+    doc.setDrawColor(20,20,20); doc.setLineWidth(0.4); doc.line(M,y,M+W,y);
+    y+=9;
+    doc.setTextColor(20,20,20); doc.setFont(undefined,"bold"); doc.setFontSize(15);
+    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":"Orçamento de Peças",M+90,y,{align:"center"});
+    doc.setFontSize(10);
+    doc.text("DATA:",M+150,y-1);
+    doc.setFont(undefined,"normal");
+    doc.text(fmtDataBR(o.data)||"—",M+165,y-1);
+    doc.line(M,y+3,M+W,y+3);
+    y+=3;
+    doc.line(M+140,26,M+140,y);
+    // linha Empresa / Telefone / Cidade
+    const linha=(colunas,yTop,altura)=>{
+      let x=M;
+      colunas.forEach((c,i)=>{
+        doc.setFont(undefined,"bold"); doc.setFontSize(8.5); doc.setTextColor(20,20,20);
+        doc.text(c.label+":",x+2,yTop+5);
+        doc.setFont(undefined,"normal"); doc.setFontSize(9);
+        const lines=doc.splitTextToSize(String(c.valor||"—"),c.w-4);
+        doc.text(lines,x+2,yTop+10);
+        x+=c.w;
+      });
+      doc.line(M,yTop+altura,M+W,yTop+altura);
+      let xx=M;
+      colunas.forEach((c,i)=>{ if(i>0) doc.line(xx,yTop,xx,yTop+altura); xx+=c.w; });
+    };
+    linha([{label:"Empresa",valor:o.empresa,w:110},{label:"Telefone",valor:o.telefone,w:36},{label:"Cidade",valor:o.cidade,w:36}], y, 16);
+    y+=16;
+    linha([{label:"Produto (Marca/Modelo)",valor:o.produtoModelo,w:90},{label:"PAT / Nº de série",valor:o.patSerie,w:46},{label:"Nº da OS",valor:o.numOS,w:46}], y, 14);
+    y+=14;
+    // Título tabela de peças
+    doc.setFont(undefined,"bold"); doc.setFontSize(12);
+    doc.text("Peças do orçamento",M+91,y+7,{align:"center"});
+    y+=10;
+    doc.line(M,y,M+W,y);
+    // colunas: Nome(58) Qtd(18) Preço Cotação(28) Local Cotação(34) Preço Consumidor(28) -> soma 166... ajusta pra 182
+    const COLW={nome:56,qtd:16,cot:30,local:38,cons:30,obs:12};
+    const heads=[["Nome",COLW.nome],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons]];
+    let xh=M;
+    doc.setFontSize(8.5);
+    heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
+    y+=7; doc.line(M,y,M+W,y);
+    let totalCons=0, totalCot=0;
+    doc.setFont(undefined,"normal"); doc.setFontSize(8.5);
+    (o.pecas||[]).forEach(p=>{
+      const nomeLines=doc.splitTextToSize(p.nome||"—",COLW.nome-4);
+      const localLines=doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
+      const alturaLinha=Math.max(nomeLines.length,localLines.length)*4.2+3;
+      if(y+alturaLinha>280){doc.addPage();y=20;}
+      let xx=M;
+      doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
+      doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,y+4,{align:"center"}); xx+=COLW.qtd;
+      const cot=parseFloat((p.precoCotacao||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+      const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+      totalCot+=cot; totalCons+=cons;
+      doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
+      doc.text(localLines,xx+2,y+4); xx+=COLW.local;
+      doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"});
+      y+=alturaLinha;
+      doc.line(M,y,M+W,y);
+    });
+    // linhas verticais da tabela (desenhadas por cima, do topo do cabeçalho até o fim)
+    // Total
+    doc.setFont(undefined,"bold"); doc.setFontSize(9.5);
+    doc.text("Total:",M+COLW.nome+COLW.qtd+COLW.cot+COLW.local-2,y+5,{align:"right"});
+    doc.text(`R$ ${totalCons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y+5,{align:"right"});
+    y+=8; doc.line(M,y,M+W,y);
+    y+=8;
+    // Observação
+    doc.setFont(undefined,"bold"); doc.setFontSize(10);
+    doc.text("Observação:",M,y);
+    y+=6;
+    doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
+    const obsLines=doc.splitTextToSize(o.observacao||"—",W);
+    doc.text(obsLines,M,y);
+    doc.setFontSize(7.5); doc.setTextColor(160,160,160);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,290);
+    doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}.pdf`);
+  }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
+};
 const gerarPDFCard = async (titulo, campos, subtitulo)=>{
   try{
     const jsPDF=await loadJsPDF();
@@ -7483,109 +7583,70 @@ export default function App(){
         {tab==="orcamento_pecas"&&(()=>{
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
-          const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado));
-          const refOrc=new Date(orcRefIso+"T12:00:00");
-          let janDeOrc,janAteOrc,orcLabel;
-          if(orcPeriodo==="semana"){ const s=new Date(refOrc); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeOrc=fmtDate(s); janAteOrc=fmtDate(e); orcLabel=`${fmtDataBR(janDeOrc)} - ${fmtDataBR(janAteOrc)}`; }
-          else if(orcPeriodo==="mes"){ const s=new Date(refOrc.getFullYear(),refOrc.getMonth(),1); const e=new Date(refOrc.getFullYear(),refOrc.getMonth()+1,0); janDeOrc=fmtDate(s); janAteOrc=fmtDate(e); orcLabel=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refOrc.getMonth()]}/${refOrc.getFullYear()}`; }
-          else { janDeOrc=null; janAteOrc=null; orcLabel="Tudo"; }
-          const navegarOrc=(dir)=>{ const d=new Date(orcRefIso+"T12:00:00"); if(orcPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(orcPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setOrcRefIso(fmtDate(d)); };
-          const btnPerOrc=(k,l)=>(<button key={k} onClick={()=>setOrcPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:orcPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:orcPeriodo===k?"#EFF6FF":"#FFF",color:orcPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>);
-          const listaPeriodo=lista.filter(o=>{ if(orcPeriodo==="tudo")return true; const d=o.data||""; return d&&d>=janDeOrc&&d<=janAteOrc; });
-          const totQtd=listaPeriodo.reduce((a,o)=>a+(parseInt(o.quantidade,10)||0),0);
-          const totCompra=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorCompra),0);
-          const totRevenda=listaPeriodo.reduce((a,o)=>a+parseVal(o.valorRevenda),0);
-          const totMargem=totRevenda-totCompra;
-          const abrirNovo=()=>{setEditOrc({data:TODAY_STR,tipoRef:"OV",refNum:"",peca:"",codigo:"",quantidade:"",localCotacao:ORC_LOCAIS_COTACAO[0],dataCotacao:"",ticket:"",valorCompra:"",valorRevenda:""});setModalOrc(true);};
-          const abrirEditar=(o)=>{setEditOrc({...o});setModalOrc(true);};
-          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
-          // série semanal/mensal para o gráfico (últimos 8 períodos)
-          const serieOrc=[];
-          for(let i=7;i>=0;i--){
-            let de,ate,lab;
-            if(orcPeriodo==="semana"){
-              const d=new Date();d.setDate(d.getDate()-i*7-d.getDay());
-              const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);
-              de=fmtDate(s);ate=fmtDate(e);lab=`${String(s.getDate()).padStart(2,"0")}/${String(s.getMonth()+1).padStart(2,"0")}`;
-            } else {
-              const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);
-              const s=new Date(d.getFullYear(),d.getMonth(),1);const e=new Date(d.getFullYear(),d.getMonth()+1,0);
-              de=fmtDate(s);ate=fmtDate(e);lab=`${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
-            }
-            const doPer=lista.filter(o=>o.data&&o.data>=de&&o.data<=ate);
-            serieOrc.push({lab,margem:doPer.reduce((a,o)=>a+(parseVal(o.valorRevenda)-parseVal(o.valorCompra)),0)});
-          }
+          const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const totalDe=(o)=>(o.pecas||[]).reduce((a,p)=>a+parseVal(p.precoConsumidor),0);
+          const totalGeral=lista.reduce((a,o)=>a+totalDe(o),0);
+          const proximoNumero=()=>{
+            const ano=new Date().getFullYear();
+            const doAno=(orcamentoPecas||[]).filter(o=>(o.orcamentoNum||"").startsWith(String(ano)));
+            const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
+            return `${ano}.${String(max+1).padStart(4,"0")}`;
+          };
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:""});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💵 Orçamento de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
-                <div style={{display:"flex",gap:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📋 Orçamento de Peças</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} orçamento(s) · {fmtR(totalGeral)} no total</div></div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   <button onClick={()=>setShowArqOrc(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqOrc?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(listaPeriodo,"orcamento_pecas",[{key:"data",label:"Data"},{key:"tipoRef",label:"Tipo"},{key:"refNum",label:"Número"},{key:"peca",label:"Peça"},{key:"codigo",label:"Código"},{key:"quantidade",label:"Quantidade"},{key:"localCotacao",label:"Local de Cotação"},{key:"dataCotacao",label:"Data da Cotação"},{key:"ticket",label:"Ticket"},{key:"valorCompra",label:"Valor de Compra"},{key:"valorRevenda",label:"Valor de Revenda"}])}/>
-                  <BtnY onClick={abrirNovo}>+ Novo Registro</BtnY>
+                  <button onClick={()=>abrirNovo("unica")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #1565C0",background:"#EFF6FF",color:"#1565C0",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Peça Única</button>
+                  <BtnY onClick={()=>abrirNovo("reforma")}>+ Reforma</BtnY>
                 </div>
               </div>
 
-              <div className="card" style={{padding:"10px 12px",marginTop:16,marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-                <div style={{display:"flex",gap:6}}>{btnPerOrc("semana","Semanal")}{btnPerOrc("mes","Mensal")}{btnPerOrc("tudo","Tudo")}</div>
-                {orcPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
-                  <button onClick={()=>navegarOrc(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
-                  <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{orcLabel}</div>
-                  <button onClick={()=>navegarOrc(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
-                  <button onClick={()=>setOrcRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
-                </div>}
-              </div>
-
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16,marginBottom:20}}>
-                {[
-                  {l:"Peças no Período",v:listaPeriodo.length,sub:`${totQtd} unidade(s)`,c:"#1565C0",i:"🔩"},
-                  {l:"Valor de Compra",v:fmtR(totCompra),sub:null,c:"#B45309",i:"🛒"},
-                  {l:"Valor de Revenda",v:fmtR(totRevenda),sub:null,c:"#0D9488",i:"💰"},
-                  {l:"Margem",v:fmtR(totMargem),sub:totCompra>0?`${((totMargem/totCompra)*100).toFixed(1)}% sobre compra`:null,c:totMargem>=0?"#15803D":"#C62828",i:totMargem>=0?"📈":"📉"},
-                ].map((k,i)=>(
-                  <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
-                    <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{k.i} {k.l}</div>
-                    <div style={{fontSize:String(k.v).startsWith("R$")?17:22,fontWeight:900,color:k.c,lineHeight:1.15}}>{k.v}</div>
-                    {k.sub&&<div style={{fontSize:10,color:"#94A3B8",fontWeight:600,marginTop:4}}>{k.sub}</div>}
-                  </div>
-                ))}
-              </div>
-
-              <div className="card" style={{padding:16,marginBottom:20}}>
-                <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>📊 Margem — {orcPeriodo==="semana"?"por semana":orcPeriodo==="mes"?"por mês":"últimos períodos"}</div>
-                <ChartCanvas type="bar" height={190} data={{labels:serieOrc.map(s=>s.lab),datasets:[{label:"Margem",data:serieOrc.map(s=>s.margem),backgroundColor:serieOrc.map(s=>s.margem>=0?"#166534":"#C62828"),borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#F5F5F5"}}}}}/>
-              </div>
-
-              <div className="card" style={{overflow:"hidden"}}>
-                <div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Referência</th><th>Peça</th><th>Código</th><th>Qtd</th><th>Local de Cotação</th><th>Data Cotação</th><th>Ticket</th><th>Valor Compra</th><th>Valor Revenda</th><th>Margem</th><th></th></tr></thead>
-                  <tbody>
-                    {listaPeriodo.map(o=>{
-                      const margem=parseVal(o.valorRevenda)-parseVal(o.valorCompra);
-                      return(
-                        <tr key={o.id}>
-                          <td style={{padding:"6px 10px"}}>{fmtDataBR(o.data)}</td>
-                          <td style={{padding:"6px 10px"}}>{o.tipoRef||"OV"} {o.refNum||"—"}</td>
-                          <td style={{padding:"6px 10px",fontWeight:600}}>{o.peca||"—"}</td>
-                          <td style={{padding:"6px 10px"}}>{o.codigo||"—"}</td>
-                          <td style={{padding:"6px 10px"}}>{o.quantidade||"—"}</td>
-                          <td style={{padding:"6px 10px"}}>{o.localCotacao||"—"}</td>
-                          <td style={{padding:"6px 10px"}}>{o.dataCotacao?fmtDataBR(o.dataCotacao):"—"}</td>
-                          <td style={{padding:"6px 10px"}}>{o.localCotacao==="Portal"?(o.ticket||"—"):<span style={{color:"#CBD5E1"}}>—</span>}</td>
-                          <td style={{padding:"6px 10px"}}>{fmtR(parseVal(o.valorCompra))}</td>
-                          <td style={{padding:"6px 10px"}}>{fmtR(parseVal(o.valorRevenda))}</td>
-                          <td style={{padding:"6px 10px",fontWeight:800,color:margem>=0?"#166534":"#C62828",whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
-                          <td style={{padding:"6px 10px",whiteSpace:"nowrap"}}>
-                            <button onClick={()=>abrirEditar(o)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>✏️</button>
-                            <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{o.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))orcamentoPecaCrud.del(o.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table></div>
-                {listaPeriodo.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqOrc?"arquivado":"no período"}</div>}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14,marginTop:16}}>
+                {lista.map(o=>{
+                  const tot=totalDe(o);
+                  const isReforma=o.tipo==="reforma";
+                  return(
+                    <div key={o.id} className="card" style={{padding:0,overflow:"hidden",borderLeft:`4px solid ${isReforma?"#7E22CE":"#1565C0"}`}}>
+                      <div style={{padding:"12px 14px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{o.empresa||"—"}</div>
+                            <div style={{fontSize:11,color:"#94A3B8"}}>Orçamento {o.orcamentoNum||"—"} · {fmtDataBR(o.data)}</div>
+                          </div>
+                          <span style={{fontSize:9,fontWeight:700,color:isReforma?"#7E22CE":"#1565C0",background:isReforma?"#F5F3FF":"#EFF6FF",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{isReforma?"Reforma":"Peça Única"}</span>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:10,fontSize:11,paddingTop:8,borderTop:"1px solid #F1F5F9",marginBottom:8}}>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>PAT / Série</div><div style={{fontWeight:600}}>{o.patSerie||"—"}</div></div>
+                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Nº OS</div><div style={{fontWeight:600}}>{o.numOS||"—"}</div></div>
+                          <div style={{gridColumn:"span 2"}}><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Produto</div><div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.produtoModelo||"—"}</div></div>
+                        </div>
+                        <div style={{fontSize:10,fontWeight:700,color:"#7E22CE",textTransform:"uppercase",marginBottom:4}}>🔩 Peças ({(o.pecas||[]).length})</div>
+                        <div style={{maxHeight:90,overflowY:"auto"}}>
+                          {(o.pecas||[]).map((p,i)=>(
+                            <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"3px 0",borderBottom:i<(o.pecas.length-1)?"1px dashed #F1F5F9":"none"}}>
+                              <span style={{color:"#334155",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:180}}>{p.nome||"—"}</span><span style={{fontWeight:700,color:"#1A1A1A"}}>{fmtR(parseVal(p.precoConsumidor))}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>
+                          <span style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Total</span>
+                          <span style={{fontSize:16,fontWeight:900,color:"#166534"}}>{fmtR(tot)}</span>
+                        </div>
+                      </div>
+                      <div style={{display:"flex",borderTop:"1px solid #F1F5F9"}}>
+                        <button onClick={()=>gerarPDFOrcamentoPecas(o)} style={{flex:1,padding:"8px",border:"none",background:"#FFFBEB",color:"#92400E",fontSize:11,fontWeight:700,cursor:"pointer"}}>📄 PDF</button>
+                        <button onClick={()=>abrirEditar(o)} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#EFF6FF",color:"#1565C0",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Editar</button>
+                        <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#F8FAFC",color:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{o.arquivado?"📤":"🗄️"}</button>
+                        <button onClick={()=>{if(window.confirm("Excluir este orçamento?"))orcamentoPecaCrud.del(o.id);}} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#FEF2F2",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {lista.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"#CCC",padding:60,fontSize:13}}>Nenhum orçamento {showArqOrc?"arquivado":"registrado"}</div>}
               </div>
             </div>
           );
@@ -7595,51 +7656,72 @@ export default function App(){
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const upd=(k,v)=>setEditOrc(p=>({...p,[k]:v}));
+          const updPeca=(i,k,v)=>setEditOrc(p=>{const np=[...(p.pecas||[])];np[i]={...np[i],[k]:v};return {...p,pecas:np};});
+          const addPeca=()=>setEditOrc(p=>({...p,pecas:[...(p.pecas||[]),{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]}));
+          const rmPeca=(i)=>setEditOrc(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{nome:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]};});
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
           const isNovo=!editOrc.id;
-          const margemPrev=parseVal(editOrc.valorRevenda)-parseVal(editOrc.valorCompra);
+          const totalPrev=(editOrc.pecas||[]).reduce((a,p)=>a+parseVal(p.precoConsumidor),0);
           const salvar=()=>{
-            if(!editOrc.peca){alert("Informe a Peça.");return;}
+            if(!editOrc.empresa){alert("Informe a Empresa.");return;}
+            const pecasValidas=(editOrc.pecas||[]).filter(p=>p.nome||p.precoConsumidor);
             if(isNovo){
-              orcamentoPecaCrud.add(editOrc);
+              orcamentoPecaCrud.add({...editOrc,pecas:pecasValidas});
             }else{
-              orcamentoPecaCrud.update(editOrc.id,editOrc);
-              notify("✅ Registro atualizado!");
+              orcamentoPecaCrud.update(editOrc.id,{...editOrc,pecas:pecasValidas});
+              notify("✅ Orçamento atualizado!");
             }
             setModalOrc(false);setEditOrc(null);
           };
           return(
             <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalOrc(false);setEditOrc(null);}}>
-              <div style={{background:"#FFF",borderRadius:14,maxWidth:620,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:720,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
                 <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
-                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"💵 Novo":"✏️ Editar"} Orçamento de Peça</div>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"📋 Novo":"✏️ Editar"} Orçamento — {editOrc.orcamentoNum}</div>
                   <button onClick={()=>{setModalOrc(false);setEditOrc(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
                 </div>
                 <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
-                  <div style={{display:"grid",gridTemplateColumns:"110px 1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipoRef||"OV"} onChange={e=>upd("tipoRef",e.target.value)} style={inp}>{ORC_TIPO_REF.map(t=><option key={t}>{t}</option>)}</select></div>
-                    <div><label style={lbl}>{editOrc.tipoRef||"OV"} nº</label><input type="text" value={editOrc.refNum||""} onChange={e=>upd("refNum",e.target.value)} style={inp}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}><option value="unica">Peça Única</option><option value="reforma">Reforma</option></select></div>
                     <div><label style={lbl}>Data</label><input type="date" value={editOrc.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Peça</label><input type="text" value={editOrc.peca||""} onChange={e=>upd("peca",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>Código</label><input type="text" value={editOrc.codigo||""} onChange={e=>upd("codigo",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>Quantidade</label><input type="text" value={editOrc.quantidade||""} onChange={e=>upd("quantidade",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Empresa</label><input type="text" value={editOrc.empresa||""} onChange={e=>upd("empresa",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Telefone</label><input type="text" value={editOrc.telefone||""} onChange={e=>upd("telefone",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Cidade</label><input type="text" value={editOrc.cidade||""} onChange={e=>upd("cidade",e.target.value)} style={inp}/></div>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:editOrc.localCotacao==="Portal"?"1fr 1fr 1fr":"1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Local de Cotação</label><select value={editOrc.localCotacao||ORC_LOCAIS_COTACAO[0]} onChange={e=>upd("localCotacao",e.target.value)} style={inp}>{ORC_LOCAIS_COTACAO.map(l=><option key={l}>{l}</option>)}</select></div>
-                    <div><label style={lbl}>Data da Cotação</label><input type="date" value={editOrc.dataCotacao||""} onChange={e=>upd("dataCotacao",e.target.value)} style={inp}/></div>
-                    {editOrc.localCotacao==="Portal"&&<div><label style={lbl}>Ticket</label><input type="text" value={editOrc.ticket||""} onChange={e=>upd("ticket",e.target.value)} style={inp}/></div>}
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Produto (Marca/Modelo)</label><input type="text" value={editOrc.produtoModelo||""} onChange={e=>upd("produtoModelo",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>PAT / Nº Série</label><input type="text" value={editOrc.patSerie||""} onChange={e=>upd("patSerie",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Nº da OS</label><input type="text" value={editOrc.numOS||""} onChange={e=>upd("numOS",e.target.value)} style={inp}/></div>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Valor de Compra</label><input type="text" value={editOrc.valorCompra||""} onChange={e=>upd("valorCompra",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
-                    <div><label style={lbl}>Valor de Revenda</label><input type="text" value={editOrc.valorRevenda||""} onChange={e=>upd("valorRevenda",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                  <div style={{background:"#F5F3FF",border:"1.5px solid #DDD6FE",borderRadius:10,padding:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#5B21B6",textTransform:"uppercase"}}>🔩 Peças do Orçamento ({(editOrc.pecas||[]).length})</div>
+                      <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"2fr 0.6fr 1fr 1.2fr 1fr 32px",gap:6,fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",marginBottom:4,paddingLeft:2}}>
+                      <span>Nome</span><span>Qtd</span><span>Preço Cotação</span><span>Local Cotação</span><span>Preço Consumidor</span><span></span>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {(editOrc.pecas||[]).map((p,i)=>(
+                        <div key={i} style={{display:"grid",gridTemplateColumns:"2fr 0.6fr 1fr 1.2fr 1fr 32px",gap:6,alignItems:"center"}}>
+                          <input type="text" value={p.nome||""} onChange={e=>updPeca(i,"nome",e.target.value)} placeholder="Nome da peça" style={inp}/>
+                          <input type="text" value={p.quantidade||""} onChange={e=>updPeca(i,"quantidade",e.target.value)} style={inp}/>
+                          <input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/>
+                          <input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/>
+                          <input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/>
+                          <button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:32,height:32,fontSize:14}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display:"flex",justifyContent:"flex-end",marginTop:10,paddingTop:10,borderTop:"1px solid #E9D5FF"}}>
+                      <span style={{fontSize:11,fontWeight:700,color:"#5B21B6",marginRight:10}}>Total (Preço Consumidor):</span>
+                      <span style={{fontSize:15,fontWeight:900,color:"#5B21B6"}}>{fmtR(totalPrev)}</span>
+                    </div>
                   </div>
-                  <div style={{padding:"10px 14px",background:margemPrev>=0?"#F0FDF4":"#FEF2F2",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <span style={{fontSize:11,fontWeight:700,color:"#64748B"}}>Margem prevista</span>
-                    <span style={{fontSize:16,fontWeight:900,color:margemPrev>=0?"#166534":"#C62828"}}>{fmtR(margemPrev)}</span>
-                  </div>
+                  <div><label style={lbl}>Observação</label><textarea value={editOrc.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
                 </div>
                 <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
                   <button onClick={()=>{setModalOrc(false);setEditOrc(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
@@ -7649,6 +7731,7 @@ export default function App(){
             </div>
           );
         })()}
+
 
         {tab==="a_faturar"&&(()=>{
           const lista=(processosAF||[]).filter(p=>p&&(showArqAF?p.processoStatus==="arquivado":p.processoStatus!=="arquivado"));
