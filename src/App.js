@@ -4741,32 +4741,31 @@ export default function App(){
                   <div><label style={lbl}>Tipo</label><select value={form.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div><label style={lbl}>Vendedor</label><select value={form.vendedor} onChange={e=>upd("vendedor",e.target.value)} style={inp}>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select></div>
                 </div>
-                {form.tipo==="Peça"&&<div style={{padding:14,background:"#F5F3FF",borderRadius:10,border:"1.5px solid #DDD6FE"}}>
-                  <div style={{fontSize:10,fontWeight:800,color:"#5B21B6",marginBottom:10,textTransform:"uppercase"}}>🔩 Dados da Peça</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-                    <div><label style={lbl}>Código</label><input type="text" value={form.pecaCodigo||""} onChange={e=>upd("pecaCodigo",e.target.value)} placeholder="Código da peça" style={inp}/></div>
-                    <div><label style={lbl}>Nome</label><input type="text" value={form.pecaNome||""} onChange={e=>upd("pecaNome",e.target.value)} placeholder="Nome da peça" style={inp}/></div>
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Quantidade</label><input type="text" value={form.pecaQtd||""} onChange={e=>upd("pecaQtd",e.target.value)} placeholder="0" style={inp}/></div>
-                    <div><label style={lbl}>Cotação (Valor)</label><input type="text" value={form.pecaCotacao||""} onChange={e=>upd("pecaCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
-                    <div><label style={lbl}>Data da Cotação</label><input type="date" value={form.pecaDataCotacao||""} onChange={e=>upd("pecaDataCotacao",e.target.value)} style={inp}/></div>
-                  </div>
-                </div>}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                   <div><label style={lbl}>Status</label><select value={form.statusAF} onChange={e=>upd("statusAF",e.target.value)} style={inp}>{Object.entries(AF_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select></div>
                   <div><label style={lbl}>Empresa</label><select value={form.empresaGrupo} onChange={e=>upd("empresaGrupo",e.target.value)} style={inp}>{AF_EMPRESAS.map(e=><option key={e}>{e}</option>)}</select></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                  <div><label style={lbl}>Relatório</label><input type="text" value={form.relatorio||""} onChange={e=>upd("relatorio",e.target.value)} style={inp}/></div>
-                  <div><label style={lbl}>Data Relatório</label><input type="date" value={form.dataRelatorio||""} onChange={e=>upd("dataRelatorio",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Recebido Manutenção</label><input type="date" value={form.recebidoManut||""} onChange={e=>upd("recebidoManut",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Data Envio Ticket</label><input type="date" value={form.dataEnvioFat||""} onChange={e=>upd("dataEnvioFat",e.target.value)} style={inp}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                  <div><label style={lbl}>Recebido Manutenção</label><input type="text" value={form.recebidoManut||""} onChange={e=>upd("recebidoManut",e.target.value)} style={inp}/></div>
-                  <div><label style={lbl}>Novo Cliente</label><input type="text" value={form.novoCliente||""} onChange={e=>upd("novoCliente",e.target.value)} style={inp}/></div>
+                  <div><label style={lbl}>Executado</label><select value={form.executado||"nao"} onChange={e=>upd("executado",e.target.value)} style={inp}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+                  <div><label style={lbl}>Rel</label><input type="text" value={form.relatorio||""} onChange={e=>upd("relatorio",e.target.value)} style={inp}/></div>
                 </div>
-                <div><label style={lbl}>Data Envio Faturamento</label><input type="date" value={form.dataEnvioFat||""} onChange={e=>upd("dataEnvioFat",e.target.value)} style={{...inp,maxWidth:220}}/></div>
-                <div><label style={lbl}>Descrição</label><textarea value={form.descricao||""} onChange={e=>upd("descricao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
+                <div>
+                  <label style={lbl}>Aplicação de Peças</label>
+                  <select value={form.aplicacaoPecas||"nao"} onChange={e=>upd("aplicacaoPecas",e.target.value)} style={inp}><option value="nao">Não</option><option value="sim">Sim</option></select>
+                </div>
+                {form.aplicacaoPecas==="sim"&&<div style={{padding:14,background:"#FFFBEB",borderRadius:10,border:"1.5px solid #FDE68A"}}>
+                  <div style={{fontSize:10,fontWeight:800,color:"#92400E",marginBottom:10,textTransform:"uppercase"}}>🔩 Peça Aplicada</div>
+                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Nome da Peça</label><input type="text" value={form.pecaNome||""} onChange={e=>upd("pecaNome",e.target.value)} placeholder="Nome da peça" style={inp}/></div>
+                    <div><label style={lbl}>Código</label><input type="text" value={form.pecaCodigo||""} onChange={e=>upd("pecaCodigo",e.target.value)} placeholder="Código" style={inp}/></div>
+                    <div><label style={lbl}>Quantidade</label><input type="text" value={form.pecaQuantidade||""} onChange={e=>upd("pecaQuantidade",e.target.value)} placeholder="0" style={inp}/></div>
+                  </div>
+                </div>}
+                <div><label style={lbl}>Observação</label><textarea value={form.descricao||""} onChange={e=>upd("descricao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
                 <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:4,borderTop:"1px solid #F1F5F9"}}>
                   <BtnG onClick={()=>{setModalAF(false);setEditAF(null);}}>Cancelar</BtnG>
                   <BtnY onClick={salvar}>Salvar</BtnY>
@@ -7492,8 +7491,9 @@ export default function App(){
             return true;
           });
           const hasF=afStatus!=="todos"||afTipo!=="todos"||afVendedor!=="todos"||afFrom||afTo||afSearch;
-          const soma=(arr)=>arr.filter(p=>p.tipo!=="Orçamento").reduce((a,p)=>a+val(p.valor),0);
-          const somaOrcamento=(arr)=>arr.filter(p=>p.tipo==="Orçamento").reduce((a,p)=>a+val(p.valor),0);
+          const orcamentoConta=(p)=>p.tipo==="Orçamento"&&(p.statusAF==="aprovado_pend_conclusao"||p.statusAF==="env_faturamento");
+          const soma=(arr)=>arr.filter(p=>p.tipo!=="Orçamento"||orcamentoConta(p)).reduce((a,p)=>a+val(p.valor),0);
+          const somaOrcamento=(arr)=>arr.filter(p=>p.tipo==="Orçamento"&&!orcamentoConta(p)).reduce((a,p)=>a+val(p.valor),0);
           const noMes=(p)=>(p.emissao||p.date||"").startsWith(mesRef);
           const naSemana=(p)=>{const d=p.emissao||p.date||"";return d>=semDe&&d<=semAte;};
           const envFat=(p)=>stDe(p)==="env_faturamento";
@@ -7507,7 +7507,7 @@ export default function App(){
           const inp={fontSize:11,border:"1px solid transparent",background:"transparent",outline:"none",padding:"4px 6px",borderRadius:6,width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
           const th={padding:"8px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,whiteSpace:"nowrap",borderBottom:"2px solid #E2E8F0",background:"#F8FAFC",position:"sticky",top:0,zIndex:2};
           const td={padding:"2px 4px",borderBottom:"1px solid #F1F5F9"};
-          const COLS=[{key:"emissao",label:"Emissão",label2:"Data Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"recebidoManut",label:"Receb. Manut."},{key:"novoCliente",label:"Novo Cliente"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"pecaCodigo",label:"Cód. Peça"},{key:"pecaNome",label:"Nome Peça"},{key:"pecaQtd",label:"Qtd Peça"},{key:"pecaCotacao",label:"Cotação Peça"},{key:"pecaDataCotacao",label:"Data Cotação"},{key:"descricao",label:"Descrição"}];
+          const COLS=[{key:"emissao",label:"Emissão",label2:"Data Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"empresaGrupo",label:"Empresa"},{key:"recebidoManut",label:"Receb. Manut."},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Ticket"},{key:"executado",label:"Executado"},{key:"relatorio",label:"Rel"},{key:"aplicacaoPecas",label:"Aplicação de Peças"},{key:"descricao",label:"Observação"}];
           return(<div style={{animation:"fadeIn .3s ease"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
               <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>💰 A Faturar — Prospecções</div>
@@ -7515,8 +7515,8 @@ export default function App(){
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                 <BtnImport onClick={()=>setModalImportAF(true)}/>
                 <button onClick={()=>setShowArqAF(p=>!p)} style={{padding:"8px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqAF?"#1A1A1A":"#FFF",color:showArqAF?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqAF?"✕ Voltar aos Ativos":"Arquivados"}</button>
-                <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"relatorio",label:"Relatório"},{key:"dataRelatorio",label:"Data Relatório"},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Fat."},{key:"empresaGrupo",label:"Empresa"},{key:"pecaCodigo",label:"Cód. Peça"},{key:"pecaNome",label:"Nome Peça"},{key:"pecaQtd",label:"Qtd Peça"},{key:"pecaCotacao",label:"Cotação Peça"},{key:"pecaDataCotacao",label:"Data Cotação"},{key:"descricao",label:"Descrição"}])}/>
-                <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",dataRelatorio:"",recebidoManut:"",novoCliente:"",ticket:"",dataEnvioFat:"",empresaGrupo:AF_EMPRESAS[0],descricao:"",pecaCodigo:"",pecaNome:"",pecaQtd:"",pecaCotacao:"",pecaDataCotacao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
+                <BtnExcel onClick={()=>exportCSV(filtrada,"a_faturar_prospeccoes",[{key:"emissao",label:"Emissão"},{key:"ov",label:"OV"},{key:"cliente",label:"Cliente"},{key:"valor",label:"Total NF"},{key:"tipo",label:"Tipo"},{key:"vendedor",label:"Vendedor"},{key:"statusAF",label:"Status"},{key:"empresaGrupo",label:"Empresa"},{key:"recebidoManut",label:"Receb. Manut."},{key:"ticket",label:"Ticket"},{key:"dataEnvioFat",label:"Data Envio Ticket"},{key:"executado",label:"Executado"},{key:"relatorio",label:"Rel"},{key:"aplicacaoPecas",label:"Aplicação de Peças"},{key:"pecaNome",label:"Nome Peça"},{key:"pecaCodigo",label:"Cód. Peça"},{key:"pecaQuantidade",label:"Qtd Peça"},{key:"descricao",label:"Observação"}])}/>
+                <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",recebidoManut:"",ticket:"",dataEnvioFat:"",executado:"nao",aplicacaoPecas:"nao",pecaNome:"",pecaCodigo:"",pecaQuantidade:"",empresaGrupo:AF_EMPRESAS[0],descricao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
               </div>
             </div>
 
@@ -7548,16 +7548,17 @@ export default function App(){
               <div><div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Serviço</div><div style={{fontSize:14,fontWeight:800,color:"#334155"}}>{fmtR(soma(aprovServ))}</div></div>
             </div>
             {(()=>{
-              const orcamentosLista=lista.filter(p=>p.tipo==="Orçamento");
-              if(orcamentosLista.length===0)return null;
+              const orcamentosPendentes=lista.filter(p=>p.tipo==="Orçamento"&&!orcamentoConta(p));
+              if(orcamentosPendentes.length===0)return null;
               return(
-                <div style={{padding:"14px 18px",marginBottom:14,background:"#EA580C",borderRadius:12,boxShadow:"0 2px 10px rgba(234,88,12,.3)"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#FFF"}}>📝 Orçamentos — {orcamentosLista.length} registro(s)</div>
-                    <div style={{display:"flex",alignItems:"center",gap:14}}>
-                      <div style={{fontSize:20,fontWeight:900,color:"#FFF"}}>{fmtR(somaOrcamento(lista))}</div>
-                      <div style={{fontSize:10,fontWeight:700,color:"#FFEDD5"}}>não soma no total até virar Venda</div>
-                    </div>
+                <div className="card" style={{padding:"14px 16px",marginBottom:14,borderLeft:"4px solid #EA580C",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{width:8,height:8,borderRadius:"50%",background:"#EA580C",display:"inline-block"}}/>
+                    <span style={{fontSize:11,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Orçamentos — {orcamentosPendentes.length} registro(s)</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:14}}>
+                    <div style={{fontSize:20,fontWeight:900,color:"#EA580C"}}>{fmtR(somaOrcamento(lista))}</div>
+                    <div style={{fontSize:10,fontWeight:600,color:"#94A3B8"}}>soma no total quando Aprovado ou Enviado ao Faturamento</div>
                   </div>
                 </div>
               );
@@ -7590,13 +7591,22 @@ export default function App(){
                           <td style={td}><select value={p.tipo||"Serviço"} onChange={e=>updateAF(p.id,{tipo:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F1F5F9",color:"#334155"}}>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select></td>
                           <td style={td}><select value={p.vendedor||""} onChange={e=>updateAF(p.id,{vendedor:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select></td>
                           <td style={td}><select value={stDe(p)} onChange={e=>{const nv=e.target.value;const ch={statusAF:nv};if(nv==="env_faturamento"&&!p.dataEnvioFat)ch.dataEnvioFat=TODAY_STR;updateAF(p.id,ch);}} style={{fontSize:10,fontWeight:700,padding:"4px 8px",borderRadius:20,border:"none",cursor:"pointer",color:"#FFF",background:s.c}}>{Object.entries(AF_STATUS).map(([k,v])=><option key={k} value={k} style={{background:"#FFF",color:"#1A1A1A"}}>{v.l}</option>)}</select></td>
-                          <td style={td}><input type="text" defaultValue={p.relatorio||""} onBlur={e=>e.target.value!==(p.relatorio||"")&&updateAF(p.id,{relatorio:e.target.value})} style={{...inp,width:110}}/></td>
-                          <td style={td}><input type="date" defaultValue={p.dataRelatorio||""} onBlur={e=>e.target.value!==(p.dataRelatorio||"")&&updateAF(p.id,{dataRelatorio:e.target.value})} style={{...inp,width:120}}/></td>
+                          <td style={td}><select value={p.empresaGrupo||""} onChange={e=>updateAF(p.id,{empresaGrupo:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_EMPRESAS.map(v=><option key={v}>{v}</option>)}</select></td>
                           <td style={td}><input type="date" defaultValue={p.recebidoManut||""} onBlur={e=>e.target.value!==(p.recebidoManut||"")&&updateAF(p.id,{recebidoManut:e.target.value})} style={{...inp,width:120}}/></td>
-                          <td style={td}><select value={p.novoCliente||""} onChange={e=>updateAF(p.id,{novoCliente:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:p.novoCliente==="SIM"?"#FFFBEB":"#F8FAFC",color:p.novoCliente==="SIM"?"#B45309":"#94A3B8"}}><option value="">—</option><option value="SIM">SIM</option></select></td>
                           <td style={td}><input type="text" defaultValue={p.ticket||""} onBlur={e=>e.target.value!==(p.ticket||"")&&updateAF(p.id,{ticket:e.target.value})} style={{...inp,width:90}}/></td>
                           <td style={td}><input type="date" defaultValue={p.dataEnvioFat||""} onBlur={e=>e.target.value!==(p.dataEnvioFat||"")&&updateAF(p.id,{dataEnvioFat:e.target.value})} style={{...inp,width:120}}/></td>
-                          <td style={td}><select value={p.empresaGrupo||""} onChange={e=>updateAF(p.id,{empresaGrupo:e.target.value})} style={{fontSize:10,fontWeight:600,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:"#F8FAFC"}}><option value="">—</option>{AF_EMPRESAS.map(v=><option key={v}>{v}</option>)}</select></td>
+                          <td style={td}><select value={p.executado||"nao"} onChange={e=>updateAF(p.id,{executado:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:p.executado==="sim"?"#F0FFF5":"#FFF0F0",color:p.executado==="sim"?"#1A7A3C":"#C62828"}}><option value="nao">Não</option><option value="sim">Sim</option></select></td>
+                          <td style={td}><input type="text" defaultValue={p.relatorio||""} onBlur={e=>e.target.value!==(p.relatorio||"")&&updateAF(p.id,{relatorio:e.target.value})} style={{...inp,width:100}}/></td>
+                          <td style={td}>
+                            <select value={p.aplicacaoPecas||"nao"} onChange={e=>updateAF(p.id,{aplicacaoPecas:e.target.value})} style={{fontSize:10,fontWeight:700,padding:"4px 6px",borderRadius:8,border:"none",cursor:"pointer",background:p.aplicacaoPecas==="sim"?"#FFFBEB":"#F8FAFC",color:p.aplicacaoPecas==="sim"?"#B45309":"#94A3B8",marginBottom:p.aplicacaoPecas==="sim"?4:0}}><option value="nao">Não</option><option value="sim">Sim</option></select>
+                            {p.aplicacaoPecas==="sim"&&<div style={{display:"flex",flexDirection:"column",gap:3,marginTop:4}}>
+                              <input type="text" defaultValue={p.pecaNome||""} onBlur={e=>e.target.value!==(p.pecaNome||"")&&updateAF(p.id,{pecaNome:e.target.value})} placeholder="Nome da peça" style={{...inp,width:130,fontSize:10}}/>
+                              <div style={{display:"flex",gap:3}}>
+                                <input type="text" defaultValue={p.pecaCodigo||""} onBlur={e=>e.target.value!==(p.pecaCodigo||"")&&updateAF(p.id,{pecaCodigo:e.target.value})} placeholder="Cód." style={{...inp,width:62,fontSize:10}}/>
+                                <input type="text" defaultValue={p.pecaQuantidade||""} onBlur={e=>e.target.value!==(p.pecaQuantidade||"")&&updateAF(p.id,{pecaQuantidade:e.target.value})} placeholder="Qtd" style={{...inp,width:62,fontSize:10}}/>
+                              </div>
+                            </div>}
+                          </td>
                           <td style={td}><input type="text" defaultValue={p.descricao||""} onBlur={e=>e.target.value!==(p.descricao||"")&&updateAF(p.id,{descricao:e.target.value})} style={{...inp,width:170,fontStyle:"italic",color:"#64748B"}}/></td>
                           <td style={{...td,textAlign:"center",whiteSpace:"nowrap"}}>
                             <button onClick={()=>{setEditAF(p);setModalAF(true);}} title="Editar em janela" style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 8px",fontSize:11,marginRight:4}}>✏️</button>
@@ -10429,7 +10439,7 @@ export default function App(){
 
         {tab==="dashboard_a_faturar"&&(
           <DashboardProcessoSimples
-            lista={(processosAF||[]).filter(p=>p&&p.tipo!=="Orçamento").map(p=>{
+            lista={(processosAF||[]).filter(p=>p&&(p.tipo!=="Orçamento"||p.statusAF==="aprovado_pend_conclusao"||p.statusAF==="env_faturamento")).map(p=>{
               const mapaAprov={aguardando_aprovacao:"aguardando_retorno",aprovado_pend_conclusao:"aprovado_cliente",env_faturamento:"cobrado_faturado",nao_aprovado:"negado_cliente"};
               return {...p,
                 empresa:p.empresaGrupo||p.cliente||p.empresa||"",
