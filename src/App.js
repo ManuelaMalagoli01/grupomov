@@ -7725,11 +7725,11 @@ export default function App(){
                       <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
                     </div>
                     <div style={{overflowX:"auto"}}>
-                    <table style={{width:"100%",borderCollapse:"collapse"}}>
+                    <table style={{width:"100%",minWidth:960,borderCollapse:"collapse",tableLayout:"fixed"}}>
                       <thead><tr>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",minWidth:200}}>Nome / Descrição</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:200}}>Nome / Descrição</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Código</th>
-                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:50}}>Qtd</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:58}}>Qtd</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Local Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Consumidor</th>
