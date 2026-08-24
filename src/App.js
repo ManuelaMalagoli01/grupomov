@@ -569,13 +569,23 @@ const loadExcelJS = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar gerador de Excel"));
   document.body.appendChild(sc);
 });
-const renderChartParaImagem = async (type, data, options={}, w=700, h=360) => {
+const renderChartParaImagem = async (type, data, options={}, w=700, h=360, scale=3) => {
   const Chart = await loadChartLib();
   const canvas = document.createElement("canvas");
-  canvas.width = w; canvas.height = h;
+  canvas.width = w*scale; canvas.height = h*scale;
   const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
   ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,w,h);
-  const chart = new Chart(ctx, {type, data, options:{...options, responsive:false, animation:false, devicePixelRatio:1}});
+  const chart = new Chart(ctx, {type, data, options:{
+    ...options, responsive:false, animation:false, devicePixelRatio:1,
+    layout:{padding:{top:10,right:16,bottom:6,left:6}},
+    font:{family:"Arial"},
+    plugins:{
+      ...(options.plugins||{}),
+      legend:{labels:{font:{family:"Arial",size:12}}, ...(options.plugins?.legend||{})},
+    },
+    scales:options.scales?Object.fromEntries(Object.entries(options.scales).map(([k,v])=>[k,{...v,ticks:{font:{family:"Arial",size:11},...(v.ticks||{})},grid:{color:"#EEF1F4",...(v.grid||{})}}])):undefined,
+  }});
   const url = canvas.toDataURL("image/png");
   chart.destroy();
   return url;
@@ -587,76 +597,110 @@ const gerarDashboardExcelProfissional = async ({titulo, periodoLabel, kpis, abas
   workbook.creator = "Grupo MOV";
   workbook.created = new Date();
 
-  const PRETO = "FF1A1A1A", DOURADO = "FFF5C200", BRANCO = "FFFFFFFF", CINZA_CLARO = "FFF8FAFC", CINZA_BORDA = "FFE2E8F0";
+  const PRETO = "FF1A1A1A", DOURADO = "FFF5C200", BRANCO = "FFFFFFFF", CINZA_CLARO = "FFF8FAFC", CINZA_BORDA = "FFE2E8F0", CINZA_TEXTO = "FF64748B";
   const corHex = (c)=>"FF"+String(c||"1565C0").replace("#","").toUpperCase();
+  const FONTE = "Calibri";
+  const borda = (peso="thin", cor=CINZA_BORDA)=>({top:{style:peso,color:{argb:cor}},bottom:{style:peso,color:{argb:cor}},left:{style:peso,color:{argb:cor}},right:{style:peso,color:{argb:cor}}});
 
   // ── Aba Dashboard ──
-  const wsDash = workbook.addWorksheet("Dashboard");
-  wsDash.columns = [{width:4},{width:26},{width:20},{width:20},{width:20},{width:20}];
-  wsDash.mergeCells("A1:F2");
-  const cellTitulo = wsDash.getCell("A1");
-  cellTitulo.value = `GRUPO MOV  —  ${titulo}`;
-  cellTitulo.font = {bold:true, size:16, color:{argb:DOURADO}};
+  const wsDash = workbook.addWorksheet("Dashboard", {views:[{showGridLines:false}]});
+  wsDash.columns = [{width:3},{width:24},{width:24},{width:24},{width:24},{width:24},{width:3}];
+
+  wsDash.mergeCells("B2:F3");
+  const cellTitulo = wsDash.getCell("B2");
+  cellTitulo.value = `GRUPO MOV — ${titulo}`;
+  cellTitulo.font = {name:FONTE, bold:true, size:18, color:{argb:DOURADO}};
   cellTitulo.fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
   cellTitulo.alignment = {vertical:"middle", horizontal:"left", indent:1};
-  wsDash.mergeCells("A3:F3");
-  const cellPeriodo = wsDash.getCell("A3");
-  cellPeriodo.value = `Período: ${periodoLabel} — Gerado em ${new Date().toLocaleString("pt-BR")}`;
-  cellPeriodo.font = {italic:true, size:10, color:{argb:"FF64748B"}};
+  for(const c of ["B","C","D","E","F"]) wsDash.getCell(`${c}2`).fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
+  wsDash.getRow(2).height = 26; wsDash.getRow(3).height = 26;
 
-  let rowKpi = 5;
+  wsDash.mergeCells("B4:F4");
+  const cellPeriodo = wsDash.getCell("B4");
+  cellPeriodo.value = `Período: ${periodoLabel}   ·   Gerado em ${new Date().toLocaleString("pt-BR")}`;
+  cellPeriodo.font = {name:FONTE, italic:true, size:10, color:{argb:CINZA_TEXTO}};
+  wsDash.getRow(4).height = 20;
+
+  let rowKpi = 6;
+  const ROW_H = 8;
   kpis.forEach((k,i)=>{
-    const col = String.fromCharCode(66+ (i%4)); // B,C,D,E
-    if(i>0 && i%4===0) rowKpi += 4;
+    const col = String.fromCharCode(66 + (i%4)); // B,C,D,E
+    if(i>0 && i%4===0) rowKpi += ROW_H+1;
     const r0 = rowKpi;
+    for(let rr=r0; rr<r0+ROW_H; rr++) wsDash.getRow(rr).height = 15;
+
+    // Card com borda completa e fundo branco, faixa colorida no topo
     wsDash.mergeCells(`${col}${r0}:${col}${r0+1}`);
-    const cLbl = wsDash.getCell(`${col}${r0}`);
-    cLbl.value = k.label;
-    cLbl.font = {bold:true, size:9, color:{argb:BRANCO}};
-    cLbl.fill = {type:"pattern", pattern:"solid", fgColor:{argb:corHex(k.cor)}};
-    cLbl.alignment = {vertical:"middle", horizontal:"center", wrapText:true};
-    wsDash.mergeCells(`${col}${r0+2}:${col}${r0+3}`);
+    const cFaixa = wsDash.getCell(`${col}${r0}`);
+    cFaixa.fill = {type:"pattern", pattern:"solid", fgColor:{argb:corHex(k.cor)}};
+    cFaixa.value = k.label;
+    cFaixa.font = {name:FONTE, bold:true, size:10, color:{argb:BRANCO}};
+    cFaixa.alignment = {vertical:"middle", horizontal:"center", wrapText:true};
+
+    wsDash.mergeCells(`${col}${r0+2}:${col}${r0+ROW_H-1}`);
     const cVal = wsDash.getCell(`${col}${r0+2}`);
     cVal.value = k.valor;
-    cVal.font = {bold:true, size:16, color:{argb:corHex(k.cor)}};
+    cVal.font = {name:FONTE, bold:true, size:22, color:{argb:PRETO}};
     cVal.alignment = {vertical:"middle", horizontal:"center"};
-    cVal.border = {bottom:{style:"medium", color:{argb:corHex(k.cor)}}};
-  });
+    cVal.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFFFF"}};
 
-  // ── Gráfico embutido (imagem renderizada via Chart.js) ──
+    // Contorno do card inteiro
+    for(let rr=r0; rr<r0+ROW_H; rr++){
+      const cell = wsDash.getCell(`${col}${rr}`);
+      const top = rr===r0?"medium":"thin";
+      const bottom = rr===r0+ROW_H-1?"medium":(rr===r0+1?"thin":"thin");
+      cell.border = {
+        top:{style: rr===r0?"medium":undefined, color:{argb:corHex(k.cor)}},
+        bottom:{style: rr===r0+ROW_H-1?"medium":undefined, color:{argb:corHex(k.cor)}},
+        left:{style:"medium", color:{argb:corHex(k.cor)}},
+        right:{style:"medium", color:{argb:corHex(k.cor)}},
+      };
+    }
+  });
+  rowKpi += ROW_H;
+
+  // ── Gráfico embutido (imagem renderizada via Chart.js, alta resolução) ──
   if(grafico && grafico.data){
     try{
-      const imgUrl = await renderChartParaImagem(grafico.type||"bar", grafico.data, grafico.options||{}, 760, 340);
+      const imgUrl = await renderChartParaImagem(grafico.type||"bar", grafico.data, grafico.options||{}, 780, 360, 3);
       const imgId = workbook.addImage({base64: imgUrl, extension:"png"});
-      const rowGrafico = rowKpi + 6;
+      const rowGrafico = rowKpi + 2;
       wsDash.mergeCells(`B${rowGrafico}:F${rowGrafico}`);
       const cGraf = wsDash.getCell(`B${rowGrafico}`);
       cGraf.value = grafico.titulo || "Gráfico";
-      cGraf.font = {bold:true, size:12, color:{argb:PRETO}};
-      wsDash.addImage(imgId, {tl:{col:1, row:rowGrafico}, ext:{width:640, height:300}});
+      cGraf.font = {name:FONTE, bold:true, size:13, color:{argb:PRETO}};
+      cGraf.border = {bottom:{style:"medium", color:{argb:DOURADO}}};
+      wsDash.getRow(rowGrafico).height = 22;
+      wsDash.addImage(imgId, {tl:{col:1, row:rowGrafico+0.3}, ext:{width:660, height:305}});
     }catch(e){ /* se o grafico falhar, segue sem ele — nao trava a exportacao */ }
   }
 
   // ── Uma aba por categoria (registros detalhados) ──
   abas.forEach(aba=>{
     if(!aba.registros || aba.registros.length===0) return;
-    const ws = workbook.addWorksheet(aba.nome.slice(0,31));
+    const ws = workbook.addWorksheet(aba.nome.slice(0,31), {views:[{showGridLines:false}]});
     ws.columns = aba.colunas.map(c=>({header:c.label, key:c.key, width:c.width||18}));
     const headerRow = ws.getRow(1);
     headerRow.eachCell(cell=>{
-      cell.font = {bold:true, size:10, color:{argb:BRANCO}};
+      cell.font = {name:FONTE, bold:true, size:10.5, color:{argb:BRANCO}};
       cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:PRETO}};
       cell.alignment = {vertical:"middle", horizontal:"center"};
-      cell.border = {bottom:{style:"thin", color:{argb:DOURADO}}};
+      cell.border = {bottom:{style:"medium", color:{argb:DOURADO}}};
     });
-    headerRow.height = 20;
+    headerRow.height = 22;
     aba.registros.forEach((reg,i)=>{
       const row = ws.addRow(aba.colunas.reduce((acc,c)=>{acc[c.key]=c.get?c.get(reg):reg[c.key];return acc;},{}));
-      row.eachCell(cell=>{
-        cell.border = {bottom:{style:"thin", color:{argb:CINZA_BORDA}}};
-        cell.font = {size:10};
+      row.height = 18;
+      row.eachCell((cell,colNum)=>{
+        cell.border = {bottom:{style:"hair", color:{argb:CINZA_BORDA}}};
+        cell.font = {name:FONTE, size:10.5};
+        const colDef = aba.colunas[colNum-1];
+        if(colDef && colDef.money){
+          cell.numFmt = '"R$" #,##0.00';
+          cell.alignment = {horizontal:"right"};
+        }
       });
-      if(i%2===1) row.eachCell(cell=>{cell.fill={type:"pattern", pattern:"solid", fgColor:{argb:CINZA_CLARO}};});
+      if(i%2===1) row.eachCell(cell=>{if(!cell.fill||cell.fill.fgColor?.argb!==PRETO) cell.fill={type:"pattern", pattern:"solid", fgColor:{argb:CINZA_CLARO}};});
     });
     ws.views = [{state:"frozen", ySplit:1}];
   });
@@ -2484,7 +2528,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 colunas:[
                   {key:"empresa", label:"Empresa", width:26, get:p=>p.empresa||""},
                   {key:"num", label:"Nº", width:14, get:p=>p.numMauUso||p.ov||""},
-                  {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor)},
+                  {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor), money:true},
                   {key:"status", label:"Status", width:22, get:p=>(APROV_STATUS[aprovDe(p)]||{}).l||""},
                   {key:"abertura", label:"Data Abertura", width:16, get:p=>fmtDataBR(dataAbertura(p))||""},
                   {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
@@ -6569,7 +6613,7 @@ export default function App(){
                           {key:"pat", label:"PAT", width:12, get:p=>p.patrimonio||""},
                           {key:"numMU", label:"Nº MU", width:16, get:p=>p.numMauUso||""},
                           {key:"nd", label:"ND", width:14, get:p=>p.ov||""},
-                          {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor)},
+                          {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor), money:true},
                           {key:"status", label:"Status", width:18, get:p=>(ST[p.processoStatus||"pendente"]||{}).l||""},
                         ],
                       })),
