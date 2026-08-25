@@ -7643,8 +7643,8 @@ export default function App(){
             const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
             return `${ano}.${String(max+1).padStart(4,"0")}`;
           };
-          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:""});setModalOrc(true);};
-          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:"",anexos:[]});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],anexos:o.anexos||[]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
@@ -7816,6 +7816,36 @@ export default function App(){
                       {parseVal(editOrc.maoDeObra)>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Mão de Obra: <b style={{color:"#1565C0"}}>{fmtR(parseVal(editOrc.maoDeObra))}</b></div>}
                       <div style={{fontSize:15,fontWeight:900,color:"#5B21B6",marginTop:4}}>Total: {fmtR(totalPrev)}</div>
                     </div>
+                  </div>
+                  <div style={{background:"#F8FAFC",border:"1.5px solid #E2E8F0",borderRadius:10,padding:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#334155",textTransform:"uppercase"}}>📎 Cotações Anexadas ({(editOrc.anexos||[]).length}/10)</div>
+                      {(editOrc.anexos||[]).length<10&&<label style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#1565C0",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                        + Anexar PDF
+                        <input type="file" accept="application/pdf,.pdf" multiple style={{display:"none"}} onChange={async e=>{
+                          const files=Array.from(e.target.files||[]);
+                          const vagas=10-(editOrc.anexos||[]).length;
+                          const aProcessar=files.slice(0,vagas);
+                          if(files.length>vagas) alert(`Só cabem mais ${vagas} anexo(s). Os demais arquivos selecionados foram ignorados.`);
+                          for(const file of aProcessar){
+                            try{
+                              const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+                              setEditOrc(p=>({...p,anexos:[...(p.anexos||[]),{nome:file.name,base64:b64}]}));
+                            }catch(err){ alert("Erro ao anexar "+file.name); }
+                          }
+                          e.target.value="";
+                        }}/>
+                      </label>}
+                    </div>
+                    {(editOrc.anexos||[]).length===0?<div style={{fontSize:11,color:"#94A3B8"}}>Nenhuma cotação anexada</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {(editOrc.anexos||[]).map((a,i)=>(
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:8,padding:"6px 10px"}}>
+                          <a href={a.base64} download={a.nome} style={{fontSize:11,color:"#1565C0",fontWeight:600,textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:400}}>📄 {a.nome}</a>
+                          <button onClick={()=>setEditOrc(p=>({...p,anexos:(p.anexos||[]).filter((_,idx)=>idx!==i)}))} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",width:24,height:24,fontSize:12}}>✕</button>
+                        </div>
+                      ))}
+                    </div>}
                   </div>
                   <div><label style={lbl}>Observação</label><textarea value={editOrc.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
                 </div>
