@@ -998,10 +998,10 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
     const COLW=versaoCliente
       ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
-      : {nome:50,cod:24,qtd:14,cot:26,local:32,cons:26,compra:32,venda:32,margem:33};
+      : {nome:52,cod:26,qtd:16,cot:30,local:36,cons:30,venda:38,margem:41};
     const heads=versaoCliente
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
-      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Compra",COLW.compra],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
+      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
     doc.setFontSize(Math.max(fonteBase,7));
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
@@ -1031,7 +1031,6 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
         doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,yTxt,{align:"right"}); xx+=COLW.cot;
         doc.text(localLines,xx+2,yTxt); xx+=COLW.local;
         doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,yTxt,{align:"right"}); xx+=COLW.cons;
-        doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,yTxt,{align:"right"}); xx+=COLW.compra;
         doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"}); xx+=COLW.venda;
         doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,yTxt,{align:"right"});
       }
@@ -1043,7 +1042,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     let xv=M;
     const colsList=versaoCliente
       ? [COLW.nome,COLW.cod,COLW.qtd,COLW.cons,COLW.venda]
-      : [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.compra,COLW.venda,COLW.margem];
+      : [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.venda,COLW.margem];
     colsList.forEach((w,i)=>{
       if(i>0) doc.line(xv,yTabelaInicio,xv,y);
       xv+=w;
@@ -7776,7 +7775,7 @@ export default function App(){
                       <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
                     </div>
                     <div style={{overflowX:"auto"}}>
-                    <table style={{width:"100%",minWidth:960,borderCollapse:"collapse",tableLayout:"fixed"}}>
+                    <table style={{width:"100%",minWidth:870,borderCollapse:"collapse",tableLayout:"fixed"}}>
                       <thead><tr>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:200}}>Nome / Descrição</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Código</th>
@@ -7784,7 +7783,6 @@ export default function App(){
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Local Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Consumidor</th>
-                        <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#B45309",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Valor Compra</th>
                         <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#0D9488",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Valor Venda</th>
                         <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#166534",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Margem</th>
                         <th style={{width:32}}></th>
@@ -7803,7 +7801,6 @@ export default function App(){
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
-                            <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:700,color:"#B45309",whiteSpace:"nowrap"}}>{fmtR(vCompra)}</td>
                             <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:700,color:"#0D9488",whiteSpace:"nowrap"}}>{fmtR(vVenda)}</td>
                             <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:800,color:margem>=0?"#166534":"#C62828",whiteSpace:"nowrap"}}>{fmtR(margem)}</td>
                             <td style={{padding:"3px 6px",textAlign:"center"}}><button onClick={()=>rmPeca(i)} style={{background:"#FEF2F2",border:"none",borderRadius:8,color:"#C62828",cursor:"pointer",width:28,height:28,fontSize:13}}>✕</button></td>
