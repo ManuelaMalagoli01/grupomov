@@ -3395,6 +3395,8 @@ export default function App(){
   const [modalImportAF,setModalImportAF]=useState(false);
   const [afStatus,setAfStatus]=useState("todos"); const [afTipo,setAfTipo]=useState("todos"); const [afVendedor,setAfVendedor]=useState("todos");
   const [showFiltrosAF,setShowFiltrosAF]=useState(false);
+  const [afPeriodo,setAfPeriodo]=useState("mes");
+  const [afRefIso,setAfRefIso]=useState(TODAY_STR);
   const [requisicoes,setRequisicoes]=useState([]);
   const [agendaItems,setAgendaItems]=useState({});
   const [schedule,setSchedule]=useState({});
@@ -7916,6 +7918,43 @@ export default function App(){
                 <BtnY onClick={()=>{setEditAF({emissao:TODAY_STR,ov:"",cliente:"",valor:"",tipo:"Serviço",vendedor:AF_VENDEDORES[0],statusAF:"aguardando_aprovacao",relatorio:"",recebidoManut:"",ticket:"",dataEnvioFat:"",executado:"nao",aplicacaoPecas:"nao",pecaNome:"",pecaCodigo:"",pecaQuantidade:"",empresaGrupo:AF_EMPRESAS[0],descricao:""});setModalAF(true);}}>+ Novo Registro</BtnY>
               </div>
             </div>
+
+            {(()=>{
+              // Navegador de período (Diário/Semanal/Mensal/Tudo) — igual ao Mau Uso
+              const refAF=new Date(afRefIso+"T12:00:00");
+              let janDeAF,janAteAF,janLabelAF;
+              if(afPeriodo==="dia"){ janDeAF=janAteAF=fmtDate(refAF); janLabelAF=fmtDataBR(janDeAF); }
+              else if(afPeriodo==="semana"){ const s=new Date(refAF); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${fmtDataBR(janDeAF)} - ${fmtDataBR(janAteAF)}`; }
+              else if(afPeriodo==="mes"){ const s=new Date(refAF.getFullYear(),refAF.getMonth(),1); const e=new Date(refAF.getFullYear(),refAF.getMonth()+1,0); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refAF.getMonth()]}/${refAF.getFullYear()}`; }
+              else { janDeAF=null; janAteAF=null; janLabelAF="Tudo"; }
+              const naJanelaAF=(d)=>{ if(afPeriodo==="tudo")return true; if(!d)return false; return d>=janDeAF&&d<=janAteAF; };
+              const navegarAF=(dir)=>{ const d=new Date(afRefIso+"T12:00:00"); if(afPeriodo==="dia")d.setDate(d.getDate()+dir); else if(afPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(afPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setAfRefIso(fmtDate(d)); };
+              const noPeriodoAF=lista.filter(p=>naJanelaAF(p.dataEnvioFat||p.emissao||p.date));
+              const comEnvioAF=noPeriodoAF.filter(p=>(p.emissao||p.date)&&p.dataEnvioFat);
+              const slaValoresAF=comEnvioAF.map(p=>diffDaysEntre(p.emissao||p.date,p.dataEnvioFat)).filter(v=>v!==null&&v>=0);
+              const slaMedioAF=slaValoresAF.length?Math.round(slaValoresAF.reduce((a,v)=>a+v,0)/slaValoresAF.length):null;
+              const valorTotalPeriodoAF=noPeriodoAF.reduce((a,p)=>a+val(p.valor),0);
+              const valorEnvPeriodoAF=noPeriodoAF.filter(p=>stDe(p)==="env_faturamento").reduce((a,p)=>a+val(p.valor),0);
+              const convAF=valorTotalPeriodoAF>0?Math.round(valorEnvPeriodoAF/valorTotalPeriodoAF*1000)/10:null;
+              const btnPerAF=(k,l)=>(
+                <button key={k} onClick={()=>setAfPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:afPeriodo===k?"2px solid #1565C0":"1.5px solid #E2E8F0",background:afPeriodo===k?"#EFF6FF":"#FFF",color:afPeriodo===k?"#1565C0":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+              );
+              return(
+                <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+                  <div style={{display:"flex",gap:6}}>{btnPerAF("dia","Diário")}{btnPerAF("semana","Semanal")}{btnPerAF("mes","Mensal")}{btnPerAF("tudo","Tudo")}</div>
+                  {(slaMedioAF!==null||convAF!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
+                    {slaMedioAF!==null&&<span title="Dias médios da emissão até o envio ao faturamento, no período" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaMedioAF}d</span>}
+                    {convAF!==null&&<span title="% enviado ao faturamento (valor) no período" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 {convAF}%</span>}
+                  </div>}
+                  {afPeriodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
+                    <button onClick={()=>navegarAF(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
+                    <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabelAF}</div>
+                    <button onClick={()=>navegarAF(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
+                    <button onClick={()=>setAfRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+                  </div>}
+                </div>
+              );
+            })()}
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
               {[{l:"Total Prospectado — Mês",v:fmtR(soma(prospMes)),q:`${prospMes.length} OV(s)`,c:"#1A1A1A"},
