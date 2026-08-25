@@ -935,7 +935,7 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
 };
 // Gera o PDF de Orcamento de Pecas, espelhando o modelo oficial GRUPO MOV (peca unica ou reforma)
-const gerarPDFOrcamentoPecas = async (o)=>{
+const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
   try{
     const jsPDF=await loadJsPDF();
     const doc=new jsPDF({orientation:"landscape"});
@@ -986,12 +986,16 @@ const gerarPDFOrcamentoPecas = async (o)=>{
     y+=14;
     // Título tabela de peças
     doc.setFont(undefined,"bold"); doc.setFontSize(12);
-    doc.text("Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
+    doc.text(versaoCliente?"Peças do orçamento":"Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
-    // colunas (paisagem, com detalhamento total): Nome, Código, Qtd, Preço Cotação, Local Cotação, Preço Consumidor, Valor Compra, Valor Venda, Margem
-    const COLW={nome:50,cod:24,qtd:14,cot:26,local:32,cons:26,compra:32,venda:32,margem:33};
-    const heads=[["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Compra",COLW.compra],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
+    // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor Compra e Margem
+    const COLW=versaoCliente
+      ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
+      : {nome:50,cod:24,qtd:14,cot:26,local:32,cons:26,compra:32,venda:32,margem:33};
+    const heads=versaoCliente
+      ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
+      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Compra",COLW.compra],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
     doc.setFontSize(8.5);
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
@@ -1001,8 +1005,8 @@ const gerarPDFOrcamentoPecas = async (o)=>{
     const yTabelaInicio=y;
     (o.pecas||[]).forEach(p=>{
       const nomeLines=doc.splitTextToSize(p.nome||"—",COLW.nome-4);
-      const localLines=doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
-      const alturaLinha=Math.max(nomeLines.length,localLines.length)*4.2+3;
+      const localLines=versaoCliente?[]:doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
+      const alturaLinha=Math.max(nomeLines.length,localLines.length,1)*4.2+3;
       if(y+alturaLinha>190){doc.addPage("landscape");y=20;}
       let xx=M;
       doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
@@ -1013,27 +1017,37 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const vCompra=qtd*cot, vVenda=qtd*cons, margem=vVenda-vCompra;
       totalCot+=vCompra; totalCons+=vVenda;
-      doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
-      doc.text(localLines,xx+2,y+4); xx+=COLW.local;
-      doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
-      doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,y+4,{align:"right"}); xx+=COLW.compra;
-      doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"}); xx+=COLW.venda;
-      doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,y+4,{align:"right"});
+      if(versaoCliente){
+        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
+        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"});
+      }else{
+        doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
+        doc.text(localLines,xx+2,y+4); xx+=COLW.local;
+        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
+        doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,y+4,{align:"right"}); xx+=COLW.compra;
+        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"}); xx+=COLW.venda;
+        doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,y+4,{align:"right"});
+      }
       y+=alturaLinha;
       doc.line(M,y,M+W,y);
     });
     // linhas verticais separando as colunas da tabela (do topo do cabeçalho ao fim da ultima linha)
     doc.setDrawColor(180,180,180); doc.setLineWidth(0.2);
     let xv=M;
-    [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.compra,COLW.venda,COLW.margem].forEach((w,i)=>{
+    const colsList=versaoCliente
+      ? [COLW.nome,COLW.cod,COLW.qtd,COLW.cons,COLW.venda]
+      : [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.compra,COLW.venda,COLW.margem];
+    colsList.forEach((w,i)=>{
       if(i>0) doc.line(xv,yTabelaInicio,xv,y);
       xv+=w;
     });
     doc.line(M,yTabelaInicio,M,y); doc.line(M+W,yTabelaInicio,M+W,y);
     doc.setDrawColor(20,20,20); doc.setLineWidth(0.4);
-    // Resumo financeiro
+    // Resumo financeiro — versão cliente mostra so Valor de Venda, Mao de Obra e Total; versao interna mostra tudo
     const margemCons=totalCons-totalCot;
     const mdo=parseFloat((o.maoDeObra||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+    const alturaResumo=versaoCliente?(mdo>0?20:14):(mdo>0?38:32);
+    if(y+8+alturaResumo>195){doc.addPage("landscape");y=20;}
     y+=8;
     const resumoW=76, resumoX=M+W-resumoW;
     doc.setFontSize(9); doc.setFont(undefined,"normal");
@@ -1044,16 +1058,22 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       doc.text(`R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W,y,{align:"right"});
       y+=6;
     };
-    linhaResumo("Valor de Compra:",totalCot,false);
-    linhaResumo("Valor de Venda:",totalCons,false);
-    linhaResumo("Margem:",margemCons,false);
-    if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+    if(versaoCliente){
+      if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+    }else{
+      linhaResumo("Valor de Compra:",totalCot,false);
+      linhaResumo("Valor de Venda:",totalCons,false);
+      linhaResumo("Margem:",margemCons,false);
+      if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+    }
     doc.setDrawColor(20,20,20); doc.line(resumoX,y-2,M+W,y-2);
+    y+=2;
     doc.setFontSize(11);
     linhaResumo("Total:",totalCons+mdo,true);
     doc.setTextColor(20,20,20);
-    y+=2;
+    y+=4;
     // Observação
+    if(y+20>195){doc.addPage("landscape");y=20;}
     doc.setFont(undefined,"bold"); doc.setFontSize(10);
     doc.text("Observação:",M,y);
     y+=6;
@@ -1062,7 +1082,7 @@ const gerarPDFOrcamentoPecas = async (o)=>{
     doc.text(obsLines,M,y);
     doc.setFontSize(7.5); doc.setTextColor(160,160,160);
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,203);
-    doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}.pdf`);
+    doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}${versaoCliente?"_Cliente":""}.pdf`);
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
 };
 const gerarPDFCard = async (titulo, campos, subtitulo)=>{
@@ -7623,8 +7643,8 @@ export default function App(){
             const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
             return `${ano}.${String(max+1).padStart(4,"0")}`;
           };
-          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:""});setModalOrc(true);};
-          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]});setModalOrc(true);};
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:"",anexos:[]});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],anexos:o.anexos||[]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
@@ -7679,7 +7699,8 @@ export default function App(){
                           <td style={{padding:"8px 10px",fontSize:12,color:"#7E22CE",fontWeight:700,textAlign:"center"}}>{(o.pecas||[]).length}</td>
                           <td style={{padding:"8px 10px",fontSize:13,fontWeight:900,color:"#166534",whiteSpace:"nowrap"}}>{fmtR(tot)}</td>
                           <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
-                            <button onClick={()=>gerarPDFOrcamentoPecas(o)} title="PDF" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
+                            <button onClick={()=>gerarPDFOrcamentoPecas(o,false)} title="PDF Interno (com custos e margem)" style={{background:"#F5C200",border:"none",borderRadius:6,color:"#1A1A1A",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>📄</button>
+                            <button onClick={()=>gerarPDFOrcamentoPecas(o,true)} title="PDF Cliente (sem custos e margem)" style={{background:"#DBEAFE",border:"none",borderRadius:6,color:"#1E40AF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>👤📄</button>
                             <button onClick={()=>abrirEditar(o)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
                             <button onClick={()=>orcamentoPecaCrud.update(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{o.arquivado?"📤":"🗄️"}</button>
                             <button onClick={()=>{if(window.confirm("Excluir este orçamento?"))orcamentoPecaCrud.del(o.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
@@ -7795,6 +7816,36 @@ export default function App(){
                       {parseVal(editOrc.maoDeObra)>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Mão de Obra: <b style={{color:"#1565C0"}}>{fmtR(parseVal(editOrc.maoDeObra))}</b></div>}
                       <div style={{fontSize:15,fontWeight:900,color:"#5B21B6",marginTop:4}}>Total: {fmtR(totalPrev)}</div>
                     </div>
+                  </div>
+                  <div style={{background:"#F8FAFC",border:"1.5px solid #E2E8F0",borderRadius:10,padding:14}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:800,color:"#334155",textTransform:"uppercase"}}>📎 Cotações Anexadas ({(editOrc.anexos||[]).length}/10)</div>
+                      {(editOrc.anexos||[]).length<10&&<label style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#1565C0",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                        + Anexar PDF
+                        <input type="file" accept="application/pdf,.pdf" multiple style={{display:"none"}} onChange={async e=>{
+                          const files=Array.from(e.target.files||[]);
+                          const vagas=10-(editOrc.anexos||[]).length;
+                          const aProcessar=files.slice(0,vagas);
+                          if(files.length>vagas) alert(`Só cabem mais ${vagas} anexo(s). Os demais arquivos selecionados foram ignorados.`);
+                          for(const file of aProcessar){
+                            try{
+                              const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+                              setEditOrc(p=>({...p,anexos:[...(p.anexos||[]),{nome:file.name,base64:b64}]}));
+                            }catch(err){ alert("Erro ao anexar "+file.name); }
+                          }
+                          e.target.value="";
+                        }}/>
+                      </label>}
+                    </div>
+                    {(editOrc.anexos||[]).length===0?<div style={{fontSize:11,color:"#94A3B8"}}>Nenhuma cotação anexada</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {(editOrc.anexos||[]).map((a,i)=>(
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#FFF",border:"1px solid #E2E8F0",borderRadius:8,padding:"6px 10px"}}>
+                          <a href={a.base64} download={a.nome} style={{fontSize:11,color:"#1565C0",fontWeight:600,textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:400}}>📄 {a.nome}</a>
+                          <button onClick={()=>setEditOrc(p=>({...p,anexos:(p.anexos||[]).filter((_,idx)=>idx!==i)}))} style={{background:"#FEF2F2",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",width:24,height:24,fontSize:12}}>✕</button>
+                        </div>
+                      ))}
+                    </div>}
                   </div>
                   <div><label style={lbl}>Observação</label><textarea value={editOrc.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
                 </div>
