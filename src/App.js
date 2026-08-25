@@ -984,12 +984,18 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     y+=16;
     linha([{label:"Produto (Marca/Modelo)",valor:o.produtoModelo,w:137},{label:"PAT / Nº de série",valor:o.patSerie,w:66},{label:"Nº da OS",valor:o.numOS,w:66}], y, 14);
     y+=14;
+    // Calcula um fator de escala pra garantir que TUDO caiba numa unica pagina, mesmo com muitas peças
+    const numPecas=(o.pecas||[]).length||1;
+    const espacoDisponivelParaTabela=195-y-8-38-20; // reserva pro resumo financeiro e observação
+    const alturaLinhaPadrao=7.2;
+    let escala=Math.min(1,Math.max(0.55,espacoDisponivelParaTabela/(numPecas*alturaLinhaPadrao)));
+    const fonteBase=8.5*escala, alturaLinhaBase=alturaLinhaPadrao*escala;
     // Título tabela de peças
     doc.setFont(undefined,"bold"); doc.setFontSize(12);
     doc.text(versaoCliente?"Peças do orçamento":"Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
-    // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor Compra e Margem
+    // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
     const COLW=versaoCliente
       ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
       : {nome:50,cod:24,qtd:14,cot:26,local:32,cons:26,compra:32,venda:32,margem:33};
@@ -997,36 +1003,37 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
       : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Compra",COLW.compra],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
-    doc.setFontSize(8.5);
+    doc.setFontSize(Math.max(fonteBase,7));
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
     y+=7; doc.line(M,y,M+W,y);
     let totalCons=0, totalCot=0;
-    doc.setFont(undefined,"normal"); doc.setFontSize(8.5);
+    doc.setFont(undefined,"normal"); doc.setFontSize(fonteBase);
     const yTabelaInicio=y;
     (o.pecas||[]).forEach(p=>{
       const nomeLines=doc.splitTextToSize(p.nome||"—",COLW.nome-4);
       const localLines=versaoCliente?[]:doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
-      const alturaLinha=Math.max(nomeLines.length,localLines.length,1)*4.2+3;
-      if(y+alturaLinha>190){doc.addPage("landscape");y=20;}
+      const alturaLinha=Math.max(nomeLines.length,localLines.length,1)*alturaLinhaBase;
+      const yTxt=y+alturaLinhaBase*0.6;
+      if(y+alturaLinha>195){doc.addPage("landscape");y=20;}
       let xx=M;
-      doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
-      doc.text(String(p.codigo||"—"),xx+COLW.cod/2,y+4,{align:"center"}); xx+=COLW.cod;
+      doc.text(nomeLines,xx+2,yTxt); xx+=COLW.nome;
+      doc.text(String(p.codigo||"—"),xx+COLW.cod/2,yTxt,{align:"center"}); xx+=COLW.cod;
       const qtd=parseFloat(p.quantidade)||0;
-      doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,y+4,{align:"center"}); xx+=COLW.qtd;
+      doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,yTxt,{align:"center"}); xx+=COLW.qtd;
       const cot=parseFloat((p.precoCotacao||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const vCompra=qtd*cot, vVenda=qtd*cons, margem=vVenda-vCompra;
       totalCot+=vCompra; totalCons+=vVenda;
       if(versaoCliente){
-        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
-        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"});
+        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,yTxt,{align:"right"}); xx+=COLW.cons;
+        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"});
       }else{
-        doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
-        doc.text(localLines,xx+2,y+4); xx+=COLW.local;
-        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
-        doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,y+4,{align:"right"}); xx+=COLW.compra;
-        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"}); xx+=COLW.venda;
-        doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,y+4,{align:"right"});
+        doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,yTxt,{align:"right"}); xx+=COLW.cot;
+        doc.text(localLines,xx+2,yTxt); xx+=COLW.local;
+        doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,yTxt,{align:"right"}); xx+=COLW.cons;
+        doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,yTxt,{align:"right"}); xx+=COLW.compra;
+        doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"}); xx+=COLW.venda;
+        doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,yTxt,{align:"right"});
       }
       y+=alturaLinha;
       doc.line(M,y,M+W,y);
