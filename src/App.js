@@ -938,33 +938,33 @@ const gerarPDFPropostaSasVend = async (p, autor)=>{
 const gerarPDFOrcamentoPecas = async (o)=>{
   try{
     const jsPDF=await loadJsPDF();
-    const doc=new jsPDF();
-    const M=14, W=182; // margem e largura util (210mm - 2*14)
+    const doc=new jsPDF({orientation:"landscape"});
+    const M=14, W=269, CX=148.5; // margem, largura util (297mm - 2*14) e centro horizontal (paisagem)
     let y=16;
     // Cabeçalho: logo + dados da empresa + numero do orçamento
     doc.addImage(LOGO_MOV,"PNG",M,10,26,16);
     doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(20,20,20);
-    doc.text("grupomov.com.br",105,13,{align:"center"});
+    doc.text("grupomov.com.br",CX,13,{align:"center"});
     doc.setFont(undefined,"normal"); doc.setFontSize(8.5);
-    doc.text("Tel(s).: (31) 3495-1486 - Administração / Peças",105,18,{align:"center"});
-    doc.text("(31) 3317-3915 - Manutenção - 9 8793-1719 - Plantão",105,22.5,{align:"center"});
-    doc.text("suporte@grupomov.com.br / Belo Horizonte - MG",105,27,{align:"center"});
+    doc.text("Tel(s).: (31) 3495-1486 - Administração / Peças",CX,18,{align:"center"});
+    doc.text("(31) 3317-3915 - Manutenção - 9 8793-1719 - Plantão",CX,22.5,{align:"center"});
+    doc.text("suporte@grupomov.com.br / Belo Horizonte - MG",CX,27,{align:"center"});
     doc.setFont(undefined,"bold"); doc.setFontSize(10); doc.setTextColor(20,20,20);
-    doc.text("Orçamento",196,15,{align:"right"});
+    doc.text("Orçamento",M+W-2,15,{align:"right"});
     doc.setTextColor(200,20,20); doc.setFontSize(14);
-    doc.text(o.orcamentoNum||"—",196,22,{align:"right"});
+    doc.text(o.orcamentoNum||"—",M+W-2,22,{align:"right"});
     y=32;
     doc.setDrawColor(20,20,20); doc.setLineWidth(0.4); doc.line(M,y,M+W,y);
     y+=9;
     doc.setTextColor(20,20,20); doc.setFont(undefined,"bold"); doc.setFontSize(15);
-    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":"Orçamento de Peças",M+90,y,{align:"center"});
+    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":"Orçamento de Peças",CX,y,{align:"center"});
     doc.setFontSize(10);
-    doc.text("DATA:",M+150,y-1);
+    doc.text("DATA:",M+W-60,y-1);
     doc.setFont(undefined,"normal");
-    doc.text(fmtDataBR(o.data)||"—",M+165,y-1);
+    doc.text(fmtDataBR(o.data)||"—",M+W-45,y-1);
     doc.line(M,y+3,M+W,y+3);
     y+=3;
-    doc.line(M+140,26,M+140,y);
+    doc.line(M+W-70,26,M+W-70,y);
     // linha Empresa / Telefone / Cidade
     const linha=(colunas,yTop,altura)=>{
       let x=M;
@@ -980,29 +980,30 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       let xx=M;
       colunas.forEach((c,i)=>{ if(i>0) doc.line(xx,yTop,xx,yTop+altura); xx+=c.w; });
     };
-    linha([{label:"Empresa",valor:o.empresa,w:110},{label:"Telefone",valor:o.telefone,w:36},{label:"Cidade",valor:o.cidade,w:36}], y, 16);
+    linha([{label:"Empresa",valor:o.empresa,w:157},{label:"Telefone",valor:o.telefone,w:56},{label:"Cidade",valor:o.cidade,w:56}], y, 16);
     y+=16;
-    linha([{label:"Produto (Marca/Modelo)",valor:o.produtoModelo,w:90},{label:"PAT / Nº de série",valor:o.patSerie,w:46},{label:"Nº da OS",valor:o.numOS,w:46}], y, 14);
+    linha([{label:"Produto (Marca/Modelo)",valor:o.produtoModelo,w:137},{label:"PAT / Nº de série",valor:o.patSerie,w:66},{label:"Nº da OS",valor:o.numOS,w:66}], y, 14);
     y+=14;
     // Título tabela de peças
     doc.setFont(undefined,"bold"); doc.setFontSize(12);
-    doc.text("Peças do orçamento",M+91,y+7,{align:"center"});
+    doc.text("Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
-    // colunas: Nome(50) Código(22) Qtd(14) Preço Cotação(28) Local Cotação(34) Preço Consumidor(28) -> soma 176, cabe em 182
-    const COLW={nome:48,cod:22,qtd:14,cot:28,local:34,cons:28};
-    const heads=[["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons]];
+    // colunas (paisagem, com detalhamento total): Nome, Código, Qtd, Preço Cotação, Local Cotação, Preço Consumidor, Valor Compra, Valor Venda, Margem
+    const COLW={nome:50,cod:24,qtd:14,cot:26,local:32,cons:26,compra:32,venda:32,margem:33};
+    const heads=[["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Compra",COLW.compra],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
     doc.setFontSize(8.5);
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
     y+=7; doc.line(M,y,M+W,y);
     let totalCons=0, totalCot=0;
     doc.setFont(undefined,"normal"); doc.setFontSize(8.5);
+    const yTabelaInicio=y;
     (o.pecas||[]).forEach(p=>{
       const nomeLines=doc.splitTextToSize(p.nome||"—",COLW.nome-4);
       const localLines=doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
       const alturaLinha=Math.max(nomeLines.length,localLines.length)*4.2+3;
-      if(y+alturaLinha>280){doc.addPage();y=20;}
+      if(y+alturaLinha>190){doc.addPage("landscape");y=20;}
       let xx=M;
       doc.text(nomeLines,xx+2,y+4); xx+=COLW.nome;
       doc.text(String(p.codigo||"—"),xx+COLW.cod/2,y+4,{align:"center"}); xx+=COLW.cod;
@@ -1010,35 +1011,57 @@ const gerarPDFOrcamentoPecas = async (o)=>{
       doc.text(String(p.quantidade||"—"),xx+COLW.qtd/2,y+4,{align:"center"}); xx+=COLW.qtd;
       const cot=parseFloat((p.precoCotacao||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
       const cons=parseFloat((p.precoConsumidor||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
-      totalCot+=qtd*cot; totalCons+=qtd*cons;
+      const vCompra=qtd*cot, vVenda=qtd*cons, margem=vVenda-vCompra;
+      totalCot+=vCompra; totalCons+=vVenda;
       doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,y+4,{align:"right"}); xx+=COLW.cot;
       doc.text(localLines,xx+2,y+4); xx+=COLW.local;
-      doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"});
+      doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,y+4,{align:"right"}); xx+=COLW.cons;
+      doc.text(`R$ ${vCompra.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.compra-2,y+4,{align:"right"}); xx+=COLW.compra;
+      doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,y+4,{align:"right"}); xx+=COLW.venda;
+      doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,y+4,{align:"right"});
       y+=alturaLinha;
       doc.line(M,y,M+W,y);
     });
-    // Mão de Obra (se houver) + Total
+    // linhas verticais separando as colunas da tabela (do topo do cabeçalho ao fim da ultima linha)
+    doc.setDrawColor(180,180,180); doc.setLineWidth(0.2);
+    let xv=M;
+    [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.compra,COLW.venda,COLW.margem].forEach((w,i)=>{
+      if(i>0) doc.line(xv,yTabelaInicio,xv,y);
+      xv+=w;
+    });
+    doc.line(M,yTabelaInicio,M,y); doc.line(M+W,yTabelaInicio,M+W,y);
+    doc.setDrawColor(20,20,20); doc.setLineWidth(0.4);
+    // Resumo financeiro
+    const margemCons=totalCons-totalCot;
     const mdo=parseFloat((o.maoDeObra||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
-    if(mdo>0){
-      y+=6; doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
-      doc.text("Mão de Obra:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y,{align:"right"});
-      doc.text(`R$ ${mdo.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y,{align:"right"});
-    }
     y+=8;
-    doc.setFont(undefined,"bold"); doc.setFontSize(9.5);
-    doc.text("Total:",M+COLW.nome+COLW.cod+COLW.qtd+COLW.cot+COLW.local-2,y,{align:"right"});
-    doc.text(`R$ ${(totalCons+mdo).toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W-2,y,{align:"right"});
-    y+=3; doc.line(M,y,M+W,y);
-    y+=8;
+    const resumoW=76, resumoX=M+W-resumoW;
+    doc.setFontSize(9); doc.setFont(undefined,"normal");
+    const linhaResumo=(label,valor,destaque)=>{
+      doc.setFont(undefined,destaque?"bold":"normal");
+      doc.setTextColor(destaque?200:60,destaque?20:60,destaque?20:60);
+      doc.text(label,resumoX,y);
+      doc.text(`R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W,y,{align:"right"});
+      y+=6;
+    };
+    linhaResumo("Valor de Compra:",totalCot,false);
+    linhaResumo("Valor de Venda:",totalCons,false);
+    linhaResumo("Margem:",margemCons,false);
+    if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+    doc.setDrawColor(20,20,20); doc.line(resumoX,y-2,M+W,y-2);
+    doc.setFontSize(11);
+    linhaResumo("Total:",totalCons+mdo,true);
+    doc.setTextColor(20,20,20);
+    y+=2;
     // Observação
     doc.setFont(undefined,"bold"); doc.setFontSize(10);
     doc.text("Observação:",M,y);
     y+=6;
     doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
-    const obsLines=doc.splitTextToSize(o.observacao||"—",W);
+    const obsLines=doc.splitTextToSize(o.observacao||"—",W-90);
     doc.text(obsLines,M,y);
     doc.setFontSize(7.5); doc.setTextColor(160,160,160);
-    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,290);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,203);
     doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}.pdf`);
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
 };
