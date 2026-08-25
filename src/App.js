@@ -3394,6 +3394,7 @@ export default function App(){
   const [modalImportSE,setModalImportSE]=useState(false);
   const [modalImportAF,setModalImportAF]=useState(false);
   const [afStatus,setAfStatus]=useState("todos"); const [afTipo,setAfTipo]=useState("todos"); const [afVendedor,setAfVendedor]=useState("todos");
+  const [showFiltrosAF,setShowFiltrosAF]=useState(false);
   const [requisicoes,setRequisicoes]=useState([]);
   const [agendaItems,setAgendaItems]=useState({});
   const [schedule,setSchedule]=useState({});
@@ -7960,16 +7961,22 @@ export default function App(){
               );
             })()}
 
-            <div className="card" style={{padding:"10px 14px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Cliente, OV, relatório, ticket..." style={{width:"100%",padding:"8px 10px 8px 30px",fontSize:12,borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box"}}/></div>
+            <button onClick={()=>setShowFiltrosAF(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosAF?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+              <span style={{fontSize:11}}>🔍</span>
+              <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+              {hasF&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+              <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosAF?"▲":"▼"}</span>
+            </button>
+            {showFiltrosAF&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{position:"relative",flex:1,minWidth:180}}><span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:12}}>🔍</span><input type="text" value={afSearch} onChange={e=>setAfSearch(e.target.value)} placeholder="Cliente, OV, relatório, ticket..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
               <select value={afStatus} onChange={e=>setAfStatus(e.target.value)}><option value="todos">Status: Todos</option>{Object.entries(AF_STATUS).map(([k,s])=><option key={k} value={k}>{s.l}</option>)}</select>
               <select value={afTipo} onChange={e=>setAfTipo(e.target.value)}><option value="todos">Tipo: Todos</option>{AF_TIPO.map(t=><option key={t}>{t}</option>)}</select>
               <select value={afVendedor} onChange={e=>setAfVendedor(e.target.value)}><option value="todos">Vendedor: Todos</option>{AF_VENDEDORES.map(v=><option key={v}>{v}</option>)}</select>
               <button onClick={()=>{setAfFrom(semDe);setAfTo(semAte);}} style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Esta semana</button>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)} style={{fontSize:12}}/></div>
-              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)} style={{fontSize:12}}/></div>
-              {hasF&&<button onClick={()=>{setAfSearch("");setAfStatus("todos");setAfTipo("todos");setAfVendedor("todos");setAfFrom("");setAfTo("");}} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
-            </div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={afFrom} onChange={e=>setAfFrom(e.target.value)}/></div>
+              <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={afTo} onChange={e=>setAfTo(e.target.value)}/></div>
+              {hasF&&<button onClick={()=>{setAfSearch("");setAfStatus("todos");setAfTipo("todos");setAfVendedor("todos");setAfFrom("");setAfTo("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+            </div>}
 
             {filtrada.length===0?(<div className="card" style={{padding:64,textAlign:"center",color:"#CCC"}}><div style={{fontSize:40,marginBottom:12}}>💰</div><div style={{fontSize:14,fontWeight:600}}>Nenhum registro</div></div>):(
               <div className="card" style={{padding:0,overflow:"hidden"}}>
