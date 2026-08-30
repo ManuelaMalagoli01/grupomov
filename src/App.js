@@ -7396,17 +7396,6 @@ export default function App(){
                   ))}
                 </div>
               </div>
-              {(()=>{
-                const meses=[...new Set(lista.map(c=>(c.data||"").slice(0,7)).filter(Boolean))].sort().slice(-6);
-                const dataConc=meses.map(m=>lista.filter(c=>c.status==="concluido"&&(c.data||"").startsWith(m)).length);
-                const mesLabel=m=>{const[y,mo]=m.split("-");return `${["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][parseInt(mo,10)-1]}/${y.slice(2)}`;};
-                return meses.length>0?(
-                  <div className="card" style={{padding:16,marginBottom:20}}>
-                    <div style={{fontWeight:800,fontSize:12,color:"#334155",marginBottom:10}}>📊 Cotações Concluídas por Mês</div>
-                    <ChartCanvas type="bar" height={190} data={{labels:meses.map(mesLabel),datasets:[{label:"Concluídas",data:dataConc,backgroundColor:"#166534",borderRadius:6}]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F5F5F5"}}}}}/>
-                  </div>
-                ):null;
-              })()}
               <div className="card" style={{overflow:"hidden",marginTop:0}}>
                 <div className="tbl-wrap"><table>
                   <thead><tr><th>Data</th><th>Serviço</th><th>Referência</th><th>Cliente</th><th>Ticket</th><th>Local de Cotação</th><th>Prazo</th><th>Peças</th><th>Total</th><th>Status</th><th></th></tr></thead>
