@@ -2831,11 +2831,20 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                   type:"bar",
                   data:{
                     labels:serie.map(s=>s.lab),
-                    datasets:[{label:"Revertido", data:serie.map(s=>s.conversao), backgroundColor:"#334155"}],
+                    datasets:[{label:"Revertido", data:serie.map(s=>s.conversao), backgroundColor:"#F5C200"}],
                   },
                   options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:100}}},
                 },
-              ],
+                slaEnvioValores.length>0?{
+                  titulo:"SLA por Período (dias)",
+                  type:"line",
+                  data:{
+                    labels:serie.map(s=>s.lab),
+                    datasets:[{label:"SLA médio", data:serie.map(s=>s.slaMedio), borderColor:"#0D9488", backgroundColor:"#0D948833", fill:true}],
+                  },
+                  options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
+                }:null,
+              ].filter(Boolean),
             });
           }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
         }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Farol Excel</button>
@@ -2933,33 +2942,39 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               </div>}
             </div>
           </div>
+
+          <div style={{height:1,background:"#1E293B",margin:"22px 0"}}/>
+          <div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr",gap:24}}>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>Faturado × Não Faturado ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
+              <ChartCanvas type="bar" height={170} data={{
+                labels:serie.map(s=>s.lab),
+                datasets:[
+                  {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:4},
+                  {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:4},
+                ]
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
+            </div>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>% Revertido nas Cobranças</div>
+              {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:11}}>Sem dados</div>:
+              <ChartCanvas type="bar" height={170} data={{
+                labels:serie.map(s=>s.lab),
+                datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#F5C200",borderRadius:4}]
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+            </div>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>SLA por Período (dias)</div>
+              {serie.every(s=>s.slaMedio===null)?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:11}}>Sem envios registrados</div>:
+              <ChartCanvas type="line" height={170} data={{
+                labels:serie.map(s=>s.lab),
+                datasets:[{label:"SLA médio",data:serie.map(s=>s.slaMedio),borderColor:"#0D9488",backgroundColor:"#0D948833",tension:.35,fill:true,pointRadius:2,pointBackgroundColor:"#0D9488"}]
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${v}d`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+            </div>
+          </div>
         </div>
       );
     })()}
-
-    <div className="card" style={{padding:18,marginBottom:20}}>
-      <div style={{fontWeight:800,fontSize:14,marginBottom:2,color:"#1A1A1A"}}>📊 Faturado × Não Faturado</div>
-      <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>{periodo==="dia"?"Por dia":periodo==="semana"?"Por semana":"Por mês"}</div>
-      <ChartCanvas type="bar" height={190} data={{
-        labels:serie.map(s=>s.lab),
-        datasets:[
-          {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:6},
-          {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:6},
-        ]
-      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>
-    </div>
-
-    <div style={{display:"grid",gridTemplateColumns:"1fr",gap:16,marginBottom:32}}>
-      <div className="card" style={{padding:18,borderTop:"3px solid #334155"}}>
-        <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔄 % Revertido nas Cobranças</div>
-        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor R$ concluído/faturado sobre o total cobrado, por período</div>
-        {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem dados no período</div>:
-        <ChartCanvas type="bar" height={200} data={{
-          labels:serie.map(s=>s.lab),
-          datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#334155",borderRadius:6}]
-        }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
-      </div>
-    </div>
 
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
       <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Detalhamento por Status (clique para filtrar)</div></div>
