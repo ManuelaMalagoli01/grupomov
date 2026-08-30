@@ -7407,46 +7407,36 @@ export default function App(){
                   </div>
                 ):null;
               })()}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14}}>
-                {lista.map(c=>{
-                  const st=COT_STATUS[c.status]||COT_STATUS.aguardando_compras;
-                  const somaPecas=(c.pecas||[]).reduce((s,p)=>s+parseVal(p.valor),0);
-                  return(
-                    <div key={c.id} className="card" style={{padding:0,overflow:"hidden",borderLeft:`4px solid ${st.c}`}}>
-                      <div style={{padding:"12px 14px"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>{c.servico||"—"}</div>
-                            <div style={{fontSize:11,color:"#94A3B8"}}>{c.tipoRef||"OV"} {c.refNum||"—"} · {fmtDataBR(c.data)}</div>
-                            {c.cliente&&<div style={{fontSize:11,color:"#1565C0",fontWeight:700}}>👤 {c.cliente}</div>}
-                          </div>
-                          <select value={c.status} onChange={e=>cotacaoCrud.update(c.id,{status:e.target.value})} style={{fontSize:10,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"3px 8px",border:"none",cursor:"pointer"}}>{COT_STATUS_KEYS.map(k=><option key={k} value={k}>{COT_STATUS[k].l}</option>)}</select>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",rowGap:6,columnGap:10,fontSize:11,paddingTop:8,borderTop:"1px solid #F1F5F9",marginBottom:8}}>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Ticket</div><div style={{fontWeight:600}}>{c.ticket||"—"}</div></div>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Local de Cotação</div><div style={{fontWeight:600}}>{c.local||"—"}</div></div>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Prazo</div><div style={{fontWeight:600}}>{c.prazo||"—"}</div></div>
-                          <div><div style={{color:"#94A3B8",fontSize:9,fontWeight:700,textTransform:"uppercase"}}>Total Peças</div><div style={{fontWeight:800,color:"#166534"}}>{fmtR(somaPecas)}</div></div>
-                        </div>
-                        <div style={{fontSize:10,fontWeight:700,color:"#7E22CE",textTransform:"uppercase",marginBottom:4}}>🔩 Peças ({(c.pecas||[]).length})</div>
-                        <div style={{maxHeight:110,overflowY:"auto"}}>
-                          {(c.pecas||[]).map((p,i)=>(
-                            <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:11,padding:"3px 0",borderBottom:i<(c.pecas.length-1)?"1px dashed #F1F5F9":"none"}}>
-                              <span style={{color:"#334155"}}>{p.nome||"—"}</span><span style={{fontWeight:700,color:"#1A1A1A"}}>{fmtR(parseVal(p.valor))}</span>
-                            </div>
-                          ))}
-                        </div>
-                        {c.obs&&<div style={{fontSize:11,color:"#64748B",fontStyle:"italic",marginTop:8,paddingTop:8,borderTop:"1px solid #F1F5F9"}}>{c.obs}</div>}
-                      </div>
-                      <div style={{display:"flex",borderTop:"1px solid #F1F5F9"}}>
-                        <button onClick={()=>abrirEditar(c)} style={{flex:1,padding:"8px",border:"none",background:"#EFF6FF",color:"#1565C0",fontSize:11,fontWeight:700,cursor:"pointer"}}>✏️ Editar</button>
-                        <button onClick={()=>cotacaoCrud.update(c.id,{arquivado:!c.arquivado})} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#F8FAFC",color:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{c.arquivado?"📤 Desarquivar":"🗄️ Arquivar"}</button>
-                        <button onClick={()=>{if(window.confirm("Excluir esta cotação?"))cotacaoCrud.del(c.id);}} style={{flex:1,padding:"8px",border:"none",borderLeft:"1px solid #F1F5F9",background:"#FEF2F2",color:"#C62828",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕ Excluir</button>
-                      </div>
-                    </div>
-                  );
-                })}
-                {lista.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"#CCC",padding:60,fontSize:13}}>Nenhuma cotação {showArqCot?"arquivada":"registrada"}</div>}
+              <div className="card" style={{overflow:"hidden",marginTop:0}}>
+                <div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Serviço</th><th>Referência</th><th>Cliente</th><th>Ticket</th><th>Local de Cotação</th><th>Prazo</th><th>Peças</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    {lista.map(c=>{
+                      const st=COT_STATUS[c.status]||COT_STATUS.aguardando_compras;
+                      const somaPecas=(c.pecas||[]).reduce((s,p)=>s+parseVal(p.valor),0);
+                      return(
+                        <tr key={c.id} style={{opacity:c.arquivado?0.55:1}}>
+                          <td style={{padding:"8px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(c.data)||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{c.servico||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155",whiteSpace:"nowrap"}}>{c.tipoRef||"OV"} {c.refNum||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#1565C0",fontWeight:600}}>{c.cliente||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{c.ticket||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{c.local||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{c.prazo||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#7E22CE",fontWeight:700,textAlign:"center"}}>{(c.pecas||[]).length}</td>
+                          <td style={{padding:"8px 10px",fontSize:13,fontWeight:900,color:"#166534",whiteSpace:"nowrap"}}>{fmtR(somaPecas)}</td>
+                          <td style={{padding:"8px 10px"}}><select value={c.status} onChange={e=>cotacaoCrud.update(c.id,{status:e.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{COT_STATUS_KEYS.map(k=><option key={k} value={k}>{COT_STATUS[k].l}</option>)}</select></td>
+                          <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>abrirEditar(c)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
+                            <button onClick={()=>cotacaoCrud.update(c.id,{arquivado:!c.arquivado})} title={c.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{c.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta cotação?"))cotacaoCrud.del(c.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhuma cotação {showArqCot?"arquivada":"registrada"}</div>}
               </div>
             </div>
           );
