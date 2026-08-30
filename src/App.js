@@ -128,10 +128,6 @@ const USERS = [
   { id:"manuela",      username:"manuela.malagoli",  name:"Manuela Malagoli", role:"Administradora",         password:"mov2026", canDelete:false },
   { id:"gustavo",      username:"gustavo.coelho",    name:"Gustavo Coelho",   role:"Administrador",           password:"mov2026", canDelete:true },
   { id:"renato",       username:"renato.rocha",      name:"Renato",           role:"Assistente",              password:"mov2026", canDelete:true },
-  { id:"werick",       username:"werick.coelho",     name:"Werick Coelho",    role:"Comercial",               password:"Comercial2026", canDelete:true, acessoComercial:true },
-  { id:"luciana",      username:"luciana.dias",      name:"Luciana Dias",     role:"Comercial",               password:"Ldias2026", canDelete:true, acessoComercial:true },
-  { id:"fran",         username:"fran.teixeira",     name:"Fran Teixeira",    role:"SAS/Comercial",           password:"Fteixeira2026", canDelete:true, acessoComercial:true },
-  { id:"paulo",        username:"paulo.pataro",      name:"Paulo Pataro",     role:"Comercial",               password:"Ppataro2026", canDelete:true, acessoComercial:true },
   { id:"matheus_m",    username:"matheus_m",         name:"Matheus Menezes",  role:"Oficina150",              password:"Oficina150", canDelete:true, apenasOficina150:true },
   { id:"hebert_s",     username:"hebert_s",          name:"Hebert Santos",    role:"Oficina1340",             password:"Oficina1340", canDelete:true, apenasOficina:true },
 ];
@@ -1099,7 +1095,7 @@ const gerarPDFCard = async (titulo, campos, subtitulo)=>{
     doc.setTextColor(245,194,0); doc.setFontSize(16); doc.setFont(undefined,"bold");
     doc.text("GRUPO MOV",14,14);
     doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,"normal");
-    doc.text("Gestão: Manutenção-Comercial-Serviços",14,20);
+    doc.text("Gestão: Manutenção-Serviços",14,20);
     doc.setTextColor(26,26,26); doc.setFontSize(14); doc.setFont(undefined,"bold");
     doc.text(String(titulo||"Documento"),14,36);
     let y=44;
@@ -1266,7 +1262,7 @@ function LoginScreen({onLogin, users=USERS}){
           <div style={{width:170,margin:"0 auto 16px"}}>
             <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{width:"100%",height:"auto",display:"block"}}/>
           </div>
-          <div style={{fontSize:12,color:"#94A3B8",marginTop:4,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Gestão: Manutenção-Comercial-Serviços</div>
+          <div style={{fontSize:12,color:"#94A3B8",marginTop:4,letterSpacing:.8,fontWeight:600,textTransform:"uppercase"}}>Gestão: Manutenção-Serviços</div>
         </div>
 
         <div style={{marginBottom:18}}>
@@ -3053,7 +3049,7 @@ function AppTopBar({user, setUser, setModalUsers}){
         <img src={LOGO_MOV_LIGHT} alt="Grupo MOV" style={{height:28,width:"auto",display:"block",flexShrink:0}}/>
         <div style={{whiteSpace:"nowrap"}}>
           <div style={{fontSize:15,fontWeight:900,color:"#FFFFFF",letterSpacing:.3}}>Grupo MOV</div>
-          <div style={{fontSize:10,color:"#F5C200",letterSpacing:1.2,textTransform:"uppercase",fontWeight:800}}>Gestão: Manutenção-Comercial-Serviços</div>
+          <div style={{fontSize:10,color:"#F5C200",letterSpacing:1.2,textTransform:"uppercase",fontWeight:800}}>Gestão: Manutenção-Serviços</div>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
@@ -3314,15 +3310,6 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubFolder label="Clientes" icon="🏢" open={subCliOpen} setOpen={setSubCliOpen} ativa={CLIENTES_TABS.includes(tab)} color="#1565C0">
           <SubBtn k="operacoes" l="🏢 Operações"/>
         </SubFolder>
-      </div>}
-
-      {/* COMERCIAL - ACORDEÃO (Propostas, Dashboard) */}
-      <GroupHeader label="Comercial" icon="💼" open={comercialOpen} setOpen={setComercialOpen} ativa={comercialAtiva||tab==="prospeccao"} badgeCount={prospAlertaCount}/>
-      {comercialOpen&&<div style={{background:"#FFFFFF"}}>
-        <SubBtn k="comercial" l="📋 Propostas"/>
-        <SubBtn k="dashboard_comercial" l="📊 Dashboard"/>
-        <SubBtn k="prospeccao" l="🎯 Prospecção - Lista de Clientes" badge={prospAlertaCount}/>
-        <SubBtn k="dashboard_prospeccao" l="📊 Dash Prospecção"/>
       </div>}
 
       {/* SAS - CATEGORIA PRÓPRIA INDEPENDENTE */}
