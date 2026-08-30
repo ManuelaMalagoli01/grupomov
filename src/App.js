@@ -2868,116 +2868,85 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-      <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores {titulo} · {janLabel}</span>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:2,marginBottom:2,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
-      {[
-        {l:"Abertos no período",v:abertosJanela.length,sub:fmtR(soma(abertosJanela)),c:"#1D4E89"},
-        {l:"Concluído/Faturado no período",v:concluidosJanela.length,sub:fmtR(soma(concluidosJanela)),c:"#166534"},
-        {l:"Pendente",v:pendentesCombo.length,sub:fmtR(soma(pendentesCombo)),c:"#B45309"},
-        {l:"Em Negociação",v:emNegociacaoCombo.length,sub:fmtR(soma(emNegociacaoCombo)),c:"#1565C0"},
-      ].map((k,i)=>(
-        <div key={i} style={{padding:"14px 16px",background:k.c}}>
-          <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.6}}>{k.l}</div>
-          <div style={{fontSize:22,fontWeight:900,color:"#FFF",marginTop:2}}>{k.v}</div>
-          <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",marginTop:2}}>{k.sub}</div>
+    {(()=>{
+      const pendentesPorEmpresa={};
+      all.filter(p=>!isConcluido(p)).forEach(p=>{
+        const emp=p.empresa||"Sem empresa";
+        if(!pendentesPorEmpresa[emp]) pendentesPorEmpresa[emp]={valor:0,qtd:0,diasMax:0};
+        pendentesPorEmpresa[emp].valor+=parseVal(p.valor);
+        pendentesPorEmpresa[emp].qtd+=1;
+        const d=diasAberto(p);
+        if(d!==null&&d>pendentesPorEmpresa[emp].diasMax) pendentesPorEmpresa[emp].diasMax=d;
+      });
+      const rankingEmp=Object.entries(pendentesPorEmpresa).sort((a,b)=>b[1].valor-a[1].valor).slice(0,5);
+      const totalPendGeral=soma(all.filter(p=>!isConcluido(p)));
+      const CORES_DONUT=["#F5C200","#0D9488","#E67E00","#1565C0","#C62828","#546E7A"];
+      const aprovCountsAtivos=aprovCounts.filter(a=>a.total>0);
+      return(
+        <div style={{background:"#0B1220",borderRadius:16,padding:"22px 24px",marginBottom:22,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
+            <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
+            <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— {titulo} · {janLabel}</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1.1fr 1.2fr",gap:24,alignItems:"stretch"}}>
+            {/* KPIs */}
+            <div style={{display:"flex",flexDirection:"column",gap:16,justifyContent:"center"}}>
+              <div>
+                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total no Período</div>
+                <div style={{fontSize:26,fontWeight:900,color:"#FFF"}}>{fmtR(soma(abertosJanela))}</div>
+                <div style={{fontSize:10,color:"#64748B"}}>{abertosJanela.length} processo(s)</div>
+              </div>
+              <div>
+                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Faturado</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#0D9488"}}>{fmtR(soma(concluidosJanela))}</div>
+                <div style={{fontSize:10,color:"#64748B"}}>{concluidosJanela.length} processo(s)</div>
+              </div>
+              <div>
+                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total Pendente (geral)</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#F5C200"}}>{fmtR(totalPendGeral)}</div>
+                <div style={{fontSize:10,color:"#64748B"}}>{slaEnvioMedio!==null?`SLA médio ${slaEnvioMedio}d`:"—"}</div>
+              </div>
+            </div>
+            {/* Doughnut */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6,alignSelf:"flex-start"}}>Distribuição por Status</div>
+              {aprovCountsAtivos.length>0?<ChartCanvas type="doughnut" height={160} data={{
+                labels:aprovCountsAtivos.map(a=>a.label),
+                datasets:[{data:aprovCountsAtivos.map(a=>a.total),backgroundColor:aprovCountsAtivos.map((a,i)=>CORES_DONUT[i%CORES_DONUT.length]),borderWidth:2,borderColor:"#0B1220"}]
+              }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:30}}>Sem dados</div>}
+            </div>
+            {/* Leaderboard Empresas com Pendência */}
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas com Pendência</div>
+              {rankingEmp.length===0?<div style={{color:"#475569",fontSize:11,padding:"20px 0"}}>Nenhuma pendência em aberto</div>:
+              <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                {rankingEmp.map(([emp,d],i)=>(
+                  <div key={emp} style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:22,height:22,borderRadius:"50%",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:700,color:"#FFF",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp}</div>
+                      <div style={{fontSize:9,color:"#64748B"}}>{d.qtd} caso(s) · deve há <span style={{color:d.diasMax>30?"#F87171":d.diasMax>15?"#FBBF24":"#64748B",fontWeight:700}}>{d.diasMax}d</span></div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:900,color:"#F5C200",whiteSpace:"nowrap"}}>{fmtR(d.valor)}</div>
+                  </div>
+                ))}
+              </div>}
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
-    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
-      <span style={{fontSize:10,fontWeight:700,color:"#B45309",background:"#FFF8F0",border:"1px solid #FDE4C0",borderRadius:20,padding:"4px 11px"}}>⏳ Aguardando Retorno: {pendentes.length}</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#C62828",background:"#FFF0F0",border:"1px solid #FBD0D0",borderRadius:20,padding:"4px 11px"}}>❌ Negado pelo Cliente: {negados.length}</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"1px solid #BFDBFE",borderRadius:20,padding:"4px 11px"}}>🤝 Em Negociação: {emNegociacao.length}</span>
-      <span style={{fontSize:10,fontWeight:700,color:"#0D9488",background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:20,padding:"4px 11px"}}>✅ Aprovado/Aguard. Faturamento: {aprovados.length}</span>
-    </div>
-    <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",marginBottom:6}}>📊 Total Geral (Tudo — todos os períodos)</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:32}}>
-      {[
-        {l:"Total (geral)",v:all.length,sub:fmtR(soma(all))},
-        {l:"Concluído/Faturado (total)",v:concluidosTodos.length,sub:fmtR(soma(concluidosTodos)),pct:all.length?Math.round(concluidosTodos.length/all.length*100):0},
-      ].map((k,i)=>(
-        <div key={i} className="card" style={{padding:"9px 12px",borderLeft:"3px solid #CBD5E1"}}>
-          <div style={{fontSize:8,color:"#94A3B8",fontWeight:700,textTransform:"uppercase"}}>{k.l}</div>
-          <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:16,fontWeight:800,color:"#334155"}}>{k.v}</span>{k.pct!==undefined&&<span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({k.pct}%)</span>}</div>
-          <div style={{fontSize:10,fontWeight:600,color:"#94A3B8"}}>{k.sub}</div>
-        </div>
-      ))}
-    </div>
-    <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
-    <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #1A7A3C"}}>
-      <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Faturado × Não Faturado</div>
+      );
+    })()}
+
+    <div className="card" style={{padding:18,marginBottom:20}}>
+      <div style={{fontWeight:800,fontSize:14,marginBottom:2,color:"#1A1A1A"}}>📊 Faturado × Não Faturado</div>
       <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>{periodo==="dia"?"Por dia":periodo==="semana"?"Por semana":"Por mês"}</div>
       <ChartCanvas type="bar" height={190} data={{
         labels:serie.map(s=>s.lab),
         datasets:[
-          {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
-          {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#E67E00",borderRadius:6},
+          {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:6},
+          {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:6},
         ]
       }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>
-    </div>
-
-    <div className="card" style={{padding:18,marginBottom:20,borderTop:"4px solid #1565C0"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-        <div>
-          <div style={{fontWeight:800,fontSize:15,marginBottom:2}}>⏱️ SLA — Data de Criação × Data de Envio ao Cliente</div>
-          <div style={{fontSize:11,color:"#94A3B8"}}>Quantos dias cada processo ficou parado até ser enviado</div>
-        </div>
-        {slaEnvioValores.length>0?<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <div style={{textAlign:"center",background:"#EFF6FF",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase"}}>Média</div><div style={{fontSize:18,fontWeight:900,color:"#1565C0"}}>{slaEnvioMedio}d</div></div>
-          <div style={{textAlign:"center",background:"#F0FFF5",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase"}}>Melhor</div><div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{Math.min(...slaEnvioValores)}d</div></div>
-          <div style={{textAlign:"center",background:"#FFF0F0",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#C62828",textTransform:"uppercase"}}>Pior</div><div style={{fontSize:18,fontWeight:900,color:"#C62828"}}>{Math.max(...slaEnvioValores)}d</div></div>
-        </div>:<div style={{fontSize:11,color:"#CCC"}}>Sem envios registrados</div>}
-      </div>
-    </div>
-
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20,borderTop:"3px solid #C62828"}}>
-      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-        <div>
-          <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A"}}>🏢 Empresas com Pendência</div>
-          <div style={{fontSize:11,color:"#94A3B8"}}>Quanto cada empresa deve e há quanto tempo</div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Total Pendente</div>
-          <div style={{fontSize:18,fontWeight:900,color:"#C62828"}}>{fmtR(soma(all.filter(p=>!isConcluido(p))))}</div>
-        </div>
-      </div>
-      {(()=>{
-        const pendentesPorEmpresa={};
-        all.filter(p=>!isConcluido(p)).forEach(p=>{
-          const emp=p.empresa||"Sem empresa";
-          if(!pendentesPorEmpresa[emp]) pendentesPorEmpresa[emp]={valor:0,qtd:0,diasMax:0};
-          pendentesPorEmpresa[emp].valor+=parseVal(p.valor);
-          pendentesPorEmpresa[emp].qtd+=1;
-          const d=diasAberto(p);
-          if(d!==null&&d>pendentesPorEmpresa[emp].diasMax) pendentesPorEmpresa[emp].diasMax=d;
-        });
-        const ranking=Object.entries(pendentesPorEmpresa).sort((a,b)=>b[1].valor-a[1].valor).slice(0,12);
-        if(ranking.length===0) return <div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhuma pendência em aberto</div>;
-        return(
-          <div style={{overflowX:"auto"}}>
-            <table style={{borderCollapse:"collapse",width:"100%",minWidth:500,fontSize:12}}>
-              <thead><tr style={{background:"#F8FAFC"}}>
-                <th style={{padding:"8px 14px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
-                <th style={{padding:"8px 14px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Casos</th>
-                <th style={{padding:"8px 14px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Valor Pendente</th>
-                <th style={{padding:"8px 14px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Nos Deve Há</th>
-              </tr></thead>
-              <tbody>
-                {ranking.map(([emp,d],i)=>(
-                  <tr key={emp} style={{borderBottom:"1px solid #F1F5F9",background:i%2===1?"#FAFBFC":"#FFF"}}>
-                    <td style={{padding:"8px 14px",fontWeight:700,color:"#1A1A1A"}}>{emp}</td>
-                    <td style={{padding:"8px 14px",textAlign:"center",color:"#64748B"}}>{d.qtd}</td>
-                    <td style={{padding:"8px 14px",textAlign:"right",fontWeight:900,color:"#C62828"}}>{fmtR(d.valor)}</td>
-                    <td style={{padding:"8px 14px",textAlign:"center"}}><span style={{fontWeight:700,color:d.diasMax>30?"#C62828":d.diasMax>15?"#E67E00":"#1A7A3C"}}>{d.diasMax}d</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      })()}
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"1fr",gap:16,marginBottom:32}}>
@@ -2992,22 +2961,16 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32,borderTop:"3px solid #6A1B9A"}}>
-      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Aprovação pelo Cliente (clique para filtrar)</div></div>
-      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:20,alignItems:"center"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-          {aprovCounts.map((a,i)=>{const pctA=all.length?Math.round(a.total/all.length*100):0;return(
-            <div key={i} style={{background:"#FFF",borderLeft:`3px solid ${a.c}`,borderRadius:8,padding:"14px 16px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #F1F5F9",borderLeftWidth:3,borderLeftColor:a.c,cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
-              <div style={{fontSize:10,fontWeight:700,color:"#64748B"}}>{a.label}</div>
-              <div style={{display:"flex",alignItems:"baseline",gap:5}}><span style={{fontSize:18,fontWeight:800,color:"#0F172A"}}>{a.total}</span><span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({pctA}%)</span></div>
-              <div style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>{fmtR(a.valor)}</div>
-            </div>
-          );})}
-        </div>
-        {aprovCounts.some(a=>a.total>0)&&<ChartCanvas type="doughnut" height={170} data={{
-          labels:aprovCounts.map(a=>a.label),
-          datasets:[{data:aprovCounts.map(a=>a.total),backgroundColor:aprovCounts.map(a=>a.c),borderWidth:2,borderColor:"#FFF"}]
-        }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}},datalabels:{display:false}}}}/>}
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
+      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Detalhamento por Status (clique para filtrar)</div></div>
+      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10}}>
+        {aprovCounts.filter(a=>a.total>0).map((a,i)=>{const pctA=all.length?Math.round(a.total/all.length*100):0;return(
+          <div key={i} style={{background:"#FFF",borderRadius:8,padding:"12px 14px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #F1F5F9",borderLeftWidth:3,borderLeftColor:a.c,cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+            <div style={{fontSize:10,fontWeight:700,color:"#64748B"}}>{a.label}</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:5}}><span style={{fontSize:16,fontWeight:800,color:"#0F172A"}}>{a.total}</span><span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({pctA}%)</span></div>
+            <div style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>{fmtR(a.valor)}</div>
+          </div>
+        );})}
       </div>
     </div>
 
