@@ -307,6 +307,14 @@ const ENVIO_PECA_STATUS = {
 const ENVIO_PECA_STATUS_KEYS = Object.keys(ENVIO_PECA_STATUS);
 const ORC_TIPO_REF = ["OV","OC","REL","OS"];
 const ORC_LOCAIS_COTACAO = ["Portal","Mastermaq MOV Compra","Fornecedor Direto","Loja Física","Outro"];
+const PORTAL_SERVICOS = ["Cotação","Compra","NF de Remessa","NF de Retorno","NF de Entrada","Cadastro de Cliente","Solicitação de Pagamento","Reembolso","Cadastro Mercadoria","Nova Locação","Faturamento Mau Uso","Faturamento Peças","Faturamento Serviços"];
+const PORTAL_STATUS = {
+  concluido:{l:"✅ Concluído",c:"#166534",bg:"#F0FDF4"},
+  pendente:{l:"🔴 Pendente",c:"#C62828",bg:"#FFF0F0"},
+  em_andamento:{l:"🟡 Em Andamento",c:"#B45309",bg:"#FFF8F0"},
+  devolvido:{l:"↩️ Devolvido",c:"#7E22CE",bg:"#F5F3FF"},
+};
+const PORTAL_STATUS_KEYS = Object.keys(PORTAL_STATUS);
 const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
@@ -3107,7 +3115,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
 
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
   const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","dashboard_mau_uso","dashboard_a_faturar"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
@@ -3330,6 +3338,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <SubBtn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
         <SubBtn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
+        <SubBtn k="pendencias_portal" l="🎫 Pendências Portal de Serviços"/>
         <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
         <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
       </div>}
@@ -3354,7 +3363,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) return;
     const al = user.acessoSas&&!user.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user.acessoComercial ? (user.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user.apenasAgenda||user.apenasAgenda150 ? ["agenda_prev","dashboard_mau_uso","dashboard_a_faturar"] :
       user.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
       user.apenasOficina150 ? ["agenda_ofi_150","apontamentos_150","pendencias_matheus","dashboard_ofi_150"] :
@@ -3482,6 +3491,7 @@ export default function App(){
   const [modalEnvioPeca,setModalEnvioPeca]=useState(false);
   const [editEnvioPeca,setEditEnvioPeca]=useState(null);
   const [showArqOrc,setShowArqOrc]=useState(false);
+  const [showArqPP,setShowArqPP]=useState(false);
   const [modalOrc,setModalOrc]=useState(false);
   const [editOrc,setEditOrc]=useState(null);
   const [orcPeriodo,setOrcPeriodo]=useState("tudo");
@@ -3640,6 +3650,7 @@ export default function App(){
   const [cotacoesPecas,setCotacoesPecas]=useState([]);
   const [envioPecas,setEnvioPecas]=useState([]);
   const [orcamentoPecas,setOrcamentoPecas]=useState([]);
+  const [pendenciasPortal,setPendenciasPortal]=useState([]);
   const [showArqDificuldade,setShowArqDificuldade]=useState(false);
   const [dificuldadeModal,setDificuldadeModal]=useState(false);
   const [dificuldadeEdit,setDificuldadeEdit]=useState(null);
@@ -3972,6 +3983,8 @@ export default function App(){
       if(envioPecaRows.length>0) setEnvioPecas(envioPecaRows);
       const orcamentoPecaRows=await safeGet("orcamento_pecas");
       if(orcamentoPecaRows.length>0) setOrcamentoPecas(orcamentoPecaRows);
+      const pendenciaPortalRows=await safeGet("pendencias_portal");
+      if(pendenciaPortalRows.length>0) setPendenciasPortal(pendenciaPortalRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -4025,7 +4038,7 @@ export default function App(){
       vale_tecnico_maquinas:setValeTecnico, ferias_colaboradores:setFerias, treinamentos_reunioes:setTreinamentos, banco_horas:setBancoHoras, entrega_tecnica:setEntregaTec, clientes_sas:setClientesSas, prospeccao:setProspeccao, ponto_diario:setPontoDiario, escala_diaria:setEscalaDiaria, servicos_fechados:setServicosFechados, dificuldades_tecnicos:setDificuldadesTec, fechamento_mensal_oficina:setFechamentoMensal,
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
-      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas, orcamento_pecas:setOrcamentoPecas,
+      sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas, orcamento_pecas:setOrcamentoPecas, pendencias_portal:setPendenciasPortal,
     };
     const applyChange=(table,eventType,rec,oldRec)=>{
       const setter=setters[table]; if(!setter)return;
@@ -4163,6 +4176,7 @@ export default function App(){
   const cotacaoCrud=mkCrud("cotacoes_pecas",setCotacoesPecas);
   const envioPecaCrud=mkCrud("envio_pecas_fornecedor",setEnvioPecas);
   const orcamentoPecaCrud=mkCrud("orcamento_pecas",setOrcamentoPecas);
+  const pendenciaPortalCrud=mkCrud("pendencias_portal",setPendenciasPortal);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes,fallbackRow)=>{
@@ -5355,7 +5369,7 @@ export default function App(){
 
   const renderTab = () => {
     const allowedTabs = user?.acessoSas&&!user?.acessoComercial ? ["entrega_tecnica","clientes_sas","dashboard_clientes_sas","prospeccao","dashboard_prospeccao","documentos_obrigatorios_sas","sas_vendas","sas_pecas"] :
-      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
+      user?.acessoComercial ? (user?.semSas?["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]:["mau_uso","execucao_mau_uso","a_faturar","dashboard_mau_uso","dashboard_a_faturar","entrega_tecnica","clientes_sas","dashboard_clientes_sas","documentos_obrigatorios_sas","sas_vendas","sas_pecas","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","comercial","dashboard_comercial","prospeccao","dashboard_prospeccao"]) :
       user?.apenasAgenda150 ? ["agenda_ofi_150","dashboard_ofi_150"] :
       user?.apenasAgenda ? ["agenda_prev","dashboard","dashboard_mau_uso","dashboard_a_faturar"] :
       user?.apenasOficina ? ["agenda_ofi","apontamentos_oficina","pendencias_hebert","dashboard_ofi"] :
@@ -7622,6 +7636,71 @@ export default function App(){
                   <button onClick={()=>{setModalEnvioPeca(false);setEditEnvioPeca(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
                   <BtnY onClick={salvar}>Salvar</BtnY>
                 </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {tab==="pendencias_portal"&&(()=>{
+          const lista=(pendenciasPortal||[]).filter(p=>p&&(showArqPP?p.arquivado:!p.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+          const porStatus=k=>lista.filter(p=>p.status===k).length;
+          const addLinha=()=>{
+            const row={id:`PP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",servico:PORTAL_SERVICOS[0],cliente:"",status:"pendente",dataRetorno:"",arquivado:false};
+            setPendenciasPortal(p=>[row,...(p||[])]);
+            db.save("pendencias_portal",row.id,row);
+          };
+          const upd=(id,changes)=>pendenciaPortalCrud.update(id,changes);
+          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🎫 Pendências Portal de Serviços</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setShowArqPP(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqPP?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <BtnExcel onClick={()=>exportCSV(lista,"pendencias_portal_servicos",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"servico",label:"Serviço"},{key:"cliente",label:"Cliente"},{key:"status",label:"Status"},{key:"dataRetorno",label:"Data de Retorno"}])}/>
+                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                </div>
+              </div>
+
+              <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",marginTop:16}}>
+                <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}> — Indicadores Pendências Portal</span>
+              </div>
+              <div style={{background:"#FFF",border:"1px solid #E2E8F0",borderTop:"none",borderRadius:"0 0 10px 10px",padding:16,marginBottom:20}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:16}}>
+                  {PORTAL_STATUS_KEYS.map(k=>(
+                    <div key={k} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${PORTAL_STATUS[k].c}`}}>
+                      <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,lineHeight:1.4,marginBottom:5}}>{PORTAL_STATUS[k].l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:PORTAL_STATUS[k].c,lineHeight:1.15}}>{porStatus(k)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap"><table>
+                  <thead><tr><th>Data</th><th>Ticket</th><th>Serviço</th><th>Cliente</th><th>Status</th><th>Data de Retorno</th><th></th></tr></thead>
+                  <tbody>
+                    {lista.map(p=>{
+                      const st=PORTAL_STATUS[p.status]||PORTAL_STATUS.pendente;
+                      return(
+                        <tr key={p.id} style={{opacity:p.arquivado?0.55:1}}>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={p.data||""} onChange={ev=>upd(p.id,{data:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={p.ticket||""} onChange={ev=>upd(p.id,{ticket:ev.target.value})} placeholder="Nº Ticket" style={{...inpCell,minWidth:100}}/></td>
+                          <td style={{padding:"6px 8px"}}><select value={p.servico||PORTAL_SERVICOS[0]} onChange={ev=>upd(p.id,{servico:ev.target.value})} style={{...inpCell,minWidth:180}}>{PORTAL_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></td>
+                          <td style={{padding:"6px 8px"}}><input type="text" value={p.cliente||""} onChange={ev=>upd(p.id,{cliente:ev.target.value})} placeholder="Cliente" style={{...inpCell,minWidth:160}}/></td>
+                          <td style={{padding:"6px 8px"}}><select value={p.status} onChange={ev=>upd(p.id,{status:ev.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{PORTAL_STATUS_KEYS.map(k=><option key={k} value={k}>{PORTAL_STATUS[k].l}</option>)}</select></td>
+                          <td style={{padding:"6px 8px"}}><input type="date" value={p.dataRetorno||""} onChange={ev=>upd(p.id,{dataRetorno:ev.target.value})} style={inpCell}/></td>
+                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>upd(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{p.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))pendenciaPortalCrud.del(p.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqPP?"arquivado":""}</div>}
               </div>
             </div>
           );
