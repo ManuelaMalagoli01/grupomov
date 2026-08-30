@@ -383,6 +383,19 @@ const APROV_STATUS={
   negado_cliente:{l:"❌ Negado pelo Cliente",c:"#C62828",bg:"#FFF0F0"},
   cobrado_faturado:{l:"💰 Faturado / Concluído",c:"#6A1B9A",bg:"#F3E5F5"},
   encerrado_sem_cobranca:{l:"🔒 Encerrado s/ Cobrança",c:"#546E7A",bg:"#ECEFF1"},
+  // ── opções extras trazidas do consolidado (aba Detalhamento) ──
+  pend_comercial:{l:"📋 Pend. Comercial",c:"#B45309",bg:"#FFFBEB"},
+  pend_coord_servicos:{l:"📋 Pend. Coord. Serviços",c:"#B45309",bg:"#FFFBEB"},
+  pend_diretoria:{l:"📋 Pend. Diretoria",c:"#B45309",bg:"#FFFBEB"},
+  pend_faturamento:{l:"📋 Pend. Faturamento",c:"#B45309",bg:"#FFFBEB"},
+  passivo_pend_fotos:{l:"📷 Passivo - Pend. Fotos",c:"#9333EA",bg:"#FAF5FF"},
+  faturamento_futuro:{l:"📅 Faturamento Futuro",c:"#0D9488",bg:"#F0FDFA"},
+  baixado_diretoria:{l:"⬇️ Baixado - Diretoria",c:"#64748B",bg:"#F8FAFC"},
+  baixado_finalizado:{l:"⬇️ Baixado - Finalizado",c:"#64748B",bg:"#F8FAFC"},
+  baixado_gap_manutencao:{l:"⬇️ Baixado - GAP Manutenção",c:"#64748B",bg:"#F8FAFC"},
+  baixado_gap_operacional:{l:"⬇️ Baixado - GAP Operacional",c:"#64748B",bg:"#F8FAFC"},
+  baixado_preenchimento_errado:{l:"⬇️ Baixado - Preenchimento Errado",c:"#64748B",bg:"#F8FAFC"},
+  baixado_repeticao:{l:"⬇️ Baixado - Repetição",c:"#64748B",bg:"#F8FAFC"},
 };
 const RUP_SOLICITACAO=[
   {v:"sem_estoque",       l:"Sem estoque no almoxarifado"},
@@ -2755,14 +2768,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
-      <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>{icone} Dashboard {titulo}</div>
+      <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🚦 Farol {titulo}</div>
         <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
       </div>
       <div style={{display:"flex",gap:8}}>
         <button onClick={async()=>{
           try{
             await gerarDashboardExcelProfissional({
-              titulo:`Dashboard ${titulo}`,
+              titulo:`Farol ${titulo}`,
               periodoLabel:janLabel,
               kpis:[
                 {label:"Abertos no Período", valor:abertosJanela.length, cor:cor},
@@ -2807,7 +2820,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               ].filter(Boolean),
             });
           }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
-        }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
+        }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Farol Excel</button>
         <button onClick={()=>{
         const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
         if(reg.length===0){alert("Nenhum mau uso no período selecionado.");return;}
@@ -3194,8 +3207,8 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
       <Btn k="cotacao_pecas" l="🧾 Cotação de Peças"/>
         <Btn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
         <Btn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
-      <Btn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
-      <Btn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
+      <Btn k="dashboard_mau_uso" l="🚦 Farol Mau Uso"/>
+      <Btn k="dashboard_a_faturar" l="🚦 Farol A Faturar"/>
     </div>
   );
   if(user.acessoSas&&!user.acessoComercial) return(
@@ -3339,8 +3352,8 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
         <SubBtn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
         <SubBtn k="pendencias_portal" l="🎫 Pendências Portal de Serviços"/>
-        <SubBtn k="dashboard_mau_uso" l="📊 Dash Mau Uso"/>
-        <SubBtn k="dashboard_a_faturar" l="📊 Dash A Faturar"/>
+        <SubBtn k="dashboard_mau_uso" l="🚦 Farol Mau Uso"/>
+        <SubBtn k="dashboard_a_faturar" l="🚦 Farol A Faturar"/>
       </div>}
     </div>
     </>
