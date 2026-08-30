@@ -2783,41 +2783,59 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 {label:"Aguardando Retorno", valor:pendentes.length, cor:"#E67E00"},
                 {label:"Em Negociação", valor:emNegociacao.length, cor:"#1565C0"},
               ],
-              abas:ABAS_MICRO.map(a=>({
-                nome:a.rotulo,
-                registros:a.registros,
-                colunas:[
-                  {key:"empresa", label:"Empresa", width:26, get:p=>p.empresa||""},
-                  {key:"num", label:"Nº", width:14, get:p=>p.numMauUso||p.ov||""},
-                  {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor), money:true},
-                  {key:"status", label:"Status", width:22, get:p=>(APROV_STATUS[aprovDe(p)]||{}).l||""},
-                  {key:"abertura", label:"Data Abertura", width:16, get:p=>fmtDataBR(dataAbertura(p))||""},
-                  {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
-                ],
-              })),
+              abas:[
+                ...ABAS_MICRO.map(a=>({
+                  nome:a.rotulo,
+                  registros:a.registros,
+                  colunas:[
+                    {key:"empresa", label:"Empresa", width:26, get:p=>p.empresa||""},
+                    {key:"num", label:"Nº", width:14, get:p=>p.numMauUso||p.ov||""},
+                    {key:"valor", label:"Valor (R$)", width:16, get:p=>parseVal(p.valor), money:true},
+                    {key:"status", label:"Status", width:22, get:p=>(APROV_STATUS[aprovDe(p)]||{}).l||""},
+                    {key:"abertura", label:"Data Abertura", width:16, get:p=>fmtDataBR(dataAbertura(p))||""},
+                    {key:"conclusao", label:"Data Conclusão", width:16, get:p=>fmtDataBR(dataConclusaoDe(p))||""},
+                  ],
+                })),
+                (()=>{
+                  const pendPorEmp={};
+                  all.filter(p=>!isConcluido(p)).forEach(p=>{
+                    const emp=p.empresa||"Sem empresa";
+                    if(!pendPorEmp[emp]) pendPorEmp[emp]={valor:0,qtd:0,diasMax:0};
+                    pendPorEmp[emp].valor+=parseVal(p.valor); pendPorEmp[emp].qtd+=1;
+                    const d=diasAberto(p); if(d!==null&&d>pendPorEmp[emp].diasMax) pendPorEmp[emp].diasMax=d;
+                  });
+                  const ranking=Object.entries(pendPorEmp).sort((a,b)=>b[1].valor-a[1].valor).map(([emp,d])=>({empresa:emp,...d}));
+                  return {nome:"Empresas com Pendência", registros:ranking, colunas:[
+                    {key:"empresa", label:"Empresa", width:28, get:r=>r.empresa},
+                    {key:"qtd", label:"Casos", width:10, get:r=>r.qtd},
+                    {key:"valor", label:"Valor Pendente (R$)", width:18, get:r=>r.valor, money:true},
+                    {key:"dias", label:"Nos Deve Há (dias)", width:16, get:r=>r.diasMax},
+                  ]};
+                })(),
+              ],
               graficos:[
                 {
-                  titulo:"Concluído/Faturado × Aberto",
+                  titulo:"Faturado × Não Faturado",
                   type:"bar",
                   data:{
                     labels:serie.map(s=>s.lab),
                     datasets:[
-                      {label:"Concluído/Faturado", data:serie.map(s=>s.concluido), backgroundColor:"#1A7A3C"},
-                      {label:"Aberto", data:serie.map(s=>s.aberto), backgroundColor:"#E67E00"},
+                      {label:"Faturado", data:serie.map(s=>s.concluido), backgroundColor:"#1A7A3C"},
+                      {label:"Não Faturado", data:serie.map(s=>s.aberto), backgroundColor:"#E67E00"},
                     ],
                   },
                   options:{plugins:{legend:{position:"bottom"}}, scales:{y:{beginAtZero:true}}},
                 },
-                slaEnvioValores.length>0?{
-                  titulo:"SLA — Criação × Envio ao Cliente",
+                {
+                  titulo:"% Revertido nas Cobranças",
                   type:"bar",
                   data:{
                     labels:serie.map(s=>s.lab),
-                    datasets:[{label:"SLA médio (dias)", data:serie.map(s=>s.slaMedio), backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828")}],
+                    datasets:[{label:"Revertido", data:serie.map(s=>s.conversao), backgroundColor:"#334155"}],
                   },
-                  options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
-                }:null,
-              ].filter(Boolean),
+                  options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:100}}},
+                },
+              ],
             });
           }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
         }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Farol Excel</button>
@@ -2889,44 +2907,87 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     </div>
     <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A",marginBottom:10,letterSpacing:.2}}>📈 Indicadores do Período</div>
     <div className="card" style={{padding:18,marginBottom:20,borderTop:"3px solid #1A7A3C"}}>
-      <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Concluído/Faturado × Aberto</div>
+      <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>📊 Faturado × Não Faturado</div>
       <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>{periodo==="dia"?"Por dia":periodo==="semana"?"Por semana":"Por mês"}</div>
       <ChartCanvas type="bar" height={190} data={{
         labels:serie.map(s=>s.lab),
         datasets:[
-          {label:"Concluído/Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
-          {label:"Aberto",data:serie.map(s=>s.aberto),backgroundColor:"#E67E00",borderRadius:6},
+          {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#1A7A3C",borderRadius:6},
+          {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#E67E00",borderRadius:6},
         ]
       }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{callback:v=>`R$${(v/1000).toFixed(0)}k`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>
     </div>
 
     <div className="card" style={{padding:18,marginBottom:20,borderTop:"4px solid #1565C0"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:4}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
         <div>
           <div style={{fontWeight:800,fontSize:15,marginBottom:2}}>⏱️ SLA — Data de Criação × Data de Envio ao Cliente</div>
-          <div style={{fontSize:11,color:"#94A3B8"}}>Quantos dias cada processo ficou parado até ser enviado (🟢 ≤7 · 🟠 8-29 · 🔴 30+)</div>
+          <div style={{fontSize:11,color:"#94A3B8"}}>Quantos dias cada processo ficou parado até ser enviado</div>
         </div>
-        {slaEnvioValores.length>0&&<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {slaEnvioValores.length>0?<div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
           <div style={{textAlign:"center",background:"#EFF6FF",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1565C0",textTransform:"uppercase"}}>Média</div><div style={{fontSize:18,fontWeight:900,color:"#1565C0"}}>{slaEnvioMedio}d</div></div>
           <div style={{textAlign:"center",background:"#F0FFF5",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#1A7A3C",textTransform:"uppercase"}}>Melhor</div><div style={{fontSize:18,fontWeight:900,color:"#1A7A3C"}}>{Math.min(...slaEnvioValores)}d</div></div>
           <div style={{textAlign:"center",background:"#FFF0F0",borderRadius:10,padding:"6px 14px"}}><div style={{fontSize:9,fontWeight:700,color:"#C62828",textTransform:"uppercase"}}>Pior</div><div style={{fontSize:18,fontWeight:900,color:"#C62828"}}>{Math.max(...slaEnvioValores)}d</div></div>
-        </div>}
+        </div>:<div style={{fontSize:11,color:"#CCC"}}>Sem envios registrados</div>}
       </div>
-      {slaEnvioValores.length===0?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem envios registrados</div>:
-      <ChartCanvas type="bar" height={220} data={{
-        labels:serie.map(s=>s.lab),
-        datasets:[{label:"SLA médio (dias)",data:serie.map(s=>s.slaMedio),backgroundColor:serie.map(s=>s.slaMedio===null?"#E2E8F0":s.slaMedio<=7?"#1A7A3C":s.slaMedio<30?"#E67E00":"#C62828"),borderRadius:6}]
-      }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{callback:v=>`${v}d`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
+    </div>
+
+    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:20,borderTop:"3px solid #C62828"}}>
+      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:14,color:"#1A1A1A"}}>🏢 Empresas com Pendência</div>
+          <div style={{fontSize:11,color:"#94A3B8"}}>Quanto cada empresa deve e há quanto tempo</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:9,fontWeight:700,color:"#94A3B8",textTransform:"uppercase"}}>Total Pendente</div>
+          <div style={{fontSize:18,fontWeight:900,color:"#C62828"}}>{fmtR(soma(all.filter(p=>!isConcluido(p))))}</div>
+        </div>
+      </div>
+      {(()=>{
+        const pendentesPorEmpresa={};
+        all.filter(p=>!isConcluido(p)).forEach(p=>{
+          const emp=p.empresa||"Sem empresa";
+          if(!pendentesPorEmpresa[emp]) pendentesPorEmpresa[emp]={valor:0,qtd:0,diasMax:0};
+          pendentesPorEmpresa[emp].valor+=parseVal(p.valor);
+          pendentesPorEmpresa[emp].qtd+=1;
+          const d=diasAberto(p);
+          if(d!==null&&d>pendentesPorEmpresa[emp].diasMax) pendentesPorEmpresa[emp].diasMax=d;
+        });
+        const ranking=Object.entries(pendentesPorEmpresa).sort((a,b)=>b[1].valor-a[1].valor).slice(0,12);
+        if(ranking.length===0) return <div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhuma pendência em aberto</div>;
+        return(
+          <div style={{overflowX:"auto"}}>
+            <table style={{borderCollapse:"collapse",width:"100%",minWidth:500,fontSize:12}}>
+              <thead><tr style={{background:"#F8FAFC"}}>
+                <th style={{padding:"8px 14px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
+                <th style={{padding:"8px 14px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Casos</th>
+                <th style={{padding:"8px 14px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Valor Pendente</th>
+                <th style={{padding:"8px 14px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Nos Deve Há</th>
+              </tr></thead>
+              <tbody>
+                {ranking.map(([emp,d],i)=>(
+                  <tr key={emp} style={{borderBottom:"1px solid #F1F5F9",background:i%2===1?"#FAFBFC":"#FFF"}}>
+                    <td style={{padding:"8px 14px",fontWeight:700,color:"#1A1A1A"}}>{emp}</td>
+                    <td style={{padding:"8px 14px",textAlign:"center",color:"#64748B"}}>{d.qtd}</td>
+                    <td style={{padding:"8px 14px",textAlign:"right",fontWeight:900,color:"#C62828"}}>{fmtR(d.valor)}</td>
+                    <td style={{padding:"8px 14px",textAlign:"center"}}><span style={{fontWeight:700,color:d.diasMax>30?"#C62828":d.diasMax>15?"#E67E00":"#1A7A3C"}}>{d.diasMax}d</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"1fr",gap:16,marginBottom:32}}>
       <div className="card" style={{padding:18,borderTop:"3px solid #334155"}}>
-        <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔄 Taxa de Conversão</div>
-        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor R$ concluído/faturado sobre o total</div>
+        <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>🔄 % Revertido nas Cobranças</div>
+        <div style={{fontSize:11,color:"#94A3B8",marginBottom:10}}>Valor R$ concluído/faturado sobre o total cobrado, por período</div>
         {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#CCC",padding:50,fontSize:12}}>Sem dados no período</div>:
         <ChartCanvas type="bar" height={200} data={{
           labels:serie.map(s=>s.lab),
-          datasets:[{label:"Conversão",data:serie.map(s=>s.conversao),backgroundColor:"#334155",borderRadius:6}]
+          datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#334155",borderRadius:6}]
         }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{callback:v=>`${v}%`,font:{size:11}},grid:{color:"#F0F0F0"}}},animation:{duration:600}}}/>}
       </div>
     </div>
