@@ -3492,6 +3492,8 @@ export default function App(){
   const [editEnvioPeca,setEditEnvioPeca]=useState(null);
   const [showArqOrc,setShowArqOrc]=useState(false);
   const [showArqPP,setShowArqPP]=useState(false);
+  const [modalPP,setModalPP]=useState(false);
+  const [editPP,setEditPP]=useState(null);
   const [modalOrc,setModalOrc]=useState(false);
   const [editOrc,setEditOrc]=useState(null);
   const [orcPeriodo,setOrcPeriodo]=useState("tudo");
@@ -7623,13 +7625,8 @@ export default function App(){
         {tab==="pendencias_portal"&&(()=>{
           const lista=(pendenciasPortal||[]).filter(p=>p&&(showArqPP?p.arquivado:!p.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const porStatus=k=>lista.filter(p=>p.status===k).length;
-          const addLinha=()=>{
-            const row={id:`PP${Date.now()}_${Math.floor(Math.random()*9999)}`,registradoPor:user.name,registradoEm:new Date().toISOString(),data:TODAY_STR,ticket:"",servico:PORTAL_SERVICOS[0],cliente:"",status:"pendente",dataRetorno:"",arquivado:false};
-            setPendenciasPortal(p=>[row,...(p||[])]);
-            db.save("pendencias_portal",row.id,row);
-          };
-          const upd=(id,changes)=>pendenciaPortalCrud.update(id,changes);
-          const inpCell={width:"100%",fontSize:12,padding:"5px 7px",borderRadius:6,border:"1px solid #E5E7EB",fontFamily:"inherit",boxSizing:"border-box"};
+          const abrirNovo=()=>{setEditPP({data:TODAY_STR,ticket:"",servico:PORTAL_SERVICOS[0],cliente:"",status:"pendente",dataRetorno:""});setModalPP(true);};
+          const abrirEditar=(p)=>{setEditPP({...p});setModalPP(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
@@ -7637,7 +7634,7 @@ export default function App(){
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqPP(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqPP?"📤 Ativos":"🗄️ Arquivados"}</button>
                   <BtnExcel onClick={()=>exportCSV(lista,"pendencias_portal_servicos",[{key:"data",label:"Data"},{key:"ticket",label:"Ticket"},{key:"servico",label:"Serviço"},{key:"cliente",label:"Cliente"},{key:"status",label:"Status"},{key:"dataRetorno",label:"Data de Retorno"}])}/>
-                  <BtnY onClick={addLinha}>+ Nova Linha</BtnY>
+                  <BtnY onClick={abrirNovo}>+ Nova Inclusão</BtnY>
                 </div>
               </div>
 
@@ -7664,15 +7661,16 @@ export default function App(){
                       const st=PORTAL_STATUS[p.status]||PORTAL_STATUS.pendente;
                       return(
                         <tr key={p.id} style={{opacity:p.arquivado?0.55:1}}>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={p.data||""} onChange={ev=>upd(p.id,{data:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={p.ticket||""} onChange={ev=>upd(p.id,{ticket:ev.target.value})} placeholder="Nº Ticket" style={{...inpCell,minWidth:100}}/></td>
-                          <td style={{padding:"6px 8px"}}><select value={p.servico||PORTAL_SERVICOS[0]} onChange={ev=>upd(p.id,{servico:ev.target.value})} style={{...inpCell,minWidth:180}}>{PORTAL_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></td>
-                          <td style={{padding:"6px 8px"}}><input type="text" value={p.cliente||""} onChange={ev=>upd(p.id,{cliente:ev.target.value})} placeholder="Cliente" style={{...inpCell,minWidth:160}}/></td>
-                          <td style={{padding:"6px 8px"}}><select value={p.status} onChange={ev=>upd(p.id,{status:ev.target.value})} style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{PORTAL_STATUS_KEYS.map(k=><option key={k} value={k}>{PORTAL_STATUS[k].l}</option>)}</select></td>
-                          <td style={{padding:"6px 8px"}}><input type="date" value={p.dataRetorno||""} onChange={ev=>upd(p.id,{dataRetorno:ev.target.value})} style={inpCell}/></td>
-                          <td style={{padding:"6px 8px",whiteSpace:"nowrap"}}>
-                            <button onClick={()=>upd(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11,marginRight:4}}>{p.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir esta linha?"))pendenciaPortalCrud.del(p.id);}} style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:11}}>✕</button>
+                          <td style={{padding:"8px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(p.data)||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{p.ticket||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{p.servico||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#1565C0",fontWeight:600}}>{p.cliente||"—"}</td>
+                          <td style={{padding:"8px 10px"}}><span style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",whiteSpace:"nowrap"}}>{st.l}</span></td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155",whiteSpace:"nowrap"}}>{p.dataRetorno?fmtDataBR(p.dataRetorno):"—"}</td>
+                          <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>abrirEditar(p)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
+                            <button onClick={()=>pendenciaPortalCrud.update(p.id,{arquivado:!p.arquivado})} title={p.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{p.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir este registro?"))pendenciaPortalCrud.del(p.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
                           </td>
                         </tr>
                       );
@@ -7680,6 +7678,49 @@ export default function App(){
                   </tbody>
                 </table></div>
                 {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqPP?"arquivado":""}</div>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {modalPP&&editPP&&(()=>{
+          const upd=(k,v)=>setEditPP(p=>({...p,[k]:v}));
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
+          const isNovo=!editPP.id;
+          const salvar=()=>{
+            if(!editPP.ticket&&!editPP.cliente){alert("Informe pelo menos o Ticket ou o Cliente.");return;}
+            if(isNovo){
+              pendenciaPortalCrud.add(editPP);
+            }else{
+              pendenciaPortalCrud.update(editPP.id,editPP);
+              notify("✅ Registro atualizado!");
+            }
+            setModalPP(false);setEditPP(null);
+          };
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalPP(false);setEditPP(null);}}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"🎫 Nova Inclusão":"✏️ Editar"} — Pendência Portal</div>
+                  <button onClick={()=>{setModalPP(false);setEditPP(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
+                </div>
+                <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Data</label><input type="date" value={editPP.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Ticket</label><input type="text" value={editPP.ticket||""} onChange={e=>upd("ticket",e.target.value)} placeholder="Nº Ticket" style={inp}/></div>
+                  </div>
+                  <div><label style={lbl}>Serviço</label><select value={editPP.servico||PORTAL_SERVICOS[0]} onChange={e=>upd("servico",e.target.value)} style={inp}>{PORTAL_SERVICOS.map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div><label style={lbl}>Cliente</label><input type="text" value={editPP.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Nome do cliente" style={inp}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Status</label><select value={editPP.status} onChange={e=>upd("status",e.target.value)} style={inp}>{PORTAL_STATUS_KEYS.map(k=><option key={k} value={k}>{PORTAL_STATUS[k].l}</option>)}</select></div>
+                    <div><label style={lbl}>Data de Retorno</label><input type="date" value={editPP.dataRetorno||""} onChange={e=>upd("dataRetorno",e.target.value)} style={inp}/></div>
+                  </div>
+                </div>
+                <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
+                  <button onClick={()=>{setModalPP(false);setEditPP(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
               </div>
             </div>
           );
