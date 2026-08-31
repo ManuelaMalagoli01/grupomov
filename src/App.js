@@ -2714,37 +2714,37 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const convMensal=soma(mesTotal)>0?Math.round(soma(mesConc)/soma(mesTotal)*100*10)/10:null;
 
   const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
-      <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",background:corSec+"0D"}}>
+    <div style={{background:"#0B1220",borderRadius:12,padding:0,overflow:"hidden",marginBottom:14}}>
+      <div style={{padding:"12px 16px",borderBottom:"1px solid #1E293B",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{fontWeight:800,fontSize:13,color:corSec}}>{icone} {titulo}</div>
-        <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#94A3B8"}}>{registros.length} mau uso</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#64748B"}}>{registros.length} mau uso</div></div>
       </div>
-      {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
+      {registros.length===0?<div style={{color:"#475569",fontSize:11,textAlign:"center",padding:24}}>{vazio}</div>:
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:660,fontSize:11}}>
-          <thead><tr style={{background:"#F8FAFC"}}>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº Mau Uso</th>
-            <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Envio Cliente</th>
-            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Ticket</th>}
-            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Conclusão</th>}
-            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>ND</th>}
-            {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Tempo</th>}
+          <thead><tr>
+            <th style={{padding:"8px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Empresa</th>
+            <th style={{padding:"8px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Nº Mau Uso</th>
+            <th style={{padding:"8px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Valor</th>
+            <th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Abertura</th>
+            <th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Envio Cliente</th>
+            {mostrarConclusao&&<th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Ticket</th>}
+            {mostrarConclusao&&<th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Conclusão</th>}
+            {mostrarConclusao&&<th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>ND</th>}
+            {mostrarTempo&&<th style={{padding:"8px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",position:"sticky",top:0,background:"#0F172A"}}>Tempo</th>}
           </tr></thead>
           <tbody>
             {registros.map((p,i)=>{const dias=diasAberto(p);return(
-              <tr key={i} style={{borderBottom:"1px solid #F1F5F9"}}>
-                <td style={{padding:"6px 10px",fontWeight:600,color:"#334155"}}>{p.empresa||"—"}</td>
-                <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
-                <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(p.date)||"—"}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#1565C0"}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ticket||"—"}</td>}
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ov||"—"}</td>}
-                {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
+              <tr key={i} style={{borderBottom:"1px solid #1E293B"}}>
+                <td style={{padding:"7px 10px",fontWeight:600,color:"#E2E8F0"}}>{p.empresa||"—"}</td>
+                <td style={{padding:"7px 10px",color:"#38BDF8",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
+                <td style={{padding:"7px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
+                <td style={{padding:"7px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(p.date)||"—"}</td>
+                <td style={{padding:"7px 10px",textAlign:"center",color:"#38BDF8"}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
+                {mostrarConclusao&&<td style={{padding:"7px 10px",textAlign:"center",color:"#94A3B8",fontWeight:600}}>{p.ticket||"—"}</td>}
+                {mostrarConclusao&&<td style={{padding:"7px 10px",textAlign:"center",color:"#0D9488",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
+                {mostrarConclusao&&<td style={{padding:"7px 10px",textAlign:"center",color:"#94A3B8",fontWeight:600}}>{p.ov||"—"}</td>}
+                {mostrarTempo&&<td style={{padding:"7px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#F87171":dias>15?"#FBBF24":"#4ADE80"}}>{dias}d</span>:"—"}</td>}
               </tr>
             );})}
           </tbody>
@@ -2990,21 +2990,22 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       );
     })()}
 
-    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #0B1220",background:showMicro?"#0B1220":"#1A1A1A",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"12px 16px",borderRadius:showMicro?"12px 12px 0 0":12,border:"none",background:"#0B1220",cursor:"pointer",marginBottom:0,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
       <span style={{fontSize:13,fontWeight:800,color:"#F5C200"}}>🔬 Detalhamento completo (por processo)</span>
       <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showMicro?"▲ Ocultar":"▼ Mostrar"}</span>
     </button>
-    {showMicro&&<>
-    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+    {showMicro&&<div style={{background:"#0B1220",borderRadius:"0 0 12px 12px",padding:"0 16px 16px",marginBottom:32}}>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14,paddingTop:4}}>
       {ABAS_MICRO.map(a=>(
-        <button key={a.k} onClick={()=>setAbaMicro(a.k)} style={{padding:"6px 13px",borderRadius:20,border:abaMicro===a.k?`2px solid ${a.cor}`:"1.5px solid #E2E8F0",background:abaMicro===a.k?a.cor+"18":"#FFF",color:abaMicro===a.k?a.cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+        <button key={a.k} onClick={()=>setAbaMicro(a.k)} style={{padding:"6px 13px",borderRadius:20,border:abaMicro===a.k?`2px solid ${a.cor}`:"1.5px solid #1E293B",background:abaMicro===a.k?a.cor+"22":"#0F172A",color:abaMicro===a.k?a.cor:"#94A3B8",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
           {a.icone} {a.rotulo} <span style={{opacity:.7}}>({a.registros.length})</span>
         </button>
       ))}
     </div>
     {(()=>{const a=ABAS_MICRO.find(x=>x.k===abaMicro)||ABAS_MICRO[0];
       return <TabelaMicro titulo={a.titulo} icone={a.icone} corSec={a.cor} registros={a.registros} vazio={a.vazio} mostrarConclusao={a.conc} mostrarTempo={a.tempo}/>;})()}
-    </>}
+    </div>}
+    {!showMicro&&<div style={{marginBottom:32}}/>}
 
   </div>);
 }
