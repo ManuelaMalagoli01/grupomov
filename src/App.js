@@ -2683,7 +2683,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       const enviadosNoPeriodo=all.filter(p=>p.date&&p.dataEnvio&&dentro(p.dataEnvio));
       const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
       const totalPeriodo=all.filter(p=>dentro(dataAbertura(p)));
-      const concPeriodo=totalPeriodo.filter(isConcluido);
+      const isFaturadoReal=(p)=>p.processoStatus==="concluido"||p.aprovCliente==="cobrado_faturado";
+      const concPeriodo=totalPeriodo.filter(isFaturadoReal);
       const totalValPeriodo=soma(totalPeriodo);
       const concValPeriodo=soma(concPeriodo);
       serie.push({lab,
