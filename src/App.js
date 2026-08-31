@@ -8432,13 +8432,21 @@ export default function App(){
           const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
           const getTipoCor=t=>(t||"preventivo")==="corretivo"?"#C62828":"#1565C0";
-          const addAtend=()=>{
+          const addAtend=async()=>{
             const dataFinal=agDate||`${ym}-01`;
-            if(!agEmpresa){alert("Preencha ao menos a Empresa.");return;}
+            if(!agEmpresa){alert("Preencha ao menos a Empresa.");return false;}
+            if(!agTech){alert("Selecione um Técnico.");return false;}
             const key=`${agTech}__${dataFinal}`;
-            saveSched(key,[...(schedule[key]||[]),{client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada||"",horaSaida:agSaida||"",horasTrabalhadas:calcHoras(agEntrada,agSaida)||""}]);
-            setAgEmpresa("");setAgCidade("");setAgPat("");setAgRelatorio("");setAgObs("");setAgEntrada("");setAgSaida("");
-            notify("✅ Atendimento salvo!");
+            const novoSlot={client:agEmpresa,cidade:agCidade||"",patrimonio:agPat||"",relatorio:agRelatorio||"",obs:agObs||"",type:agTipo,status:(agStatus==="todos"?"agendada":agStatus),horaEntrada:agEntrada||"",horaSaida:agSaida||"",horasTrabalhadas:calcHoras(agEntrada,agSaida)||""};
+            const novosSlots=[...(schedule[key]||[]),novoSlot];
+            setSchedule(p=>({...p,[key]:novosSlots}));
+            try{
+              const r=await db.save("escala",key,{key,slots:novosSlots});
+              if(r&&r.ok===false){ alert("❌ Não foi possível salvar o atendimento. Tente novamente ou avise a Manuela."); return false; }
+              setAgEmpresa("");setAgCidade("");setAgPat("");setAgRelatorio("");setAgObs("");setAgEntrada("");setAgSaida("");
+              notify("✅ Atendimento salvo!");
+              return true;
+            }catch(e){ alert("❌ Erro ao salvar o atendimento: "+(e?.message||e)); return false; }
           };
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -8704,7 +8712,7 @@ export default function App(){
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Relatório</label><input type="text" placeholder="Nº Relatório" value={agRelatorio} onChange={e=>setAgRelatorio(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:110}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Tipo</label><select value={agTipo} onChange={e=>setAgTipo(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:700,color:getTipoCor(agTipo)}}><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option></select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Status</label><select value={agStatus} onChange={e=>setAgStatus(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select></div>
-                   <BtnY onClick={()=>{addAtend();setShowNovoAtend(false);}}>Adicionar</BtnY>
+                   <BtnY onClick={async()=>{const ok=await addAtend();if(ok)setShowNovoAtend(false);}}>Adicionar</BtnY>
                 </div>
               </div>
               </div>}
