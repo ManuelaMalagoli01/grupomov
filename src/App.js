@@ -2763,7 +2763,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   ];
 
   const btnPer=(k,l)=>(
-    <button key={k} onClick={()=>setPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:periodo===k?`2px solid ${cor}`:"1.5px solid #E2E8F0",background:periodo===k?cor+"18":"#FFF",color:periodo===k?cor:"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+    <button key={k} onClick={()=>setPeriodo(k)} style={{padding:"6px 14px",borderRadius:20,border:periodo===k?"2px solid #F5C200":"1.5px solid #1E293B",background:periodo===k?"#F5C20022":"#0F172A",color:periodo===k?"#F5C200":"#94A3B8",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
   );
 
   return(<div style={{animation:"fadeIn .3s ease"}}>
@@ -2857,23 +2857,23 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       </div>
     </div>
 
-    <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+    <div style={{background:"#0B1220",borderRadius:12,padding:"10px 14px",marginBottom:4,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
       <div style={{display:"flex",gap:6}}>{btnPer("dia","Diário")}{btnPer("semana","Semanal")}{btnPer("mes","Mensal")}{btnPer("tudo","Tudo")}</div>
-      {(slaEnvioMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
-        {slaEnvioMedio!==null&&<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>}
-        {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
-        {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
+      {(slaEnvioMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #1E293B"}}>
+        {slaEnvioMedio!==null&&<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#0D9488",background:"#0D948822",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>}
+        {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#F5C200",background:"#F5C20022",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
+        {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#F5C200",background:"#F5C20022",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
       </div>}
       {periodo!=="tudo"&&<div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4}}>
-        <button onClick={()=>navegar(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>‹</button>
-        <div style={{fontSize:12,fontWeight:800,color:"#1A1A1A",minWidth:150,textAlign:"center"}}>{janLabel}</div>
-        <button onClick={()=>navegar(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #E2E8F0",background:"#FFF",cursor:"pointer",fontWeight:900,color:"#64748B"}}>›</button>
-        <button onClick={()=>setRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #E2E8F0",background:"#F8FAFC",fontSize:10,fontWeight:700,color:"#64748B",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
+        <button onClick={()=>navegar(-1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #1E293B",background:"#0F172A",cursor:"pointer",fontWeight:900,color:"#94A3B8"}}>‹</button>
+        <div style={{fontSize:12,fontWeight:800,color:"#FFF",minWidth:150,textAlign:"center"}}>{janLabel}</div>
+        <button onClick={()=>navegar(1)} style={{width:28,height:28,borderRadius:8,border:"1.5px solid #1E293B",background:"#0F172A",cursor:"pointer",fontWeight:900,color:"#94A3B8"}}>›</button>
+        <button onClick={()=>setRefIso(TODAY_STR)} style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid #1E293B",background:"#0F172A",fontSize:10,fontWeight:700,color:"#94A3B8",cursor:"pointer",fontFamily:"inherit"}}>Hoje</button>
       </div>}
       <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-        <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150}}/>
-        <select value={fStatus} onChange={e=>setFStatus(e.target.value)}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído/Faturado</option></select>
-        {hasFilter&&<button onClick={clearFilter} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+        <input type="text" value={fEmpresa} onChange={e=>setFEmpresa(e.target.value)} placeholder="Filtrar empresa..." style={{minWidth:150,background:"#0F172A",border:"1.5px solid #1E293B",color:"#FFF"}}/>
+        <select value={fStatus} onChange={e=>setFStatus(e.target.value)} style={{background:"#0F172A",border:"1.5px solid #1E293B",color:"#FFF"}}><option value="todos">Status: Todos</option><option value="pendente">Pendente</option><option value="em_andamento">Em Andamento</option><option value="concluido">Concluído/Faturado</option></select>
+        {hasFilter&&<button onClick={clearFilter} style={{padding:"6px 12px",borderRadius:20,background:"#F5C200",color:"#1A1A1A",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>✕ Limpar</button>}
       </div>
     </div>
 
@@ -2892,34 +2892,34 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       const CORES_DONUT=["#F5C200","#0D9488","#E67E00","#1565C0","#C62828","#546E7A"];
       const aprovCountsAtivos=aprovCounts.filter(a=>a.total>0);
       return(
-        <div style={{background:"#0B1220",borderRadius:16,padding:"22px 24px",marginBottom:22,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
-            <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
-            <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— {titulo} · {janLabel}</span>
+        <div style={{background:"#0B1220",borderRadius:16,padding:"28px 32px",marginBottom:22,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:26}}>
+            <span style={{fontSize:13,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
+            <span style={{fontSize:12,fontWeight:600,color:"#94A3B8"}}>— {titulo} · {janLabel}</span>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1.1fr 1.2fr",gap:24,alignItems:"stretch"}}>
+          <div style={{display:"grid",gridTemplateColumns:"0.9fr 1fr 1.3fr",gap:32,alignItems:"stretch"}}>
             {/* KPIs */}
-            <div style={{display:"flex",flexDirection:"column",gap:16,justifyContent:"center"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:22,justifyContent:"center"}}>
               <div>
-                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total no Período</div>
-                <div style={{fontSize:26,fontWeight:900,color:"#FFF"}}>{fmtR(soma(abertosJanela))}</div>
-                <div style={{fontSize:10,color:"#64748B"}}>{abertosJanela.length} processo(s)</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total no Período</div>
+                <div style={{fontSize:32,fontWeight:900,color:"#FFF"}}>{fmtR(soma(abertosJanela))}</div>
+                <div style={{fontSize:11,color:"#64748B"}}>{abertosJanela.length} processo(s)</div>
               </div>
               <div>
-                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Faturado</div>
-                <div style={{fontSize:22,fontWeight:900,color:"#0D9488"}}>{fmtR(soma(concluidosJanela))}</div>
-                <div style={{fontSize:10,color:"#64748B"}}>{concluidosJanela.length} processo(s)</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Faturado</div>
+                <div style={{fontSize:27,fontWeight:900,color:"#0D9488"}}>{fmtR(soma(concluidosJanela))}</div>
+                <div style={{fontSize:11,color:"#64748B"}}>{concluidosJanela.length} processo(s)</div>
               </div>
               <div>
-                <div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total Pendente (geral)</div>
-                <div style={{fontSize:22,fontWeight:900,color:"#F5C200"}}>{fmtR(totalPendGeral)}</div>
-                <div style={{fontSize:10,color:"#64748B"}}>{slaEnvioMedio!==null?`SLA médio ${slaEnvioMedio}d`:"—"}</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total Pendente (geral)</div>
+                <div style={{fontSize:27,fontWeight:900,color:"#F5C200"}}>{fmtR(totalPendGeral)}</div>
+                <div style={{fontSize:11,color:"#64748B"}}>{slaEnvioMedio!==null?`SLA médio ${slaEnvioMedio}d`:"—"}</div>
               </div>
             </div>
             {/* Doughnut */}
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6,alignSelf:"flex-start"}}>Distribuição por Status</div>
-              {aprovCountsAtivos.length>0?<ChartCanvas type="doughnut" height={160} data={{
+              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8,alignSelf:"flex-start"}}>Distribuição por Status</div>
+              {aprovCountsAtivos.length>0?<ChartCanvas type="doughnut" height={200} data={{
                 labels:aprovCountsAtivos.map(a=>a.label),
                 datasets:[{data:aprovCountsAtivos.map(a=>a.total),backgroundColor:aprovCountsAtivos.map((a,i)=>CORES_DONUT[i%CORES_DONUT.length]),borderWidth:2,borderColor:"#0B1220"}]
               }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:30}}>Sem dados</div>}
@@ -2943,54 +2943,55 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             </div>
           </div>
 
-          <div style={{height:1,background:"#1E293B",margin:"22px 0"}}/>
-          <div style={{display:"grid",gridTemplateColumns:"1.2fr 1fr 1fr",gap:24}}>
+          <div style={{height:1,background:"#1E293B",margin:"26px 0"}}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:32}}>
             <div>
-              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>Faturado × Não Faturado ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
-              <ChartCanvas type="bar" height={170} data={{
+              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Faturado × Não Faturado ({periodo==="dia"?"por dia":periodo==="semana"?"por semana":"por mês"})</div>
+              <ChartCanvas type="bar" height={210} data={{
                 labels:serie.map(s=>s.lab),
                 datasets:[
                   {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:4},
                   {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:4},
                 ]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
             </div>
             <div>
-              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>% Revertido nas Cobranças</div>
-              {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:11}}>Sem dados</div>:
-              <ChartCanvas type="bar" height={170} data={{
+              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>% Revertido nas Cobranças</div>
+              {serie.every(s=>s.conversao===null)?<div style={{textAlign:"center",color:"#475569",padding:60,fontSize:11}}>Sem dados</div>:
+              <ChartCanvas type="bar" height={210} data={{
                 labels:serie.map(s=>s.lab),
                 datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#F5C200",borderRadius:4}]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
             </div>
             <div>
-              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>SLA por Período (dias)</div>
-              {serie.every(s=>s.slaMedio===null)?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:11}}>Sem envios registrados</div>:
-              <ChartCanvas type="line" height={170} data={{
+              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>SLA por Período (dias)</div>
+              {serie.every(s=>s.slaMedio===null)?<div style={{textAlign:"center",color:"#475569",padding:60,fontSize:11}}>Sem envios registrados</div>:
+              <ChartCanvas type="line" height={210} data={{
                 labels:serie.map(s=>s.lab),
                 datasets:[{label:"SLA médio",data:serie.map(s=>s.slaMedio),borderColor:"#0D9488",backgroundColor:"#0D948833",tension:.35,fill:true,pointRadius:2,pointBackgroundColor:"#0D9488"}]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${v}d`,font:{size:9}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${v}d`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
             </div>
           </div>
+
+          {aprovCounts.some(a=>a.total>0)&&<>
+          <div style={{height:1,background:"#1E293B",margin:"22px 0"}}/>
+          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Detalhamento por Status (clique para filtrar)</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
+            {aprovCounts.filter(a=>a.total>0).map((a,i)=>{const pctA=all.length?Math.round(a.total/all.length*100):0;return(
+              <div key={i} style={{background:fAprov===a.key?"#1E293B":"#0F172A",borderRadius:8,padding:"11px 13px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #1E293B",cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
+                <div style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>{a.label}</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:5}}><span style={{fontSize:15,fontWeight:800,color:"#FFF"}}>{a.total}</span><span style={{fontSize:9,fontWeight:700,color:"#64748B"}}>({pctA}%)</span></div>
+                <div style={{fontSize:10,fontWeight:600,color:a.c}}>{fmtR(a.valor)}</div>
+              </div>
+            );})}
+          </div>
+          </>}
         </div>
       );
     })()}
 
-    <div className="card" style={{padding:0,overflow:"hidden",marginBottom:32}}>
-      <div style={{padding:"14px 18px",borderBottom:"1px solid #EEF1F4"}}><div style={{fontWeight:700,fontSize:13,color:"#1A1A1A"}}>Detalhamento por Status (clique para filtrar)</div></div>
-      <div style={{padding:"16px 18px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:10}}>
-        {aprovCounts.filter(a=>a.total>0).map((a,i)=>{const pctA=all.length?Math.round(a.total/all.length*100):0;return(
-          <div key={i} style={{background:"#FFF",borderRadius:8,padding:"12px 14px",border:fAprov===a.key?`1.5px solid ${a.c}`:"1.5px solid #F1F5F9",borderLeftWidth:3,borderLeftColor:a.c,cursor:"pointer"}} onClick={()=>setFAprov(fAprov===a.key?"todos":a.key)}>
-            <div style={{fontSize:10,fontWeight:700,color:"#64748B"}}>{a.label}</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:5}}><span style={{fontSize:16,fontWeight:800,color:"#0F172A"}}>{a.total}</span><span style={{fontSize:10,fontWeight:700,color:"#94A3B8"}}>({pctA}%)</span></div>
-            <div style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>{fmtR(a.valor)}</div>
-          </div>
-        );})}
-      </div>
-    </div>
-
-    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",borderLeft:"4px solid #1A1A1A",background:showMicro?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
-      <span style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>🔬 Detalhamento completo (por processo)</span>
+    <button onClick={()=>setShowMicro(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:10,border:"1.5px solid #0B1220",background:showMicro?"#0B1220":"#1A1A1A",cursor:"pointer",marginBottom:showMicro?14:32,fontFamily:"inherit",width:"100%",textAlign:"left"}}>
+      <span style={{fontSize:13,fontWeight:800,color:"#F5C200"}}>🔬 Detalhamento completo (por processo)</span>
       <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showMicro?"▲ Ocultar":"▼ Mostrar"}</span>
     </button>
     {showMicro&&<>
