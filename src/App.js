@@ -2684,11 +2684,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       const slaLista=enviadosNoPeriodo.map(p=>diffDaysEntre(p.date,p.dataEnvio)).filter(v=>v!==null&&v>=0);
       const totalPeriodo=all.filter(p=>dentro(dataAbertura(p)));
       const concPeriodo=totalPeriodo.filter(isConcluido);
+      const totalValPeriodo=soma(totalPeriodo);
+      const concValPeriodo=soma(concPeriodo);
       serie.push({lab,
-        concluido:soma(all.filter(p=>isConcluido(p)&&dentro(dataConclusaoDe(p)||dataAbertura(p)))),
-        aberto:soma(all.filter(p=>dentro(dataAbertura(p)))),
+        concluido:concValPeriodo,
+        aberto:Math.max(0,totalValPeriodo-concValPeriodo),
         slaMedio:slaLista.length?Math.round(slaLista.reduce((a,v)=>a+v,0)/slaLista.length):null,
-        conversao:soma(totalPeriodo)>0?Math.round(soma(concPeriodo)/soma(totalPeriodo)*100*10)/10:null,
+        conversao:totalValPeriodo>0?Math.round(concValPeriodo/totalValPeriodo*100*10)/10:null,
       });
     }
   }
