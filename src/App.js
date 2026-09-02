@@ -7759,6 +7759,24 @@ export default function App(){
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
           const isNovo=!editPC.id;
+          // Atendimentos agendados do técnico selecionado (usa a Agenda como referência de data)
+          const atendsDoTecnico=[];
+          if(editPC.tecnico){
+            Object.keys(schedule||{}).forEach(key=>{
+              const [tec,dt]=key.split("__");
+              if(tec===editPC.tecnico){
+                (schedule[key]||[]).forEach((s,si)=>{
+                  atendsDoTecnico.push({data:dt,client:s.client,patrimonio:s.patrimonio,relatorio:s.relatorio,si});
+                });
+              }
+            });
+            atendsDoTecnico.sort((a,b)=>b.data.localeCompare(a.data));
+          }
+          const selecionarAtendimento=(idx)=>{
+            if(idx===""){return;}
+            const a=atendsDoTecnico[Number(idx)];
+            if(a) setEditPC(p=>({...p,data:a.data,pat:a.patrimonio||p.pat,numRelatorio:a.relatorio||p.numRelatorio}));
+          };
           const salvar=()=>{
             if(!editPC.pat&&!editPC.tecnico){alert("Informe pelo menos o Técnico ou o PAT.");return;}
             if(isNovo){
@@ -7777,14 +7795,20 @@ export default function App(){
                   <button onClick={()=>{setModalPC(false);setEditPC(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
                 </div>
                 <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+                  <div><label style={lbl}>Técnico</label><select value={editPC.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} style={inp}><option value="">Selecione...</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                  {editPC.tecnico&&<div style={{background:"#F8FAFC",border:"1.5px solid #E2E8F0",borderRadius:10,padding:12}}>
+                    <label style={lbl}>Atendimento na Agenda (usa a data do agendamento)</label>
+                    <select onChange={e=>selecionarAtendimento(e.target.value)} defaultValue="" style={inp}>
+                      <option value="">— Selecionar da agenda —</option>
+                      {atendsDoTecnico.map((a,i)=><option key={i} value={i}>{fmtDataBR(a.data)} · {a.client||"—"} {a.patrimonio?`· PAT ${a.patrimonio}`:""}</option>)}
+                    </select>
+                    {atendsDoTecnico.length===0&&<div style={{fontSize:11,color:"#94A3B8",marginTop:6}}>Nenhum atendimento encontrado na Agenda para este técnico</div>}
+                  </div>}
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                     <div><label style={lbl}>Data</label><input type="date" value={editPC.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>Técnico</label><input type="text" value={editPC.tecnico||""} onChange={e=>upd("tecnico",e.target.value)} placeholder="Nome do técnico" style={inp}/></div>
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                     <div><label style={lbl}>PAT</label><input type="text" value={editPC.pat||""} onChange={e=>upd("pat",e.target.value)} placeholder="Nº do patrimônio" style={inp}/></div>
-                    <div><label style={lbl}>Nº Relatório</label><input type="text" value={editPC.numRelatorio||""} onChange={e=>upd("numRelatorio",e.target.value)} placeholder="Nº do relatório" style={inp}/></div>
                   </div>
+                  <div><label style={lbl}>Nº Relatório</label><input type="text" value={editPC.numRelatorio||""} onChange={e=>upd("numRelatorio",e.target.value)} placeholder="Nº do relatório" style={inp}/></div>
                   <div><label style={lbl}>Link do Checklist</label><input type="text" value={editPC.linkChecklist||""} onChange={e=>upd("linkChecklist",e.target.value)} placeholder="https://chamados.grupomov.com.br/pdf/checklist;..." style={inp}/></div>
                   <div><label style={lbl}>Observação / Problema</label><textarea value={editPC.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={4} placeholder="Descreva o problema reportado" style={{...inp,resize:"vertical"}}/></div>
                   <div><label style={lbl}>Status</label><select value={editPC.status} onChange={e=>upd("status",e.target.value)} style={inp}>{CHECKLIST_STATUS_KEYS.map(k=><option key={k} value={k}>{CHECKLIST_STATUS[k].l}</option>)}</select></div>
