@@ -633,49 +633,99 @@ const parsePlanilhaManutencao = async (file, tipoDefault)=>{
   const wb=XLSX.read(buf,{type:"array"});
   const ws=wb.Sheets[wb.SheetNames[0]];
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false});
+  if(rows.length<2) return [];
+  // Monta um mapa nome-do-cabeçalho -> índice da coluna, pra não depender de posição fixa
+  const headerRow=rows[0].map(h=>String(h||"").trim().toLowerCase());
+  const idxDe=(...nomes)=>{
+    for(const nome of nomes){
+      const alvo=nome.toLowerCase();
+      const i=headerRow.findIndex(h=>h===alvo);
+      if(i!==-1) return i;
+    }
+    // fallback: busca parcial (contém)
+    for(const nome of nomes){
+      const alvo=nome.toLowerCase();
+      const i=headerRow.findIndex(h=>h.includes(alvo));
+      if(i!==-1) return i;
+    }
+    return -1;
+  };
+  const COL={
+    data:idxDe("data"),
+    mes:idxDe("mês","mes"),
+    relatorio:idxDe("relatório","relatorio"),
+    tipoServico:idxDe("tipo de serviço","tipo de servico"),
+    tecnico:idxDe("técnico 1","tecnico 1"),
+    tecnico2:idxDe("técnico 2","tecnico 2"),
+    cliente:idxDe("cliente"),
+    pat:idxDe("pat/s.n","pat"),
+    tipoEquipamento:idxDe("tipo de equipamento"),
+    equipamento:idxDe("equipamento"),
+    modelo:idxDe("modelo"),
+    horimetro:idxDe("horimetro","horímetro"),
+    horaInicio:idxDe("início hora trabalhada","inicio hora trabalhada"),
+    horaFim:idxDe("fim da hora trabalhada"),
+    horasTrabalhadas:idxDe("total hora trabalhada"),
+    kmDeslocado:idxDe("km deslocado"),
+    tempoDeslocIda:idxDe("tempo deslocamento ida"),
+    tempoDeslocRetorno:idxDe("tempo deslocamento retorno"),
+    tempoDeslocTotal:idxDe("tempo deslocamento total"),
+    servico:idxDe("serviço","servico"),
+    mauUso:idxDe("mau uso"),
+    chamado:idxDe("chamado"),
+    obs:idxDe("observações/solução","observacoes/solucao"),
+    pendencia:idxDe("pendência","pendencia"),
+    pendencias2:idxDe("pendencias"),
+    obs2:idxDe("observações2","observacoes2"),
+    pecas:idxDe("peças","pecas"),
+    tipoServicoEquip:idxDe("tipo serviço equipamento","tipo servico equipamento"),
+    retrabalho:idxDe("retrabalho"),
+    refChamado:idxDe("referência de chamado","referencia de chamado"),
+  };
+  const g=(r,key)=>{ const i=COL[key]; return i>=0&&i<r.length?r[i]:""; };
   const out=[];
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
     if(!r||r.every(c=>c==="")) continue;
-    const dataISO=paraISO(r[0]);
-    const tipoServico=(r[3]||tipoDefault||"").toString().trim();
+    const dataISO=paraISO(g(r,"data"));
+    const tipoServico=(g(r,"tipoServico")||tipoDefault||"").toString().trim();
     const atendimento=/corret/i.test(tipoServico)?"corretivo":/prevent/i.test(tipoServico)?"preventivo":(tipoDefault||"");
-    const mauUso=(r[24]||"").toString().trim().toLowerCase()==="sim";
-    const tipoServicoEquip=(r[31]||"").toString().trim();
+    const mauUso=(g(r,"mauUso")||"").toString().trim().toLowerCase()==="sim";
+    const tipoServicoEquip=(g(r,"tipoServicoEquip")||"").toString().trim();
     const aFaturar=/faturar/i.test(tipoServicoEquip);
-    const retrabalho=(r[32]||"").toString().trim().toLowerCase()==="sim";
+    const retrabalho=(g(r,"retrabalho")||"").toString().trim().toLowerCase()==="sim";
     out.push({
       id:`RM${Date.now()}_${Math.floor(Math.random()*100000)}_${i}`,
       data:dataISO,
-      mes:r[1]||"",
-      relatorio:String(r[2]||""),
+      mes:g(r,"mes")||"",
+      relatorio:String(g(r,"relatorio")||""),
       atendimento, tipoServicoOriginal:tipoServico,
-      tecnico:String(r[4]||"").trim(),
-      tecnico2:String(r[5]||"").trim(),
-      cliente:String(r[6]||"").trim(),
-      patrimonio:extrairPat(r[7]),
-      patCompleto:String(r[7]||""),
-      tipoEquipamento:String(r[8]||""),
-      equipamento:String(r[9]||""),
-      modelo:String(r[10]||""),
-      horimetro:r[11]||"",
-      horaInicio:String(r[12]||""),
-      horaFim:String(r[13]||""),
-      horasTrabalhadas:String(r[14]||""),
-      kmDeslocado:r[15]||"",
-      tempoDeslocIda:String(r[18]||""),
-      tempoDeslocRetorno:String(r[21]||""),
-      tempoDeslocTotal:String(r[22]||""),
-      servico:String(r[23]||""),
-      mauUso, chamado:String(r[25]||""),
-      obs:String(r[26]||""),
-      pendencia:String(r[27]||""),
-      pendencias2:String(r[28]||""),
-      obs2:String(r[29]||""),
-      pecas:String(r[30]||""),
+      tecnico:String(g(r,"tecnico")||"").trim(),
+      tecnico2:String(g(r,"tecnico2")||"").trim(),
+      cliente:String(g(r,"cliente")||"").trim(),
+      patrimonio:extrairPat(g(r,"pat")),
+      patCompleto:String(g(r,"pat")||""),
+      tipoEquipamento:String(g(r,"tipoEquipamento")||""),
+      equipamento:String(g(r,"equipamento")||""),
+      modelo:String(g(r,"modelo")||""),
+      horimetro:g(r,"horimetro")||"",
+      horaInicio:String(g(r,"horaInicio")||""),
+      horaFim:String(g(r,"horaFim")||""),
+      horasTrabalhadas:String(g(r,"horasTrabalhadas")||""),
+      kmDeslocado:g(r,"kmDeslocado")||"",
+      tempoDeslocIda:String(g(r,"tempoDeslocIda")||""),
+      tempoDeslocRetorno:String(g(r,"tempoDeslocRetorno")||""),
+      tempoDeslocTotal:String(g(r,"tempoDeslocTotal")||""),
+      servico:String(g(r,"servico")||""),
+      mauUso, chamado:String(g(r,"chamado")||""),
+      obs:String(g(r,"obs")||""),
+      pendencia:String(g(r,"pendencia")||""),
+      pendencias2:String(g(r,"pendencias2")||""),
+      obs2:String(g(r,"obs2")||""),
+      pecas:String(g(r,"pecas")||""),
       tipoServicoEquipamento:tipoServicoEquip,
       aFaturar, retrabalho,
-      refChamado:String(r[33]||""),
+      refChamado:String(g(r,"refChamado")||""),
       status:aFaturar?"a_faturar":mauUso?"mau_uso":"concluida_importada",
       arquivado:true,
       categoriaFalha:categorizarFalha(r[26]),
