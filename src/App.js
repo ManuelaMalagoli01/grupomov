@@ -727,8 +727,8 @@ const parsePlanilhaManutencao = async (file, tipoDefault)=>{
       aFaturar, retrabalho,
       refChamado:String(g(r,"refChamado")||""),
       status:aFaturar?"a_faturar":mauUso?"mau_uso":"concluida_importada",
-      arquivado:true,
-      categoriaFalha:categorizarFalha(r[26]),
+      arquivado:false,
+      categoriaFalha:categorizarFalha(g(r,"obs")),
       importadoEm:new Date().toISOString(),
     });
   }
@@ -5871,6 +5871,15 @@ export default function App(){
               const toggleUm=(id)=>setRelSelecionados(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
               return(
                 <div className="card" style={{overflow:"hidden"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid #F1F5F9",flexWrap:"wrap",gap:8}}>
+                    <span style={{fontSize:11,color:"#94A3B8"}}>{listaPlanilha.length} registro(s) nessa categoria · <span style={{color:"#B45309",fontWeight:700}}>{listaPlanilha.filter(r=>r.arquivado).length} arquivado(s)</span></span>
+                    {listaPlanilha.some(r=>r.arquivado)&&<button onClick={()=>{
+                      const arquivados=listaPlanilha.filter(r=>r.arquivado);
+                      if(!window.confirm(`Desarquivar todos os ${arquivados.length} registro(s) arquivado(s) nessa categoria/filtro?`))return;
+                      arquivados.forEach(r=>updateReport(r.id,{arquivado:false}));
+                      notify(`📤 ${arquivados.length} registro(s) desarquivado(s)!`);
+                    }} style={{padding:"6px 14px",borderRadius:20,background:"#F0FDF4",color:"#166534",border:"1px solid #86EFAC",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Desarquivar Todos ({listaPlanilha.filter(r=>r.arquivado).length})</button>}
+                  </div>
                   {relSelecionados.length>0&&<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",borderBottom:"1.5px solid #86EFAC"}}>
                     <span style={{fontSize:12,fontWeight:700,color:"#166534"}}>{relSelecionados.length} selecionado(s)</span>
                     <button onClick={()=>{
