@@ -9439,6 +9439,105 @@ export default function App(){
                     ))}
                   </div>
 
+                  {/* ── Por Empresa: atendimentos, corretiva/preventiva por PAT, MTBF/MTTR/Disponibilidade ── */}
+                  {(()=>{
+                    const porEmpresa={};
+                    dashReports.forEach(r=>{
+                      const emp=r.cliente||"Sem empresa";
+                      if(!porEmpresa[emp]) porEmpresa[emp]={registros:[],pats:{}};
+                      porEmpresa[emp].registros.push(r);
+                      const pat=r.patrimonio||"—";
+                      if(!porEmpresa[emp].pats[pat]) porEmpresa[emp].pats[pat]={prev:0,corr:0};
+                      if(r.atendimento==="preventivo") porEmpresa[emp].pats[pat].prev++;
+                      else if(r.atendimento==="corretivo") porEmpresa[emp].pats[pat].corr++;
+                    });
+                    const linhasEmpresa=Object.entries(porEmpresa).map(([emp,d])=>{
+                      const corretivas=d.registros.filter(r=>r.atendimento==="corretivo");
+                      const preventivas=d.registros.filter(r=>r.atendimento==="preventivo");
+                      const mttrHoras=corretivas.length?corretivas.reduce((a,r)=>a+horasDe(r),0)/corretivas.length:null;
+                      // MTBF: pra cada PAT com 2+ corretivas, media de dias entre corretivas consecutivas; depois media entre os PATs da empresa
+                      const mtbfPorPat=[];
+                      Object.keys(d.pats).forEach(pat=>{
+                        const doPat=corretivas.filter(r=>(r.patrimonio||"—")===pat&&r.data).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+                        if(doPat.length>=2){
+                          const deltas=[];
+                          for(let i=1;i<doPat.length;i++){ const dias=diffDaysEntre(doPat[i-1].data,doPat[i].data); if(dias!==null&&dias>=0) deltas.push(dias); }
+                          if(deltas.length) mtbfPorPat.push(deltas.reduce((a,v)=>a+v,0)/deltas.length);
+                        }
+                      });
+                      const mtbfDias=mtbfPorPat.length?mtbfPorPat.reduce((a,v)=>a+v,0)/mtbfPorPat.length:null;
+                      const mttrDias=mttrHoras!==null?mttrHoras/24:null;
+                      const disponibilidade=(mtbfDias!==null&&mttrDias!==null&&(mtbfDias+mttrDias)>0)?Math.round(mtbfDias/(mtbfDias+mttrDias)*1000)/10:null;
+                      return {empresa:emp,atendimentos:d.registros.length,preventivas:preventivas.length,corretivas:corretivas.length,pats:d.pats,mtbfDias,mttrHoras,disponibilidade};
+                    }).sort((a,b)=>b.atendimentos-a.atendimentos);
+                    const catFalhaCounts=FALHA_CATEGORIAS.map(f=>({...f,total:dashReports.filter(r=>r.categoriaFalha===f.cat).length})).filter(f=>f.total>0);
+                    const semFalhaClassificada=dashReports.filter(r=>r.atendimento==="corretivo"&&!r.categoriaFalha).length;
+                    return(
+                      <div style={{background:"#0B1220",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
+                          <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
+                          <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção · Por Empresa</span>
+                        </div>
+                        <div style={{overflowX:"auto",marginBottom:24}}>
+                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:760,fontSize:12}}>
+                            <thead><tr style={{borderBottom:"1.5px solid #1E293B"}}>
+                              <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Atend.</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Prevent.</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Corret.</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>PATs</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#0D9488",textTransform:"uppercase"}}>MTBF</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#F5C200",textTransform:"uppercase"}}>MTTR</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase"}}>Disponib.</th>
+                            </tr></thead>
+                            <tbody>
+                              {linhasEmpresa.slice(0,15).map((e,i)=>(
+                                <tr key={e.empresa} style={{borderBottom:"1px solid #1E293B"}}>
+                                  <td style={{padding:"7px 10px",fontWeight:700,color:"#FFF"}}>{e.empresa}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#60A5FA"}}>{e.preventivas}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#F87171"}}>{e.corretivas}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#64748B"}}>{Object.keys(e.pats).length}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#0D9488"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#64748B"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          {linhasEmpresa.length>15&&<div style={{fontSize:10,color:"#64748B",marginTop:8}}>Mostrando as 15 empresas com mais atendimentos, de {linhasEmpresa.length} total — use os filtros pra refinar</div>}
+                        </div>
+                        <div style={{fontSize:9,color:"#475569",marginBottom:20}}>MTBF = tempo médio entre falhas consecutivas no mesmo patrimônio (dias) · MTTR = tempo médio de reparo por corretiva (horas) · Disponibilidade = MTBF / (MTBF + MTTR)</div>
+
+                        {catFalhaCounts.length>0&&<>
+                        <div style={{height:1,background:"#1E293B",margin:"4px 0 18px"}}/>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:32,alignItems:"center"}}>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha (corretivas)</div>
+                            <ChartCanvas type="doughnut" height={200} data={{
+                              labels:catFalhaCounts.map(f=>f.cat),
+                              datasets:[{data:catFalhaCounts.map(f=>f.total),backgroundColor:catFalhaCounts.map(f=>f.cor),borderWidth:2,borderColor:"#0B1220"}]
+                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}}}}}/>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Detalhe por Categoria</div>
+                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                              {catFalhaCounts.sort((a,b)=>b.total-a.total).map(f=>(
+                                <div key={f.cat} style={{display:"flex",alignItems:"center",gap:10}}>
+                                  <span style={{width:10,height:10,borderRadius:3,background:f.cor,flexShrink:0}}/>
+                                  <span style={{fontSize:12,color:"#FFF",flex:1}}>{f.cat}</span>
+                                  <span style={{fontSize:12,fontWeight:800,color:f.cor}}>{f.total}</span>
+                                </div>
+                              ))}
+                              {semFalhaClassificada>0&&<div style={{fontSize:10,color:"#64748B",marginTop:4}}>{semFalhaClassificada} corretiva(s) sem observação suficiente pra classificar</div>}
+                            </div>
+                          </div>
+                        </div>
+                        </>}
+                      </div>
+                    );
+                  })()}
+
                   <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:14}}>
                     <div className="card" style={{padding:"8px 12px"}}>
                       <div style={chartTitle}>Preventivas × Corretivas (qtd e %)</div>
