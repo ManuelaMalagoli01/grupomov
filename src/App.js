@@ -3585,7 +3585,7 @@ export default function App(){
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
   const [relNivelFiltro,setRelNivelFiltro]=useState("todos");
-  const [relView,setRelView]=useState("kanban");
+  const [relView,setRelView]=useState("planilha");
   const [relCategoria,setRelCategoria]=useState("todos");
   const [relSelecionados,setRelSelecionados]=useState([]);
   const [showFiltrosRel,setShowFiltrosRel]=useState(false);
@@ -5812,18 +5812,35 @@ export default function App(){
                 if(relCategoria==="a_faturar")return r.aFaturar||r.status==="a_faturar";
                 return r.atendimento===relCategoria;
               }).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+              const visiveis=listaPlanilha.slice(0,500);
+              const todosSelecionados=visiveis.length>0&&visiveis.every(r=>relSelecionados.includes(r.id));
+              const toggleTodos=()=>{
+                if(todosSelecionados) setRelSelecionados(p=>p.filter(id=>!visiveis.some(r=>r.id===id)));
+                else setRelSelecionados(p=>[...new Set([...p,...visiveis.map(r=>r.id)])]);
+              };
+              const toggleUm=(id)=>setRelSelecionados(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
               return(
                 <div className="card" style={{overflow:"hidden"}}>
+                  {relSelecionados.length>0&&<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#F0FDF4",borderBottom:"1.5px solid #86EFAC"}}>
+                    <span style={{fontSize:12,fontWeight:700,color:"#166534"}}>{relSelecionados.length} selecionado(s)</span>
+                    <button onClick={()=>{
+                      relSelecionados.forEach(id=>{ const r=(reports||[]).find(x=>x.id===id); if(r&&!r.arquivado) updateReport(id,{arquivado:true}); });
+                      notify(`🗄️ ${relSelecionados.length} registro(s) arquivado(s)! A contagem continua nos indicadores.`);
+                      setRelSelecionados([]);
+                    }} style={{padding:"6px 14px",borderRadius:20,background:"#1A1A1A",color:"#F5C200",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>🗄️ Arquivar Selecionados</button>
+                    <button onClick={()=>setRelSelecionados([])} style={{padding:"6px 12px",borderRadius:20,background:"#FFF",color:"#64748B",border:"1px solid #E2E8F0",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar seleção</button>
+                  </div>}
                   <div className="tbl-wrap"><table>
-                    <thead><tr><th>Data</th><th>Categoria</th><th>Técnico</th><th>Cliente</th><th>PAT</th><th>Equipamento</th><th>Relatório</th><th>Horas</th><th>Retrabalho</th></tr></thead>
+                    <thead><tr><th style={{width:32}}><input type="checkbox" checked={todosSelecionados} onChange={toggleTodos}/></th><th>Data</th><th>Categoria</th><th>Técnico</th><th>Cliente</th><th>PAT</th><th>Equipamento</th><th>Relatório</th><th>Horas</th><th>Retrabalho</th><th>Arquivado</th></tr></thead>
                     <tbody>
-                      {listaPlanilha.slice(0,500).map(r=>{
+                      {visiveis.map(r=>{
                         const isMauUso=r.mauUso||r.status==="mau_uso";
                         const isAFaturar=r.aFaturar||r.status==="a_faturar";
                         const catLabel=isMauUso?"Mau Uso":isAFaturar?"A Faturar":r.atendimento==="corretivo"?"Corretivo":"Preventivo";
                         const catColor=isMauUso?"#B45309":isAFaturar?"#0D9488":r.atendimento==="corretivo"?"#C62828":"#1565C0";
                         return(
-                          <tr key={r.id}>
+                          <tr key={r.id} style={{opacity:r.arquivado?0.6:1}}>
+                            <td style={{padding:"7px 10px"}}><input type="checkbox" checked={relSelecionados.includes(r.id)} onChange={()=>toggleUm(r.id)}/></td>
                             <td style={{padding:"7px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(r.data)||"—"}</td>
                             <td style={{padding:"7px 10px"}}><span style={{fontSize:10,fontWeight:700,color:catColor,background:catColor+"18",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{catLabel}</span></td>
                             <td style={{padding:"7px 10px",fontSize:12,fontWeight:600}}>{r.tecnico||"—"}</td>
@@ -5833,6 +5850,7 @@ export default function App(){
                             <td style={{padding:"7px 10px",fontSize:12}}>{r.relatorio||"—"}</td>
                             <td style={{padding:"7px 10px",fontSize:12}}>{r.horasTrabalhadas||"—"}</td>
                             <td style={{padding:"7px 10px"}}>{r.retrabalho?<span style={{fontSize:10,fontWeight:700,color:"#C62828"}}>⚠️ Sim</span>:"—"}</td>
+                            <td style={{padding:"7px 10px"}}>{r.arquivado?<button onClick={()=>updateReport(r.id,{arquivado:false})} title="Desarquivar" style={{fontSize:10,fontWeight:700,color:"#166534",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:20,padding:"3px 9px",cursor:"pointer"}}>📤 Sim</button>:<button onClick={()=>updateReport(r.id,{arquivado:true})} title="Arquivar" style={{fontSize:10,fontWeight:700,color:"#64748B",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:20,padding:"3px 9px",cursor:"pointer"}}>🗄️ Não</button>}</td>
                           </tr>
                         );
                       })}
