@@ -5460,12 +5460,21 @@ export default function App(){
                         const corrs=await parsePlanilhaManutencao(arqCorretivas,"corretivo");
                         todos=todos.concat(corrs);
                       }
-                      setProgressoImport(`Salvando ${todos.length} registro(s)... isso pode levar alguns minutos`);
+                      if(todos.length===0){ alert("A planilha foi lida mas nenhuma linha de dado foi encontrada. Confira se o arquivo tem o formato esperado (cabeçalho na linha 1, dados a partir da linha 2)."); setImportandoManutencao(false); return; }
+                      setProgressoImport(`${todos.length} linha(s) lida(s). Salvando... isso pode levar alguns minutos`);
                       setReports(p=>[...todos,...(p||[])]);
-                      await db.saveBatch("relatorios",todos);
+                      const resultado=await db.saveBatch("relatorios",todos);
+                      // Limpa todos os filtros e troca pra Planilha, garantindo que os dados importados fiquem visiveis
+                      // mesmo se algum filtro (ex: Conferencia Futura) tivesse ficado ativo de uma sessao anterior
+                      setRelFiltroData("");setRelFiltroDataDe("");setRelFiltroDataAte("");setRelFiltroEmp("");setRelFiltroPat("");setRelFiltroRelatorio("");setRelFiltroTech("todos");setRelFiltroCidade("");setRelFiltroAtend("todos");setRelFiltroStatus("todos");
+                      setRelView("planilha");setRelCategoria("todos");setShowArqRel(false);
                       setModalImportManutencao(false);
                       setArqPreventivas(null);setArqCorretivas(null);setProgressoImport("");
-                      notify(`✅ ${todos.length} relatório(s) importado(s) com sucesso!`);
+                      if(resultado&&resultado.ok===false){
+                        notify(`⚠️ ${resultado.okCount} de ${todos.length} salvos no banco — veja o alerta com o detalhe do que falhou`);
+                      }else{
+                        notify(`✅ ${todos.length} relatório(s) importado(s) com sucesso! Veja na aba Planilha`);
+                      }
                     }catch(err){
                       alert("Erro ao importar: "+(err?.message||err));
                     }finally{
