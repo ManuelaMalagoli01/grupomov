@@ -164,6 +164,24 @@ const REGIONS = {
   roca:         { label:"Roca",              techs:["Artur Gerônimo","Eduardo Oliveira","Luiz Ribeiro","Pedro Souza","Lucio Silva"] },
   centroOeste:  { label:"Centro-Oeste",      techs:["Bruno Alexandre","Marcus Vinicius Botelho Dos Santos","Junio Ferreira","Reginaldo Souza"] },
 };
+// Categorização de falhas por palavra-chave, lida a partir do texto de Observações/Solução dos relatórios
+const FALHA_CATEGORIAS=[
+  {cat:"Elétrica",cor:"#F5C200",kw:["eletric","bateria","fusível","fusivel","curto","contator","chicote","cabo","fiação","fiacao","chave"]},
+  {cat:"Hidráulica",cor:"#1565C0",kw:["hidraulic","vazamento","óleo","oleo","cilindro","válvula","valvula","mangueira","bomba hidraul"]},
+  {cat:"Motor/Mecânica",cor:"#C62828",kw:["motor","correia","rolamento","engrenagem","embreagem","câmbio","cambio","transmiss","eixo","polia"]},
+  {cat:"Estrutural",cor:"#7E22CE",kw:["garfo","torre","chassi","estrutura","solda","trinca","quebrad","empeno","deform"]},
+  {cat:"Pneus/Rodas",cor:"#0D9488",kw:["pneu","roda","rodízio","rodizio"]},
+  {cat:"Freios",cor:"#B45309",kw:["freio"]},
+  {cat:"Refrigeração",cor:"#0891B2",kw:["radiador","arrefec","superaquec"]},
+  {cat:"Combustível/GLP",cor:"#15803D",kw:["glp","gás","gas ","combustível","combustivel","carburador","injeç","injec"]},
+];
+const categorizarFalha=(texto)=>{
+  const t=String(texto||"").toLowerCase();
+  if(!t.trim())return null;
+  for(const f of FALHA_CATEGORIAS){ if(f.kw.some(k=>t.includes(k))) return f.cat; }
+  return "Outros";
+};
+const corFalhaCategoria=(cat)=>(FALHA_CATEGORIAS.find(f=>f.cat===cat)||{cor:"#64748B"}).cor;
 const METRO_PREV = ["Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const METRO_CORR = ["Anderson Almeida","Dilson Santos","Rafael Santos","Hebert Santos","Luiz G. Pinheiro"];
 const NAO_PREVENTIVA = ["Anderson Almeida","Dilson Santos"];
@@ -592,6 +610,80 @@ const loadExcelJS = () => new Promise((resolve,reject)=>{
   sc.onerror=()=>reject(new Error("Falha ao carregar gerador de Excel"));
   document.body.appendChild(sc);
 });
+// Converte "dd/mm/aaaa" -> "aaaa-mm-dd" (ISO), tolerante a já estar em ISO ou ser um serial do Excel
+const paraISO=(v)=>{
+  if(!v)return "";
+  if(v instanceof Date) return fmtDate(v);
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(m){ let [,d,mo,y]=m; if(y.length===2)y="20"+y; return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`; }
+  return "";
+};
+// Extrai PAT numérico de campos como "1270/10205613" ou "1395"
+const extrairPat=(v)=>{
+  const s=String(v||"").trim();
+  const m=s.match(/^(\d+)/);
+  return m?m[1]:s;
+};
+// Faz o parse de uma planilha de preventivas OU corretivas (34 colunas fixas) e retorna os registros normalizados
+const parsePlanilhaManutencao = async (file, tipoDefault)=>{
+  const XLSX=await loadXLSX();
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false});
+  const out=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r||r.every(c=>c==="")) continue;
+    const dataISO=paraISO(r[0]);
+    const tipoServico=(r[3]||tipoDefault||"").toString().trim();
+    const atendimento=/corret/i.test(tipoServico)?"corretivo":/prevent/i.test(tipoServico)?"preventivo":(tipoDefault||"");
+    const mauUso=(r[24]||"").toString().trim().toLowerCase()==="sim";
+    const tipoServicoEquip=(r[31]||"").toString().trim();
+    const aFaturar=/faturar/i.test(tipoServicoEquip);
+    const retrabalho=(r[32]||"").toString().trim().toLowerCase()==="sim";
+    out.push({
+      id:`RM${Date.now()}_${Math.floor(Math.random()*100000)}_${i}`,
+      data:dataISO,
+      mes:r[1]||"",
+      relatorio:String(r[2]||""),
+      atendimento, tipoServicoOriginal:tipoServico,
+      tecnico:String(r[4]||"").trim(),
+      tecnico2:String(r[5]||"").trim(),
+      cliente:String(r[6]||"").trim(),
+      patrimonio:extrairPat(r[7]),
+      patCompleto:String(r[7]||""),
+      tipoEquipamento:String(r[8]||""),
+      equipamento:String(r[9]||""),
+      modelo:String(r[10]||""),
+      horimetro:r[11]||"",
+      horaInicio:String(r[12]||""),
+      horaFim:String(r[13]||""),
+      horasTrabalhadas:String(r[14]||""),
+      kmDeslocado:r[15]||"",
+      tempoDeslocIda:String(r[18]||""),
+      tempoDeslocRetorno:String(r[21]||""),
+      tempoDeslocTotal:String(r[22]||""),
+      servico:String(r[23]||""),
+      mauUso, chamado:String(r[25]||""),
+      obs:String(r[26]||""),
+      pendencia:String(r[27]||""),
+      pendencias2:String(r[28]||""),
+      obs2:String(r[29]||""),
+      pecas:String(r[30]||""),
+      tipoServicoEquipamento:tipoServicoEquip,
+      aFaturar, retrabalho,
+      refChamado:String(r[33]||""),
+      status:aFaturar?"a_faturar":mauUso?"mau_uso":"concluida_importada",
+      arquivado:true,
+      categoriaFalha:categorizarFalha(r[26]),
+      importadoEm:new Date().toISOString(),
+    });
+  }
+  return out;
+};
 const renderChartParaImagem = async (type, data, options={}, w=700, h=360, scale=3) => {
   const Chart = await loadChartLib();
   const canvas = document.createElement("canvas");
@@ -3493,6 +3585,8 @@ export default function App(){
   const [filterReqStatus,setFilterReqStatus]=useState("sem_retorno");
   const [showArqRel,setShowArqRel]=useState(false);
   const [relNivelFiltro,setRelNivelFiltro]=useState("todos");
+  const [relView,setRelView]=useState("kanban");
+  const [relCategoria,setRelCategoria]=useState("todos");
   const [relSelecionados,setRelSelecionados]=useState([]);
   const [showFiltrosRel,setShowFiltrosRel]=useState(false);
   const [execMauUso,setExecMauUso]=useState([]);
@@ -3940,6 +4034,11 @@ export default function App(){
   const [modalImportMU2,setModalImportMU2]=useState(false);
   const [modalImportAF2,setModalImportAF2]=useState(false);
   const [modalImportRel,setModalImportRel]=useState(false);
+  const [modalImportManutencao,setModalImportManutencao]=useState(false);
+  const [arqPreventivas,setArqPreventivas]=useState(null);
+  const [arqCorretivas,setArqCorretivas]=useState(null);
+  const [importandoManutencao,setImportandoManutencao]=useState(false);
+  const [progressoImport,setProgressoImport]=useState("");
   const [modalImportPH,setModalImportPH]=useState(false);
   const [modalImportPM,setModalImportPM]=useState(false);  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
   const [showFiltrosDP,setShowFiltrosDP]=useState(false);
@@ -5321,6 +5420,64 @@ export default function App(){
         {modalImportMU2&&<ImportExcelModal onClose={()=>setModalImportMU2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"MU"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosMU(p=>[...stamp,...(p||[])]);db.saveBatch("processos_mu",stamp);setModalImportMU2(false);notify(`✅ ${stamp.length} Mau Uso importado(s)!`);}}/>}
         {modalImportAF2&&<ImportExcelModal onClose={()=>setModalImportAF2(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"AF"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setProcessosAF(p=>[...stamp,...(p||[])]);db.saveBatch("processos_af",stamp);setModalImportAF2(false);notify(`✅ ${stamp.length} A Faturar importado(s)!`);}}/>}
         {modalImportRel&&<ImportExcelModal onClose={()=>setModalImportRel(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"R"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setReports(p=>[...stamp,...(p||[])]);db.saveBatch("relatorios",stamp);setModalImportRel(false);notify(`✅ ${stamp.length} relatório(s) importado(s)!`);}}/>}
+
+        {modalImportManutencao&&(()=>{
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>!importandoManutencao&&setModalImportManutencao(false)}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>📥 Importar Preventivas / Corretivas</div>
+                  {!importandoManutencao&&<button onClick={()=>setModalImportManutencao(false)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>}
+                </div>
+                <div style={{padding:22,display:"flex",flexDirection:"column",gap:16}}>
+                  <div style={{fontSize:12,color:"#64748B"}}>Selecione a planilha de <b>Preventivas</b> e/ou a de <b>Corretivas</b> (formato com as 34 colunas padrão: Data, Relatório, Técnico, Cliente, PAT, etc). Pode importar uma de cada vez ou as duas juntas.</div>
+                  <div>
+                    <label style={{display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",marginBottom:6}}>Planilha de Preventivas</label>
+                    <input type="file" accept=".xlsx,.xls" disabled={importandoManutencao} onChange={e=>setArqPreventivas(e.target.files[0]||null)} style={{width:"100%",fontSize:12}}/>
+                    {arqPreventivas&&<div style={{fontSize:11,color:"#1A7A3C",marginTop:4}}>✓ {arqPreventivas.name}</div>}
+                  </div>
+                  <div>
+                    <label style={{display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",marginBottom:6}}>Planilha de Corretivas</label>
+                    <input type="file" accept=".xlsx,.xls" disabled={importandoManutencao} onChange={e=>setArqCorretivas(e.target.files[0]||null)} style={{width:"100%",fontSize:12}}/>
+                    {arqCorretivas&&<div style={{fontSize:11,color:"#1A7A3C",marginTop:4}}>✓ {arqCorretivas.name}</div>}
+                  </div>
+                  {importandoManutencao&&<div style={{textAlign:"center",padding:20,fontSize:13,color:"#1565C0",fontWeight:700}}>⏳ {progressoImport||"Processando..."}</div>}
+                </div>
+                <div style={{padding:"14px 22px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"flex-end",gap:10}}>
+                  <button disabled={importandoManutencao} onClick={()=>setModalImportManutencao(false)} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={async()=>{
+                    if(!arqPreventivas&&!arqCorretivas){alert("Selecione ao menos uma planilha.");return;}
+                    setImportandoManutencao(true);
+                    try{
+                      let todos=[];
+                      if(arqPreventivas){
+                        setProgressoImport("Lendo planilha de Preventivas...");
+                        const prevs=await parsePlanilhaManutencao(arqPreventivas,"preventivo");
+                        todos=todos.concat(prevs);
+                      }
+                      if(arqCorretivas){
+                        setProgressoImport("Lendo planilha de Corretivas...");
+                        const corrs=await parsePlanilhaManutencao(arqCorretivas,"corretivo");
+                        todos=todos.concat(corrs);
+                      }
+                      setProgressoImport(`Salvando ${todos.length} registro(s)... isso pode levar alguns minutos`);
+                      setReports(p=>[...todos,...(p||[])]);
+                      await db.saveBatch("relatorios",todos);
+                      setModalImportManutencao(false);
+                      setArqPreventivas(null);setArqCorretivas(null);setProgressoImport("");
+                      notify(`✅ ${todos.length} relatório(s) importado(s) com sucesso!`);
+                    }catch(err){
+                      alert("Erro ao importar: "+(err?.message||err));
+                    }finally{
+                      setImportandoManutencao(false);
+                    }
+                  }}>{importandoManutencao?"Importando...":"Importar"}</BtnY>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {modalImportPH&&<ImportExcelModal onClose={()=>setModalImportPH(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PH"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendHebert(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_hebert",stamp);setModalImportPH(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportPM&&<ImportExcelModal onClose={()=>setModalImportPM(false)} onImport={novos=>{const stamp=novos.map(d=>({...d,id:d.id||"PM"+Date.now()+Math.random().toString(36).slice(2,6),registradoPor:d.registradoPor||user.name}));setPendMatheus(p=>[...stamp,...(p||[])]);db.saveBatch("pendencias_matheus",stamp);setModalImportPM(false);notify(`✅ ${stamp.length} serviço(s) importado(s)!`);}}/>}
         {modalImportApon&&<ImportAponModal label="Apontamentos 1340" oficina="1340" onClose={()=>setModalImportApon(false)} onImport={novos=>{setApontamentos(p=>[...novos,...(p||[])]);db.saveBatch("apontamentos_oficina",novos);setModalImportApon(false);notify(`✅ ${novos.length} apontamento(s) importado(s)!`);}}/>}
@@ -5489,6 +5646,15 @@ export default function App(){
                 <div style={{fontSize:11,color:"#888",marginTop:2}}>{lista.length} relatório(s) · <span style={{color:"#C62828",fontWeight:700}}>{totalPend} pendente(s) de peças</span></div>
               </div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <button onClick={()=>setModalImportManutencao(true)} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1565C0",background:"#EFF6FF",color:"#1565C0",fontSize:11,cursor:"pointer",fontWeight:700}}>📥 Importar Preventivas/Corretivas</button>
+                <button onClick={async()=>{
+                  if(!window.confirm(`Isso vai APAGAR PERMANENTEMENTE todos os ${(reports||[]).length} relatório(s) atuais da Conferência de Relatórios. Essa ação não pode ser desfeita. Confirma?`))return;
+                  if(!window.confirm("Tem certeza mesmo? Essa é sua última chance de cancelar."))return;
+                  const idsAtuais=(reports||[]).map(r=>r.id);
+                  setReports([]);
+                  for(const id of idsAtuais){ db.delete("relatorios",id); }
+                  notify(`🗑️ ${idsAtuais.length} relatório(s) apagado(s)!`);
+                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #C62828",background:"#FFF0F0",color:"#C62828",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑️ Excluir Todos os Dados</button>
                 <BtnImport onClick={()=>setModalImportRel(true)}/>
                 <button onClick={()=>{
                   const alvos=(reports||[]).filter(r=>r&&!r.cidade&&(r.cliente||"").includes(" - "));
@@ -5617,6 +5783,57 @@ export default function App(){
               }} style={{padding:"6px 14px",borderRadius:20,background:"#166534",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:700}}>✅ Marcar selecionados como Concluído</button>
               <button onClick={()=>setRelSelecionados([])} style={{padding:"6px 12px",borderRadius:20,background:"#FFF",color:"#64748B",border:"1px solid #E2E8F0",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar seleção</button>
             </div>}
+            {/* Toggle Kanban / Planilha + categorias */}
+            <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:12}}>
+              <div style={{display:"flex",gap:4,background:"#F1F5F9",borderRadius:10,padding:3}}>
+                <button onClick={()=>setRelView("kanban")} style={{padding:"6px 14px",borderRadius:8,border:"none",background:relView==="kanban"?"#FFF":"transparent",color:relView==="kanban"?"#1A1A1A":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",boxShadow:relView==="kanban"?"0 1px 3px rgba(0,0,0,.1)":"none"}}>🗂️ Kanban</button>
+                <button onClick={()=>setRelView("planilha")} style={{padding:"6px 14px",borderRadius:8,border:"none",background:relView==="planilha"?"#FFF":"transparent",color:relView==="planilha"?"#1A1A1A":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer",boxShadow:relView==="planilha"?"0 1px 3px rgba(0,0,0,.1)":"none"}}>📋 Planilha</button>
+              </div>
+              {relView==="planilha"&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[["todos","Todos"],["preventivo","Preventivo"],["corretivo","Corretivo"],["mau_uso","Mau Uso"],["a_faturar","A Faturar"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>setRelCategoria(k)} style={{padding:"6px 13px",borderRadius:20,border:relCategoria===k?"2px solid #1A1A1A":"1.5px solid #E2E8F0",background:relCategoria===k?"#1A1A1A":"#FFF",color:relCategoria===k?"#F5C200":"#64748B",fontSize:11,fontWeight:700,cursor:"pointer"}}>{l}</button>
+                ))}
+              </div>}
+            </div>
+
+            {relView==="planilha"?(()=>{
+              const listaPlanilha=todosFiltrados.filter(r=>{
+                if(relCategoria==="todos")return true;
+                if(relCategoria==="mau_uso")return r.mauUso||r.status==="mau_uso";
+                if(relCategoria==="a_faturar")return r.aFaturar||r.status==="a_faturar";
+                return r.atendimento===relCategoria;
+              }).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
+              return(
+                <div className="card" style={{overflow:"hidden"}}>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Data</th><th>Categoria</th><th>Técnico</th><th>Cliente</th><th>PAT</th><th>Equipamento</th><th>Relatório</th><th>Horas</th><th>Retrabalho</th></tr></thead>
+                    <tbody>
+                      {listaPlanilha.slice(0,500).map(r=>{
+                        const isMauUso=r.mauUso||r.status==="mau_uso";
+                        const isAFaturar=r.aFaturar||r.status==="a_faturar";
+                        const catLabel=isMauUso?"Mau Uso":isAFaturar?"A Faturar":r.atendimento==="corretivo"?"Corretivo":"Preventivo";
+                        const catColor=isMauUso?"#B45309":isAFaturar?"#0D9488":r.atendimento==="corretivo"?"#C62828":"#1565C0";
+                        return(
+                          <tr key={r.id}>
+                            <td style={{padding:"7px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(r.data)||"—"}</td>
+                            <td style={{padding:"7px 10px"}}><span style={{fontSize:10,fontWeight:700,color:catColor,background:catColor+"18",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{catLabel}</span></td>
+                            <td style={{padding:"7px 10px",fontSize:12,fontWeight:600}}>{r.tecnico||"—"}</td>
+                            <td style={{padding:"7px 10px",fontSize:12,color:"#1565C0",fontWeight:600}}>{r.cliente||"—"}</td>
+                            <td style={{padding:"7px 10px",fontSize:12}}>{r.patrimonio||"—"}</td>
+                            <td style={{padding:"7px 10px",fontSize:12,color:"#64748B",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.equipamento||"—"}</td>
+                            <td style={{padding:"7px 10px",fontSize:12}}>{r.relatorio||"—"}</td>
+                            <td style={{padding:"7px 10px",fontSize:12}}>{r.horasTrabalhadas||"—"}</td>
+                            <td style={{padding:"7px 10px"}}>{r.retrabalho?<span style={{fontSize:10,fontWeight:700,color:"#C62828"}}>⚠️ Sim</span>:"—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table></div>
+                  {listaPlanilha.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro nessa categoria</div>}
+                  {listaPlanilha.length>500&&<div style={{textAlign:"center",color:"#94A3B8",padding:10,fontSize:11}}>Mostrando os 500 mais recentes de {listaPlanilha.length} — use os filtros ou exporte em Excel para ver tudo</div>}
+                </div>
+              );
+            })():(<>
             {/* Cards */}
             {listaFiltradaNivel.length===0?(<div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}><div style={{fontSize:32,marginBottom:8}}>📋</div><div style={{fontSize:12,fontWeight:600}}>Nenhum relatório</div><div style={{fontSize:11,marginTop:4}}>Use "+ Novo Relatório"</div></div>):(
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:10}}>
@@ -5682,6 +5899,7 @@ export default function App(){
                 })}
               </div>
             )}
+            </>)}
           </div>);
         })()}
 
