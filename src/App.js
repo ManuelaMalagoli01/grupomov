@@ -9442,7 +9442,7 @@ export default function App(){
                     ))}
                   </div>
 
-                  {/* ── Por Empresa: atendimentos, corretiva/preventiva por PAT, MTBF/MTTR/Disponibilidade ── */}
+                  {/* ── Painel de BI unificado, no mesmo padrão do Farol de Mau Uso ── */}
                   {(()=>{
                     const porEmpresa={};
                     dashReports.forEach(r=>{
@@ -9458,7 +9458,6 @@ export default function App(){
                       const corretivas=d.registros.filter(r=>r.atendimento==="corretivo");
                       const preventivas=d.registros.filter(r=>r.atendimento==="preventivo");
                       const mttrHoras=corretivas.length?corretivas.reduce((a,r)=>a+horasDe(r),0)/corretivas.length:null;
-                      // MTBF: pra cada PAT com 2+ corretivas, media de dias entre corretivas consecutivas; depois media entre os PATs da empresa
                       const mtbfPorPat=[];
                       Object.keys(d.pats).forEach(pat=>{
                         const doPat=corretivas.filter(r=>(r.patrimonio||"—")===pat&&r.data).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
@@ -9473,23 +9472,95 @@ export default function App(){
                       const disponibilidade=(mtbfDias!==null&&mttrDias!==null&&(mtbfDias+mttrDias)>0)?Math.round(mtbfDias/(mtbfDias+mttrDias)*1000)/10:null;
                       return {empresa:emp,atendimentos:d.registros.length,preventivas:preventivas.length,corretivas:corretivas.length,pats:d.pats,mtbfDias,mtbfDetalhe:mtbfPorPat.sort((a,b)=>a.dias-b.dias),mttrHoras,disponibilidade};
                     }).sort((a,b)=>b.atendimentos-a.atendimentos);
-                    // Classificação de saúde do MTBF: quanto mais dias entre falhas, melhor. Limites aproximados p/ empilhadeiras, ajustáveis se necessário.
                     const classifMTBF=(dias)=>dias===null?{l:"—",c:"#64748B"}:dias>=60?{l:"Bom",c:"#4ADE80"}:dias>=30?{l:"Regular",c:"#FBBF24"}:{l:"Crítico",c:"#F87171"};
                     const catFalhaCounts=FALHA_CATEGORIAS.map(f=>({...f,total:dashReports.filter(r=>r.categoriaFalha===f.cat).length})).filter(f=>f.total>0);
                     const semFalhaClassificada=dashReports.filter(r=>r.atendimento==="corretivo"&&!r.categoriaFalha).length;
+                    const topEmpresasLeaderboard=linhasEmpresa.slice(0,5);
+                    const porEmpresaPC={};
+                    dashReports.forEach(r=>{ const emp=r.cliente||"Sem empresa"; if(!porEmpresaPC[emp]) porEmpresaPC[emp]={prev:0,corr:0}; if(r.atendimento==="preventivo") porEmpresaPC[emp].prev++; else if(r.atendimento==="corretivo") porEmpresaPC[emp].corr++; });
+                    const topEmpresasPC=Object.entries(porEmpresaPC).sort((a,b)=>(b[1].prev+b[1].corr)-(a[1].prev+a[1].corr)).slice(0,10);
+                    const relatoriosPorTecEmp=techsWith.map(t=>{
+                      const doTec=dashReports.filter(r=>r.tecnico===t);
+                      const porEmp={};
+                      doTec.forEach(r=>{ const emp=r.cliente||"Sem empresa"; porEmp[emp]=(porEmp[emp]||0)+1; });
+                      const topEmp=Object.entries(porEmp).sort((a,b)=>b[1]-a[1]).slice(0,3);
+                      return {tecnico:t,total:doTec.length,topEmp};
+                    }).sort((a,b)=>b.total-a.total);
                     return(
-                      <div style={{background:"#1E293B",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
+                      <div style={{background:"#1E293B",borderRadius:16,padding:"36px 40px",marginBottom:22,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
                           <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
-                          <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção · Por Empresa</span>
+                          <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção</span>
                         </div>
-                        <div style={{overflowX:"auto",marginBottom:24}}>
+
+                        {/* ── Linha 1: KPIs | Doughnut | Leaderboard (igual Mau Uso) ── */}
+                        <div style={{display:"grid",gridTemplateColumns:"0.85fr 1.1fr 1.3fr",gap:44,alignItems:"stretch",marginBottom:26}}>
+                          <div style={{display:"flex",flexDirection:"column",gap:16,justifyContent:"center"}}>
+                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total de Atendimentos</div><div style={{fontSize:26,fontWeight:900,color:"#FFF"}}>{dashReports.length}</div></div>
+                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Preventivas × Corretivas</div><div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{prev} <span style={{color:"#64748B",fontWeight:600,fontSize:13}}>×</span> <span style={{color:"#F5C200"}}>{corr}</span></div></div>
+                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos</div><div style={{fontSize:18,fontWeight:900,color:retrabalhos.length>0?"#F87171":"#4ADE80"}}>{retrabalhos.length}</div></div>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>Preventiva × Corretiva</div>
+                            <ChartCanvas type="doughnut" height={190} data={{
+                              labels:["Preventiva","Corretiva"],
+                              datasets:[{data:[prev,corr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#1E293B"}]
+                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas — Atendimentos</div>
+                            {topEmpresasLeaderboard.length===0?<div style={{color:"#475569",fontSize:11,padding:"20px 0"}}>Sem dados no filtro</div>:
+                            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                              {topEmpresasLeaderboard.map((e,i)=>(
+                                <div key={e.empresa} style={{display:"flex",alignItems:"center",gap:10}}>
+                                  <div style={{width:22,height:22,borderRadius:"50%",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{fontSize:12,fontWeight:700,color:"#FFF",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.empresa}</div>
+                                    <div style={{fontSize:9,color:"#64748B"}}>{e.preventivas} prevent. · {e.corretivas} corret.</div>
+                                  </div>
+                                  <div style={{fontSize:13,fontWeight:900,color:"#F5C200",whiteSpace:"nowrap"}}>{e.atendimentos}</div>
+                                </div>
+                              ))}
+                            </div>}
+                          </div>
+                        </div>
+
+                        <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
+
+                        {/* ── Linha 2: 3 gráficos (igual Mau Uso) ── */}
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:32,marginBottom:26}}>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Região</div>
+                            <ChartCanvas type="bar" height={200} data={{
+                              labels:regList.map(([,l])=>l),
+                              datasets:[{label:"Preventiva",data:regPrev,backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:regCorr,backgroundColor:"#F5C200",borderRadius:4}]
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#334155"}}}}}/>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Empresa</div>
+                            {topEmpresasPC.length?<ChartCanvas type="bar" height={200} data={{
+                              labels:topEmpresasPC.slice(0,6).map(([emp])=>emp.length>10?emp.slice(0,10)+"…":emp),
+                              datasets:[{label:"Preventiva",data:topEmpresasPC.slice(0,6).map(([,d])=>d.prev),backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:topEmpresasPC.slice(0,6).map(([,d])=>d.corr),backgroundColor:"#F5C200",borderRadius:4}]
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:40,textAlign:"center"}}>Sem dados</div>}
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Horas Trabalhadas por Técnico</div>
+                            {techsWith.length?<ChartCanvas type="bar" height={200} data={{
+                              labels:techsWith.slice(0,6),
+                              datasets:[{label:"Preventiva",data:techHorasPrev.slice(0,6),backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:techHorasCorr.slice(0,6),backgroundColor:"#F5C200",borderRadius:4}]
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}h`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",font:{size:9}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:40,textAlign:"center"}}>Sem dados</div>}
+                          </div>
+                        </div>
+
+                        <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
+
+                        {/* ── Linha 3: MTBF / MTTR / Disponibilidade por empresa ── */}
+                        <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>MTBF · MTTR · Disponibilidade por Empresa</div>
+                        <div style={{overflowX:"auto",marginBottom:16}}>
                           <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:12}}>
-                            <thead><tr style={{borderBottom:"1.5px solid #1E293B"}}>
+                            <thead><tr style={{borderBottom:"1.5px solid #334155"}}>
                               <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Atend.</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Prevent.</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Corret.</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>PATs</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#0D9488",textTransform:"uppercase"}}>MTBF</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Situação</th>
@@ -9497,24 +9568,22 @@ export default function App(){
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase"}}>Disponib.</th>
                             </tr></thead>
                             <tbody>
-                              {linhasEmpresa.slice(0,15).map((e,i)=>{
+                              {linhasEmpresa.slice(0,12).map((e,i)=>{
                                 const st=classifMTBF(e.mtbfDias);
                                 const aberta=empresaExpandidaMTBF===e.empresa;
                                 return(
-                                <>
-                                <tr key={e.empresa} onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{borderBottom:aberta?"none":"1px solid #1E293B",cursor:e.mtbfDetalhe.length>0?"pointer":"default"}}>
+                                <Fragment key={e.empresa}>
+                                <tr onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{borderBottom:aberta?"none":"1px solid #334155",cursor:e.mtbfDetalhe.length>0?"pointer":"default"}}>
                                   <td style={{padding:"7px 10px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#64748B",marginRight:5,fontSize:10}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#60A5FA"}}>{e.preventivas}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#F87171"}}>{e.corretivas}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#64748B"}}>{Object.keys(e.pats).length}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#0D9488"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center"}}><span style={{fontSize:9,fontWeight:800,color:st.c,background:st.c+"22",borderRadius:20,padding:"2px 9px"}}>{st.l}</span></td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#64748B"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
                                 </tr>
-                                {aberta&&<tr style={{borderBottom:"1px solid #1E293B"}}><td colSpan={9} style={{padding:"0 10px 10px 26px",background:"#0F172A"}}>
-                                  <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",margin:"8px 0 6px"}}>MTBF por patrimônio (base do cálculo acima)</div>
+                                {aberta&&<tr style={{borderBottom:"1px solid #334155"}}><td colSpan={7} style={{padding:"0 10px 10px 26px",background:"#0F172A"}}>
+                                  <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",margin:"8px 0 6px"}}>MTBF por patrimônio</div>
                                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                                     {e.mtbfDetalhe.map(p=>{const stp=classifMTBF(p.dias);return(
                                       <div key={p.pat} style={{background:"#1E293B",borderRadius:8,padding:"6px 12px",display:"flex",alignItems:"center",gap:8}}>
@@ -9525,117 +9594,55 @@ export default function App(){
                                     );})}
                                   </div>
                                 </td></tr>}
-                                </>
+                                </Fragment>
                                 );
                               })}
                             </tbody>
                           </table>
-                          {linhasEmpresa.length>15&&<div style={{fontSize:10,color:"#64748B",marginTop:8}}>Mostrando as 15 empresas com mais atendimentos, de {linhasEmpresa.length} total — use os filtros pra refinar</div>}
+                          {linhasEmpresa.length>12&&<div style={{fontSize:10,color:"#64748B",marginTop:8}}>Mostrando as 12 empresas com mais atendimentos, de {linhasEmpresa.length} total</div>}
                         </div>
-                        <div style={{fontSize:9,color:"#475569",marginBottom:20}}>MTBF = tempo médio entre falhas consecutivas no mesmo patrimônio (dias, clique na linha pra ver por PAT) · MTTR = tempo médio de reparo por corretiva (horas) · Disponibilidade = MTBF / (MTBF + MTTR) · Situação: <span style={{color:"#4ADE80"}}>●</span> Bom ≥60d &nbsp; <span style={{color:"#FBBF24"}}>●</span> Regular 30-59d &nbsp; <span style={{color:"#F87171"}}>●</span> Crítico &lt;30d</div>
+                        <div style={{fontSize:9,color:"#64748B",marginBottom:26}}>MTBF = dias médios entre falhas no mesmo patrimônio (clique na linha p/ ver por PAT) · MTTR = horas médias de reparo · Disponibilidade = MTBF/(MTBF+MTTR) · <span style={{color:"#4ADE80"}}>●</span> Bom ≥60d &nbsp; <span style={{color:"#FBBF24"}}>●</span> Regular 30-59d &nbsp; <span style={{color:"#F87171"}}>●</span> Crítico &lt;30d</div>
 
-                        {catFalhaCounts.length>0&&<>
-                        <div style={{height:1,background:"#1E293B",margin:"4px 0 18px"}}/>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:32,alignItems:"center"}}>
+                        <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
+
+                        {/* ── Linha 4: Falhas | Relatórios por Técnico ── */}
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:32,marginBottom:catFalhaCounts.length>0||relatoriosPorTecEmp.length>0?26:0}}>
+                          {catFalhaCounts.length>0&&<div>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha</div>
+                            <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:20,alignItems:"center"}}>
+                              <ChartCanvas type="doughnut" height={160} data={{
+                                labels:catFalhaCounts.map(f=>f.cat),
+                                datasets:[{data:catFalhaCounts.map(f=>f.total),backgroundColor:catFalhaCounts.map(f=>f.cor),borderWidth:2,borderColor:"#1E293B"}]
+                              }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false}}}}/>
+                              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                                {catFalhaCounts.sort((a,b)=>b.total-a.total).slice(0,5).map(f=>(
+                                  <div key={f.cat} style={{display:"flex",alignItems:"center",gap:8}}>
+                                    <span style={{width:8,height:8,borderRadius:2,background:f.cor,flexShrink:0}}/>
+                                    <span style={{fontSize:11,color:"#FFF",flex:1}}>{f.cat}</span>
+                                    <span style={{fontSize:11,fontWeight:800,color:f.cor}}>{f.total}</span>
+                                  </div>
+                                ))}
+                                {semFalhaClassificada>0&&<div style={{fontSize:9,color:"#64748B",marginTop:2}}>{semFalhaClassificada} sem classificação</div>}
+                              </div>
+                            </div>
+                          </div>}
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha (corretivas)</div>
-                            <ChartCanvas type="doughnut" height={200} data={{
-                              labels:catFalhaCounts.map(f=>f.cat),
-                              datasets:[{data:catFalhaCounts.map(f=>f.total),backgroundColor:catFalhaCounts.map(f=>f.cor),borderWidth:2,borderColor:"#1E293B"}]
-                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}}}}}/>
-                          </div>
-                          <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Detalhe por Categoria</div>
-                            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                              {catFalhaCounts.sort((a,b)=>b.total-a.total).map(f=>(
-                                <div key={f.cat} style={{display:"flex",alignItems:"center",gap:10}}>
-                                  <span style={{width:10,height:10,borderRadius:3,background:f.cor,flexShrink:0}}/>
-                                  <span style={{fontSize:12,color:"#FFF",flex:1}}>{f.cat}</span>
-                                  <span style={{fontSize:12,fontWeight:800,color:f.cor}}>{f.total}</span>
+                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Relatórios por Técnico — por Empresa</div>
+                            {relatoriosPorTecEmp.length?<div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:200,overflowY:"auto"}}>
+                              {relatoriosPorTecEmp.slice(0,8).map(t=>(
+                                <div key={t.tecnico} style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <div style={{width:20,height:20,borderRadius:"50%",background:"#0F172A",color:"#F5C200",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(t.tecnico)}</div>
+                                  <div style={{fontSize:11,fontWeight:700,color:"#FFF",minWidth:110,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.tecnico}</div>
+                                  <div style={{fontSize:10,fontWeight:900,color:"#F5C200",width:26,flexShrink:0}}>{t.total}</div>
+                                  <div style={{fontSize:9,color:"#64748B",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.topEmp.map(([emp,q])=>`${emp} (${q})`).join(" · ")}</div>
                                 </div>
                               ))}
-                              {semFalhaClassificada>0&&<div style={{fontSize:10,color:"#64748B",marginTop:4}}>{semFalhaClassificada} corretiva(s) sem observação suficiente pra classificar</div>}
-                            </div>
+                            </div>:<div style={{color:"#475569",fontSize:11,padding:20}}>Sem dados</div>}
                           </div>
-                        </div>
-                        </>}
-                      </div>
-                    );
-                  })()}
-
-                  {(()=>{
-                    const porEmpresaPC={};
-                    dashReports.forEach(r=>{
-                      const emp=r.cliente||"Sem empresa";
-                      if(!porEmpresaPC[emp]) porEmpresaPC[emp]={prev:0,corr:0};
-                      if(r.atendimento==="preventivo") porEmpresaPC[emp].prev++;
-                      else if(r.atendimento==="corretivo") porEmpresaPC[emp].corr++;
-                    });
-                    const topEmpresasPC=Object.entries(porEmpresaPC).sort((a,b)=>(b[1].prev+b[1].corr)-(a[1].prev+a[1].corr)).slice(0,10);
-                    // Relatórios por técnico, por empresa (top 3 empresas de cada técnico)
-                    const relatoriosPorTecEmp=techsWith.map(t=>{
-                      const doTec=dashReports.filter(r=>r.tecnico===t);
-                      const porEmp={};
-                      doTec.forEach(r=>{ const emp=r.cliente||"Sem empresa"; porEmp[emp]=(porEmp[emp]||0)+1; });
-                      const topEmp=Object.entries(porEmp).sort((a,b)=>b[1]-a[1]).slice(0,3);
-                      return {tecnico:t,total:doTec.length,topEmp};
-                    }).sort((a,b)=>b.total-a.total);
-                    return(
-                      <div style={{background:"#1E293B",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
-                          <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
-                          <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Indicadores Operacionais</span>
-                        </div>
-
-                        <div style={{display:"grid",gridTemplateColumns:"0.8fr 1.2fr",gap:32,marginBottom:26}}>
-                          <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva</div>
-                            <ChartCanvas type="doughnut" height={190} data={{
-                              labels:["Preventiva","Corretiva"],
-                              datasets:[{data:[prev,corr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#1E293B"}]
-                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
-                          </div>
-                          <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva por Região</div>
-                            <ChartCanvas type="bar" height={190} data={{
-                              labels:regList.map(([,l])=>l),
-                              datasets:[{label:"Preventiva",data:regPrev,backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:regCorr,backgroundColor:"#F5C200",borderRadius:4}]
-                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#1E293B"}}}}}/>
-                          </div>
-                        </div>
-
-                        <div style={{marginBottom:26}}>
-                          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva por Empresa (top 10)</div>
-                          {topEmpresasPC.length?<div style={{overflowX:"auto"}}><div style={{minWidth:Math.max(520,topEmpresasPC.length*70)}}><ChartCanvas type="bar" height={210} data={{
-                            labels:topEmpresasPC.map(([emp])=>emp.length>14?emp.slice(0,14)+"…":emp),
-                            datasets:[{label:"Preventiva",data:topEmpresasPC.map(([,d])=>d.prev),backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:topEmpresasPC.map(([,d])=>d.corr),backgroundColor:"#F5C200",borderRadius:4}]
-                          }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#1E293B"}}}}}/></div></div>:<div style={{color:"#475569",fontSize:11,padding:30,textAlign:"center"}}>Sem dados no filtro</div>}
-                        </div>
-
-                        <div style={{marginBottom:26}}>
-                          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Horas Trabalhadas por Técnico</div>
-                          {techsWith.length?<div style={{overflowX:"auto"}}><div style={{minWidth:Math.max(520,techsWith.length*70)}}><ChartCanvas type="bar" height={210} data={{
-                            labels:techsWith,
-                            datasets:[{label:"Preventiva",data:techHorasPrev,backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:techHorasCorr,backgroundColor:"#F5C200",borderRadius:4}]
-                          }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}h`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",font:{size:9}},grid:{color:"#1E293B"}}}}}/></div></div>:<div style={{color:"#475569",fontSize:11,padding:30,textAlign:"center"}}>Sem dados no filtro</div>}
-                        </div>
-
-                        <div style={{marginBottom:retrabalhos.length>0?26:0}}>
-                          <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Relatórios por Técnico — por Empresa</div>
-                          {relatoriosPorTecEmp.length?<div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:280,overflowY:"auto"}}>
-                            {relatoriosPorTecEmp.map(t=>(
-                              <div key={t.tecnico} style={{display:"flex",alignItems:"center",gap:10}}>
-                                <div style={{width:22,height:22,borderRadius:"50%",background:"#1E293B",color:"#F5C200",fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(t.tecnico)}</div>
-                                <div style={{fontSize:12,fontWeight:700,color:"#FFF",minWidth:130,flexShrink:0}}>{t.tecnico}</div>
-                                <div style={{fontSize:11,fontWeight:900,color:"#F5C200",width:34,flexShrink:0}}>{t.total}</div>
-                                <div style={{fontSize:10,color:"#64748B",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.topEmp.map(([emp,q])=>`${emp} (${q})`).join(" · ")}</div>
-                              </div>
-                            ))}
-                          </div>:<div style={{color:"#475569",fontSize:11,padding:30,textAlign:"center"}}>Sem dados no filtro</div>}
                         </div>
 
                         {retrabalhos.length>0&&<>
-                        <div style={{height:1,background:"#1E293B",margin:"0 0 18px"}}/>
+                        <div style={{height:1,background:"#334155",margin:"0 0 18px"}}/>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:14}}>⚠️</span><div style={{fontSize:10,fontWeight:700,color:"#F5C200",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
                         <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:180,overflowY:"auto"}}>
                           {retrabalhos.map((r,i)=>(
