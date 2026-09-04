@@ -3623,6 +3623,7 @@ export default function App(){
   const [dashStatus,setDashStatus]=useState("todos");
   const [dashPatrimonio,setDashPatrimonio]=useState("");
   const [dashCliente,setDashCliente]=useState("");
+  const [empresaExpandidaMTBF,setEmpresaExpandidaMTBF]=useState(null);
   const [showFiltrosDash,setShowFiltrosDash]=useState(false);
   const [dashOfiTech,setDashOfiTech]=useState("todos");
   const [dashOfiSetor,setDashOfiSetor]=useState("todos");
@@ -9468,14 +9469,16 @@ export default function App(){
                         if(doPat.length>=2){
                           const deltas=[];
                           for(let i=1;i<doPat.length;i++){ const dias=diffDaysEntre(doPat[i-1].data,doPat[i].data); if(dias!==null&&dias>=0) deltas.push(dias); }
-                          if(deltas.length) mtbfPorPat.push(deltas.reduce((a,v)=>a+v,0)/deltas.length);
+                          if(deltas.length) mtbfPorPat.push({pat,dias:Math.round(deltas.reduce((a,v)=>a+v,0)/deltas.length),ocorrencias:doPat.length});
                         }
                       });
-                      const mtbfDias=mtbfPorPat.length?mtbfPorPat.reduce((a,v)=>a+v,0)/mtbfPorPat.length:null;
+                      const mtbfDias=mtbfPorPat.length?mtbfPorPat.reduce((a,v)=>a+v.dias,0)/mtbfPorPat.length:null;
                       const mttrDias=mttrHoras!==null?mttrHoras/24:null;
                       const disponibilidade=(mtbfDias!==null&&mttrDias!==null&&(mtbfDias+mttrDias)>0)?Math.round(mtbfDias/(mtbfDias+mttrDias)*1000)/10:null;
-                      return {empresa:emp,atendimentos:d.registros.length,preventivas:preventivas.length,corretivas:corretivas.length,pats:d.pats,mtbfDias,mttrHoras,disponibilidade};
+                      return {empresa:emp,atendimentos:d.registros.length,preventivas:preventivas.length,corretivas:corretivas.length,pats:d.pats,mtbfDias,mtbfDetalhe:mtbfPorPat.sort((a,b)=>a.dias-b.dias),mttrHoras,disponibilidade};
                     }).sort((a,b)=>b.atendimentos-a.atendimentos);
+                    // Classificação de saúde do MTBF: quanto mais dias entre falhas, melhor. Limites aproximados p/ empilhadeiras, ajustáveis se necessário.
+                    const classifMTBF=(dias)=>dias===null?{l:"—",c:"#64748B"}:dias>=60?{l:"Bom",c:"#4ADE80"}:dias>=30?{l:"Regular",c:"#FBBF24"}:{l:"Crítico",c:"#F87171"};
                     const catFalhaCounts=FALHA_CATEGORIAS.map(f=>({...f,total:dashReports.filter(r=>r.categoriaFalha===f.cat).length})).filter(f=>f.total>0);
                     const semFalhaClassificada=dashReports.filter(r=>r.atendimento==="corretivo"&&!r.categoriaFalha).length;
                     return(
@@ -9485,7 +9488,7 @@ export default function App(){
                           <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção · Por Empresa</span>
                         </div>
                         <div style={{overflowX:"auto",marginBottom:24}}>
-                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:760,fontSize:12}}>
+                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:12}}>
                             <thead><tr style={{borderBottom:"1.5px solid #1E293B"}}>
                               <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Atend.</th>
@@ -9493,27 +9496,47 @@ export default function App(){
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Corret.</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>PATs</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#0D9488",textTransform:"uppercase"}}>MTBF</th>
+                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Situação</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#F5C200",textTransform:"uppercase"}}>MTTR</th>
                               <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase"}}>Disponib.</th>
                             </tr></thead>
                             <tbody>
-                              {linhasEmpresa.slice(0,15).map((e,i)=>(
-                                <tr key={e.empresa} style={{borderBottom:"1px solid #1E293B"}}>
-                                  <td style={{padding:"7px 10px",fontWeight:700,color:"#FFF"}}>{e.empresa}</td>
+                              {linhasEmpresa.slice(0,15).map((e,i)=>{
+                                const st=classifMTBF(e.mtbfDias);
+                                const aberta=empresaExpandidaMTBF===e.empresa;
+                                return(
+                                <>
+                                <tr key={e.empresa} onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{borderBottom:aberta?"none":"1px solid #1E293B",cursor:e.mtbfDetalhe.length>0?"pointer":"default"}}>
+                                  <td style={{padding:"7px 10px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#64748B",marginRight:5,fontSize:10}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#60A5FA"}}>{e.preventivas}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#F87171"}}>{e.corretivas}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",color:"#64748B"}}>{Object.keys(e.pats).length}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#0D9488"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
+                                  <td style={{padding:"7px 10px",textAlign:"center"}}><span style={{fontSize:9,fontWeight:800,color:st.c,background:st.c+"22",borderRadius:20,padding:"2px 9px"}}>{st.l}</span></td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
                                   <td style={{padding:"7px 10px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#64748B"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
                                 </tr>
-                              ))}
+                                {aberta&&<tr style={{borderBottom:"1px solid #1E293B"}}><td colSpan={9} style={{padding:"0 10px 10px 26px",background:"#0F172A"}}>
+                                  <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",margin:"8px 0 6px"}}>MTBF por patrimônio (base do cálculo acima)</div>
+                                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                                    {e.mtbfDetalhe.map(p=>{const stp=classifMTBF(p.dias);return(
+                                      <div key={p.pat} style={{background:"#1E293B",borderRadius:8,padding:"6px 12px",display:"flex",alignItems:"center",gap:8}}>
+                                        <span style={{fontSize:11,fontWeight:700,color:"#FFF"}}>PAT {p.pat}</span>
+                                        <span style={{fontSize:11,fontWeight:800,color:stp.c}}>{p.dias}d</span>
+                                        <span style={{fontSize:9,color:"#64748B"}}>({p.ocorrencias} corretivas)</span>
+                                      </div>
+                                    );})}
+                                  </div>
+                                </td></tr>}
+                                </>
+                                );
+                              })}
                             </tbody>
                           </table>
                           {linhasEmpresa.length>15&&<div style={{fontSize:10,color:"#64748B",marginTop:8}}>Mostrando as 15 empresas com mais atendimentos, de {linhasEmpresa.length} total — use os filtros pra refinar</div>}
                         </div>
-                        <div style={{fontSize:9,color:"#475569",marginBottom:20}}>MTBF = tempo médio entre falhas consecutivas no mesmo patrimônio (dias) · MTTR = tempo médio de reparo por corretiva (horas) · Disponibilidade = MTBF / (MTBF + MTTR)</div>
+                        <div style={{fontSize:9,color:"#475569",marginBottom:20}}>MTBF = tempo médio entre falhas consecutivas no mesmo patrimônio (dias, clique na linha pra ver por PAT) · MTTR = tempo médio de reparo por corretiva (horas) · Disponibilidade = MTBF / (MTBF + MTTR) · Situação: <span style={{color:"#4ADE80"}}>●</span> Bom ≥60d &nbsp; <span style={{color:"#FBBF24"}}>●</span> Regular 30-59d &nbsp; <span style={{color:"#F87171"}}>●</span> Crítico &lt;30d</div>
 
                         {catFalhaCounts.length>0&&<>
                         <div style={{height:1,background:"#1E293B",margin:"4px 0 18px"}}/>
