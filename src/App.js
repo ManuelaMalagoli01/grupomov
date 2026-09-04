@@ -9555,41 +9555,42 @@ export default function App(){
                         <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
 
                         {/* ── Linha 3: MTBF / MTTR / Disponibilidade por empresa ── */}
-                        <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>MTBF · MTTR · Disponibilidade por Empresa</div>
-                        <div style={{overflowX:"auto",marginBottom:16}}>
-                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:12}}>
-                            <thead><tr style={{borderBottom:"1.5px solid #334155"}}>
-                              <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Empresa</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Atend.</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>PATs</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#0D9488",textTransform:"uppercase"}}>MTBF</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase"}}>Situação</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#F5C200",textTransform:"uppercase"}}>MTTR</th>
-                              <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase"}}>Disponib.</th>
+                        <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:12}}>MTBF · MTTR · Disponibilidade por Empresa</div>
+                        <div style={{overflowX:"auto",marginBottom:16,borderRadius:10,border:"1px solid #334155"}}>
+                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:12.5}}>
+                            <thead><tr style={{background:"#0F172A"}}>
+                              <th style={{padding:"10px 14px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Empresa</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Atend.</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>PATs</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#2DD4BF",textTransform:"uppercase",letterSpacing:.4}}>MTBF</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Situação</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#F5C200",textTransform:"uppercase",letterSpacing:.4}}>MTTR</th>
+                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Disponib.</th>
                             </tr></thead>
                             <tbody>
                               {linhasEmpresa.slice(0,12).map((e,i)=>{
                                 const st=classifMTBF(e.mtbfDias);
                                 const aberta=empresaExpandidaMTBF===e.empresa;
+                                const bgLinha=aberta?"#334155":(i%2===1?"#25324A":"transparent");
                                 return(
                                 <Fragment key={e.empresa}>
-                                <tr onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{borderBottom:aberta?"none":"1px solid #334155",cursor:e.mtbfDetalhe.length>0?"pointer":"default"}}>
-                                  <td style={{padding:"7px 10px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#64748B",marginRight:5,fontSize:10}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",color:"#64748B"}}>{Object.keys(e.pats).length}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#0D9488"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center"}}><span style={{fontSize:9,fontWeight:800,color:st.c,background:st.c+"22",borderRadius:20,padding:"2px 9px"}}>{st.l}</span></td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
-                                  <td style={{padding:"7px 10px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#64748B"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
+                                <tr onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{background:bgLinha,borderBottom:aberta?"none":"1px solid #334155",cursor:e.mtbfDetalhe.length>0?"pointer":"default",transition:"background .15s"}}>
+                                  <td style={{padding:"11px 14px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#F5C200",marginRight:6,fontSize:10}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
+                                  <td style={{padding:"11px 14px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
+                                  <td style={{padding:"11px 14px",textAlign:"center",color:"#94A3B8"}}>{Object.keys(e.pats).length}</td>
+                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:700,color:"#2DD4BF"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
+                                  <td style={{padding:"11px 14px",textAlign:"center"}}><span style={{fontSize:9.5,fontWeight:800,color:st.c,background:st.c+"26",borderRadius:20,padding:"3px 10px"}}>{st.l}</span></td>
+                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
+                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#94A3B8"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
                                 </tr>
-                                {aberta&&<tr style={{borderBottom:"1px solid #334155"}}><td colSpan={7} style={{padding:"0 10px 10px 26px",background:"#0F172A"}}>
-                                  <div style={{fontSize:9,fontWeight:700,color:"#64748B",textTransform:"uppercase",margin:"8px 0 6px"}}>MTBF por patrimônio</div>
+                                {aberta&&<tr style={{borderBottom:"1px solid #334155"}}><td colSpan={7} style={{padding:"0 14px 14px 32px",background:"#0F172A"}}>
+                                  <div style={{fontSize:9.5,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",margin:"10px 0 8px"}}>MTBF por patrimônio</div>
                                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                                     {e.mtbfDetalhe.map(p=>{const stp=classifMTBF(p.dias);return(
-                                      <div key={p.pat} style={{background:"#1E293B",borderRadius:8,padding:"6px 12px",display:"flex",alignItems:"center",gap:8}}>
+                                      <div key={p.pat} style={{background:"#1E293B",borderRadius:8,padding:"7px 13px",display:"flex",alignItems:"center",gap:8,border:"1px solid #334155"}}>
                                         <span style={{fontSize:11,fontWeight:700,color:"#FFF"}}>PAT {p.pat}</span>
                                         <span style={{fontSize:11,fontWeight:800,color:stp.c}}>{p.dias}d</span>
-                                        <span style={{fontSize:9,color:"#64748B"}}>({p.ocorrencias} corretivas)</span>
+                                        <span style={{fontSize:9,color:"#94A3B8"}}>({p.ocorrencias} corretivas)</span>
                                       </div>
                                     );})}
                                   </div>
