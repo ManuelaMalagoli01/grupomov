@@ -9426,22 +9426,18 @@ export default function App(){
                     {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashCliente("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
 
-                  <div style={{background:"#1A1A1A",borderRadius:"10px 10px 0 0",padding:"8px 14px",display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:11,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
-                    <span style={{fontSize:10,fontWeight:700,color:"#CBD5E1"}}>— Indicadores de Atendimento</span>
-                  </div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:2,marginBottom:16,background:"#E2E8F0",borderRadius:"0 0 10px 10px",overflow:"hidden"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:20}}>
                     {[
-                      {l:"Total",v:dashReports.length,c:"#1F2937",i:"📊"},
-                      {l:"Preventivas",v:prev,c:"#1D4E89",i:"📋"},
-                      {l:"Corretivas",v:corr,c:"#B91C1C",i:"🔧"},
+                      {l:"Total",v:dashReports.length,c:"#1A1A1A",i:"📊"},
+                      {l:"Preventivas",v:prev,c:"#1565C0",i:"📋"},
+                      {l:"Corretivas",v:corr,c:"#C62828",i:"🔧"},
                       {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#B45309",i:"⏱"},
-                      {l:"Técnicos Ativos",v:techsWith.length,c:"#166534",i:"👷"},
+                      {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",i:"👷"},
                       {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#6D28D9",i:"📐"},
                     ].map((k,i)=>(
-                      <div key={i} style={{padding:"12px 12px",background:k.c,display:"flex",flexDirection:"column",gap:2}}>
-                        <div style={{fontSize:8,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:.8}}>{k.i} {k.l}</div>
-                        <div style={{fontSize:20,fontWeight:900,color:"#FFF"}}>{k.v}</div>
+                      <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
+                        <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                       </div>
                     ))}
                   </div>
@@ -9482,7 +9478,7 @@ export default function App(){
                     const catFalhaCounts=FALHA_CATEGORIAS.map(f=>({...f,total:dashReports.filter(r=>r.categoriaFalha===f.cat).length})).filter(f=>f.total>0);
                     const semFalhaClassificada=dashReports.filter(r=>r.atendimento==="corretivo"&&!r.categoriaFalha).length;
                     return(
-                      <div style={{background:"#0B1220",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+                      <div style={{background:"#1E293B",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
                           <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
                           <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção · Por Empresa</span>
@@ -9545,7 +9541,7 @@ export default function App(){
                             <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha (corretivas)</div>
                             <ChartCanvas type="doughnut" height={200} data={{
                               labels:catFalhaCounts.map(f=>f.cat),
-                              datasets:[{data:catFalhaCounts.map(f=>f.total),backgroundColor:catFalhaCounts.map(f=>f.cor),borderWidth:2,borderColor:"#0B1220"}]
+                              datasets:[{data:catFalhaCounts.map(f=>f.total),backgroundColor:catFalhaCounts.map(f=>f.cor),borderWidth:2,borderColor:"#1E293B"}]
                             }} options={{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"right",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}}}}}/>
                           </div>
                           <div>
@@ -9585,7 +9581,7 @@ export default function App(){
                       return {tecnico:t,total:doTec.length,topEmp};
                     }).sort((a,b)=>b.total-a.total);
                     return(
-                      <div style={{background:"#0B1220",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
+                      <div style={{background:"#1E293B",borderRadius:16,padding:"28px 32px",marginBottom:20,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
                           <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
                           <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Indicadores Operacionais</span>
@@ -9596,7 +9592,7 @@ export default function App(){
                             <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva</div>
                             <ChartCanvas type="doughnut" height={190} data={{
                               labels:["Preventiva","Corretiva"],
-                              datasets:[{data:[prev,corr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#0B1220"}]
+                              datasets:[{data:[prev,corr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#1E293B"}]
                             }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:10},boxWidth:9,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
                           </div>
                           <div>
