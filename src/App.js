@@ -3692,6 +3692,7 @@ export default function App(){
   const [dashCliente,setDashCliente]=useState("");
   const [empresaExpandidaMTBF,setEmpresaExpandidaMTBF]=useState(null);
   const [showFiltrosDash,setShowFiltrosDash]=useState(false);
+  const [showDetalheDash,setShowDetalheDash]=useState(false);
   const [dashOfiTech,setDashOfiTech]=useState("todos");
   const [dashOfiSetor,setDashOfiSetor]=useState("todos");
   const [showFiltrosDashOfi,setShowFiltrosDashOfi]=useState(false);
@@ -9402,11 +9403,11 @@ export default function App(){
         {/* ── DASHBOARD ── */}
         {tab==="dashboard"&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{fontWeight:900,fontSize:24,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard de Atendimentos</div>
-            <div style={{fontSize:11,color:"#94A3B8",marginBottom:20}}>Fonte de dados: Conferência de Relatórios (Técnicos Externos) — mostra somente atendimentos <b>concluídos</b> (inclui Mau Uso e A Faturar). A quantidade inicial/em aberto fica na aba Conferência de Relatórios</div>
+            <div style={{fontWeight:900,fontSize:29,color:"#1A1A1A",marginBottom:4}}>📊 Dashboard de Atendimentos</div>
+            <div style={{fontSize:13,color:"#94A3B8",marginBottom:20}}>Fonte de dados: Conferência de Relatórios (Técnicos Externos) — mostra somente atendimentos <b>concluídos</b> (inclui Mau Uso e A Faturar). A quantidade inicial/em aberto fica na aba Conferência de Relatórios</div>
 
             {(()=>{
-              const chartTitle={fontSize:11,fontWeight:700,color:"#888",marginBottom:12};
+              const chartTitle={fontSize:13,fontWeight:700,color:"#888",marginBottom:12};
               const inRange=d=>{ if(dashFrom&&(!d.data||d.data<dashFrom))return false; if(dashTo&&(!d.data||d.data>dashTo))return false; return true; };
               const baseReports=(reports||[]);
               const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar";
@@ -9469,29 +9470,29 @@ export default function App(){
               return(
                 <>
                   <button onClick={()=>setShowFiltrosDash(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosDash?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-                    <span style={{fontSize:11}}>🔍</span>
-                    <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-                    {hasFilterDash&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
-                    <span style={{fontSize:9,color:"#94A3B8"}}>{dashReports.length} relatório(s)</span>
-                    <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosDash?"▲":"▼"}</span>
+                    <span style={{fontSize:13}}>🔍</span>
+                    <span style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                    {hasFilterDash&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                    <span style={{fontSize:11,color:"#94A3B8"}}>{dashReports.length} relatório(s)</span>
+                    <span style={{fontSize:10,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosDash?"▲":"▼"}</span>
                   </button>
                   {showFiltrosDash&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                    <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
-                    <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
-                    <select value={dashServico} onChange={e=>setDashServico(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos serviços</option>{SERVICOS_RELATORIO.map(s=><option key={s} value={s}>{s}</option>)}</select>
-                    <select value={dashAtendimento} onChange={e=>setDashAtendimento(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todo atendimento</option><option value="preventivo">📋 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
-                    <select value={dashStatus} onChange={e=>setDashStatus(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
-                    <input type="text" value={dashPatrimonio} onChange={e=>setDashPatrimonio(e.target.value)} placeholder="Máquina / PAT..." style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",width:120}}/>
-                    <select value={dashCliente} onChange={e=>setDashCliente(e.target.value)} style={{fontSize:11,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",maxWidth:180}}>
+                    <select value={dashRegion} onChange={e=>setDashRegion(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todas">Todas regiões</option>{regList.map(([k,l])=><option key={k} value={k}>{l}</option>)}</select>
+                    <select value={dashTech} onChange={e=>setDashTech(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                    <select value={dashServico} onChange={e=>setDashServico(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos serviços</option>{SERVICOS_RELATORIO.map(s=><option key={s} value={s}>{s}</option>)}</select>
+                    <select value={dashAtendimento} onChange={e=>setDashAtendimento(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todo atendimento</option><option value="preventivo">📋 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
+                    <select value={dashStatus} onChange={e=>setDashStatus(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
+                    <input type="text" value={dashPatrimonio} onChange={e=>setDashPatrimonio(e.target.value)} placeholder="Máquina / PAT..." style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",width:120}}/>
+                    <select value={dashCliente} onChange={e=>setDashCliente(e.target.value)} style={{fontSize:13,padding:"5px 7px",borderRadius:6,border:"1px solid #E0E0E0",maxWidth:180}}>
                       <option value="">Todas empresas</option>
                       {[...new Set((reports||[]).map(r=>r.cliente).filter(Boolean))].sort().map(c=><option key={c} value={c}>{c}</option>)}
                     </select>
-                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:11}}/></div>
-                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:11}}/></div>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:13,color:"#888",fontWeight:600}}>De</span><input type="date" value={dashFrom} onChange={e=>setDashFrom(e.target.value)} style={{fontSize:13}}/></div>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:13,color:"#888",fontWeight:600}}>Até</span><input type="date" value={dashTo} onChange={e=>setDashTo(e.target.value)} style={{fontSize:13}}/></div>
                     {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashCliente("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
 
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:20}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:16,marginBottom:24}}>
                     {[
                       {l:"Total",v:dashReports.length,c:"#1A1A1A",i:"📊"},
                       {l:"Preventivas",v:prev,c:"#1565C0",i:"📋"},
@@ -9500,9 +9501,9 @@ export default function App(){
                       {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",i:"👷"},
                       {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#6D28D9",i:"📐"},
                     ].map((k,i)=>(
-                      <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
-                        <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
-                        <div style={{fontSize:22,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                      <div key={i} className="card" style={{padding:"20px 22px",borderLeft:"5px solid "+k.c}}>
+                        <div style={{fontSize:11,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
+                        <div style={{fontSize:27,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
                       </div>
                     ))}
                   </div>
@@ -9554,36 +9555,36 @@ export default function App(){
                     return(
                       <div style={{background:"#1E293B",borderRadius:16,padding:"36px 40px",marginBottom:22,boxShadow:"0 8px 24px rgba(0,0,0,.18)"}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}>
-                          <span style={{fontSize:12,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
-                          <span style={{fontSize:11,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção</span>
+                          <span style={{fontSize:15,fontWeight:900,color:"#F5C200",letterSpacing:1.2}}>🚚 GRUPO MOV</span>
+                          <span style={{fontSize:13,fontWeight:600,color:"#94A3B8"}}>— Gestão de Manutenção</span>
                         </div>
 
                         {/* ── Linha 1: KPIs | Doughnut | Leaderboard (igual Mau Uso) ── */}
                         <div style={{display:"grid",gridTemplateColumns:"0.85fr 1.1fr 1.3fr",gap:44,alignItems:"stretch",marginBottom:26}}>
                           <div style={{display:"flex",flexDirection:"column",gap:16,justifyContent:"center"}}>
-                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total de Atendimentos</div><div style={{fontSize:26,fontWeight:900,color:"#FFF"}}>{dashReports.length}</div></div>
-                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Preventivas × Corretivas</div><div style={{fontSize:18,fontWeight:900,color:"#0D9488"}}>{prev} <span style={{color:"#64748B",fontWeight:600,fontSize:13}}>×</span> <span style={{color:"#F5C200"}}>{corr}</span></div></div>
-                            <div><div style={{fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos</div><div style={{fontSize:18,fontWeight:900,color:retrabalhos.length>0?"#F87171":"#4ADE80"}}>{retrabalhos.length}</div></div>
+                            <div><div style={{fontSize:12,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total de Atendimentos</div><div style={{fontSize:32,fontWeight:900,color:"#FFF"}}>{dashReports.length}</div></div>
+                            <div><div style={{fontSize:12,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Preventivas × Corretivas</div><div style={{fontSize:22,fontWeight:900,color:"#0D9488"}}>{prev} <span style={{color:"#64748B",fontWeight:600,fontSize:16}}>×</span> <span style={{color:"#F5C200"}}>{corr}</span></div></div>
+                            <div><div style={{fontSize:12,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos</div><div style={{fontSize:22,fontWeight:900,color:retrabalhos.length>0?"#F87171":"#4ADE80"}}>{retrabalhos.length}</div></div>
                           </div>
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>Preventiva × Corretiva</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:6}}>Preventiva × Corretiva</div>
                             <ChartCanvas type="doughnut" height={190} data={{
                               labels:["Preventiva","Corretiva"],
                               datasets:[{data:[prev,corr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#1E293B"}]
-                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
+                            }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:11},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${pct(c.raw)}%)`}}}}}/>
                           </div>
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas — Atendimentos</div>
-                            {topEmpresasLeaderboard.length===0?<div style={{color:"#475569",fontSize:11,padding:"20px 0"}}>Sem dados no filtro</div>:
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas — Atendimentos</div>
+                            {topEmpresasLeaderboard.length===0?<div style={{color:"#475569",fontSize:13,padding:"20px 0"}}>Sem dados no filtro</div>:
                             <div style={{display:"flex",flexDirection:"column",gap:9}}>
                               {topEmpresasLeaderboard.map((e,i)=>(
                                 <div key={e.empresa} style={{display:"flex",alignItems:"center",gap:10}}>
-                                  <div style={{width:22,height:22,borderRadius:"50%",background:"#F5C200",color:"#1A1A1A",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                                  <div style={{width:22,height:22,borderRadius:"50%",background:"#F5C200",color:"#1A1A1A",fontSize:13,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
                                   <div style={{flex:1,minWidth:0}}>
-                                    <div style={{fontSize:12,fontWeight:700,color:"#FFF",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.empresa}</div>
-                                    <div style={{fontSize:9,color:"#64748B"}}>{e.preventivas} prevent. · {e.corretivas} corret.</div>
+                                    <div style={{fontSize:15,fontWeight:700,color:"#FFF",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.empresa}</div>
+                                    <div style={{fontSize:11,color:"#64748B"}}>{e.preventivas} prevent. · {e.corretivas} corret.</div>
                                   </div>
-                                  <div style={{fontSize:13,fontWeight:900,color:"#F5C200",whiteSpace:"nowrap"}}>{e.atendimentos}</div>
+                                  <div style={{fontSize:16,fontWeight:900,color:"#F5C200",whiteSpace:"nowrap"}}>{e.atendimentos}</div>
                                 </div>
                               ))}
                             </div>}
@@ -9595,42 +9596,42 @@ export default function App(){
                         {/* ── Linha 2: 3 gráficos (igual Mau Uso) ── */}
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:32,marginBottom:26}}>
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Região</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Região</div>
                             <ChartCanvas type="bar" height={200} data={{
                               labels:regList.map(([,l])=>l),
                               datasets:[{label:"Preventiva",data:regPrev,backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:regCorr,backgroundColor:"#F5C200",borderRadius:4}]
-                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#334155"}}}}}/>
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:11},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:11}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:11}},grid:{color:"#334155"}}}}}/>
                           </div>
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Empresa</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Preventiva × Corretiva por Empresa</div>
                             {topEmpresasPC.length?<ChartCanvas type="bar" height={200} data={{
                               labels:topEmpresasPC.slice(0,6).map(([emp])=>emp.length>10?emp.slice(0,10)+"…":emp),
                               datasets:[{label:"Preventiva",data:topEmpresasPC.slice(0,6).map(([,d])=>d.prev),backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:topEmpresasPC.slice(0,6).map(([,d])=>d.corr),backgroundColor:"#F5C200",borderRadius:4}]
-                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:9}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:40,textAlign:"center"}}>Sem dados</div>}
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:11},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:11}}},y:{beginAtZero:true,ticks:{color:"#64748B",precision:0,font:{size:11}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:13,padding:40,textAlign:"center"}}>Sem dados</div>}
                           </div>
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Horas Trabalhadas por Técnico</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>Horas Trabalhadas por Técnico</div>
                             {techsWith.length?<ChartCanvas type="bar" height={200} data={{
                               labels:techsWith.slice(0,6),
                               datasets:[{label:"Preventiva",data:techHorasPrev.slice(0,6),backgroundColor:"#0D9488",borderRadius:4},{label:"Corretiva",data:techHorasCorr.slice(0,6),backgroundColor:"#F5C200",borderRadius:4}]
-                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}h`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:9}}},y:{beginAtZero:true,ticks:{color:"#64748B",font:{size:9}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:40,textAlign:"center"}}>Sem dados</div>}
+                            }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:11},boxWidth:8}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}h`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:11}}},y:{beginAtZero:true,ticks:{color:"#64748B",font:{size:11}},grid:{color:"#334155"}}}}}/>:<div style={{color:"#475569",fontSize:13,padding:40,textAlign:"center"}}>Sem dados</div>}
                           </div>
                         </div>
 
                         <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
 
                         {/* ── Linha 3: MTBF / MTTR / Disponibilidade por empresa ── */}
-                        <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:12}}>MTBF · MTTR · Disponibilidade por Empresa</div>
+                        <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:12}}>MTBF · MTTR · Disponibilidade por Empresa</div>
                         <div style={{overflowX:"auto",marginBottom:16,borderRadius:10,border:"1px solid #334155"}}>
-                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:12.5}}>
+                          <table style={{borderCollapse:"collapse",width:"100%",minWidth:820,fontSize:15}}>
                             <thead><tr style={{background:"#0F172A"}}>
-                              <th style={{padding:"10px 14px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Empresa</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Atend.</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>PATs</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#2DD4BF",textTransform:"uppercase",letterSpacing:.4}}>MTBF</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Situação</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#F5C200",textTransform:"uppercase",letterSpacing:.4}}>MTTR</th>
-                              <th style={{padding:"10px 14px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Disponib.</th>
+                              <th style={{padding:"13px 18px",textAlign:"left",fontSize:11.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Empresa</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Atend.</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>PATs</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#2DD4BF",textTransform:"uppercase",letterSpacing:.4}}>MTBF</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Situação</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#F5C200",textTransform:"uppercase",letterSpacing:.4}}>MTTR</th>
+                              <th style={{padding:"13px 18px",textAlign:"center",fontSize:11.5,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.4}}>Disponib.</th>
                             </tr></thead>
                             <tbody>
                               {linhasEmpresa.slice(0,12).map((e,i)=>{
@@ -9640,22 +9641,22 @@ export default function App(){
                                 return(
                                 <Fragment key={e.empresa}>
                                 <tr onClick={()=>e.mtbfDetalhe.length>0&&setEmpresaExpandidaMTBF(aberta?null:e.empresa)} style={{background:bgLinha,borderBottom:aberta?"none":"1px solid #334155",cursor:e.mtbfDetalhe.length>0?"pointer":"default",transition:"background .15s"}}>
-                                  <td style={{padding:"11px 14px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#F5C200",marginRight:6,fontSize:10}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
-                                  <td style={{padding:"11px 14px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
-                                  <td style={{padding:"11px 14px",textAlign:"center",color:"#94A3B8"}}>{Object.keys(e.pats).length}</td>
-                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:700,color:"#2DD4BF"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
-                                  <td style={{padding:"11px 14px",textAlign:"center"}}><span style={{fontSize:9.5,fontWeight:800,color:st.c,background:st.c+"26",borderRadius:20,padding:"3px 10px"}}>{st.l}</span></td>
-                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
-                                  <td style={{padding:"11px 14px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#94A3B8"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
+                                  <td style={{padding:"14px 18px",fontWeight:700,color:"#FFF"}}>{e.mtbfDetalhe.length>0&&<span style={{color:"#F5C200",marginRight:6,fontSize:12}}>{aberta?"▾":"▸"}</span>}{e.empresa}</td>
+                                  <td style={{padding:"14px 18px",textAlign:"center",color:"#CBD5E1"}}>{e.atendimentos}</td>
+                                  <td style={{padding:"14px 18px",textAlign:"center",color:"#94A3B8"}}>{Object.keys(e.pats).length}</td>
+                                  <td style={{padding:"14px 18px",textAlign:"center",fontWeight:700,color:"#2DD4BF"}}>{e.mtbfDias!==null?`${e.mtbfDias.toFixed(0)}d`:"—"}</td>
+                                  <td style={{padding:"14px 18px",textAlign:"center"}}><span style={{fontSize:11.5,fontWeight:800,color:st.c,background:st.c+"26",borderRadius:20,padding:"3px 10px"}}>{st.l}</span></td>
+                                  <td style={{padding:"14px 18px",textAlign:"center",fontWeight:700,color:"#F5C200"}}>{e.mttrHoras!==null?`${e.mttrHoras.toFixed(1)}h`:"—"}</td>
+                                  <td style={{padding:"14px 18px",textAlign:"center",fontWeight:800,color:e.disponibilidade!==null?(e.disponibilidade>=90?"#4ADE80":e.disponibilidade>=70?"#FBBF24":"#F87171"):"#94A3B8"}}>{e.disponibilidade!==null?`${e.disponibilidade}%`:"—"}</td>
                                 </tr>
                                 {aberta&&<tr style={{borderBottom:"1px solid #334155"}}><td colSpan={7} style={{padding:"0 14px 14px 32px",background:"#0F172A"}}>
-                                  <div style={{fontSize:9.5,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",margin:"10px 0 8px"}}>MTBF por patrimônio</div>
+                                  <div style={{fontSize:11.5,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",margin:"10px 0 8px"}}>MTBF por patrimônio</div>
                                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                                     {e.mtbfDetalhe.map(p=>{const stp=classifMTBF(p.dias);return(
                                       <div key={p.pat} style={{background:"#1E293B",borderRadius:8,padding:"7px 13px",display:"flex",alignItems:"center",gap:8,border:"1px solid #334155"}}>
-                                        <span style={{fontSize:11,fontWeight:700,color:"#FFF"}}>PAT {p.pat}</span>
-                                        <span style={{fontSize:11,fontWeight:800,color:stp.c}}>{p.dias}d</span>
-                                        <span style={{fontSize:9,color:"#94A3B8"}}>({p.ocorrencias} corretivas)</span>
+                                        <span style={{fontSize:13,fontWeight:700,color:"#FFF"}}>PAT {p.pat}</span>
+                                        <span style={{fontSize:13,fontWeight:800,color:stp.c}}>{p.dias}d</span>
+                                        <span style={{fontSize:11,color:"#94A3B8"}}>({p.ocorrencias} corretivas)</span>
                                       </div>
                                     );})}
                                   </div>
@@ -9665,16 +9666,22 @@ export default function App(){
                               })}
                             </tbody>
                           </table>
-                          {linhasEmpresa.length>12&&<div style={{fontSize:10,color:"#64748B",marginTop:8}}>Mostrando as 12 empresas com mais atendimentos, de {linhasEmpresa.length} total</div>}
+                          {linhasEmpresa.length>12&&<div style={{fontSize:12,color:"#64748B",marginTop:8}}>Mostrando as 12 empresas com mais atendimentos, de {linhasEmpresa.length} total</div>}
                         </div>
-                        <div style={{fontSize:9,color:"#64748B",marginBottom:26}}>MTBF = dias médios entre falhas no mesmo patrimônio (clique na linha p/ ver por PAT) · MTTR = horas médias de reparo · Disponibilidade = MTBF/(MTBF+MTTR) · <span style={{color:"#4ADE80"}}>●</span> Bom ≥60d &nbsp; <span style={{color:"#FBBF24"}}>●</span> Regular 30-59d &nbsp; <span style={{color:"#F87171"}}>●</span> Crítico &lt;30d</div>
+                        <div style={{fontSize:11,color:"#64748B",marginBottom:26}}>MTBF = dias médios entre falhas no mesmo patrimônio (clique na linha p/ ver por PAT) · MTTR = horas médias de reparo · Disponibilidade = MTBF/(MTBF+MTTR) · <span style={{color:"#4ADE80"}}>●</span> Bom ≥60d &nbsp; <span style={{color:"#FBBF24"}}>●</span> Regular 30-59d &nbsp; <span style={{color:"#F87171"}}>●</span> Crítico &lt;30d</div>
 
-                        <div style={{height:1,background:"#334155",margin:"0 0 26px"}}/>
+                        <button onClick={()=>setShowDetalheDash(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"11px 18px",borderRadius:10,border:"1.5px solid #334155",background:showDetalheDash?"#0F172A":"#1E293B",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"inherit"}}>
+                          <span style={{fontSize:14,fontWeight:800,color:"#F5C200"}}>🔬 Causas de Falha, Relatórios por Técnico e Retrabalhos</span>
+                          <span style={{fontSize:11,color:"#94A3B8",marginLeft:"auto"}}>{showDetalheDash?"▲ Ocultar":"▼ Mostrar detalhamento"}</span>
+                        </button>
+
+                        {showDetalheDash&&<>
+                        <div style={{height:1,background:"#334155",margin:"18px 0 26px"}}/>
 
                         {/* ── Linha 4: Falhas | Relatórios por Técnico ── */}
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:32,marginBottom:catFalhaCounts.length>0||relatoriosPorTecEmp.length>0?26:0}}>
                           {catFalhaCounts.length>0&&<div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Principais Causas de Falha</div>
                             <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:20,alignItems:"center"}}>
                               <ChartCanvas type="doughnut" height={160} data={{
                                 labels:catFalhaCounts.map(f=>f.cat),
@@ -9684,40 +9691,41 @@ export default function App(){
                                 {catFalhaCounts.sort((a,b)=>b.total-a.total).slice(0,5).map(f=>(
                                   <div key={f.cat} style={{display:"flex",alignItems:"center",gap:8}}>
                                     <span style={{width:8,height:8,borderRadius:2,background:f.cor,flexShrink:0}}/>
-                                    <span style={{fontSize:11,color:"#FFF",flex:1}}>{f.cat}</span>
-                                    <span style={{fontSize:11,fontWeight:800,color:f.cor}}>{f.total}</span>
+                                    <span style={{fontSize:13,color:"#FFF",flex:1}}>{f.cat}</span>
+                                    <span style={{fontSize:13,fontWeight:800,color:f.cor}}>{f.total}</span>
                                   </div>
                                 ))}
-                                {semFalhaClassificada>0&&<div style={{fontSize:9,color:"#64748B",marginTop:2}}>{semFalhaClassificada} sem classificação</div>}
+                                {semFalhaClassificada>0&&<div style={{fontSize:11,color:"#64748B",marginTop:2}}>{semFalhaClassificada} sem classificação</div>}
                               </div>
                             </div>
                           </div>}
                           <div>
-                            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Relatórios por Técnico — por Empresa</div>
+                            <div style={{fontSize:12,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Relatórios por Técnico — por Empresa</div>
                             {relatoriosPorTecEmp.length?<div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:200,overflowY:"auto"}}>
                               {relatoriosPorTecEmp.slice(0,8).map(t=>(
                                 <div key={t.tecnico} style={{display:"flex",alignItems:"center",gap:8}}>
-                                  <div style={{width:20,height:20,borderRadius:"50%",background:"#0F172A",color:"#F5C200",fontSize:9,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(t.tecnico)}</div>
-                                  <div style={{fontSize:11,fontWeight:700,color:"#FFF",minWidth:110,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.tecnico}</div>
-                                  <div style={{fontSize:10,fontWeight:900,color:"#F5C200",width:26,flexShrink:0}}>{t.total}</div>
-                                  <div style={{fontSize:9,color:"#64748B",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.topEmp.map(([emp,q])=>`${emp} (${q})`).join(" · ")}</div>
+                                  <div style={{width:20,height:20,borderRadius:"50%",background:"#0F172A",color:"#F5C200",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{iniciais(t.tecnico)}</div>
+                                  <div style={{fontSize:13,fontWeight:700,color:"#FFF",minWidth:110,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.tecnico}</div>
+                                  <div style={{fontSize:12,fontWeight:900,color:"#F5C200",width:26,flexShrink:0}}>{t.total}</div>
+                                  <div style={{fontSize:11,color:"#64748B",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.topEmp.map(([emp,q])=>`${emp} (${q})`).join(" · ")}</div>
                                 </div>
                               ))}
-                            </div>:<div style={{color:"#475569",fontSize:11,padding:20}}>Sem dados</div>}
+                            </div>:<div style={{color:"#475569",fontSize:13,padding:20}}>Sem dados</div>}
                           </div>
                         </div>
 
                         {retrabalhos.length>0&&<>
                         <div style={{height:1,background:"#334155",margin:"0 0 18px"}}/>
-                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:14}}>⚠️</span><div style={{fontSize:10,fontWeight:700,color:"#F5C200",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><span style={{fontSize:17}}>⚠️</span><div style={{fontSize:12,fontWeight:700,color:"#F5C200",textTransform:"uppercase",letterSpacing:.6}}>Retrabalhos — {retrabalhos.length} caso(s) (corretiva repetida em ≤30 dias no mesmo patrimônio)</div></div>
                         <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:180,overflowY:"auto"}}>
                           {retrabalhos.map((r,i)=>(
-                            <div key={i} style={{background:"#0F172A",borderRadius:8,padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11}}>
+                            <div key={i} style={{background:"#0F172A",borderRadius:8,padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13}}>
                               <div style={{color:"#CBD5E1"}}><b style={{color:"#FFF"}}>PAT {r.pat}</b> — {r.cliente||"—"} <span style={{color:"#64748B"}}>· {r.tecnicoAnterior}{r.tecnico!==r.tecnicoAnterior?` → ${r.tecnico}`:""}</span></div>
                               <div style={{color:"#F5C200",fontWeight:700}}>{fmtDataBR(r.dataAnterior)} → {fmtDataBR(r.dataAtual)} ({r.dias}d)</div>
                             </div>
                           ))}
                         </div>
+                        </>}
                         </>}
                       </div>
                     );
