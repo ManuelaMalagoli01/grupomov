@@ -2868,14 +2868,14 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
       <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",background:corSec+"0D"}}>
         <div style={{fontWeight:800,fontSize:13,color:corSec}}>{icone} {titulo}</div>
-        <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#94A3B8"}}>{registros.length} mau uso</div></div>
+        <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:corSec}}>{fmtR(soma(registros))}</div><div style={{fontSize:9,color:"#94A3B8"}}>{registros.length} registro{registros.length===1?"":"s"}</div></div>
       </div>
       {registros.length===0?<div style={{color:"#CCC",fontSize:11,textAlign:"center",padding:18}}>{vazio}</div>:
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:660,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº Mau Uso</th>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº {titulo}</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Envio Cliente</th>
@@ -2920,7 +2920,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   return(<div style={{animation:"fadeIn .3s ease"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:12}}>
       <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🚦 Farol {titulo}</div>
-        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} mau uso · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
+        <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{all.length} registro{all.length===1?"":"s"} · <span style={{color:"#1A7A3C",fontWeight:700}}>{all.filter(isArquivado).length} arquivado(s)</span> · <span style={{color:cor,fontWeight:700}}>{janLabel}</span></div>
       </div>
       <div style={{display:"flex",gap:8}}>
         <button onClick={async()=>{
@@ -3001,9 +3001,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Farol Excel</button>
         <button onClick={()=>{
         const reg=periodo==="tudo"?all:all.filter(p=>naJanela(dataAbertura(p))||naJanela(dataConclusaoDe(p)));
-        if(reg.length===0){alert("Nenhum mau uso no período selecionado.");return;}
+        if(reg.length===0){alert(`Nenhum registro de ${titulo} no período selecionado.`);return;}
         const dados=reg.map(p=>({empresa:p.empresa||"",numMauUso:p.numMauUso||p.ov||"",valor:fmtR(parseVal(p.valor)),status:(APROV_STATUS[aprovDe(p)]||{}).l||"",abertura:fmtDataBR(dataAbertura(p)),conclusao:fmtDataBR(dataConclusaoDe(p))}));
-        exportCSV(dados,`farol_${periodo}_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:"Nº Mau Uso"},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
+        exportCSV(dados,`farol_${periodo}_${titulo.replace(/\s+/g,"_")}`,[{key:"empresa",label:"Empresa"},{key:"numMauUso",label:`Nº ${titulo}`},{key:"valor",label:"Valor"},{key:"status",label:"Status"},{key:"abertura",label:"Data Abertura"},{key:"conclusao",label:"Data Conclusão"}]);
       }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #F5C200",background:"#FFFBEB",color:"#B45309",fontSize:11,cursor:"pointer",fontWeight:700}}>📤 Exportar Farol ({janLabel})</button>
       </div>
     </div>
@@ -3690,6 +3690,14 @@ export default function App(){
   const [dashProcFNumMU,setDashProcFNumMU]=useState("");
   const [dashProcFStatus,setDashProcFStatus]=useState("todos");
   const [dashProcFAprov,setDashProcFAprov]=useState("todos");
+  // ── Filtros do Farol A Faturar — estado PRÓPRIO, separado do Farol Mau Uso ──
+  const [dashProcFMesAF,setDashProcFMesAF]=useState("");
+  const [dashProcFAnoAF,setDashProcFAnoAF]=useState("");
+  const [dashProcFDeAF,setDashProcFDeAF]=useState("");
+  const [dashProcFAteAF,setDashProcFAteAF]=useState("");
+  const [dashProcFEmpresaAF,setDashProcFEmpresaAF]=useState("");
+  const [dashProcFStatusAF,setDashProcFStatusAF]=useState("todos");
+  const [dashProcFAprovAF,setDashProcFAprovAF]=useState("todos");
   const [dashProcFTipo,setDashProcFTipo]=useState("todos");
   const [muEnvioDe,setMuEnvioDe]=useState("");
   const [muEnvioAte,setMuEnvioAte]=useState("");
@@ -4094,6 +4102,7 @@ export default function App(){
   const [modalImportPH,setModalImportPH]=useState(false);
   const [modalImportPM,setModalImportPM]=useState(false);  const notify=msg=>{setNotification(msg);setTimeout(()=>setNotification(""),3000);};
   const [showFiltrosDP,setShowFiltrosDP]=useState(false);
+  const [showFiltrosDPAF,setShowFiltrosDPAF]=useState(false);
   const [modalImportApon,setModalImportApon]=useState(false);
   const [modalImportApon150,setModalImportApon150]=useState(false);
   const [modalImportAgenda,setModalImportAgenda]=useState(false);
@@ -11750,14 +11759,14 @@ export default function App(){
             cor="#1565C0"
             corBg="#EFF6FF"
             filtros={{
-              fMes:dashProcFMes,setFMes:setDashProcFMes,
-              fAno:dashProcFAno,setFAno:setDashProcFAno,
-              fDe:dashProcFDe,setFDe:setDashProcFDe,
-              fAte:dashProcFAte,setFAte:setDashProcFAte,
-              fEmpresa:dashProcFEmpresa,setFEmpresa:setDashProcFEmpresa,
-              fAprov:dashProcFAprov,setFAprov:setDashProcFAprov,
-              fStatus:dashProcFStatus,setFStatus:setDashProcFStatus,
-              showFiltros:showFiltrosDP,setShowFiltros:setShowFiltrosDP,
+              fMes:dashProcFMesAF,setFMes:setDashProcFMesAF,
+              fAno:dashProcFAnoAF,setFAno:setDashProcFAnoAF,
+              fDe:dashProcFDeAF,setFDe:setDashProcFDeAF,
+              fAte:dashProcFAteAF,setFAte:setDashProcFAteAF,
+              fEmpresa:dashProcFEmpresaAF,setFEmpresa:setDashProcFEmpresaAF,
+              fAprov:dashProcFAprovAF,setFAprov:setDashProcFAprovAF,
+              fStatus:dashProcFStatusAF,setFStatus:setDashProcFStatusAF,
+              showFiltros:showFiltrosDPAF,setShowFiltros:setShowFiltrosDPAF,
             }}
           />
         )}
