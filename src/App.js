@@ -3146,7 +3146,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                   {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:4},
                   {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:4},
                 ]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}},barLabels:{mode:"pctOfGroup",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
+              }} options={{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}},barLabels:{mode:"pctOfGroup",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
             </div>
             <div>
               <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>% Revertido nas Cobranças</div>
@@ -3154,7 +3154,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               <ChartCanvas type="bar" height={240} data={{
                 labels:serie.map(s=>s.lab),
                 datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#F5C200",borderRadius:4}]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}},barLabels:{mode:"value",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+              }} options={{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}},barLabels:{mode:"value",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
             </div>
             <div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
