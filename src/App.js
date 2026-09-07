@@ -2915,7 +2915,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
       <div style={{overflowX:"auto",maxHeight:320,overflowY:"auto"}}>
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:660,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>{faroTitulo==="A Faturar"?"Cliente":"Empresa"}</th>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
@@ -3119,7 +3119,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             </div>
             {/* Leaderboard Empresas com Pendência */}
             <div>
-              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas com Pendência</div>
+              <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 {faroTitulo==="A Faturar"?"Clientes":"Empresas"} com Pendência</div>
               {rankingEmp.length===0?<div style={{color:"#475569",fontSize:11,padding:"20px 0"}}>Nenhuma pendência em aberto</div>:
               <div style={{display:"flex",flexDirection:"column",gap:9}}>
                 {rankingEmp.map(([emp,d],i)=>(
@@ -3157,12 +3157,37 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}},barLabels:{mode:"value",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
             </div>
             <div>
-              <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>SLA por Período (dias)</div>
-              {serie.every(s=>s.slaMedio===null)?<div style={{textAlign:"center",color:"#475569",padding:60,fontSize:11}}>Sem envios registrados</div>:
-              <ChartCanvas type="line" height={240} data={{
-                labels:serie.map(s=>s.lab),
-                datasets:[{label:"SLA médio",data:serie.map(s=>s.slaMedio),borderColor:"#0D9488",backgroundColor:"#0D948833",tension:.35,fill:true,pointRadius:2,pointBackgroundColor:"#0D9488"}]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${v}d`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{faroTitulo==="A Faturar"?"Aguardando Aprovação":"SLA por Período (dias)"}</div>
+                {faroTitulo==="A Faturar"&&pendentes.length>0&&<div style={{fontSize:10,fontWeight:800,color:"#F5C200"}}>{fmtR(soma(pendentes))}</div>}
+              </div>
+              {faroTitulo==="A Faturar"?(
+                pendentes.length===0?<div style={{textAlign:"center",color:"#475569",padding:60,fontSize:11}}>Nenhum pendente</div>:
+                <div style={{background:"#0F172A",borderRadius:8,overflow:"hidden",height:240,overflowY:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:10.5}}>
+                    <thead><tr style={{background:"#1E293B"}}>
+                      <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Cliente</th>
+                      <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Nº</th>
+                      <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Valor</th>
+                    </tr></thead>
+                    <tbody>
+                      {[...pendentes].sort((a,b)=>parseVal(b.valor)-parseVal(a.valor)).map((p,i)=>(
+                        <tr key={i} style={{borderTop:"1px solid #1E293B"}}>
+                          <td style={{padding:"6px 10px",color:"#E2E8F0",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:100}}>{p.empresa||"—"}</td>
+                          <td style={{padding:"6px 10px",color:"#F5C200",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
+                          <td style={{padding:"6px 10px",textAlign:"right",color:"#FFF",fontWeight:800}}>{fmtR(parseVal(p.valor))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ):(
+                serie.every(s=>s.slaMedio===null)?<div style={{textAlign:"center",color:"#475569",padding:60,fontSize:11}}>Sem envios registrados</div>:
+                <ChartCanvas type="line" height={240} data={{
+                  labels:serie.map(s=>s.lab),
+                  datasets:[{label:"SLA médio",data:serie.map(s=>s.slaMedio),borderColor:"#0D9488",backgroundColor:"#0D948833",tension:.35,fill:true,pointRadius:2,pointBackgroundColor:"#0D9488"}]
+                }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"} dia(s)`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${v}d`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
+              )}
             </div>
           </div>
 
@@ -3180,16 +3205,16 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
           </div>
           </>}
 
-          {pendentes.length>0&&<>
+          {faroTitulo!=="A Faturar"&&pendentes.length>0&&<>
           <div style={{height:1,background:"#1E293B",margin:"22px 0"}}/>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{faroTitulo==="A Faturar"?"Aguardando Aprovação":"Aguardando Retorno"} — Empresa / Nº / Valor</div>
+            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{faroTitulo==="A Faturar"?"Aguardando Aprovação":"Aguardando Retorno"} — {faroTitulo==="A Faturar"?"Cliente":"Empresa"} / Nº / Valor</div>
             <div style={{fontSize:11,fontWeight:800,color:"#F5C200"}}>{fmtR(soma(pendentes))} · {pendentes.length} processo(s)</div>
           </div>
           <div style={{background:"#0F172A",borderRadius:8,overflow:"hidden",maxHeight:280,overflowY:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
               <thead><tr style={{background:"#1E293B"}}>
-                <th style={{padding:"7px 12px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Empresa</th>
+                <th style={{padding:"7px 12px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>{faroTitulo==="A Faturar"?"Cliente":"Empresa"}</th>
                 <th style={{padding:"7px 12px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Nº</th>
                 <th style={{padding:"7px 12px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Aberto há</th>
                 <th style={{padding:"7px 12px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Valor</th>
