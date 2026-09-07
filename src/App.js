@@ -2492,6 +2492,41 @@ const loadChartLib = () => new Promise((resolve,reject)=>{
     .then(resolve)
     .catch(()=>tryLoad("https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js").then(resolve).catch(reject));
 });
+// ── Plugin leve pra desenhar rótulo (valor/porcentagem) em cima das barras ──
+// Ativado via options.plugins.barLabels = {mode:"pctOfGroup"|"value", suffix, color}
+const BAR_LABELS_PLUGIN = {
+  id: "grupomovBarLabels",
+  afterDatasetsDraw(chart){
+    const opts = chart.options && chart.options.plugins && chart.options.plugins.barLabels;
+    if(!opts) return;
+    const {ctx} = chart;
+    const mode = opts.mode || "value";
+    const suffix = opts.suffix!==undefined ? opts.suffix : "";
+    ctx.save();
+    ctx.font = "700 10px sans-serif";
+    ctx.textAlign = "center";
+    chart.data.datasets.forEach((dataset, dsIndex)=>{
+      const meta = chart.getDatasetMeta(dsIndex);
+      if(!meta || meta.hidden) return;
+      meta.data.forEach((bar, index)=>{
+        const value = dataset.data[index];
+        if(value===null||value===undefined||value<=0) return;
+        let text;
+        if(mode==="pctOfGroup"){
+          let total=0; chart.data.datasets.forEach(ds=>{ total += (ds.data[index]||0); });
+          if(total<=0) return;
+          text = `${Math.round(value/total*100)}${suffix}`;
+        } else {
+          text = `${Math.round(value)}${suffix}`;
+        }
+        ctx.fillStyle = opts.color || dataset.backgroundColor || "#E2E8F0";
+        const pos = bar.tooltipPosition ? bar.tooltipPosition() : {x:bar.x,y:bar.y};
+        ctx.fillText(text, pos.x, pos.y-6);
+      });
+    });
+    ctx.restore();
+  }
+};
 function ChartCanvas({type,data,options,height=240}){
   const ref=useRef(null); const inst=useRef(null);
   const [err,setErr]=useState(null);
@@ -2504,7 +2539,7 @@ function ChartCanvas({type,data,options,height=240}){
       if(!alive||!ref.current)return;
       if(inst.current){try{inst.current.destroy();}catch(e){}inst.current=null;}
       try{
-        inst.current=new Chart(ref.current.getContext("2d"),{type,data:JSON.parse(JSON.stringify(data)),options:{...options,responsive:true,maintainAspectRatio:false}});
+        inst.current=new Chart(ref.current.getContext("2d"),{type,data:JSON.parse(JSON.stringify(data)),options:{...options,responsive:true,maintainAspectRatio:false},plugins:[BAR_LABELS_PLUGIN]});
         if(alive)setLoading(false);
       }catch(e){if(alive)setErr(e.message);}
     }).catch(e=>{if(alive){setLoading(false);setErr("Erro ao carregar biblioteca de gráficos");}});
@@ -2813,8 +2848,11 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const pendentesCombo=all.filter(p=>aprovDe(p)==="aguardando_retorno"||aprovDe(p)==="negado_cliente");
   const emNegociacaoCombo=all.filter(p=>aprovDe(p)==="em_negociacao"||aprovDe(p)==="aprovado_cliente");
 
+  // Rotulos de status ajustados por farol: "A Faturar" usa a terminologia real da tela
+  // (Aguardando Aprovação, nao "Aguardando Retorno", que e vocabulario do Mau Uso).
+  const LABEL_OVERRIDE_AF={aguardando_retorno:"⏳ Aguardando Aprovação"};
   const aprovCounts=Object.entries(APROV_STATUS).map(([k,s])=>({
-    key:k,label:s.l,total:all.filter(p=>aprovDe(p)===k).length,
+    key:k,label:(titulo==="A Faturar"&&LABEL_OVERRIDE_AF[k])||s.l,total:all.filter(p=>aprovDe(p)===k).length,
     valor:soma(all.filter(p=>aprovDe(p)===k)),c:s.c,bg:s.bg
   }));
 
@@ -3073,7 +3111,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               {aprovCountsAtivos.length>0?<ChartCanvas type="doughnut" height={230} data={{
                 labels:aprovCountsAtivos.map(a=>a.label),
                 datasets:[{data:aprovCountsAtivos.map(a=>a.total),backgroundColor:aprovCountsAtivos.map((a,i)=>CORES_DONUT[i%CORES_DONUT.length]),borderWidth:2,borderColor:"#0B1220"}]
-              }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;return `${c.label}: ${c.raw} (${pct}%)`;}}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:30}}>Sem dados</div>}
+              }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:9},boxWidth:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>{const tot=c.dataset.data.reduce((a,b)=>a+b,0);const pct=tot?Math.round(c.raw/tot*100):0;const item=aprovCountsAtivos[c.dataIndex];return `${c.label}: ${c.raw} (${pct}%) · ${fmtR(item?item.valor:0)}`;}}}}}}/>:<div style={{color:"#475569",fontSize:11,padding:30}}>Sem dados</div>}
             </div>
             {/* Leaderboard Empresas com Pendência */}
             <div>
@@ -3104,7 +3142,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                   {label:"Faturado",data:serie.map(s=>s.concluido),backgroundColor:"#0D9488",borderRadius:4},
                   {label:"Não Faturado",data:serie.map(s=>s.aberto),backgroundColor:"#F5C200",borderRadius:4},
                 ]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.raw)}`}},barLabels:{mode:"pctOfGroup",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#64748B",callback:v=>`${(v/1000).toFixed(0)}k`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>
             </div>
             <div>
               <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>% Revertido nas Cobranças</div>
@@ -3112,7 +3150,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               <ChartCanvas type="bar" height={240} data={{
                 labels:serie.map(s=>s.lab),
                 datasets:[{label:"Revertido",data:serie.map(s=>s.conversao),backgroundColor:"#F5C200",borderRadius:4}]
-              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
+              }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw??"—"}%`}},barLabels:{mode:"value",suffix:"%",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#64748B",font:{size:10}}},y:{beginAtZero:true,max:100,ticks:{color:"#64748B",callback:v=>`${v}%`,font:{size:10}},grid:{color:"#1E293B"}}},animation:{duration:600}}}/>}
             </div>
             <div>
               <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:8}}>SLA por Período (dias)</div>
