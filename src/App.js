@@ -11839,7 +11839,7 @@ export default function App(){
             lista={(processosAF||[]).filter(p=>p&&(p.tipo!=="Orçamento"||p.statusAF==="aprovado_pend_conclusao"||p.statusAF==="env_faturamento")).map(p=>{
               const mapaAprov={aguardando_aprovacao:"aguardando_retorno",aprovado_pend_conclusao:"aprovado_cliente",env_faturamento:"cobrado_faturado",nao_aprovado:"negado_cliente"};
               return {...p,
-                empresa:p.empresaGrupo||p.cliente||p.empresa||"",
+                empresa:p.cliente||p.empresaGrupo||p.empresa||"",
                 date:p.emissao||p.date||"",
                 aprovCliente:mapaAprov[p.statusAF]||p.aprovCliente||"aguardando_retorno",
                 dataAprovacao:p.dataEnvioFat||p.dataAprovacao||"",
