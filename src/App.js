@@ -2902,6 +2902,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
   const convSemanal=soma(semanaTotal)>0?Math.round(soma(semanaConc)/soma(semanaTotal)*100*10)/10:null;
   const convMensal=soma(mesTotal)>0?Math.round(soma(mesConc)/soma(mesTotal)*100*10)/10:null;
 
+  const faroTitulo=titulo; // guarda o titulo do farol (Mau Uso/A Faturar) antes do shadow abaixo
   const TabelaMicro=({titulo,icone,corSec,registros,vazio,mostrarConclusao,mostrarTempo})=>(
     <div className="card" style={{padding:0,overflow:"hidden",marginBottom:14}}>
       <div style={{padding:"10px 14px",borderBottom:"1px solid #EEF1F4",display:"flex",justifyContent:"space-between",alignItems:"center",background:corSec+"0D"}}>
@@ -2916,7 +2917,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº {titulo}</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
-            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Envio Cliente</th>
+            <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>{faroTitulo==="A Faturar"?"Envio Faturamento":"Envio Cliente"}</th>
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Ticket</th>}
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Conclusão</th>}
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>ND</th>}
@@ -2929,7 +2930,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 <td style={{padding:"6px 10px",color:"#1565C0",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
                 <td style={{padding:"6px 10px",textAlign:"right",fontWeight:800,color:corSec}}>{fmtR(parseVal(p.valor))}</td>
                 <td style={{padding:"6px 10px",textAlign:"center",color:"#64748B"}}>{fmtDataBR(p.date)||"—"}</td>
-                <td style={{padding:"6px 10px",textAlign:"center",color:"#1565C0"}}>{fmtDataBR(p.dataEnvio)||"—"}</td>
+                <td style={{padding:"6px 10px",textAlign:"center",color:"#1565C0"}}>{fmtDataBR(faroTitulo==="A Faturar"?p.dataAprovacao:p.dataEnvio)||"—"}</td>
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ticket||"—"}</td>}
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ov||"—"}</td>}
