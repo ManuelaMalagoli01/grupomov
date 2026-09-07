@@ -3176,6 +3176,34 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
             );})}
           </div>
           </>}
+
+          {pendentes.length>0&&<>
+          <div style={{height:1,background:"#1E293B",margin:"22px 0"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{faroTitulo==="A Faturar"?"Aguardando Aprovação":"Aguardando Retorno"} — Empresa / Nº / Valor</div>
+            <div style={{fontSize:11,fontWeight:800,color:"#F5C200"}}>{fmtR(soma(pendentes))} · {pendentes.length} processo(s)</div>
+          </div>
+          <div style={{background:"#0F172A",borderRadius:8,overflow:"hidden",maxHeight:280,overflowY:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+              <thead><tr style={{background:"#1E293B"}}>
+                <th style={{padding:"7px 12px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Empresa</th>
+                <th style={{padding:"7px 12px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Nº</th>
+                <th style={{padding:"7px 12px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Aberto há</th>
+                <th style={{padding:"7px 12px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#1E293B"}}>Valor</th>
+              </tr></thead>
+              <tbody>
+                {[...pendentes].sort((a,b)=>parseVal(b.valor)-parseVal(a.valor)).map((p,i)=>{const d=diasAberto(p);return(
+                  <tr key={i} style={{borderTop:"1px solid #1E293B"}}>
+                    <td style={{padding:"7px 12px",color:"#E2E8F0",fontWeight:600}}>{p.empresa||"—"}</td>
+                    <td style={{padding:"7px 12px",color:"#F5C200",fontWeight:700}}>{p.numMauUso||p.ov||"—"}</td>
+                    <td style={{padding:"7px 12px",textAlign:"center",fontWeight:700,color:d!==null&&d>30?"#F87171":d!==null&&d>15?"#FBBF24":"#64748B"}}>{d!==null?`${d}d`:"—"}</td>
+                    <td style={{padding:"7px 12px",textAlign:"right",color:"#FFF",fontWeight:800}}>{fmtR(parseVal(p.valor))}</td>
+                  </tr>
+                );})}
+              </tbody>
+            </table>
+          </div>
+          </>}
         </div>
       );
     })()}
