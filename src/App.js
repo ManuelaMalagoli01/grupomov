@@ -2914,13 +2914,13 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
         <table style={{borderCollapse:"collapse",width:"100%",minWidth:660,fontSize:11}}>
           <thead><tr style={{background:"#F8FAFC"}}>
             <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Empresa</th>
-            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº {titulo}</th>
+            <th style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Nº</th>
             <th style={{padding:"6px 10px",textAlign:"right",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Valor</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Abertura</th>
             <th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>{faroTitulo==="A Faturar"?"Envio Faturamento":"Envio Cliente"}</th>
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Ticket</th>}
             {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Conclusão</th>}
-            {mostrarConclusao&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>ND</th>}
+            {mostrarConclusao&&faroTitulo!=="A Faturar"&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>ND</th>}
             {mostrarTempo&&<th style={{padding:"6px 10px",textAlign:"center",fontSize:9,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC"}}>Tempo</th>}
           </tr></thead>
           <tbody>
@@ -2933,7 +2933,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
                 <td style={{padding:"6px 10px",textAlign:"center",color:"#1565C0"}}>{fmtDataBR(faroTitulo==="A Faturar"?p.dataAprovacao:p.dataEnvio)||"—"}</td>
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ticket||"—"}</td>}
                 {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#1A7A3C",fontWeight:600}}>{fmtDataBR(dataConclusaoDe(p))||"—"}</td>}
-                {mostrarConclusao&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ov||"—"}</td>}
+                {mostrarConclusao&&faroTitulo!=="A Faturar"&&<td style={{padding:"6px 10px",textAlign:"center",color:"#334155",fontWeight:600}}>{p.ov||"—"}</td>}
                 {mostrarTempo&&<td style={{padding:"6px 10px",textAlign:"center"}}>{dias!==null?<span style={{fontWeight:700,color:dias>30?"#C62828":dias>15?"#E67E00":"#1A7A3C"}}>{dias}d</span>:"—"}</td>}
               </tr>
             );})}
