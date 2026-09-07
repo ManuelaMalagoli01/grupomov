@@ -5910,7 +5910,7 @@ export default function App(){
                             <td style={{padding:"7px 10px",fontSize:12,color:"#64748B",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.equipamento||"—"}</td>
                             <td style={{padding:"7px 10px",fontSize:12}}>{r.relatorio||"—"}</td>
                             <td style={{padding:"7px 10px",fontSize:12}}>{r.horasTrabalhadas||"—"}</td>
-                            <td style={{padding:"7px 10px"}}>{r.retrabalho?<span style={{fontSize:10,fontWeight:700,color:"#C62828"}}>⚠️ Sim</span>:"—"}</td>
+                            <td style={{padding:"7px 10px"}}>{(r.retrabalho&&r.atendimento==="corretivo")?<span style={{fontSize:10,fontWeight:700,color:"#C62828"}}>⚠️ Sim</span>:"—"}</td>
                             <td style={{padding:"7px 10px"}}>{r.arquivado?<button onClick={()=>updateReport(r.id,{arquivado:false})} title="Desarquivar" style={{fontSize:10,fontWeight:700,color:"#166534",background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:20,padding:"3px 9px",cursor:"pointer"}}>📤 Sim</button>:<button onClick={()=>updateReport(r.id,{arquivado:true})} title="Arquivar" style={{fontSize:10,fontWeight:700,color:"#64748B",background:"#F8FAFC",border:"1px solid #E2E8F0",borderRadius:20,padding:"3px 9px",cursor:"pointer"}}>🗄️ Não</button>}</td>
                           </tr>
                         );
