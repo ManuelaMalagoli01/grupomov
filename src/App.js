@@ -8497,8 +8497,13 @@ export default function App(){
           const noMes=(p)=>(p.emissao||p.date||"").startsWith(mesRef);
           const naSemana=(p)=>{const d=p.emissao||p.date||"";return d>=semDe&&d<=semAte;};
           const envFat=(p)=>stDe(p)==="env_faturamento";
+          const noMesEnvio=(p)=>(p.dataEnvioFat||"").startsWith(mesRef);
+          const naSemanaEnvio=(p)=>{const d=p.dataEnvioFat||"";return d>=semDe&&d<=semAte;};
           const prospMes=lista.filter(noMes), prospSem=lista.filter(naSemana);
-          const fatMes=prospMes.filter(envFat), fatSem=prospSem.filter(envFat);
+          // Enviado ao Faturamento conta pela data em que foi de fato enviado (dataEnvioFat),
+          // nao pela data de emissao — senao mudar o status nao move esse card quando a
+          // emissao é de outro mes/semana.
+          const fatMes=lista.filter(p=>envFat(p)&&noMesEnvio(p)), fatSem=lista.filter(p=>envFat(p)&&naSemanaEnvio(p));
           const txMes=soma(prospMes)>0?(soma(fatMes)/soma(prospMes)*100):0;
           const txSem=soma(prospSem)>0?(soma(fatSem)/soma(prospSem)*100):0;
           const aprovPend=lista.filter(p=>stDe(p)==="aprovado_pend_conclusao");
