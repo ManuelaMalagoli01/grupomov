@@ -8472,13 +8472,22 @@ export default function App(){
           const val=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,-]/g,"").replace(/\.(\d{3})/g,"$1").replace(",","."));return isNaN(n)?0:n;};
           const fmtR=(v)=>`R$ ${v.toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const stDe=(p)=>p.statusAF||"aguardando_aprovacao";
-          // janela: mes e semana atuais
-          const hoje=new Date(); hoje.setHours(0,0,0,0);
-          const dow=hoje.getDay(); const seg=new Date(hoje); seg.setDate(hoje.getDate()-((dow+6)%7));
-          const dom=new Date(seg); dom.setDate(seg.getDate()+6);
-          const iso=(d)=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
-          const semDe=iso(seg), semAte=iso(dom);
-          const mesRef=`${TODAY.getFullYear()}-${PAD(TODAY.getMonth()+1)}`;
+          // ── Navegador de período (Diário/Semanal/Mensal/Tudo) — igual ao Mau Uso ──
+          // Os cards abaixo TEM que seguir esse período selecionado/navegado, nao um "mes atual" fixo.
+          const refAF=new Date(afRefIso+"T12:00:00");
+          let janDeAF,janAteAF,janLabelAF;
+          if(afPeriodo==="dia"){ janDeAF=janAteAF=fmtDate(refAF); janLabelAF=fmtDataBR(janDeAF); }
+          else if(afPeriodo==="semana"){ const s=new Date(refAF); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${fmtDataBR(janDeAF)} - ${fmtDataBR(janAteAF)}`; }
+          else if(afPeriodo==="mes"){ const s=new Date(refAF.getFullYear(),refAF.getMonth(),1); const e=new Date(refAF.getFullYear(),refAF.getMonth()+1,0); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refAF.getMonth()]}/${refAF.getFullYear()}`; }
+          else { janDeAF=null; janAteAF=null; janLabelAF="Tudo"; }
+          const naJanelaAF=(d)=>{ if(afPeriodo==="tudo")return true; if(!d)return false; return d>=janDeAF&&d<=janAteAF; };
+          const navegarAF=(dir)=>{ const d=new Date(afRefIso+"T12:00:00"); if(afPeriodo==="dia")d.setDate(d.getDate()+dir); else if(afPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(afPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setAfRefIso(fmtDate(d)); };
+          // Semana civil atual real — usada só no texto do cabeçalho e no atalho "Esta semana" do filtro (nao no dash de KPIs)
+          const hojeReal=new Date(); hojeReal.setHours(0,0,0,0);
+          const dowReal=hojeReal.getDay(); const segReal=new Date(hojeReal); segReal.setDate(hojeReal.getDate()-((dowReal+6)%7));
+          const domReal=new Date(segReal); domReal.setDate(segReal.getDate()+6);
+          const isoReal=(d)=>`${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
+          const semDe=isoReal(segReal), semAte=isoReal(domReal);
           const filtrada=lista.filter(p=>{
             if(afStatus!=="todos"&&stDe(p)!==afStatus)return false;
             if(afTipo!=="todos"&&(p.tipo||"")!==afTipo)return false;
@@ -8494,18 +8503,13 @@ export default function App(){
           const orcamentoConta=(p)=>p.tipo==="Orçamento"&&(p.statusAF==="aprovado_pend_conclusao"||p.statusAF==="env_faturamento");
           const soma=(arr)=>arr.filter(p=>p.tipo!=="Orçamento"||orcamentoConta(p)).reduce((a,p)=>a+val(p.valor),0);
           const somaOrcamento=(arr)=>arr.filter(p=>p.tipo==="Orçamento"&&!orcamentoConta(p)).reduce((a,p)=>a+val(p.valor),0);
-          const noMes=(p)=>(p.emissao||p.date||"").startsWith(mesRef);
-          const naSemana=(p)=>{const d=p.emissao||p.date||"";return d>=semDe&&d<=semAte;};
           const envFat=(p)=>stDe(p)==="env_faturamento";
-          const noMesEnvio=(p)=>(p.dataEnvioFat||"").startsWith(mesRef);
-          const naSemanaEnvio=(p)=>{const d=p.dataEnvioFat||"";return d>=semDe&&d<=semAte;};
-          const prospMes=lista.filter(noMes), prospSem=lista.filter(naSemana);
+          // Cards seguem o periodo navegado (janDeAF/janAteAF/janLabelAF) acima, nao um "mes atual" fixo.
+          const prospPeriodo=lista.filter(p=>naJanelaAF(p.emissao||p.date));
           // Enviado ao Faturamento conta pela data em que foi de fato enviado (dataEnvioFat),
-          // nao pela data de emissao — senao mudar o status nao move esse card quando a
-          // emissao é de outro mes/semana.
-          const fatMes=lista.filter(p=>envFat(p)&&noMesEnvio(p)), fatSem=lista.filter(p=>envFat(p)&&naSemanaEnvio(p));
-          const txMes=soma(prospMes)>0?(soma(fatMes)/soma(prospMes)*100):0;
-          const txSem=soma(prospSem)>0?(soma(fatSem)/soma(prospSem)*100):0;
+          // nao pela data de emissao — senao mudar o status nao move esse card.
+          const fatPeriodo=lista.filter(p=>envFat(p)&&naJanelaAF(p.dataEnvioFat));
+          const txPeriodo=soma(prospPeriodo)>0?(soma(fatPeriodo)/soma(prospPeriodo)*100):0;
           const aprovPend=lista.filter(p=>stDe(p)==="aprovado_pend_conclusao");
           const aprovVenda=aprovPend.filter(p=>(p.tipo||"").toLowerCase().startsWith("venda"));
           const aprovServ=aprovPend.filter(p=>(p.tipo||"").toLowerCase().startsWith("serv"));
@@ -8526,15 +8530,6 @@ export default function App(){
             </div>
 
             {(()=>{
-              // Navegador de período (Diário/Semanal/Mensal/Tudo) — igual ao Mau Uso
-              const refAF=new Date(afRefIso+"T12:00:00");
-              let janDeAF,janAteAF,janLabelAF;
-              if(afPeriodo==="dia"){ janDeAF=janAteAF=fmtDate(refAF); janLabelAF=fmtDataBR(janDeAF); }
-              else if(afPeriodo==="semana"){ const s=new Date(refAF); s.setDate(s.getDate()-s.getDay()); const e=new Date(s); e.setDate(e.getDate()+6); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${fmtDataBR(janDeAF)} - ${fmtDataBR(janAteAF)}`; }
-              else if(afPeriodo==="mes"){ const s=new Date(refAF.getFullYear(),refAF.getMonth(),1); const e=new Date(refAF.getFullYear(),refAF.getMonth()+1,0); janDeAF=fmtDate(s); janAteAF=fmtDate(e); janLabelAF=`${["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"][refAF.getMonth()]}/${refAF.getFullYear()}`; }
-              else { janDeAF=null; janAteAF=null; janLabelAF="Tudo"; }
-              const naJanelaAF=(d)=>{ if(afPeriodo==="tudo")return true; if(!d)return false; return d>=janDeAF&&d<=janAteAF; };
-              const navegarAF=(dir)=>{ const d=new Date(afRefIso+"T12:00:00"); if(afPeriodo==="dia")d.setDate(d.getDate()+dir); else if(afPeriodo==="semana")d.setDate(d.getDate()+dir*7); else if(afPeriodo==="mes"){d.setDate(1);d.setMonth(d.getMonth()+dir);} setAfRefIso(fmtDate(d)); };
               const noPeriodoAF=lista.filter(p=>naJanelaAF(p.dataEnvioFat||p.emissao||p.date));
               const comEnvioAF=noPeriodoAF.filter(p=>(p.emissao||p.date)&&p.dataEnvioFat);
               const slaValoresAF=comEnvioAF.map(p=>diffDaysEntre(p.emissao||p.date,p.dataEnvioFat)).filter(v=>v!==null&&v>=0);
@@ -8563,20 +8558,9 @@ export default function App(){
             })()}
 
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
-              {[{l:"Total Prospectado — Mês",v:fmtR(soma(prospMes)),q:`${prospMes.length} OV(s)`,c:"#1A1A1A"},
-                {l:"Env. Faturamento — Mês",v:fmtR(soma(fatMes)),q:`${fatMes.length} OV(s)`,c:"#1A7A3C"},
-                {l:"Taxa de Conversão — Mês",v:`${txMes.toFixed(1)}%`,q:"sobre o valor prospectado",c:"#6A1B9A"}].map((k,i)=>(
-                <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
-                  <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
-                  <div style={{fontSize:20,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
-                  <div style={{fontSize:10,color:"#94A3B8",marginTop:1}}>{k.q}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:12}}>
-              {[{l:"Prospectado — Semana",v:fmtR(soma(prospSem)),q:`${prospSem.length} OV(s)`,c:"#1565C0"},
-                {l:"Env. Faturamento — Semana",v:fmtR(soma(fatSem)),q:`${fatSem.length} OV(s)`,c:"#1A7A3C"},
-                {l:"Taxa de Conversão — Semana",v:`${txSem.toFixed(1)}%`,q:"sobre o valor da semana",c:"#6A1B9A"}].map((k,i)=>(
+              {[{l:`Total Prospectado — ${janLabelAF}`,v:fmtR(soma(prospPeriodo)),q:`${prospPeriodo.length} OV(s)`,c:"#1A1A1A"},
+                {l:`Env. Faturamento — ${janLabelAF}`,v:fmtR(soma(fatPeriodo)),q:`${fatPeriodo.length} OV(s)`,c:"#1A7A3C"},
+                {l:`Taxa de Conversão — ${janLabelAF}`,v:`${txPeriodo.toFixed(1)}%`,q:"sobre o valor prospectado no período",c:"#6A1B9A"}].map((k,i)=>(
                 <div key={i} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${k.c}`}}>
                   <div style={{fontSize:9,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.8}}>{k.l}</div>
                   <div style={{fontSize:20,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
