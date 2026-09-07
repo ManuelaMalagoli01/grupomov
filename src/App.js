@@ -2891,6 +2891,8 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
   const hoje=new Date(); hoje.setHours(0,0,0,0);
   const diasAberto=(p)=>{const d=dataAbertura(p);if(!d)return null;const dt=new Date(d);if(isNaN(dt))return null;return Math.max(0,Math.round((hoje-dt)/86400000));};
+  // Fallback quando nao ha SLA calculavel (ex: A Faturar, que nao tem "envio ao cliente") — mostra ha quanto tempo os pendentes estao parados, em vez de ficar em branco
+  const diasPendMedio=(()=>{ const ds=pendentes.map(diasAberto).filter(v=>v!==null); return ds.length?Math.round(ds.reduce((a,v)=>a+v,0)/ds.length):null; })();
 
   // ── Conversao semanal/mensal (% concluido/faturado) ─────────────────────
   const inWeek=(d)=>{ if(!d)return false; const s=new Date(hoje); s.setDate(hoje.getDate()-((hoje.getDay()+6)%7)); const e=new Date(s); e.setDate(s.getDate()+6); const dt=new Date(d+"T12:00:00"); return dt>=s&&dt<=e; };
@@ -3049,8 +3051,9 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
 
     <div className="card" style={{padding:"10px 12px",marginBottom:14,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
       <div style={{display:"flex",gap:6}}>{btnPer("dia","Diário")}{btnPer("semana","Semanal")}{btnPer("mes","Mensal")}{btnPer("tudo","Tudo")}</div>
-      {(slaEnvioMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
-        {slaEnvioMedio!==null&&<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>}
+      {(slaEnvioMedio!==null||diasPendMedio!==null||convSemanal!==null||convMensal!==null)&&<div style={{display:"flex",gap:6,paddingLeft:10,borderLeft:"1.5px solid #F1F5F9"}}>
+        {slaEnvioMedio!==null?<span title="Dias médios da abertura até o envio ao cliente" style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:20,padding:"5px 11px"}}>⏱️ SLA {slaEnvioMedio}d</span>
+        :diasPendMedio!==null&&<span title="Dias médios que os pendentes estão parados" style={{fontSize:10,fontWeight:700,color:"#B45309",background:"#FFFBEB",borderRadius:20,padding:"5px 11px"}}>⏱️ Parado há {diasPendMedio}d (méd.)</span>}
         {convSemanal!==null&&<span title="% concluído/faturado na semana atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Sem {convSemanal}%</span>}
         {convMensal!==null&&<span title="% concluído/faturado no mês atual" style={{fontSize:10,fontWeight:700,color:"#334155",background:"#F1F5F9",borderRadius:20,padding:"5px 11px"}}>🔄 Mês {convMensal}%</span>}
       </div>}
@@ -3103,7 +3106,7 @@ function DashboardProcessoSimples({lista, titulo, icone, cor, corBg, filtros}){
               <div>
                 <div style={{fontSize:11,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.6}}>Total Pendente (geral)</div>
                 <div style={{fontSize:27,fontWeight:900,color:"#F5C200"}}>{fmtR(totalPendGeral)}</div>
-                <div style={{fontSize:11,color:"#64748B"}}>{slaEnvioMedio!==null?`SLA médio ${slaEnvioMedio}d`:"—"}</div>
+                <div style={{fontSize:11,color:"#64748B"}}>{slaEnvioMedio!==null?`SLA médio ${slaEnvioMedio}d`:diasPendMedio!==null?`Parado há ${diasPendMedio}d em média`:"—"}</div>
               </div>
             </div>
             {/* Doughnut */}
