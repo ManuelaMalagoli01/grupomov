@@ -9520,18 +9520,21 @@ export default function App(){
                     {hasFilterDash&&<BtnG onClick={()=>{setDashRegion("todas");setDashFrom("");setDashTo("");setDashTech("todos");setDashServico("todos");setDashPatrimonio("");setDashCliente("");setDashAtendimento("todos");setDashStatus("todos");}}>✕ Limpar</BtnG>}
                   </div>}
 
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:16,marginBottom:24}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:14,marginBottom:26}}>
                     {[
-                      {l:"Total",v:dashReports.length,c:"#1A1A1A",i:"📊"},
-                      {l:"Preventivas",v:prev,c:"#1565C0",i:"📋"},
-                      {l:"Corretivas",v:corr,c:"#C62828",i:"🔧"},
-                      {l:"Total Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",c:"#B45309",i:"⏱"},
-                      {l:"Técnicos Ativos",v:techsWith.length,c:"#1A7A3C",i:"👷"},
-                      {l:"Média h/Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",c:"#6D28D9",i:"📐"},
+                      {l:"Total Atendimentos",v:dashReports.length,i:"📊",bg:"#EFF6FF",fg:"#1565C0"},
+                      {l:"Preventivas",v:prev,i:"📋",bg:"#F0FDFA",fg:"#0D9488"},
+                      {l:"Corretivas",v:corr,i:"🔧",bg:"#FFF0F0",fg:"#C62828"},
+                      {l:"Total de Horas",v:techHours.reduce((a,h)=>a+h,0).toFixed(0)+"h",i:"⏱️",bg:"#FFFBEB",fg:"#B45309"},
+                      {l:"Técnicos Ativos",v:techsWith.length,i:"👷",bg:"#F1F5F9",fg:"#334155"},
+                      {l:"Média h / Atendimento",v:(dashReports.length?(techHours.reduce((a,h)=>a+h,0)/dashReports.length).toFixed(1):"0.0")+"h",i:"📐",bg:"#F3E5F5",fg:"#6D28D9"},
                     ].map((k,i)=>(
-                      <div key={i} className="card" style={{padding:"20px 22px",borderLeft:"5px solid "+k.c}}>
-                        <div style={{fontSize:11,fontWeight:800,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6}}>{k.i} {k.l}</div>
-                        <div style={{fontSize:27,fontWeight:900,color:k.c,marginTop:2}}>{k.v}</div>
+                      <div key={i} className="card" style={{padding:"18px 20px",display:"flex",alignItems:"center",gap:14,border:"1px solid #EEF1F5"}}>
+                        <div style={{width:44,height:44,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{k.i}</div>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{k.l}</div>
+                          <div style={{fontSize:26,fontWeight:900,color:"#0F172A",marginTop:2}}>{k.v}</div>
+                        </div>
                       </div>
                     ))}
                   </div>
