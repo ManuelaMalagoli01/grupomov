@@ -349,8 +349,9 @@ const PORTAL_STATUS = {
 const PORTAL_STATUS_KEYS = Object.keys(PORTAL_STATUS);
 const CHECKLIST_STATUS = {
   pendente:{l:"🔴 Pendente",c:"#C62828",bg:"#FFF0F0"},
-  em_analise:{l:"🟡 Em Análise",c:"#B45309",bg:"#FFF8F0"},
-  resolvido:{l:"✅ Resolvido",c:"#166534",bg:"#F0FDF4"},
+  em_andamento:{l:"🔵 Em Andamento",c:"#1565C0",bg:"#EFF6FF"},
+  refazer:{l:"🟠 Refazer",c:"#E67E00",bg:"#FFF8F0"},
+  concluido:{l:"✅ Concluído",c:"#166534",bg:"#F0FDF4"},
 };
 const CHECKLIST_STATUS_KEYS = Object.keys(CHECKLIST_STATUS);
 const COT_PECA_VAZIA = {nome:"",valor:""};
@@ -1801,6 +1802,123 @@ function ImportEquipamentosModal({onClose,onImport,operacoesExistentes}){
             <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
               <BtnG onClick={onClose}>Cancelar</BtnG>
               <BtnY onClick={()=>onImport(preview.porCliente)}>Importar {preview.porCliente.length} cliente(s)</BtnY>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
+// Modal de importação da planilha de "Pendências de Checklist Preventivo" (formato Grupo MOV):
+// título/subtítulo nas primeiras linhas, cabeçalho real mais abaixo (Data/Cliente/PAT/Técnico/
+// Nº Relatório/Motivo/Situação encontrada/Ação/STATUS/Checklist/OBSERVAÇÃO). Procura o cabeçalho
+// automaticamente em qualquer aba, converte o STATUS da planilha pros status internos do sistema.
+function ImportChecklistModal({onClose,onImport}){
+  const [preview,setPreview]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const norm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const STATUS_MAP={
+    "pendente":"pendente",
+    "em andamento":"em_andamento",
+    "refazer":"refazer",
+    "concluido":"concluido",
+    "resolvido":"concluido",
+    "em analise":"em_andamento",
+  };
+  const onFile=async(f)=>{
+    if(!f)return; setErr(""); setLoading(true); setPreview(null);
+    try{
+      const XLSX=await loadXLSX();
+      const buf=await f.arrayBuffer();
+      const wb=XLSX.read(buf,{type:"array",cellDates:true});
+      let header=null,dataRows=null;
+      for(const name of wb.SheetNames){
+        const ws=wb.Sheets[name];
+        const raw=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:""});
+        for(let i=0;i<Math.min(raw.length,15);i++){
+          const linha=(raw[i]||[]).map(c=>norm(c));
+          if(linha.includes("cliente")&&linha.includes("pat")){
+            header=raw[i].map(c=>String(c||"").trim());
+            dataRows=raw.slice(i+1);
+            break;
+          }
+        }
+        if(header)break;
+      }
+      if(!header){setErr("Não encontrei a linha de cabeçalho (procurei por colunas Cliente e PAT em todas as abas).");setLoading(false);return;}
+      const idx=(nomes)=>{for(const n of nomes){const i=header.findIndex(h=>norm(h)===norm(n));if(i>=0)return i;}return -1;};
+      const iData=idx(["data"]),iCliente=idx(["cliente"]),iPat=idx(["pat"]),iTecnico=idx(["tecnico"]),
+        iNumRel=idx(["nº relatorio","numero relatorio","n relatorio"]),iMotivo=idx(["motivo"]),
+        iSituacao=idx(["situacao encontrada"]),iAcao=idx(["acao"]),
+        iStatus=idx(["status"]),iChecklist=idx(["checklist"]),iObs=idx(["observacao"]);
+      const regs=(dataRows||[]).map(row=>{
+        if(!row||row.every(c=>c===""||c===undefined||c===null))return null;
+        const statusRaw=norm(iStatus>=0?row[iStatus]:"");
+        const cliente=iCliente>=0?String(row[iCliente]||"").trim():"";
+        const pat=iPat>=0?String(row[iPat]||"").trim():"";
+        if(!cliente&&!pat)return null;
+        return {
+          data:iData>=0?paraISO(row[iData]):"",
+          cliente,pat,
+          tecnico:iTecnico>=0?String(row[iTecnico]||"").trim():"",
+          numRelatorio:iNumRel>=0?String(row[iNumRel]||"").trim():"",
+          motivo:iMotivo>=0?String(row[iMotivo]||"").trim():"",
+          situacaoEncontrada:iSituacao>=0?String(row[iSituacao]||"").trim():"",
+          acao:iAcao>=0?String(row[iAcao]||"").trim():"",
+          status:STATUS_MAP[statusRaw]||"pendente",
+          linkChecklist:iChecklist>=0?String(row[iChecklist]||"").trim():"",
+          observacao:iObs>=0?String(row[iObs]||"").trim():"",
+        };
+      }).filter(Boolean);
+      if(!regs.length){setErr("Nenhuma linha de dados encontrada abaixo do cabeçalho.");setLoading(false);return;}
+      setPreview(regs);
+    }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx ou .xls.");}
+    setLoading(false);
+  };
+  const contagem={};
+  (preview||[]).forEach(r=>{contagem[r.status]=(contagem[r.status]||0)+1;});
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:720,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+        <div style={{padding:"12px 16px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF"}}>
+          <div style={{fontWeight:800,fontSize:15}}>📥 Importar Pendências de Checklist</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
+        </div>
+        <div style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{fontSize:12,color:"#666"}}>Leio a planilha no formato Grupo MOV (colunas <b>Data, Cliente, PAT, Técnico, Nº Relatório, Motivo, Situação encontrada, Ação, STATUS, Checklist, OBSERVAÇÃO</b>), procurando o cabeçalho automaticamente em qualquer aba.</div>
+          <input type="file" accept=".xlsx,.xls" onChange={e=>onFile(e.target.files[0])} style={{fontSize:12}}/>
+          {loading&&<div style={{fontSize:12,color:"#888"}}>Lendo planilha...</div>}
+          {err&&<div style={{fontSize:12,color:"#C62828",padding:"8px 12px",background:"#FFF0F0",borderRadius:8}}>{err}</div>}
+          {preview&&<>
+            <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A"}}>
+              {preview.length} registro(s) — {CHECKLIST_STATUS_KEYS.map(k=>`${(CHECKLIST_STATUS[k].l||"").replace(/^\S+\s/,"")}: ${contagem[k]||0}`).join(" · ")}
+            </div>
+            <div style={{maxHeight:300,overflowY:"auto",border:"1px solid #EEE",borderRadius:8}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                <thead><tr style={{background:"#F8FAFC"}}>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>Data</th>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>Cliente</th>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>PAT</th>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>Técnico</th>
+                  <th style={{padding:"6px 10px",textAlign:"center",position:"sticky",top:0,background:"#F8FAFC"}}>Status</th>
+                </tr></thead>
+                <tbody>
+                  {preview.map((r,i)=>(
+                    <tr key={i} style={{borderTop:"1px solid #F1F5F9"}}>
+                      <td style={{padding:"6px 10px"}}>{fmtDataBR(r.data)||"—"}</td>
+                      <td style={{padding:"6px 10px",fontWeight:600}}>{r.cliente||"—"}</td>
+                      <td style={{padding:"6px 10px"}}>{r.pat||"—"}</td>
+                      <td style={{padding:"6px 10px"}}>{r.tecnico||"—"}</td>
+                      <td style={{padding:"6px 10px",textAlign:"center",fontWeight:700,color:CHECKLIST_STATUS[r.status].c}}>{(CHECKLIST_STATUS[r.status].l||"").replace(/^\S+\s/,"")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <BtnG onClick={onClose}>Cancelar</BtnG>
+              <BtnY onClick={()=>onImport(preview)}>Importar {preview.length} registro(s)</BtnY>
             </div>
           </>}
         </div>
@@ -3914,6 +4032,7 @@ export default function App(){
   const [showArqPC,setShowArqPC]=useState(false);
   const [modalPC,setModalPC]=useState(false);
   const [editPC,setEditPC]=useState(null);
+  const [modalImportPC,setModalImportPC]=useState(false);
   const [modalPP,setModalPP]=useState(false);
   const [editPP,setEditPP]=useState(null);
   const [modalOrc,setModalOrc]=useState(false);
@@ -8213,7 +8332,7 @@ export default function App(){
         {tab==="pendencias_checklist"&&(()=>{
           const lista=(pendenciasChecklist||[]).filter(p=>p&&(showArqPC?p.arquivado:!p.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const porStatus=k=>lista.filter(p=>p.status===k).length;
-          const abrirNovo=()=>{setEditPC({data:TODAY_STR,tecnico:"",pat:"",numRelatorio:"",linkChecklist:"",observacao:"",status:"pendente"});setModalPC(true);};
+          const abrirNovo=()=>{setEditPC({data:TODAY_STR,cliente:"",tecnico:"",pat:"",numRelatorio:"",motivo:"",situacaoEncontrada:"",acao:"",linkChecklist:"",observacao:"",status:"pendente"});setModalPC(true);};
           const abrirEditar=(p)=>{setEditPC({...p});setModalPC(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
@@ -8221,7 +8340,24 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>📋 Pendências Checklist Preventivo</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqPC(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqPC?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(lista,"pendencias_checklist_preventivo",[{key:"data",label:"Data"},{key:"tecnico",label:"Técnico"},{key:"pat",label:"PAT"},{key:"numRelatorio",label:"Nº Relatório"},{key:"linkChecklist",label:"Link do Checklist"},{key:"observacao",label:"Observação"},{key:"status",label:"Status"}])}/>
+                  <button onClick={()=>setModalImportPC(true)} style={{padding:"9px 16px",borderRadius:10,border:"1px solid #0D9488",background:"#F0FDFA",fontSize:12,fontWeight:700,color:"#0D9488",cursor:"pointer"}}>📥 Importar Planilha</button>
+                  <BtnExcel onClick={()=>{
+                    const STATUS_LABEL={pendente:"PENDENTE",em_andamento:"EM ANDAMENTO",refazer:"REFAZER",concluido:"CONCLUÍDO"};
+                    const dadosExport=lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",statusFmt:STATUS_LABEL[p.status]||p.status||""}));
+                    exportCSV(dadosExport,"pendencias_checklist_preventivo",[
+                      {key:"dataFmt",label:"Data"},
+                      {key:"cliente",label:"Cliente"},
+                      {key:"pat",label:"PAT"},
+                      {key:"tecnico",label:"Técnico"},
+                      {key:"numRelatorio",label:"Nº Relatório"},
+                      {key:"motivo",label:"Motivo"},
+                      {key:"situacaoEncontrada",label:"Situação encontrada"},
+                      {key:"acao",label:"Ação"},
+                      {key:"statusFmt",label:"STATUS"},
+                      {key:"linkChecklist",label:"Checklist"},
+                      {key:"observacao",label:"OBSERVAÇÃO"},
+                    ]);
+                  }}/>
                   <BtnY onClick={abrirNovo}>+ Nova Inclusão</BtnY>
                 </div>
               </div>
@@ -8243,18 +8379,19 @@ export default function App(){
 
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap"><table>
-                  <thead><tr><th>Data</th><th>Técnico</th><th>PAT</th><th>Nº Relatório</th><th>Checklist</th><th>Observação</th><th>Status</th><th></th></tr></thead>
+                  <thead><tr><th>Data</th><th>Cliente</th><th>PAT</th><th>Técnico</th><th>Nº Relatório</th><th>Motivo</th><th>Checklist</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {lista.map(p=>{
                       const st=CHECKLIST_STATUS[p.status]||CHECKLIST_STATUS.pendente;
                       return(
                         <tr key={p.id} style={{opacity:p.arquivado?0.55:1}}>
                           <td style={{padding:"8px 10px",whiteSpace:"nowrap",fontSize:12,color:"#64748B"}}>{fmtDataBR(p.data)||"—"}</td>
-                          <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{p.tecnico||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{p.cliente||"—"}</td>
                           <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{p.pat||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{p.tecnico||"—"}</td>
                           <td style={{padding:"8px 10px",fontSize:12,color:"#1565C0",fontWeight:600}}>{p.numRelatorio||"—"}</td>
+                          <td style={{padding:"8px 10px",fontSize:12,color:"#64748B",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={p.motivo}>{p.motivo||"—"}</td>
                           <td style={{padding:"8px 10px",fontSize:12}}>{p.linkChecklist?<a href={p.linkChecklist} target="_blank" rel="noopener noreferrer" style={{color:"#1565C0",fontWeight:600}}>🔗 Abrir</a>:"—"}</td>
-                          <td style={{padding:"8px 10px",fontSize:12,color:"#64748B",maxWidth:260,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.observacao||"—"}</td>
                           <td style={{padding:"8px 10px"}}><span style={{fontSize:11,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"4px 9px",whiteSpace:"nowrap"}}>{st.l}</span></td>
                           <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>
                             <button onClick={()=>abrirEditar(p)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
@@ -8268,6 +8405,12 @@ export default function App(){
                 </table></div>
                 {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqPC?"arquivado":""}</div>}
               </div>
+
+              {modalImportPC&&<ImportChecklistModal onClose={()=>setModalImportPC(false)} onImport={(regs)=>{
+                regs.forEach(r=>pendenciaChecklistCrud.add({...r,arquivado:false}));
+                notify(`✅ ${regs.length} registro(s) importado(s)!`);
+                setModalImportPC(false);
+              }}/>}
             </div>
           );
         })()}
@@ -8324,9 +8467,15 @@ export default function App(){
                   </div>}
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                     <div><label style={lbl}>Data</label><input type="date" value={editPC.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>PAT</label><input type="text" value={editPC.pat||""} onChange={e=>upd("pat",e.target.value)} placeholder="Nº do patrimônio" style={inp}/></div>
+                    <div><label style={lbl}>Cliente</label><input type="text" value={editPC.cliente||""} onChange={e=>upd("cliente",e.target.value)} placeholder="Nome do cliente" style={inp}/></div>
                   </div>
-                  <div><label style={lbl}>Nº Relatório</label><input type="text" value={editPC.numRelatorio||""} onChange={e=>upd("numRelatorio",e.target.value)} placeholder="Nº do relatório" style={inp}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>PAT</label><input type="text" value={editPC.pat||""} onChange={e=>upd("pat",e.target.value)} placeholder="Nº do patrimônio" style={inp}/></div>
+                    <div><label style={lbl}>Nº Relatório</label><input type="text" value={editPC.numRelatorio||""} onChange={e=>upd("numRelatorio",e.target.value)} placeholder="Nº do relatório" style={inp}/></div>
+                  </div>
+                  <div><label style={lbl}>Motivo</label><input type="text" value={editPC.motivo||""} onChange={e=>upd("motivo",e.target.value)} placeholder="Ex: CORREÇÃO, PENDÊNCIA PEÇAS/ADESIVOS, REFAZER..." style={inp}/></div>
+                  <div><label style={lbl}>Situação Encontrada</label><textarea value={editPC.situacaoEncontrada||""} onChange={e=>upd("situacaoEncontrada",e.target.value)} rows={2} placeholder="O que foi encontrado no checklist" style={{...inp,resize:"vertical"}}/></div>
+                  <div><label style={lbl}>Ação</label><textarea value={editPC.acao||""} onChange={e=>upd("acao",e.target.value)} rows={2} placeholder="O que precisa ser feito" style={{...inp,resize:"vertical"}}/></div>
                   <div><label style={lbl}>Link do Checklist</label><input type="text" value={editPC.linkChecklist||""} onChange={e=>upd("linkChecklist",e.target.value)} placeholder="https://chamados.grupomov.com.br/pdf/checklist;..." style={inp}/></div>
                   <div><label style={lbl}>Observação / Problema</label><textarea value={editPC.observacao||""} onChange={e=>upd("observacao",e.target.value)} rows={4} placeholder="Descreva o problema reportado" style={{...inp,resize:"vertical"}}/></div>
                   <div><label style={lbl}>Status</label><select value={editPC.status} onChange={e=>upd("status",e.target.value)} style={inp}>{CHECKLIST_STATUS_KEYS.map(k=><option key={k} value={k}>{CHECKLIST_STATUS[k].l}</option>)}</select></div>
