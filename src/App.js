@@ -1716,6 +1716,98 @@ function ImportExcelModal({onClose,onImport}){
     </div>
   );
 }
+// Modal de importação específico pra planilha de Equipamentos (uma linha por PAT, agrupada por Empresa/Cliente).
+// Lê TODAS as abas do arquivo, agrupa por empresa e usa isso como base de clientes de Operações:
+// cliente que já existe recebe os equipamentos como novos patrimônios (sem duplicar PAT já cadastrado);
+// cliente novo vira uma Operação nova.
+function ImportEquipamentosModal({onClose,onImport,operacoesExistentes}){
+  const [preview,setPreview]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const norm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const pick=(o,k)=>{const keys=Object.keys(o);const alvo=norm(k);const found=keys.find(x=>norm(x)===alvo)||keys.find(x=>norm(x).includes(alvo));return found?o[found]:"";};
+  const onFile=async(f)=>{
+    if(!f)return; setErr(""); setLoading(true); setPreview(null);
+    try{
+      const XLSX=await loadXLSX();
+      const buf=await f.arrayBuffer();
+      const wb=XLSX.read(buf,{type:"array"});
+      let allRows=[];
+      wb.SheetNames.forEach(name=>{
+        const ws=wb.Sheets[name];
+        const data=XLSX.utils.sheet_to_json(ws,{defval:"",raw:false});
+        allRows=allRows.concat(data);
+      });
+      const itens=allRows.map(o=>({
+        pat:String(pick(o,"PAT")||"").trim(),
+        numeroSerie:String(pick(o,"Número de série")||"").trim(),
+        marca:String(pick(o,"Marca")||"").trim(),
+        modelo:String(pick(o,"Modelo")||"").trim(),
+        equipamento:String(pick(o,"Equipamento")||"").trim(),
+        empresa:String(pick(o,"Empresa")||"").trim(),
+        status:String(pick(o,"Status")||"").trim(),
+        ativo:String(pick(o,"Ativo")||"").trim(),
+        servico:String(pick(o,"Serviço")||"").trim(),
+      })).filter(it=>it.pat||it.empresa);
+      if(!itens.length){setErr("Nenhum equipamento encontrado na planilha (verifique as colunas PAT/Empresa).");setLoading(false);return;}
+      const porClienteMap={};
+      itens.forEach(it=>{
+        const key=it.empresa||"(sem empresa)";
+        if(!porClienteMap[key])porClienteMap[key]=[];
+        porClienteMap[key].push(it);
+      });
+      const existeNorm=(operacoesExistentes||[]).map(o=>norm(o.cliente));
+      const porCliente=Object.entries(porClienteMap).map(([cliente,itensCli])=>({
+        cliente,itens:itensCli,existe:existeNorm.includes(norm(cliente)),
+      })).sort((a,b)=>a.cliente.localeCompare(b.cliente));
+      setPreview({porCliente,totalItens:itens.length,abas:wb.SheetNames.length});
+    }catch(e){setErr("Não consegui ler o arquivo. Use .xlsx ou .xls.");}
+    setLoading(false);
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+        <div style={{padding:"12px 16px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF"}}>
+          <div style={{fontWeight:800,fontSize:15}}>📥 Importar Equipamentos — base de clientes</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
+        </div>
+        <div style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{fontSize:12,color:"#666"}}>Leio as colunas <b>PAT</b>, <b>Número de série</b>, <b>Marca</b>, <b>Modelo</b>, <b>Equipamento</b>, <b>Empresa</b>, <b>Status</b>, <b>Ativo</b> e <b>Serviço</b>, considerando <b>todas as abas</b> do arquivo. Os equipamentos são agrupados por Empresa: cliente que já existe em Operações recebe os equipamentos como novos patrimônios (sem duplicar PAT já cadastrado); cliente novo vira uma Operação nova.</div>
+          <input type="file" accept=".xlsx,.xls" onChange={e=>onFile(e.target.files[0])} style={{fontSize:12}}/>
+          {loading&&<div style={{fontSize:12,color:"#888"}}>Lendo planilha...</div>}
+          {err&&<div style={{fontSize:12,color:"#C62828",padding:"8px 12px",background:"#FFF0F0",borderRadius:8}}>{err}</div>}
+          {preview&&<>
+            <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A"}}>
+              {preview.abas} aba(s) lida(s) · {preview.totalItens} equipamento(s) em {preview.porCliente.length} cliente(s) — <span style={{color:"#1A7A3C"}}>{preview.porCliente.filter(c=>!c.existe).length} novo(s)</span> · <span style={{color:"#1565C0"}}>{preview.porCliente.filter(c=>c.existe).length} já cadastrado(s)</span>
+            </div>
+            <div style={{maxHeight:300,overflowY:"auto",border:"1px solid #EEE",borderRadius:8}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                <thead><tr style={{background:"#F8FAFC"}}>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>Cliente</th>
+                  <th style={{padding:"6px 10px",textAlign:"center",position:"sticky",top:0,background:"#F8FAFC"}}>Equipamentos</th>
+                  <th style={{padding:"6px 10px",textAlign:"center",position:"sticky",top:0,background:"#F8FAFC"}}>Situação</th>
+                </tr></thead>
+                <tbody>
+                  {preview.porCliente.map((c,i)=>(
+                    <tr key={i} style={{borderTop:"1px solid #F1F5F9"}}>
+                      <td style={{padding:"6px 10px",fontWeight:600}}>{c.cliente}</td>
+                      <td style={{padding:"6px 10px",textAlign:"center"}}>{c.itens.length}</td>
+                      <td style={{padding:"6px 10px",textAlign:"center",fontWeight:700,color:c.existe?"#1565C0":"#1A7A3C"}}>{c.existe?"Já existe":"Novo"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <BtnG onClick={onClose}>Cancelar</BtnG>
+              <BtnY onClick={()=>onImport(preview.porCliente)}>Importar {preview.porCliente.length} cliente(s)</BtnY>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── MODAL RELATÓRIO (Conferência de Relatórios — Técnicos Externos) ─────────
 function RelatorioModal({initial,onClose,onSave}){
@@ -3878,6 +3970,7 @@ export default function App(){
   const [opSearch,setOpSearch]=useState("");
   const [showFiltrosOp,setShowFiltrosOp]=useState(false);
   const [modalImportOp,setModalImportOp]=useState(false);
+  const [modalImportEquip,setModalImportEquip]=useState(false);
   const [showArqPendMan,setShowArqPendMan]=useState(false);
   const [pendManForm,setPendManForm]=useState({tarefa:"Reunião",tarefaOutros:"",data:"",prioridade:"Normal",solucao:"",status:"Pendente",dataConclusao:""});
   const [editPendMan,setEditPendMan]=useState(null);
@@ -12560,6 +12653,7 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
                 <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                   <BtnImport onClick={()=>setModalImportOp(true)}/>
+                  <button onClick={()=>setModalImportEquip(true)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #0D9488",background:"#F0FDFA",fontSize:12,cursor:"pointer",color:"#0D9488",fontWeight:700,fontFamily:"inherit"}}>🏗️ Importar Equipamentos</button>
                   <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"7px 12px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:10,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                   <BtnExcel onClick={()=>{
                     const cols=[{key:"cliente",label:"Cliente"},{key:"localizacao",label:"Localização"},{key:"_responsaveis",label:"Responsáveis"},{key:"_patrimonios",label:"Patrimônios"},{key:"_baterias",label:"Baterias"},{key:"_carregadores",label:"Carregadores"},{key:"cuidadosBateria",label:"Cuidados Bateria"},{key:"cuidadosBateriaObs",label:"Obs Cuidados"},{key:"prevDiaMes",label:"Dia Preventiva"},{key:"prevPeriodo",label:"Período Preventiva"},{key:"qtdPreventiva",label:"Qtd Preventiva"},{key:"qtdCorretiva",label:"Qtd Corretiva"},{key:"qtdMauUso",label:"Qtd Mau Uso"},{key:"servicosRealizados",label:"Serviços Realizados"},{key:"trocaPecas",label:"Troca Peças"},{key:"obs",label:"Obs"}];
@@ -12661,6 +12755,33 @@ export default function App(){
                   servicosRealizados:r["Serviços Realizados"]||r.servicosRealizados||"",trocaPecas:r["Troca Peças"]||r.trocaPecas||"",obs:r.Obs||r.obs||"",arquivado:false});});
                 notify(`✅ ${rows.length} operação(ões) importada(s)!`);
                 setModalImportOp(false);
+              }}/>}
+
+              {modalImportEquip&&<ImportEquipamentosModal operacoesExistentes={operacoes} onClose={()=>setModalImportEquip(false)} onImport={(porCliente)=>{
+                const norm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+                let novos=0,atualizados=0;
+                porCliente.forEach(grupo=>{
+                  const existing=(operacoes||[]).find(o=>norm(o.cliente)===norm(grupo.cliente));
+                  const novosPatrimonios=grupo.itens.map(it=>({
+                    pat:it.pat,modelo:it.modelo,mediaHoras:"",corretivas:"",motivo:"",
+                    marca:it.marca,numeroSerie:it.numeroSerie,equipamento:it.equipamento,status:it.status,ativo:it.ativo,servico:it.servico,
+                  }));
+                  if(existing){
+                    const patsExistentes=new Set((existing.patrimonios||[]).map(p=>String(p.pat||"").trim()).filter(Boolean));
+                    const aAdicionar=novosPatrimonios.filter(p=>!p.pat||!patsExistentes.has(String(p.pat).trim()));
+                    if(aAdicionar.length){
+                      opCrud.update(existing.id,{patrimonios:[...(existing.patrimonios||[]),...aAdicionar]});
+                      atualizados++;
+                    }
+                  } else {
+                    opCrud.add({cliente:grupo.cliente,localizacao:"",responsaveis:[],patrimonios:novosPatrimonios,baterias:[],carregadores:[],
+                      cuidadosBateria:"nao",cuidadosBateriaObs:"",prevDiaMes:"",prevPeriodo:"manha",
+                      qtdPreventiva:"",qtdCorretiva:"",qtdMauUso:"",servicosRealizados:"",trocaPecas:"",obs:"",arquivado:false});
+                    novos++;
+                  }
+                });
+                notify(`✅ ${novos} cliente(s) novo(s) · ${atualizados} atualizado(s) com novos equipamentos!`);
+                setModalImportEquip(false);
               }}/>}
             </div>
           );
