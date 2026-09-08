@@ -164,6 +164,20 @@ const REGIONS = {
   roca:         { label:"Roca",              techs:["Artur Gerônimo","Eduardo Oliveira","Luiz Ribeiro","Pedro Souza","Lucio Silva"] },
   centroOeste:  { label:"Centro-Oeste",      techs:["Bruno Alexandre","Marcus Vinicius Botelho Dos Santos","Junio Ferreira","Reginaldo Souza"] },
 };
+// Região por EMPRESA (não por técnico) — usada no Dashboard de Atendimentos pra agrupar
+// Preventiva/Corretiva por região, já que um técnico pode eventualmente atender empresa de outra
+// região. Roça é isolada (só a empresa Roca Sanitarios); as demais listadas são Centro-Oeste;
+// tudo o mais é considerado Metropolitana BH.
+const EMPRESAS_ROCA=["roca sanitarios"];
+const EMPRESAS_CENTRO_OESTE=["farmax","itambé pará de minas","itambe para de minas","logoplast pará de minas","logoplast para de minas","supermercado peixoto","cogram","cogran","plasdil","vitaminas"];
+const normalizeEmp=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
+const empresaRegiao=(nome)=>{
+  const n=normalizeEmp(nome);
+  if(!n)return "metropolitana";
+  if(EMPRESAS_ROCA.some(k=>n.includes(normalizeEmp(k))))return "roca";
+  if(EMPRESAS_CENTRO_OESTE.some(k=>n.includes(normalizeEmp(k))))return "centroOeste";
+  return "metropolitana";
+};
 // Categorização de falhas por palavra-chave, lida a partir do texto de Observações/Solução dos relatórios
 const FALHA_CATEGORIAS=[
   {cat:"Elétrica",cor:"#F5C200",kw:["eletric","bateria","fusível","fusivel","curto","contator","chicote","cabo","fiação","fiacao","chave"]},
@@ -9441,7 +9455,7 @@ export default function App(){
               const isConcluido=r=>r.arquivado||(r.status||"").includes("concluida")||r.status==="mau_uso"||r.status==="a_faturar";
               const dashReports=baseReports.filter(d=>{
                 if(!isConcluido(d))return false;
-                const region=techRegionMap[d.tecnico]||"";
+                const region=empresaRegiao(d.cliente);
                 if(!((dashRegion==="todas"||region===dashRegion)&&(dashTech==="todos"||d.tecnico===dashTech)&&inRange(d)))return false;
                 if(dashServico!=="todos"&&!(d.servicos||[]).includes(dashServico))return false;
                 if(dashPatrimonio&&!(d.patrimonio||"").toLowerCase().includes(dashPatrimonio.toLowerCase()))return false;
@@ -9456,8 +9470,8 @@ export default function App(){
               const totalPC=prev+corr;
               const pct=n=>totalPC?Math.round(n/totalPC*100):0;
               const regList=[["metropolitana","Metropolitana BH"],["roca","Roca"],["centroOeste","Centro-Oeste"]];
-              const regPrev=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="preventivo").length);
-              const regCorr=regList.map(([k])=>dashReports.filter(r=>(techRegionMap[r.tecnico]||"")===k&&r.atendimento==="corretivo").length);
+              const regPrev=regList.map(([k])=>dashReports.filter(r=>empresaRegiao(r.cliente)===k&&r.atendimento==="preventivo").length);
+              const regCorr=regList.map(([k])=>dashReports.filter(r=>empresaRegiao(r.cliente)===k&&r.atendimento==="corretivo").length);
               const techsWith=ALL_TECHS.filter(t=>dashReports.some(r=>r.tecnico===t));
               const techCounts=techsWith.map(t=>dashReports.filter(r=>r.tecnico===t).length);
               const techHours=techsWith.map(t=>+(dashReports.filter(r=>r.tecnico===t).reduce((a,r)=>a+parseMin(r.horasTrabalhadas||calcHoras(r.horaInicio,r.horaFim)),0)/60).toFixed(1));
