@@ -12836,10 +12836,10 @@ export default function App(){
                 {hasFilterOp&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
                 <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosOp?"▲":"▼"}</span>
               </button>
-              {showFiltrosOp&&<div className="card" style={{padding:"6px 8px",marginBottom:10,display:"flex",gap:6,alignItems:"center"}}>
-                <span style={{fontSize:10}}>🔍</span>
-                <input type="text" value={opSearch} onChange={e=>setOpSearch(e.target.value)} placeholder="Buscar cliente, localização, patrimônio, responsável..." style={{flex:1,fontSize:10,padding:"5px 7px",borderRadius:6,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
-                {hasFilterOp&&<button onClick={()=>setOpSearch("")} style={{padding:"5px 10px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:9,cursor:"pointer",fontWeight:600}}>✕</button>}
+              {showFiltrosOp&&<div className="card" style={{padding:"8px 10px",marginBottom:10,display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{fontSize:13}}>🔍</span>
+                <input type="text" value={opSearch} onChange={e=>setOpSearch(e.target.value)} placeholder="Buscar cliente, localização, patrimônio, responsável..." style={{flex:1,minWidth:220,fontSize:13,padding:"9px 12px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA"}}/>
+                {hasFilterOp&&<button onClick={()=>setOpSearch("")} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕</button>}
               </div>}
 
               {/* Lista de clientes (cards pequenos) */}
