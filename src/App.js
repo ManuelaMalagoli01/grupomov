@@ -169,7 +169,7 @@ const REGIONS = {
 // região. Roça é isolada (só a empresa Roca Sanitarios); as demais listadas são Centro-Oeste;
 // tudo o mais é considerado Metropolitana BH.
 const EMPRESAS_ROCA=["roca sanitarios"];
-const EMPRESAS_CENTRO_OESTE=["farmax","itambé pará de minas","itambe para de minas","itambé cd pm","itambe cd pm","logoplast pará de minas","logoplast para de minas","supermercado peixoto","cogram","cogran","plasdil","vitaminas"];
+const EMPRESAS_CENTRO_OESTE=["farmax","itambé pará de minas","itambe para de minas","itambé cd pm","itambe cd pm","itambe alimentos cd para de minas","itambé alimentos cd pará de minas","logoplast pará de minas","logoplast para de minas","supermercado peixoto","cogram","cogran","plasdil","vitaminas"];
 const normalizeEmp=(s)=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 const empresaRegiao=(nome)=>{
   const n=normalizeEmp(nome);
