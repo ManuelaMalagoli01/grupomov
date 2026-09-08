@@ -3637,8 +3637,8 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   );
 
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus"];
-  const TECEXT_TABS = ["agenda_prev","dashboard","relatorios"];
-  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","pendencias_checklist","dashboard_mau_uso","dashboard_a_faturar"];
+  const TECEXT_TABS = ["agenda_prev","dashboard","relatorios","pendencias_checklist"];
+  const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
@@ -3656,7 +3656,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const prospAlertaCount=prospAlerta||0;
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi"];
-  const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios"];
+  const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios","pendencias_checklist"];
   const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria","dificuldades_tecnicos"];
   const SUB_FROTA=["pendencias_frota"];
   const [subOfiOpen,setSubOfiOpen]=useState(false);
@@ -3812,6 +3812,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
           <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
           <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
           <SubBtn k="relatorios" l="📋 Relatórios Técnicos - Verificação/Separação de Materiais"/>
+          <SubBtn k="pendencias_checklist" l="📋 Pendências Checklist Preventivo"/>
         </SubFolder>
 
         <SubFolder label="Administrativo" icon="🗂️" open={subAdmOpen} setOpen={setSubAdmOpen} ativa={SUB_ADMIN.includes(tab)} color="#B45309">
@@ -3862,7 +3863,6 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         <SubBtn k="envio_pecas_fornecedor" l="📦 Envio de Peças ao Fornecedor"/>
         <SubBtn k="orcamento_pecas" l="💵 Orçamento de Peças"/>
         <SubBtn k="pendencias_portal" l="🎫 Pendências Portal de Serviços"/>
-        <SubBtn k="pendencias_checklist" l="📋 Pendências Checklist Preventivo"/>
         <SubBtn k="dashboard_mau_uso" l="🚦 Farol Mau Uso"/>
         <SubBtn k="dashboard_a_faturar" l="🚦 Farol A Faturar"/>
       </div>}
