@@ -1176,7 +1176,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
     const COLW=versaoCliente
       ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
-      : {nome:60,cod:22,qtd:14,cot:24,dataCot:20,local:30,cons:28,venda:36,margem:35};
+      : {nome:70,cod:20,qtd:12,cot:22,dataCot:24,local:28,cons:26,venda:34,margem:33};
     // Calcula um fator de escala pra garantir que TUDO caiba numa unica pagina, mesmo com muitas peças
     // e nomes longos (que quebram em mais de uma linha). Faz isso simulando a quebra de texto de
     // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
@@ -1237,8 +1237,8 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
         doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"});
       }else{
         doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,yTxt,{align:"right"}); xx+=COLW.cot;
-        doc.text(fmtDataBR(p.dataCotacao)||"—",xx+COLW.dataCot/2,yTxt,{align:"center"}); xx+=COLW.dataCot;
-        doc.text(localLines,xx+2,yTxt); xx+=COLW.local;
+        doc.text(fmtDataBR(p.dataCotacao)||"—",xx+COLW.dataCot-2,yTxt,{align:"right"}); xx+=COLW.dataCot;
+        doc.text(localLines,xx+3,yTxt); xx+=COLW.local;
         doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,yTxt,{align:"right"}); xx+=COLW.cons;
         doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"}); xx+=COLW.venda;
         doc.text(`R$ ${margem.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.margem-2,yTxt,{align:"right"});
