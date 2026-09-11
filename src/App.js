@@ -1181,7 +1181,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // e nomes longos (que quebram em mais de uma linha). Faz isso simulando a quebra de texto de
     // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
     const numPecas=(o.pecas||[]).length||1;
-    const espacoDisponivelParaTabela=195-y-8-56-20; // reserva pro resumo financeiro (com mao de obra/deslocamento) e observação
+    const espacoDisponivelParaTabela=195-y-8-56-34; // reserva pro resumo financeiro (com mao de obra/deslocamento), observação e condições gerais
     const alturaLinhaPadrao=7.2;
     const alturaTotalNaEscala=(esc)=>{
       const fonte=8.5*esc, altLinha=alturaLinhaPadrao*esc;
@@ -1303,7 +1303,24 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
     const obsLines=doc.splitTextToSize(o.observacao||"—",W-90);
     doc.text(obsLines,M,y);
-    doc.setFontSize(7.5); doc.setTextColor(160,160,160);
+    y+=obsLines.length*4.2+6;
+    // Condições gerais — texto muda conforme o tipo do orçamento (Peça Única usa o texto de "Peças", os demais tipos usam o texto genérico)
+    const CONDICOES_PECAS=[
+      "Este orçamento é válido por 07 dias a contar da data de emissão.",
+      "A garantia aplica-se apenas a defeitos de fabricação, não cobrindo danos decorrentes de mau uso, instalação inadequada ou ação externa.",
+      "Sujeito à disponibilidade em estoque e confirmação após aprovação do pedido.",
+    ];
+    const CONDICOES_GERAIS=[
+      "Este orçamento é válido por 07 dias a contar da data de emissão.",
+      "A empresa não se responsabiliza por falhas decorrentes de uso incorreto ou não conforme às recomendações técnicas.",
+      "Qualquer serviço não especificado neste orçamento será cobrado separadamente mediante aprovação prévia.",
+    ];
+    const condicoes=o.tipo==="unica"?CONDICOES_PECAS:CONDICOES_GERAIS;
+    if(y+condicoes.length*4>198){doc.addPage("landscape");y=20;}
+    doc.setDrawColor(210,210,210); doc.setLineWidth(0.2); doc.line(M,y,M+W,y); y+=5;
+    doc.setFont(undefined,"italic"); doc.setFontSize(7.5); doc.setTextColor(110,110,110);
+    condicoes.forEach(linha=>{ doc.text(`• ${linha}`,M,y); y+=4; });
+    doc.setTextColor(160,160,160);
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,203);
     doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}${versaoCliente?"_Cliente":""}.pdf`);
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
