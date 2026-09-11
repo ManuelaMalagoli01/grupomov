@@ -12705,8 +12705,8 @@ export default function App(){
           lista.forEach(o=>{severCounts[calcSeveridade(o.qtdPreventiva,o.qtdCorretiva)]++;});
           const top10=[...lista].sort((a,b)=>(parseFloat(b.qtdCorretiva)||0)-(parseFloat(a.qtdCorretiva)||0)).slice(0,10);
           const chartData={labels:top10.map(o=>(o.cliente||"—").length>14?o.cliente.slice(0,14)+"…":o.cliente||"—"),datasets:[
-            {label:"Preventiva",data:top10.map(o=>parseFloat(o.qtdPreventiva)||0),backgroundColor:"#1565C0",borderRadius:5,borderSkipped:false},
-            {label:"Corretiva",data:top10.map(o=>parseFloat(o.qtdCorretiva)||0),backgroundColor:"#C62828",borderRadius:5,borderSkipped:false},
+            {label:"Preventiva",data:top10.map(o=>parseFloat(o.qtdPreventiva)||0),backgroundColor:"#0D9488",borderRadius:5,borderSkipped:false},
+            {label:"Corretiva",data:top10.map(o=>parseFloat(o.qtdCorretiva)||0),backgroundColor:"#F5C200",borderRadius:5,borderSkipped:false},
           ]};
           const chartOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0},grid:{color:"#F0F0F0"}}}};
           const joinRows=(arr,keys)=>(arr||[]).filter(r=>keys.some(k=>r[k])).map(r=>keys.map(k=>r[k]||"").join(":")).join(";");
@@ -12799,11 +12799,11 @@ export default function App(){
               )}
 
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10}}>
-                <div><div style={{fontWeight:900,fontSize:22,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:9,color:"#888",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
+                <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🏢 Operações</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} cliente(s) cadastrado(s)</div></div>
                 <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                   <BtnImport onClick={()=>setModalImportOp(true)}/>
                   <button onClick={()=>setModalImportEquip(true)} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #0D9488",background:"#F0FDFA",fontSize:12,cursor:"pointer",color:"#0D9488",fontWeight:700,fontFamily:"inherit"}}>🏗️ Importar Equipamentos</button>
-                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"7px 12px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:10,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
+                  <button onClick={()=>setShowArqOp(p=>!p)} style={{padding:"9px 16px",borderRadius:20,border:"1px solid #E0E0E0",background:showArqOp?"#1A1A1A":"#FFF",color:showArqOp?"#FFF":"#555",fontSize:12,cursor:"pointer",fontWeight:600}}>📁 {showArqOp?"✕ Voltar aos Ativos":"Consultar Arquivados"}</button>
                   <BtnExcel onClick={()=>{
                     const cols=[{key:"cliente",label:"Cliente"},{key:"localizacao",label:"Localização"},{key:"_responsaveis",label:"Responsáveis"},{key:"_patrimonios",label:"Patrimônios"},{key:"_baterias",label:"Baterias"},{key:"_carregadores",label:"Carregadores"},{key:"cuidadosBateria",label:"Cuidados Bateria"},{key:"cuidadosBateriaObs",label:"Obs Cuidados"},{key:"prevDiaMes",label:"Dia Preventiva"},{key:"prevPeriodo",label:"Período Preventiva"},{key:"qtdPreventiva",label:"Qtd Preventiva"},{key:"qtdCorretiva",label:"Qtd Corretiva"},{key:"qtdMauUso",label:"Qtd Mau Uso"},{key:"servicosRealizados",label:"Serviços Realizados"},{key:"trocaPecas",label:"Troca Peças"},{key:"obs",label:"Obs"}];
                     const data=lista.map(o=>({...o,_responsaveis:joinRows(o.responsaveis,["nome","telefone","email"]),_patrimonios:joinRows(o.patrimonios,["pat","modelo","mediaHoras","corretivas","motivo"]),_baterias:joinRows(o.baterias,["pat","modelo","spec"]),_carregadores:joinRows(o.carregadores,["pat","modelo","spec"])}));
@@ -12814,27 +12814,71 @@ export default function App(){
               </div>
 
               {/* KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8,marginBottom:12}}>
-                {[{l:"Clientes",v:lista.length,c:"#1A1A1A",bg:"#FFF"},{l:"Preventivas",v:totalPrev,c:"#1565C0",bg:"#EFF6FF"},{l:"Corretivas",v:totalCorr,c:"#C62828",bg:"#FFF0F0"},{l:"Mau Uso",v:totalMU,c:"#E67E00",bg:"#FFF8F0"},{l:"Críticas+Severas",v:severCounts.critica+severCounts.severa,c:"#EA580C",bg:"#FFF3E8"},{l:"Operantes",v:severCounts.operante,c:"#1A7A3C",bg:"#F0FFF5"}].map((k,i)=>(
-                  <div key={i} className="card" style={{padding:"6px 8px",borderLeft:`4px solid ${k.c}`,background:k.bg}}>
-                    <div style={{fontSize:7,fontWeight:800,color:"#AAA",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{k.l}</div>
-                    <div style={{fontSize:15,fontWeight:900,color:k.c,lineHeight:1}}>{k.v}</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,marginBottom:22}}>
+                {[
+                  {l:"Clientes",v:lista.length,i:"🏢",bg:"#F1F5F9",fg:"#334155"},
+                  {l:"Preventivas",v:totalPrev,i:"📋",bg:"#EFF6FF",fg:"#1565C0"},
+                  {l:"Corretivas",v:totalCorr,i:"🔧",bg:"#FFF0F0",fg:"#C62828"},
+                  {l:"Mau Uso",v:totalMU,i:"⚠️",bg:"#FFF8F0",fg:"#E67E00"},
+                  {l:"Críticas + Severas",v:severCounts.critica+severCounts.severa,i:"🚨",bg:"#FFF3E8",fg:"#EA580C"},
+                  {l:"Operantes",v:severCounts.operante,i:"✅",bg:"#F0FFF5",fg:"#1A7A3C"},
+                ].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"18px 20px",display:"flex",alignItems:"center",gap:14,border:"1px solid #EEF1F5"}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{k.i}</div>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{k.l}</div>
+                      <div style={{fontSize:26,fontWeight:900,color:k.fg,marginTop:2}}>{k.v}</div>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              {/* Dashboard Preventiva x Corretiva */}
-              <div className="card" style={{padding:10,marginBottom:12}}>
-                <div style={{fontSize:11,fontWeight:800,color:"#1E293B",marginBottom:8}}>📊 Preventiva × Corretiva por Cliente (Top 10 por corretivas)</div>
-                {top10.length===0?<div style={{textAlign:"center",color:"#CBD5E1",padding:24,fontSize:11}}>Sem dados</div>:<ChartCanvas type="bar" data={chartData} options={chartOpts} height={200}/>}
+              {/* Painel BI */}
+              <div style={{background:"#0B1220",borderRadius:16,padding:"26px 30px",marginBottom:22,color:"#FFF"}}>
+                <div style={{marginBottom:22}}>
+                  <span style={{fontSize:13,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                  <span style={{fontSize:12,fontWeight:700,color:"#CBD5E1"}}> — Operações</span>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1.1fr",gap:32,marginBottom:26}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva (total)</div>
+                    <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:20,alignItems:"center"}}>
+                      {(totalPrev+totalCorr)>0?<ChartCanvas type="doughnut" height={170} data={{
+                        labels:["Preventiva","Corretiva"],
+                        datasets:[{data:[totalPrev,totalCorr],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#0B1220"}]
+                      }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{display:false}}}}/>:<div style={{color:"#475569",fontSize:12,padding:20}}>Sem dados</div>}
+                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{width:9,height:9,borderRadius:2,background:"#0D9488"}}/><span style={{fontSize:13,color:"#FFF",flex:1}}>Preventiva</span><span style={{fontSize:14,fontWeight:900,color:"#0D9488"}}>{totalPrev}</span></div>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{width:9,height:9,borderRadius:2,background:"#F5C200"}}/><span style={{fontSize:13,color:"#FFF",flex:1}}>Corretiva</span><span style={{fontSize:14,fontWeight:900,color:"#F5C200"}}>{totalCorr}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Clientes — Corretivas</div>
+                    {top10.filter(o=>(parseFloat(o.qtdCorretiva)||0)>0).length===0?<div style={{color:"#475569",fontSize:12,padding:12}}>Sem corretivas no momento</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                      {top10.filter(o=>(parseFloat(o.qtdCorretiva)||0)>0).slice(0,5).map((o,i)=>(
+                        <div key={o.id} style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{width:22,height:22,borderRadius:"50%",background:"#1E293B",color:"#F5C200",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:"#FFF",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.cliente||"—"}</div>
+                          <div style={{fontSize:13,fontWeight:900,color:"#F5C200"}}>{o.qtdCorretiva}</div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                </div>
+                <div style={{height:1,background:"#1E293B",margin:"0 0 22px"}}/>
+                <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Preventiva × Corretiva por Cliente (Top 10 por corretivas)</div>
+                {top10.length===0?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:12}}>Sem dados</div>:
+                <ChartCanvas type="bar" height={260} data={chartData} options={{...chartOpts,layout:{padding:{top:22}},plugins:{...chartOpts.plugins,legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:11},boxWidth:9}},barLabels:{mode:"value",suffix:"",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#94A3B8",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#94A3B8",precision:0,font:{size:10}},grid:{color:"#1E293B"}}}}}/>}
               </div>
 
               {/* Filtro colapsável (botão pequeno) */}
-              <button onClick={()=>setShowFiltrosOp(p=>!p)} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosOp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:8,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
-                <span style={{fontSize:10}}>🔍</span>
-                <span style={{fontSize:9,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-                {hasFilterOp&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
-                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosOp?"▲":"▼"}</span>
+              <button onClick={()=>setShowFiltrosOp(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 16px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosOp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:10,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:13}}>🔍</span>
+                <span style={{fontSize:12,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {hasFilterOp&&<span style={{fontSize:10,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"2px 8px"}}>ativo</span>}
+                <span style={{fontSize:10,color:"#94A3B8"}}>{showFiltrosOp?"▲":"▼"}</span>
               </button>
               {showFiltrosOp&&<div className="card" style={{padding:"8px 10px",marginBottom:10,display:"flex",gap:8,alignItems:"center"}}>
                 <span style={{fontSize:13}}>🔍</span>
@@ -12842,9 +12886,9 @@ export default function App(){
                 {hasFilterOp&&<button onClick={()=>setOpSearch("")} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕</button>}
               </div>}
 
-              {/* Lista de clientes (cards pequenos) */}
+              {/* Lista de clientes */}
               {listaFil.length===0?(<div className="card" style={{padding:36,textAlign:"center",color:"#CCC"}}><div style={{fontSize:26,marginBottom:4}}>🏢</div><div style={{fontSize:10,fontWeight:600}}>Nenhuma operação cadastrada</div></div>):(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
                   {listaFil.map(o=>{
                     const sev=calcSeveridade(o.qtdPreventiva,o.qtdCorretiva);
                     const sevInfo=OP_SEVER[sev];
@@ -12854,35 +12898,35 @@ export default function App(){
                     const respExtra=(o.responsaveis||[]).length-1;
                     const patExtra=(o.patrimonios||[]).length;
                     return(
-                      <div key={o.id} className="card" style={{borderTop:`3px solid ${sevInfo.c}`,padding:0,overflow:"hidden",opacity:o.arquivado?0.6:1}}>
-                        <div style={{padding:"4px 6px",background:sevInfo.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:8,fontWeight:800,color:sevInfo.c}}>{sevInfo.l}</span>
-                          <div style={{display:"flex",gap:2}}>
-                            <button onClick={()=>abrirEditarOp(o)} style={{background:"#EFF6FF",border:"none",borderRadius:5,color:"#1565C0",cursor:"pointer",padding:"2px 5px",fontSize:9}}>✏️</button>
-                            <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:5,cursor:"pointer",padding:"2px 5px",fontSize:9}}>{o.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))opCrud.del(o.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"2px 5px",fontSize:9,fontWeight:700}}>✕</button>
+                      <div key={o.id} className="card" style={{borderTop:`4px solid ${sevInfo.c}`,padding:0,overflow:"hidden",opacity:o.arquivado?0.6:1}}>
+                        <div style={{padding:"9px 14px",background:sevInfo.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <span style={{fontSize:12,fontWeight:800,color:sevInfo.c}}>{sevInfo.l}</span>
+                          <div style={{display:"flex",gap:5}}>
+                            <button onClick={()=>abrirEditarOp(o)} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 8px",fontSize:12}}>✏️</button>
+                            <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12}}>{o.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))opCrud.del(o.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:12,fontWeight:700}}>✕</button>
                           </div>
                         </div>
-                        <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:3}}>
-                          <div style={{fontSize:11,fontWeight:800,color:"#1A1A1A"}}>{o.cliente||"—"}</div>
-                          <div style={{fontSize:8,color:"#888"}}>📍 {o.localizacao||"—"}</div>
-                          {resp0&&<div style={{fontSize:8,color:"#555"}}>👤 {resp0.nome||"—"}{respExtra>0&&<span style={{color:"#94A3B8"}}> +{respExtra}</span>}</div>}
-                          <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
-                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🏗️ {patExtra} PAT</span>
-                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🔋 {(o.baterias||[]).length}</span>
-                            <span style={{fontSize:7,background:"#F5F5F5",color:"#555",borderRadius:6,padding:"1px 5px",fontWeight:700}}>🔌 {(o.carregadores||[]).length}</span>
+                        <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:8}}>
+                          <div style={{fontSize:16,fontWeight:800,color:"#1A1A1A"}}>{o.cliente||"—"}</div>
+                          <div style={{fontSize:12,color:"#64748B"}}>📍 {o.localizacao||"—"}</div>
+                          {resp0&&<div style={{fontSize:12,color:"#334155"}}>👤 {resp0.nome||"—"}{respExtra>0&&<span style={{color:"#94A3B8"}}> +{respExtra}</span>}</div>}
+                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🏗️ {patExtra} PAT</span>
+                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🔋 {(o.baterias||[]).length}</span>
+                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🔌 {(o.carregadores||[]).length}</span>
                           </div>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:3}}>
-                            <div style={{background:"#EFF6FF",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#1565C0",fontSize:7,fontWeight:700}}>Prev.</div><div style={{fontSize:10,fontWeight:800,color:"#1565C0"}}>{o.qtdPreventiva||0}</div></div>
-                            <div style={{background:"#FFF0F0",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#C62828",fontSize:7,fontWeight:700}}>Corr.</div><div style={{fontSize:10,fontWeight:800,color:"#C62828"}}>{o.qtdCorretiva||0}</div></div>
-                            <div style={{background:"#FFF8F0",borderRadius:5,padding:"2px 4px",textAlign:"center"}}><div style={{color:"#E67E00",fontSize:7,fontWeight:700}}>M.Uso</div><div style={{fontSize:10,fontWeight:800,color:"#E67E00"}}>{o.qtdMauUso||0}</div></div>
+                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+                            <div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#1565C0",fontSize:10,fontWeight:700}}>Prev.</div><div style={{fontSize:16,fontWeight:800,color:"#1565C0"}}>{o.qtdPreventiva||0}</div></div>
+                            <div style={{background:"#FFF0F0",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#C62828",fontSize:10,fontWeight:700}}>Corr.</div><div style={{fontSize:16,fontWeight:800,color:"#C62828"}}>{o.qtdCorretiva||0}</div></div>
+                            <div style={{background:"#FFF8F0",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#E67E00",fontSize:10,fontWeight:700}}>M.Uso</div><div style={{fontSize:16,fontWeight:800,color:"#E67E00"}}>{o.qtdMauUso||0}</div></div>
                           </div>
-                          {o.prevDiaMes&&<div style={{fontSize:7,color:"#888"}}>🗓 Preventiva: dia {o.prevDiaMes} · {o.prevPeriodo==="tarde"?"Tarde":"Manhã"}</div>}
-                          {batAlert&&<div style={{fontSize:7,color:"#C62828",background:"#FFF0F0",borderRadius:5,padding:"2px 4px",fontWeight:700}}>🔋⚠️ {batAlert}</div>}
-                          {o.cuidadosBateria==="sim"&&<div style={{fontSize:7,color:"#C47D00",background:"#FFFBF0",borderRadius:5,padding:"2px 4px",fontWeight:700}}>⚠️ Cuidados c/ bateria: {o.cuidadosBateriaObs||"ver detalhes"}</div>}
-                          {patTop&&<div style={{fontSize:7,color:"#92400E",background:"#FFFBEB",borderRadius:5,padding:"2px 4px"}}>🔧 PAT {patTop.pat} — {patTop.corretivas} corretivas{patTop.motivo?`: ${patTop.motivo}`:""}</div>}
-                          {o.servicosRealizados&&<div style={{fontSize:7,color:"#666",background:"#FAFAFA",borderRadius:5,padding:"2px 4px"}}>🔧 {o.servicosRealizados}</div>}
-                          {o.obs&&<div style={{fontSize:7,color:"#666",fontStyle:"italic"}}>💬 {o.obs}</div>}
+                          {o.prevDiaMes&&<div style={{fontSize:11,color:"#888"}}>🗓 Preventiva: dia {o.prevDiaMes} · {o.prevPeriodo==="tarde"?"Tarde":"Manhã"}</div>}
+                          {batAlert&&<div style={{fontSize:11,color:"#C62828",background:"#FFF0F0",borderRadius:8,padding:"5px 8px",fontWeight:700}}>🔋⚠️ {batAlert}</div>}
+                          {o.cuidadosBateria==="sim"&&<div style={{fontSize:11,color:"#C47D00",background:"#FFFBF0",borderRadius:8,padding:"5px 8px",fontWeight:700}}>⚠️ Cuidados c/ bateria: {o.cuidadosBateriaObs||"ver detalhes"}</div>}
+                          {patTop&&<div style={{fontSize:11,color:"#92400E",background:"#FFFBEB",borderRadius:8,padding:"5px 8px"}}>🔧 PAT {patTop.pat} — {patTop.corretivas} corretivas{patTop.motivo?`: ${patTop.motivo}`:""}</div>}
+                          {o.servicosRealizados&&<div style={{fontSize:11,color:"#666",background:"#FAFAFA",borderRadius:8,padding:"5px 8px"}}>🔧 {o.servicosRealizados}</div>}
+                          {o.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic"}}>💬 {o.obs}</div>}
                         </div>
                       </div>
                     );
