@@ -1176,7 +1176,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
     const COLW=versaoCliente
       ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
-      : {nome:52,cod:26,qtd:16,cot:26,dataCot:12,local:32,cons:30,venda:38,margem:37};
+      : {nome:60,cod:22,qtd:14,cot:24,dataCot:20,local:30,cons:28,venda:36,margem:35};
     // Calcula um fator de escala pra garantir que TUDO caiba numa unica pagina, mesmo com muitas peças
     // e nomes longos (que quebram em mais de uma linha). Faz isso simulando a quebra de texto de
     // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
@@ -1209,7 +1209,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     doc.line(M,y,M+W,y);
     const heads=versaoCliente
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
-      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Data Cotação",COLW.dataCot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
+      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Data Cot.",COLW.dataCot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
     doc.setFontSize(Math.max(fonteBase,7));
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
