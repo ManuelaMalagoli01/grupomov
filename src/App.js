@@ -1164,21 +1164,40 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     y+=16;
     linha([{label:"Produto (Marca/Modelo)",valor:o.produtoModelo,w:137},{label:"PAT / Nº de série",valor:o.patSerie,w:66},{label:"Nº da OS",valor:o.numOS,w:66}], y, 14);
     y+=14;
+    // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
+    const COLW=versaoCliente
+      ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
+      : {nome:52,cod:26,qtd:16,cot:30,local:36,cons:30,venda:38,margem:41};
     // Calcula um fator de escala pra garantir que TUDO caiba numa unica pagina, mesmo com muitas peças
+    // e nomes longos (que quebram em mais de uma linha). Faz isso simulando a quebra de texto de
+    // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
     const numPecas=(o.pecas||[]).length||1;
     const espacoDisponivelParaTabela=195-y-8-38-20; // reserva pro resumo financeiro e observação
     const alturaLinhaPadrao=7.2;
+    const alturaTotalNaEscala=(esc)=>{
+      const fonte=8.5*esc, altLinha=alturaLinhaPadrao*esc;
+      doc.setFont(undefined,"normal"); doc.setFontSize(Math.max(fonte,4));
+      let total=0;
+      (o.pecas||[]).forEach(p=>{
+        const nomeLines=doc.splitTextToSize(p.nome||"—",COLW.nome-4);
+        const localLines=versaoCliente?[]:doc.splitTextToSize(p.localCotacao||"—",COLW.local-4);
+        total+=Math.max(nomeLines.length,localLines.length,1)*altLinha;
+      });
+      return total;
+    };
     let escala=Math.min(1,Math.max(0.55,espacoDisponivelParaTabela/(numPecas*alturaLinhaPadrao)));
+    // refina em até 3 passadas, medindo a altura real (com quebra de linha) no tamanho de fonte candidato
+    for(let tentativa=0;tentativa<3;tentativa++){
+      const alturaReal=alturaTotalNaEscala(escala);
+      if(alturaReal<=espacoDisponivelParaTabela||escala<=0.4)break;
+      escala=Math.max(0.4,escala*(espacoDisponivelParaTabela/alturaReal));
+    }
     const fonteBase=8.5*escala, alturaLinhaBase=alturaLinhaPadrao*escala;
     // Título tabela de peças
     doc.setFont(undefined,"bold"); doc.setFontSize(12);
     doc.text(versaoCliente?"Peças do orçamento":"Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
-    // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
-    const COLW=versaoCliente
-      ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
-      : {nome:52,cod:26,qtd:16,cot:30,local:36,cons:30,venda:38,margem:41};
     const heads=versaoCliente
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
       : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
