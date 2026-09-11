@@ -354,6 +354,15 @@ const CHECKLIST_STATUS = {
   concluido:{l:"✅ Concluído",c:"#166534",bg:"#F0FDF4"},
 };
 const CHECKLIST_STATUS_KEYS = Object.keys(CHECKLIST_STATUS);
+const TIPO_ORC={
+  unica:{l:"Peça Única",c:"#1565C0",bg:"#EFF6FF"},
+  reforma:{l:"Reforma",c:"#7E22CE",bg:"#F5F3FF"},
+  prev_interna:{l:"Preventiva Interna",c:"#0D9488",bg:"#F0FDFA"},
+  prev_externa:{l:"Preventiva Externa",c:"#0E7490",bg:"#ECFEFF"},
+  prev_troca_oleo:{l:"Preventiva c/ Troca de Óleo",c:"#166534",bg:"#F0FDF4"},
+  corr_interna:{l:"Corretiva Interna",c:"#C62828",bg:"#FFF0F0"},
+  corr_externa:{l:"Corretiva Externa",c:"#B45309",bg:"#FFFBEB"},
+};
 const COT_PECA_VAZIA = {nome:"",valor:""};
 const AF_VENDEDORES = ["LUCIANA","RODRIGO","STEFANY","MANUELA","INTERNO"];
 const AF_EMPRESAS = ["Mov Service","Mov Com","Mov Loc"];
@@ -1137,7 +1146,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     doc.setDrawColor(20,20,20); doc.setLineWidth(0.4); doc.line(M,y,M+W,y);
     y+=9;
     doc.setTextColor(20,20,20); doc.setFont(undefined,"bold"); doc.setFontSize(15);
-    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":o.tipo==="preventiva"?"Orçamento de Preventiva":"Orçamento de Peças",CX,y,{align:"center"});
+    doc.text(o.tipo==="unica"||!o.tipo?"Orçamento de Peças":`Orçamento de ${(TIPO_ORC[o.tipo]||{}).l||"Peças"}`,CX,y,{align:"center"});
     doc.setFontSize(10);
     doc.text("DATA:",M+W-60,y-1);
     doc.setFont(undefined,"normal");
@@ -1167,12 +1176,12 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // colunas: versão interna mostra tudo (com custos/margem); versão cliente esconde Preço Cotação, Local Cotação, Valor de Compra e Margem
     const COLW=versaoCliente
       ? {nome:100,cod:40,qtd:24,cons:52,venda:53}
-      : {nome:52,cod:26,qtd:16,cot:30,local:36,cons:30,venda:38,margem:41};
+      : {nome:52,cod:26,qtd:16,cot:26,dataCot:12,local:32,cons:30,venda:38,margem:37};
     // Calcula um fator de escala pra garantir que TUDO caiba numa unica pagina, mesmo com muitas peças
     // e nomes longos (que quebram em mais de uma linha). Faz isso simulando a quebra de texto de
     // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
     const numPecas=(o.pecas||[]).length||1;
-    const espacoDisponivelParaTabela=195-y-8-38-20; // reserva pro resumo financeiro e observação
+    const espacoDisponivelParaTabela=195-y-8-56-20; // reserva pro resumo financeiro (com mao de obra/deslocamento) e observação
     const alturaLinhaPadrao=7.2;
     const alturaTotalNaEscala=(esc)=>{
       const fonte=8.5*esc, altLinha=alturaLinhaPadrao*esc;
@@ -1200,7 +1209,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     doc.line(M,y,M+W,y);
     const heads=versaoCliente
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
-      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
+      : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Data Cotação",COLW.dataCot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
     doc.setFontSize(Math.max(fonteBase,7));
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
@@ -1228,6 +1237,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
         doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"});
       }else{
         doc.text(`R$ ${cot.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cot-2,yTxt,{align:"right"}); xx+=COLW.cot;
+        doc.text(fmtDataBR(p.dataCotacao)||"—",xx+COLW.dataCot/2,yTxt,{align:"center"}); xx+=COLW.dataCot;
         doc.text(localLines,xx+2,yTxt); xx+=COLW.local;
         doc.text(`R$ ${cons.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.cons-2,yTxt,{align:"right"}); xx+=COLW.cons;
         doc.text(`R$ ${vVenda.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,xx+COLW.venda-2,yTxt,{align:"right"}); xx+=COLW.venda;
@@ -1241,17 +1251,21 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     let xv=M;
     const colsList=versaoCliente
       ? [COLW.nome,COLW.cod,COLW.qtd,COLW.cons,COLW.venda]
-      : [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.local,COLW.cons,COLW.venda,COLW.margem];
+      : [COLW.nome,COLW.cod,COLW.qtd,COLW.cot,COLW.dataCot,COLW.local,COLW.cons,COLW.venda,COLW.margem];
     colsList.forEach((w,i)=>{
       if(i>0) doc.line(xv,yTabelaInicio,xv,y);
       xv+=w;
     });
     doc.line(M,yTabelaInicio,M,y); doc.line(M+W,yTabelaInicio,M+W,y);
     doc.setDrawColor(20,20,20); doc.setLineWidth(0.4);
-    // Resumo financeiro — versão cliente mostra so Valor de Venda, Mao de Obra e Total; versao interna mostra tudo
+    // Resumo financeiro — versão cliente mostra so Valor de Venda, Mao de Obra/Deslocamento e Total; versao interna mostra tudo
     const margemCons=totalCons-totalCot;
-    const mdo=parseFloat((o.maoDeObra||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
-    const alturaResumo=versaoCliente?(mdo>0?20:14):(mdo>0?38:32);
+    const valorHoraNum=parseFloat((o.maoDeObraValorHora||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+    const mdo=((parseFloat(o.maoDeObraQtdHoras)||0)*valorHoraNum)||parseFloat((o.maoDeObra||"0").toString().replace(/[^\d.,]/g,"").replace(",","."))||0;
+    const desloc=(parseFloat(o.deslocamentoKm)||0)*3.5;
+    const horaDesloc=(parseFloat(o.horaDeslocamentoQtd)||0)*70;
+    const qtdLinhasExtras=(mdo>0?1:0)+(desloc>0?1:0)+(horaDesloc>0?1:0);
+    const alturaResumo=(versaoCliente?14:32)+qtdLinhasExtras*6;
     if(y+8+alturaResumo>195){doc.addPage("landscape");y=20;}
     y+=8;
     const resumoW=76, resumoX=M+W-resumoW;
@@ -1264,17 +1278,21 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
       y+=6;
     };
     if(versaoCliente){
-      if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+      if(mdo>0) linhaResumo(`Mão de Obra (${o.maoDeObraTipo==="externa"?"Externa":"Interna"}):`,mdo,false);
+      if(desloc>0) linhaResumo(`Deslocamento (${o.deslocamentoKm} km):`,desloc,false);
+      if(horaDesloc>0) linhaResumo(`Hora em Deslocamento (${o.horaDeslocamentoQtd} h):`,horaDesloc,false);
     }else{
       linhaResumo("Valor de Compra:",totalCot,false);
       linhaResumo("Valor de Venda:",totalCons,false);
       linhaResumo("Margem:",margemCons,false);
-      if(mdo>0) linhaResumo("Mão de Obra:",mdo,false);
+      if(mdo>0) linhaResumo(`Mão de Obra (${o.maoDeObraTipo==="externa"?"Externa":"Interna"}):`,mdo,false);
+      if(desloc>0) linhaResumo(`Deslocamento (${o.deslocamentoKm} km):`,desloc,false);
+      if(horaDesloc>0) linhaResumo(`Hora em Deslocamento (${o.horaDeslocamentoQtd} h):`,horaDesloc,false);
     }
     doc.setDrawColor(20,20,20); doc.line(resumoX,y-2,M+W,y-2);
     y+=2;
     doc.setFontSize(11);
-    linhaResumo("Total:",totalCons+mdo,true);
+    linhaResumo("Total:",totalCons+mdo+desloc+horaDesloc,true);
     doc.setTextColor(20,20,20);
     y+=4;
     // Observação
@@ -8613,11 +8631,16 @@ export default function App(){
         })()}
 
         {tab==="orcamento_pecas"&&(()=>{
-          const TIPO_ORC={unica:{l:"Peça Única",c:"#1565C0",bg:"#EFF6FF"},reforma:{l:"Reforma",c:"#7E22CE",bg:"#F5F3FF"},preventiva:{l:"Preventiva",c:"#0D9488",bg:"#F0FDFA"}};
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
-          const totalDe=(o)=>(o.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoConsumidor),0)+parseVal(o.maoDeObra);
+          const totalDe=(o)=>{
+            const pecas=(o.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoConsumidor),0);
+            const mdo=((parseFloat(o.maoDeObraQtdHoras)||0)*parseVal(o.maoDeObraValorHora))||parseVal(o.maoDeObra);
+            const desloc=(parseFloat(o.deslocamentoKm)||0)*3.5;
+            const horaDesloc=(parseFloat(o.horaDeslocamentoQtd)||0)*70;
+            return pecas+mdo+desloc+horaDesloc;
+          };
           const totalGeral=lista.reduce((a,o)=>a+totalDe(o),0);
           const proximoNumero=()=>{
             const ano=new Date().getFullYear();
@@ -8625,8 +8648,8 @@ export default function App(){
             const max=doAno.reduce((m,o)=>{const n=parseInt((o.orcamentoNum||"").split(".")[1],10);return isNaN(n)?m:Math.max(m,n);},0);
             return `${ano}.${String(max+1).padStart(4,"0")}`;
           };
-          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:"",anexos:[]});setModalOrc(true);};
-          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}],anexos:o.anexos||[]});setModalOrc(true);};
+          const abrirNovo=(tipo)=>{setEditOrc({orcamentoNum:proximoNumero(),tipo,data:TODAY_STR,empresa:"",telefone:"",cidade:"",produtoModelo:"",patSerie:"",numOS:"",pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",dataCotacao:"",localCotacao:"",precoConsumidor:""}],observacao:"",maoDeObra:"",maoDeObraTipo:"interna",maoDeObraQtdHoras:"",maoDeObraValorHora:"",deslocamentoKm:"",horaDeslocamentoQtd:"",anexos:[]});setModalOrc(true);};
+          const abrirEditar=(o)=>{setEditOrc({...o,pecas:o.pecas&&o.pecas.length?o.pecas:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",dataCotacao:"",localCotacao:"",precoConsumidor:""}],anexos:o.anexos||[]});setModalOrc(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
@@ -8636,13 +8659,21 @@ export default function App(){
                   <BtnExcel onClick={()=>{
                     const linhas=[];
                     lista.forEach(o=>{
+                      const valorHoraNum=parseVal(o.maoDeObraValorHora);
+                      const mdo=((parseFloat(o.maoDeObraQtdHoras)||0)*valorHoraNum)||parseVal(o.maoDeObra);
+                      const desloc=(parseFloat(o.deslocamentoKm)||0)*3.5;
+                      const horaDesloc=(parseFloat(o.horaDeslocamentoQtd)||0)*70;
                       (o.pecas&&o.pecas.length?o.pecas:[{}]).forEach(p=>{
                         linhas.push({
                           orcamentoNum:o.orcamentoNum||"", tipo:(TIPO_ORC[o.tipo]||TIPO_ORC.unica).l, data:fmtDataBR(o.data)||"",
                           empresa:o.empresa||"", telefone:o.telefone||"", cidade:o.cidade||"",
                           produtoModelo:o.produtoModelo||"", patSerie:o.patSerie||"", numOS:o.numOS||"",
                           pecaNome:p.nome||"", pecaCodigo:p.codigo||"", pecaQtd:p.quantidade||"",
-                          precoCotacao:p.precoCotacao||"", localCotacao:p.localCotacao||"", precoConsumidor:p.precoConsumidor||"",
+                          precoCotacao:p.precoCotacao||"", dataCotacao:fmtDataBR(p.dataCotacao)||"", localCotacao:p.localCotacao||"", precoConsumidor:p.precoConsumidor||"",
+                          maoDeObraTipo:o.maoDeObraTipo==="externa"?"Externa":o.maoDeObraQtdHoras?"Interna":"",
+                          maoDeObraQtdHoras:o.maoDeObraQtdHoras||"", maoDeObraValorHora:o.maoDeObraValorHora||"", maoDeObraTotal:mdo?fmtR(mdo):"",
+                          deslocamentoKm:o.deslocamentoKm||"", deslocamentoValor:desloc?fmtR(desloc):"",
+                          horaDeslocamentoQtd:o.horaDeslocamentoQtd||"", horaDeslocamentoValor:horaDesloc?fmtR(horaDesloc):"",
                           observacao:o.observacao||"",
                         });
                       });
@@ -8652,12 +8683,14 @@ export default function App(){
                       {key:"empresa",label:"Empresa"},{key:"telefone",label:"Telefone"},{key:"cidade",label:"Cidade"},
                       {key:"produtoModelo",label:"Produto (Marca/Modelo)"},{key:"patSerie",label:"PAT/Série"},{key:"numOS",label:"Nº OS"},
                       {key:"pecaNome",label:"Nome da Peça"},{key:"pecaCodigo",label:"Código"},{key:"pecaQtd",label:"Quantidade"},
-                      {key:"precoCotacao",label:"Preço Cotação"},{key:"localCotacao",label:"Local Cotação"},{key:"precoConsumidor",label:"Preço Consumidor"},
+                      {key:"precoCotacao",label:"Preço Cotação"},{key:"dataCotacao",label:"Data Cotação"},{key:"localCotacao",label:"Local Cotação"},{key:"precoConsumidor",label:"Preço Consumidor"},
+                      {key:"maoDeObraTipo",label:"Mão de Obra"},{key:"maoDeObraQtdHoras",label:"Qtd Horas"},{key:"maoDeObraValorHora",label:"Valor Hora"},{key:"maoDeObraTotal",label:"Total Mão de Obra"},
+                      {key:"deslocamentoKm",label:"Deslocamento (km)"},{key:"deslocamentoValor",label:"Valor Deslocamento"},
+                      {key:"horaDeslocamentoQtd",label:"Hora em Deslocamento (h)"},{key:"horaDeslocamentoValor",label:"Valor Hora Deslocamento"},
                       {key:"observacao",label:"Observação"},
                     ]);
                   }}/>
                   <button onClick={()=>abrirNovo("unica")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #1565C0",background:"#EFF6FF",color:"#1565C0",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Peça Única</button>
-                  <button onClick={()=>abrirNovo("preventiva")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #0D9488",background:"#F0FDFA",color:"#0D9488",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Preventiva</button>
                   <BtnY onClick={()=>abrirNovo("reforma")}>+ Reforma</BtnY>
                 </div>
               </div>
@@ -8704,15 +8737,18 @@ export default function App(){
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const upd=(k,v)=>setEditOrc(p=>({...p,[k]:v}));
           const updPeca=(i,k,v)=>setEditOrc(p=>{const np=[...(p.pecas||[])];np[i]={...np[i],[k]:v};return {...p,pecas:np};});
-          const addPeca=()=>setEditOrc(p=>({...p,pecas:[...(p.pecas||[]),{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]}));
-          const rmPeca=(i)=>setEditOrc(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",localCotacao:"",precoConsumidor:""}]};});
+          const addPeca=()=>setEditOrc(p=>({...p,pecas:[...(p.pecas||[]),{nome:"",codigo:"",quantidade:"1",precoCotacao:"",dataCotacao:"",localCotacao:"",precoConsumidor:""}]}));
+          const rmPeca=(i)=>setEditOrc(p=>{const arr=(p.pecas||[]).filter((_,idx)=>idx!==i);return {...p,pecas:arr.length?arr:[{nome:"",codigo:"",quantidade:"1",precoCotacao:"",dataCotacao:"",localCotacao:"",precoConsumidor:""}]};});
           const lbl={display:"block",fontSize:10,fontWeight:700,color:"#64748B",textTransform:"uppercase",letterSpacing:.4,marginBottom:4};
           const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:10,border:"1.5px solid #E0E0E0",boxSizing:"border-box",fontFamily:"inherit"};
           const isNovo=!editOrc.id;
           const totalCompraPrev=(editOrc.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoCotacao),0);
           const totalVendaPrev=(editOrc.pecas||[]).reduce((a,p)=>a+(parseFloat(p.quantidade)||0)*parseVal(p.precoConsumidor),0);
           const margemPrev=totalVendaPrev-totalCompraPrev;
-          const totalPrev=totalVendaPrev+parseVal(editOrc.maoDeObra);
+          const maoDeObraTotal=(parseFloat(editOrc.maoDeObraQtdHoras)||0)*parseVal(editOrc.maoDeObraValorHora)||parseVal(editOrc.maoDeObra);
+          const deslocamentoValor=(parseFloat(editOrc.deslocamentoKm)||0)*3.5;
+          const horaDeslocamentoValor=(parseFloat(editOrc.horaDeslocamentoQtd)||0)*70;
+          const totalPrev=totalVendaPrev+maoDeObraTotal+deslocamentoValor+horaDeslocamentoValor;
           const salvar=()=>{
             if(!editOrc.empresa){alert("Informe a Empresa.");return;}
             const pecasValidas=(editOrc.pecas||[]).filter(p=>p.nome||p.precoConsumidor);
@@ -8733,7 +8769,7 @@ export default function App(){
                 </div>
                 <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}><option value="unica">Peça Única</option><option value="preventiva">Preventiva</option><option value="reforma">Reforma</option></select></div>
+                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}>{Object.entries(TIPO_ORC).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}</select></div>
                     <div><label style={lbl}>Data</label><input type="date" value={editOrc.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
@@ -8752,12 +8788,13 @@ export default function App(){
                       <button onClick={addPeca} style={{padding:"5px 12px",borderRadius:20,border:"none",background:"#7E22CE",color:"#FFF",fontSize:11,fontWeight:700,cursor:"pointer"}}>+ Peça</button>
                     </div>
                     <div style={{overflowX:"auto"}}>
-                    <table style={{width:"100%",minWidth:870,borderCollapse:"collapse",tableLayout:"fixed"}}>
+                    <table style={{width:"100%",minWidth:980,borderCollapse:"collapse",tableLayout:"fixed"}}>
                       <thead><tr>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:200}}>Nome / Descrição</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Código</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:58}}>Qtd</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Cotação</th>
+                        <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Data Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:110}}>Local Cotação</th>
                         <th style={{textAlign:"left",fontSize:9,fontWeight:700,color:"#5B21B6",textTransform:"uppercase",padding:"0 6px 5px",width:100}}>Preço Consumidor</th>
                         <th style={{textAlign:"right",fontSize:9,fontWeight:700,color:"#0D9488",textTransform:"uppercase",padding:"0 6px 5px",width:90}}>Valor Venda</th>
@@ -8776,6 +8813,7 @@ export default function App(){
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.codigo||""} onChange={e=>updPeca(i,"codigo",e.target.value)} placeholder="Código" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.quantidade||""} onChange={e=>updPeca(i,"quantidade",e.target.value)} style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoCotacao||""} onChange={e=>updPeca(i,"precoCotacao",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
+                            <td style={{padding:"3px 6px"}}><input type="date" value={p.dataCotacao||""} onChange={e=>updPeca(i,"dataCotacao",e.target.value)} style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.localCotacao||""} onChange={e=>updPeca(i,"localCotacao",e.target.value)} placeholder="Local" style={inp}/></td>
                             <td style={{padding:"3px 6px"}}><input type="text" value={p.precoConsumidor||""} onChange={e=>updPeca(i,"precoConsumidor",e.target.value)} placeholder="R$ 0,00" style={inp}/></td>
                             <td style={{padding:"3px 6px",textAlign:"right",fontSize:11,fontWeight:700,color:"#0D9488",whiteSpace:"nowrap"}}>{fmtR(vVenda)}</td>
@@ -8787,14 +8825,38 @@ export default function App(){
                       </tbody>
                     </table>
                     </div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:12}}>
-                      <div><label style={lbl}>Mão de Obra</label><input type="text" value={editOrc.maoDeObra||""} onChange={e=>upd("maoDeObra",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                    <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:12}}>
+                      <div style={{background:"#FFF",border:"1px solid #E9D5FF",borderRadius:8,padding:10}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#5B21B6",textTransform:"uppercase",marginBottom:6}}>👷 Mão de Obra</div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                          <div><label style={lbl}>Interna/Externa</label><select value={editOrc.maoDeObraTipo||"interna"} onChange={e=>upd("maoDeObraTipo",e.target.value)} style={inp}><option value="interna">Interna</option><option value="externa">Externa</option></select></div>
+                          <div><label style={lbl}>Qtd. Horas</label><input type="text" value={editOrc.maoDeObraQtdHoras||""} onChange={e=>upd("maoDeObraQtdHoras",e.target.value)} placeholder="0" style={inp}/></div>
+                          <div><label style={lbl}>Valor Hora Trabalhada</label><input type="text" value={editOrc.maoDeObraValorHora||""} onChange={e=>upd("maoDeObraValorHora",e.target.value)} placeholder="R$ 0,00" style={inp}/></div>
+                        </div>
+                        {maoDeObraTotal>0&&<div style={{fontSize:11,color:"#5B21B6",fontWeight:700,marginTop:6,textAlign:"right"}}>Total Mão de Obra: {fmtR(maoDeObraTotal)}</div>}
+                      </div>
+                      <div style={{background:"#FFF",border:"1px solid #E9D5FF",borderRadius:8,padding:10}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#5B21B6",textTransform:"uppercase",marginBottom:6}}>🚚 Deslocamento (R$ 3,50/km)</div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                          <div><label style={lbl}>Quilometragem</label><input type="text" value={editOrc.deslocamentoKm||""} onChange={e=>upd("deslocamentoKm",e.target.value)} placeholder="0" style={inp}/></div>
+                          <div style={{display:"flex",alignItems:"flex-end",paddingBottom:9}}><span style={{fontSize:12,fontWeight:700,color:"#0D9488"}}>{deslocamentoValor>0?`= ${fmtR(deslocamentoValor)}`:""}</span></div>
+                        </div>
+                      </div>
+                      <div style={{background:"#FFF",border:"1px solid #E9D5FF",borderRadius:8,padding:10}}>
+                        <div style={{fontSize:9,fontWeight:800,color:"#5B21B6",textTransform:"uppercase",marginBottom:6}}>⏱️ Hora em Deslocamento (R$ 70,00/h)</div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                          <div><label style={lbl}>Quantidade de Horas</label><input type="text" value={editOrc.horaDeslocamentoQtd||""} onChange={e=>upd("horaDeslocamentoQtd",e.target.value)} placeholder="0" style={inp}/></div>
+                          <div style={{display:"flex",alignItems:"flex-end",paddingBottom:9}}><span style={{fontSize:12,fontWeight:700,color:"#0D9488"}}>{horaDeslocamentoValor>0?`= ${fmtR(horaDeslocamentoValor)}`:""}</span></div>
+                        </div>
+                      </div>
                     </div>
                     <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3,marginTop:10,paddingTop:10,borderTop:"1px solid #E9D5FF"}}>
                       <div style={{fontSize:11,color:"#94A3B8"}}>Valor de Compra: <b style={{color:"#B45309"}}>{fmtR(totalCompraPrev)}</b></div>
                       <div style={{fontSize:11,color:"#94A3B8"}}>Valor de Venda: <b style={{color:"#0D9488"}}>{fmtR(totalVendaPrev)}</b></div>
                       <div style={{fontSize:11,color:"#94A3B8"}}>Margem: <b style={{color:margemPrev>=0?"#166534":"#C62828"}}>{fmtR(margemPrev)}</b></div>
-                      {parseVal(editOrc.maoDeObra)>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Mão de Obra: <b style={{color:"#1565C0"}}>{fmtR(parseVal(editOrc.maoDeObra))}</b></div>}
+                      {maoDeObraTotal>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Mão de Obra ({editOrc.maoDeObraTipo==="externa"?"Externa":"Interna"}): <b style={{color:"#1565C0"}}>{fmtR(maoDeObraTotal)}</b></div>}
+                      {deslocamentoValor>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Deslocamento ({editOrc.deslocamentoKm} km): <b style={{color:"#1565C0"}}>{fmtR(deslocamentoValor)}</b></div>}
+                      {horaDeslocamentoValor>0&&<div style={{fontSize:11,color:"#94A3B8"}}>Hora em Deslocamento ({editOrc.horaDeslocamentoQtd} h): <b style={{color:"#1565C0"}}>{fmtR(horaDeslocamentoValor)}</b></div>}
                       <div style={{fontSize:15,fontWeight:900,color:"#5B21B6",marginTop:4}}>Total: {fmtR(totalPrev)}</div>
                     </div>
                   </div>
