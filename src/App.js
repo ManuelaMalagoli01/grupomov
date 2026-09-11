@@ -1137,7 +1137,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     doc.setDrawColor(20,20,20); doc.setLineWidth(0.4); doc.line(M,y,M+W,y);
     y+=9;
     doc.setTextColor(20,20,20); doc.setFont(undefined,"bold"); doc.setFontSize(15);
-    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":"Orçamento de Peças",CX,y,{align:"center"});
+    doc.text(o.tipo==="reforma"?"Orçamento de Reforma":o.tipo==="preventiva"?"Orçamento de Preventiva":"Orçamento de Peças",CX,y,{align:"center"});
     doc.setFontSize(10);
     doc.text("DATA:",M+W-60,y-1);
     doc.setFont(undefined,"normal");
@@ -8594,6 +8594,7 @@ export default function App(){
         })()}
 
         {tab==="orcamento_pecas"&&(()=>{
+          const TIPO_ORC={unica:{l:"Peça Única",c:"#1565C0",bg:"#EFF6FF"},reforma:{l:"Reforma",c:"#7E22CE",bg:"#F5F3FF"},preventiva:{l:"Preventiva",c:"#0D9488",bg:"#F0FDFA"}};
           const fmtR=(v)=>`R$ ${(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`;
           const parseVal=(v)=>{const n=parseFloat((v||"0").toString().replace(/[^\d.,]/g,"").replace(/\.(?=\d{3})/g,"").replace(",","."));return isNaN(n)?0:n;};
           const lista=(orcamentoPecas||[]).filter(o=>o&&(showArqOrc?o.arquivado:!o.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
@@ -8618,7 +8619,7 @@ export default function App(){
                     lista.forEach(o=>{
                       (o.pecas&&o.pecas.length?o.pecas:[{}]).forEach(p=>{
                         linhas.push({
-                          orcamentoNum:o.orcamentoNum||"", tipo:o.tipo==="reforma"?"Reforma":"Peça Única", data:fmtDataBR(o.data)||"",
+                          orcamentoNum:o.orcamentoNum||"", tipo:(TIPO_ORC[o.tipo]||TIPO_ORC.unica).l, data:fmtDataBR(o.data)||"",
                           empresa:o.empresa||"", telefone:o.telefone||"", cidade:o.cidade||"",
                           produtoModelo:o.produtoModelo||"", patSerie:o.patSerie||"", numOS:o.numOS||"",
                           pecaNome:p.nome||"", pecaCodigo:p.codigo||"", pecaQtd:p.quantidade||"",
@@ -8637,6 +8638,7 @@ export default function App(){
                     ]);
                   }}/>
                   <button onClick={()=>abrirNovo("unica")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #1565C0",background:"#EFF6FF",color:"#1565C0",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Peça Única</button>
+                  <button onClick={()=>abrirNovo("preventiva")} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #0D9488",background:"#F0FDFA",color:"#0D9488",fontSize:12,cursor:"pointer",fontWeight:700}}>+ Preventiva</button>
                   <BtnY onClick={()=>abrirNovo("reforma")}>+ Reforma</BtnY>
                 </div>
               </div>
@@ -8647,11 +8649,11 @@ export default function App(){
                   <tbody>
                     {lista.map(o=>{
                       const tot=totalDe(o);
-                      const isReforma=o.tipo==="reforma";
+                      const tipoInfo=TIPO_ORC[o.tipo]||TIPO_ORC.unica;
                       return(
                         <tr key={o.id} style={{opacity:o.arquivado?0.55:1}}>
                           <td style={{padding:"8px 10px",fontWeight:700,color:"#1A1A1A",whiteSpace:"nowrap"}}>{o.orcamentoNum||"—"}</td>
-                          <td style={{padding:"8px 10px"}}><span style={{fontSize:9,fontWeight:700,color:isReforma?"#7E22CE":"#1565C0",background:isReforma?"#F5F3FF":"#EFF6FF",borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{isReforma?"Reforma":"Peça Única"}</span></td>
+                          <td style={{padding:"8px 10px"}}><span style={{fontSize:9,fontWeight:700,color:tipoInfo.c,background:tipoInfo.bg,borderRadius:20,padding:"3px 9px",whiteSpace:"nowrap"}}>{tipoInfo.l}</span></td>
                           <td style={{padding:"8px 10px",fontSize:12,color:"#64748B",whiteSpace:"nowrap"}}>{fmtDataBR(o.data)||"—"}</td>
                           <td style={{padding:"8px 10px",fontSize:12,fontWeight:700,color:"#1A1A1A"}}>{o.empresa||"—"}</td>
                           <td style={{padding:"8px 10px",fontSize:12,color:"#334155"}}>{o.cidade||"—"}</td>
@@ -8712,7 +8714,7 @@ export default function App(){
                 </div>
                 <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}><option value="unica">Peça Única</option><option value="reforma">Reforma</option></select></div>
+                    <div><label style={lbl}>Tipo</label><select value={editOrc.tipo} onChange={e=>upd("tipo",e.target.value)} style={inp}><option value="unica">Peça Única</option><option value="preventiva">Preventiva</option><option value="reforma">Reforma</option></select></div>
                     <div><label style={lbl}>Data</label><input type="date" value={editOrc.data||""} onChange={e=>upd("data",e.target.value)} style={inp}/></div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
