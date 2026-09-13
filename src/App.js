@@ -8567,18 +8567,18 @@ export default function App(){
           const totalRuptura=lista.filter(p=>p.status==="ruptura").length;
           const totalAplicado=lista.filter(p=>p.aplicacao==="sim").length;
           const pendAplicacao=lista.filter(p=>p.status==="atendido"&&p.aplicacao!=="sim").length;
-          const abrirNovo=()=>{setEditSPM({data:TODAY_STR,atendimento:"preventivo",tipoSolicitacao:"relatorio",numero:"",tecnicoSolicitante:"",empresa:"",maquina:"",pat:"",pecaSolicitada:"",codigoPeca:"",quantidade:"1",numReq:"",dataReq:"",status:"ruptura",aplicacao:"nao",dataAplicacao:"",relatorioAplicacao:"",tecnico:"",observacoes:""});setModalSPM(true);};
-          const abrirEditar=(p)=>{setEditSPM({...p});setModalSPM(true);};
+          const abrirNovo=()=>{setEditSPM({data:TODAY_STR,atendimento:"preventivo",tipoSolicitacao:"relatorio",numero:"",tecnicoSolicitante:"",empresa:"",maquina:"",pat:"",pecas:[{pecaSolicitada:"",codigoPeca:"",quantidade:"1"}],numReq:"",dataReq:"",status:"ruptura",aplicacao:"nao",dataAplicacao:"",relatorioAplicacao:"",tecnico:"",observacoes:""});setModalSPM(true);};
+          const abrirEditar=(p)=>{setEditSPM({...p,pecas:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada||"",codigoPeca:p.codigoPeca||"",quantidade:p.quantidade||"1"}])});setModalSPM(true);};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🔧 Solicitação Peças Manutenção</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqSPM(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqSPM?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:p.aplicacao==="sim"?"Sim":"Não"})),"solicitacao_pecas_manutencao",[
+                  <BtnExcel onClick={()=>exportCSV(lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:p.aplicacao==="sim"?"Sim":"Não",pecasFmt:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada).map(x=>`${x.pecaSolicitada}${x.codigoPeca?` (${x.codigoPeca})`:""} x${x.quantidade||1}`).join(" · ")})),"solicitacao_pecas_manutencao",[
                     {key:"dataFmt",label:"Data"},{key:"atendimento",label:"Atendimento"},{key:"tipoSolicitacao",label:"Solicitação"},{key:"numero",label:"Número"},
                     {key:"tecnicoSolicitante",label:"Técnico Solicitante"},{key:"empresa",label:"Empresa"},{key:"maquina",label:"Máquina"},{key:"pat",label:"PAT"},
-                    {key:"pecaSolicitada",label:"Peça Solicitada"},{key:"codigoPeca",label:"Código da Peça"},{key:"quantidade",label:"Quantidade"},
+                    {key:"pecasFmt",label:"Peças Solicitadas"},
                     {key:"numReq",label:"Nº REQ"},{key:"dataReqFmt",label:"Data da REQ"},{key:"statusFmt",label:"Status"},{key:"aplicacaoFmt",label:"Aplicação"},
                     {key:"dataAplicacaoFmt",label:"Data Aplicação"},{key:"relatorioAplicacao",label:"Relatório Aplicação"},{key:"tecnico",label:"Técnico"},{key:"observacoes",label:"Observações"},
                   ])}/>
@@ -8606,10 +8606,11 @@ export default function App(){
 
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap" style={{overflowX:"auto"}}><table style={{minWidth:1600}}>
-                  <thead><tr><th>Data</th><th>Atendimento</th><th>Solicitação</th><th>Técnico Solic.</th><th>Empresa</th><th>Máquina</th><th>PAT</th><th>Peça</th><th>Código</th><th>Qtd</th><th>Nº REQ</th><th>Data REQ</th><th>Status</th><th>Aplicação</th><th>Data Apl.</th><th>Rel. Apl.</th><th>Técnico</th><th></th></tr></thead>
+                  <thead><tr><th>Data</th><th>Atendimento</th><th>Solicitação</th><th>Técnico Solic.</th><th>Empresa</th><th>Máquina</th><th>PAT</th><th>Peças (até 5)</th><th>Nº REQ</th><th>Data REQ</th><th>Status</th><th>Aplicação</th><th>Data Apl.</th><th>Rel. Apl.</th><th>Técnico</th><th></th></tr></thead>
                   <tbody>
                     {lista.map(p=>{
                       const st=STATUS_SPM[p.status]||STATUS_SPM.ruptura;
+                      const pecasList=(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada);
                       return(
                         <tr key={p.id} style={{opacity:p.arquivado?0.55:1}}>
                           <td style={{padding:"7px 9px",whiteSpace:"nowrap",fontSize:11,color:"#64748B"}}>{fmtDataBR(p.data)||"—"}</td>
@@ -8619,9 +8620,11 @@ export default function App(){
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.empresa||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.maquina||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.pat||"—"}</td>
-                          <td style={{padding:"7px 9px",fontSize:11,fontWeight:700,color:"#1A1A1A"}}>{p.pecaSolicitada||"—"}</td>
-                          <td style={{padding:"7px 9px",fontSize:11,color:"#94A3B8"}}>{p.codigoPeca||"—"}</td>
-                          <td style={{padding:"7px 9px",fontSize:11,textAlign:"center"}}>{p.quantidade||"—"}</td>
+                          <td style={{padding:"7px 9px",fontSize:11,minWidth:180}}>
+                            {pecasList.length===0?"—":pecasList.map((x,i)=>(
+                              <div key={i} style={{whiteSpace:"nowrap"}}><span style={{fontWeight:700,color:"#1A1A1A"}}>{x.pecaSolicitada}</span>{x.codigoPeca&&<span style={{color:"#94A3B8"}}> ({x.codigoPeca})</span>} <span style={{color:"#64748B"}}>x{x.quantidade||1}</span></div>
+                            ))}
+                          </td>
                           <td style={{padding:"7px 9px",fontSize:11,color:"#1565C0",fontWeight:600}}>{p.numReq||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11,color:"#64748B",whiteSpace:"nowrap"}}>{fmtDataBR(p.dataReq)||"—"}</td>
                           <td style={{padding:"7px 9px"}}><span style={{fontSize:10,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"3px 8px",whiteSpace:"nowrap"}}>{st.l}</span></td>
@@ -8663,7 +8666,7 @@ export default function App(){
           const topTecnicos=Object.entries(tecCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
           // Peças mais solicitadas
           const pecaCount={};
-          lista.forEach(p=>{const nome=p.pecaSolicitada||"";if(nome)pecaCount[nome]=(pecaCount[nome]||0)+1;});
+          lista.forEach(p=>{const pecasArr=p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada}];pecasArr.forEach(x=>{const nome=x.pecaSolicitada||"";if(nome)pecaCount[nome]=(pecaCount[nome]||0)+1;});});
           const topPecas=Object.entries(pecaCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
           // Evolução por mês
           const getMes=(dateStr)=>{if(!dateStr)return null;const d=new Date(dateStr);if(isNaN(d))return null;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;};
@@ -8786,7 +8789,7 @@ export default function App(){
                       <tr key={i}>
                         <td style={{fontSize:11,color:"#888"}}>{fmtDataBR(r.data)||"—"}</td>
                         <td>{r.empresa||"—"}</td>
-                        <td style={{fontWeight:700}}>{r.pecaSolicitada||"—"}</td>
+                        <td style={{fontWeight:700}}>{(r.pecas&&r.pecas.length?r.pecas:[{pecaSolicitada:r.pecaSolicitada}]).filter(x=>x.pecaSolicitada).map(x=>x.pecaSolicitada).join(", ")||"—"}</td>
                         <td style={{fontSize:11}}>{r.tecnicoSolicitante||"—"}</td>
                         <td style={{fontSize:11,color:"#1565C0",fontWeight:600}}>{r.numReq||"—"}</td>
                       </tr>
@@ -8837,10 +8840,21 @@ export default function App(){
                     <div><label style={lbl}>Máquina</label><input type="text" value={editSPM.maquina||""} onChange={e=>upd("maquina",e.target.value)} style={inp}/></div>
                     <div><label style={lbl}>PAT</label><input type="text" value={editSPM.pat||""} onChange={e=>upd("pat",e.target.value)} style={inp}/></div>
                   </div>
-                  <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Peça Solicitada</label><input type="text" value={editSPM.pecaSolicitada||""} onChange={e=>upd("pecaSolicitada",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>Código da Peça</label><input type="text" value={editSPM.codigoPeca||""} onChange={e=>upd("codigoPeca",e.target.value)} style={inp}/></div>
-                    <div><label style={lbl}>Quantidade</label><input type="text" value={editSPM.quantidade||""} onChange={e=>upd("quantidade",e.target.value)} style={inp}/></div>
+                  <div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <label style={{...lbl,marginBottom:0}}>Peças Solicitadas (até 5)</label>
+                      {(editSPM.pecas||[]).length<5&&<button type="button" onClick={()=>upd("pecas",[...(editSPM.pecas||[]),{pecaSolicitada:"",codigoPeca:"",quantidade:"1"}])} style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer"}}>+ Adicionar Peça</button>}
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {(editSPM.pecas||[{pecaSolicitada:"",codigoPeca:"",quantidade:"1"}]).map((pc,i)=>(
+                        <div key={i} style={{display:"grid",gridTemplateColumns:"2fr 1fr 0.7fr auto",gap:8,alignItems:"center"}}>
+                          <input type="text" value={pc.pecaSolicitada||""} onChange={e=>{const np=[...editSPM.pecas];np[i]={...np[i],pecaSolicitada:e.target.value};upd("pecas",np);}} placeholder="Nome da peça" style={inp}/>
+                          <input type="text" value={pc.codigoPeca||""} onChange={e=>{const np=[...editSPM.pecas];np[i]={...np[i],codigoPeca:e.target.value};upd("pecas",np);}} placeholder="Código" style={inp}/>
+                          <input type="text" value={pc.quantidade||""} onChange={e=>{const np=[...editSPM.pecas];np[i]={...np[i],quantidade:e.target.value};upd("pecas",np);}} placeholder="Qtd" style={inp}/>
+                          {(editSPM.pecas||[]).length>1&&<button type="button" onClick={()=>upd("pecas",editSPM.pecas.filter((_,idx)=>idx!==i))} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"7px 9px",fontSize:11,fontWeight:700}}>✕</button>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                     <div><label style={lbl}>Nº REQ</label><input type="text" value={editSPM.numReq||""} onChange={e=>upd("numReq",e.target.value)} style={inp}/></div>
