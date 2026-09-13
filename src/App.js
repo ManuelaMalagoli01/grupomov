@@ -13398,51 +13398,64 @@ export default function App(){
                 {hasFilterOp&&<button onClick={()=>setOpSearch("")} style={{padding:"7px 14px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕</button>}
               </div>}
 
-              {/* Lista de clientes */}
+              {/* Lista de clientes — formato planilha, agrupado por empresa (uma empresa pode ter várias máquinas, é a mesma operação) */}
               {listaFil.length===0?(<div className="card" style={{padding:36,textAlign:"center",color:"#CCC"}}><div style={{fontSize:26,marginBottom:4}}>🏢</div><div style={{fontSize:10,fontWeight:600}}>Nenhuma operação cadastrada</div></div>):(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
-                  {listaFil.map(o=>{
-                    const sev=calcSeveridade(o.qtdPreventiva,o.qtdCorretiva);
-                    const sevInfo=OP_SEVER[sev];
-                    const batAlert=bateriaAlerta(o);
-                    const patTop=patMaisCorretivas(o);
-                    const resp0=(o.responsaveis||[])[0];
-                    const respExtra=(o.responsaveis||[]).length-1;
-                    const patExtra=(o.patrimonios||[]).length;
-                    return(
-                      <div key={o.id} className="card" style={{borderTop:`4px solid ${sevInfo.c}`,padding:0,overflow:"hidden",opacity:o.arquivado?0.6:1}}>
-                        <div style={{padding:"9px 14px",background:sevInfo.bg,borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:12,fontWeight:800,color:sevInfo.c}}>{sevInfo.l}</span>
-                          <div style={{display:"flex",gap:5}}>
-                            <button onClick={()=>abrirEditarOp(o)} style={{background:"#EFF6FF",border:"none",borderRadius:6,color:"#1565C0",cursor:"pointer",padding:"5px 8px",fontSize:12}}>✏️</button>
-                            <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} style={{background:"#F5F5F5",border:"none",borderRadius:6,cursor:"pointer",padding:"5px 8px",fontSize:12}}>{o.arquivado?"📤":"🗄️"}</button>
-                            <button onClick={()=>{if(window.confirm("Excluir permanentemente?"))opCrud.del(o.id);}} style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"5px 8px",fontSize:12,fontWeight:700}}>✕</button>
-                          </div>
-                        </div>
-                        <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:8}}>
-                          <div style={{fontSize:16,fontWeight:800,color:"#1A1A1A"}}>{o.cliente||"—"}</div>
-                          <div style={{fontSize:12,color:"#64748B"}}>📍 {o.localizacao||"—"}</div>
-                          {resp0&&<div style={{fontSize:12,color:"#334155"}}>👤 {resp0.nome||"—"}{respExtra>0&&<span style={{color:"#94A3B8"}}> +{respExtra}</span>}</div>}
-                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🏗️ {patExtra} PAT</span>
-                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🔋 {(o.baterias||[]).length}</span>
-                            <span style={{fontSize:11,background:"#F5F5F5",color:"#555",borderRadius:8,padding:"3px 9px",fontWeight:700}}>🔌 {(o.carregadores||[]).length}</span>
-                          </div>
-                          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-                            <div style={{background:"#EFF6FF",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#1565C0",fontSize:10,fontWeight:700}}>Prev.</div><div style={{fontSize:16,fontWeight:800,color:"#1565C0"}}>{o.qtdPreventiva||0}</div></div>
-                            <div style={{background:"#FFF0F0",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#C62828",fontSize:10,fontWeight:700}}>Corr.</div><div style={{fontSize:16,fontWeight:800,color:"#C62828"}}>{o.qtdCorretiva||0}</div></div>
-                            <div style={{background:"#FFF8F0",borderRadius:8,padding:"6px 4px",textAlign:"center"}}><div style={{color:"#E67E00",fontSize:10,fontWeight:700}}>M.Uso</div><div style={{fontSize:16,fontWeight:800,color:"#E67E00"}}>{o.qtdMauUso||0}</div></div>
-                          </div>
-                          {o.prevDiaMes&&<div style={{fontSize:11,color:"#888"}}>🗓 Preventiva: dia {o.prevDiaMes} · {o.prevPeriodo==="tarde"?"Tarde":"Manhã"}</div>}
-                          {batAlert&&<div style={{fontSize:11,color:"#C62828",background:"#FFF0F0",borderRadius:8,padding:"5px 8px",fontWeight:700}}>🔋⚠️ {batAlert}</div>}
-                          {o.cuidadosBateria==="sim"&&<div style={{fontSize:11,color:"#C47D00",background:"#FFFBF0",borderRadius:8,padding:"5px 8px",fontWeight:700}}>⚠️ Cuidados c/ bateria: {o.cuidadosBateriaObs||"ver detalhes"}</div>}
-                          {patTop&&<div style={{fontSize:11,color:"#92400E",background:"#FFFBEB",borderRadius:8,padding:"5px 8px"}}>🔧 PAT {patTop.pat} — {patTop.corretivas} corretivas{patTop.motivo?`: ${patTop.motivo}`:""}</div>}
-                          {o.servicosRealizados&&<div style={{fontSize:11,color:"#666",background:"#FAFAFA",borderRadius:8,padding:"5px 8px"}}>🔧 {o.servicosRealizados}</div>}
-                          {o.obs&&<div style={{fontSize:11,color:"#666",fontStyle:"italic"}}>💬 {o.obs}</div>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="card" style={{padding:0,overflow:"hidden"}}>
+                  <div className="tbl-wrap" style={{overflowX:"auto",maxHeight:"calc(100vh - 420px)"}}>
+                    <table style={{width:"100%",minWidth:960,borderCollapse:"collapse"}}>
+                      <thead><tr style={{background:"#F8FAFC"}}>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>PAT</th>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Modelo</th>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Marca</th>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Nº Série</th>
+                        <th style={{padding:"8px 10px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#0D9488",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Horímetro</th>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Situação</th>
+                        <th style={{padding:"8px 10px",textAlign:"center",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Corretivas</th>
+                        <th style={{padding:"8px 10px",textAlign:"left",fontSize:9.5,fontWeight:800,color:"#64748B",textTransform:"uppercase",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}>Motivo</th>
+                        <th style={{padding:"8px 10px",position:"sticky",top:0,background:"#F8FAFC",zIndex:1}}></th>
+                      </tr></thead>
+                      <tbody>
+                        {listaFil.map(o=>{
+                          const pats=o.patrimonios||[];
+                          const setPat=(i,changes)=>{const np=[...pats];np[i]={...np[i],...changes};opCrud.update(o.id,{patrimonios:np});};
+                          const addPat=()=>opCrud.update(o.id,{patrimonios:[...pats,{pat:"",modelo:"",marca:"",numeroSerie:"",horimetro:"",status:"",corretivas:"",motivo:""}]});
+                          const rmPat=(i)=>opCrud.update(o.id,{patrimonios:pats.filter((_,idx)=>idx!==i)});
+                          return(
+                            <Fragment key={o.id}>
+                              <tr style={{background:"#1A1A1A",opacity:o.arquivado?0.6:1}}>
+                                <td colSpan={9} style={{padding:"9px 12px"}}>
+                                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                                    <div style={{color:"#F5C200",fontWeight:800,fontSize:13}}>🏢 {o.cliente||"—"} <span style={{color:"#94A3B8",fontWeight:600,fontSize:11}}>— {pats.length} máquina{pats.length===1?"":"s"} · 📍 {o.localizacao||"—"}</span></div>
+                                    <div style={{display:"flex",gap:5}}>
+                                      <button onClick={addPat} title="Adicionar máquina" style={{background:"#0D9488",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:10,fontWeight:700}}>+ Máquina</button>
+                                      <button onClick={()=>abrirEditarOp(o)} title="Editar operação" style={{background:"#1E293B",border:"none",borderRadius:6,color:"#93C5FD",cursor:"pointer",padding:"4px 8px",fontSize:11}}>✏️</button>
+                                      <button onClick={()=>opCrud.update(o.id,{arquivado:!o.arquivado})} title={o.arquivado?"Desarquivar":"Arquivar"} style={{background:"#1E293B",border:"none",borderRadius:6,color:"#CBD5E1",cursor:"pointer",padding:"4px 8px",fontSize:11}}>{o.arquivado?"📤":"🗄️"}</button>
+                                      <button onClick={()=>{if(window.confirm("Excluir permanentemente essa operação e todas as suas máquinas?"))opCrud.del(o.id);}} title="Excluir" style={{background:"#7F1D1D",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 8px",fontSize:11,fontWeight:700}}>✕</button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                              {pats.length===0?(
+                                <tr><td colSpan={9} style={{padding:"10px 16px",color:"#94A3B8",fontStyle:"italic",fontSize:12}}>Nenhuma máquina cadastrada — clique em "+ Máquina" acima</td></tr>
+                              ):pats.map((p,i)=>(
+                                <tr key={i} style={{borderBottom:"1px solid #F1F5F9"}}>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.pat||""} onChange={e=>setPat(i,{pat:e.target.value})} style={{width:70,fontSize:12,padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.modelo||""} onChange={e=>setPat(i,{modelo:e.target.value})} style={{width:100,fontSize:12,padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.marca||""} onChange={e=>setPat(i,{marca:e.target.value})} style={{width:90,fontSize:12,padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.numeroSerie||""} onChange={e=>setPat(i,{numeroSerie:e.target.value})} style={{width:110,fontSize:12,padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit",color:"#64748B"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px",textAlign:"center"}}><input type="text" value={p.horimetro||""} onChange={e=>setPat(i,{horimetro:e.target.value})} placeholder="0h" style={{width:80,fontSize:13,fontWeight:800,color:"#0D9488",padding:"4px 6px",border:"1.5px solid #CCFBF1",background:"#F0FDFA",borderRadius:6,textAlign:"center",fontFamily:"inherit"}}/></td>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.status||""} onChange={e=>setPat(i,{status:e.target.value})} style={{width:100,fontSize:11,color:"#94A3B8",padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px",textAlign:"center"}}><input type="text" value={p.corretivas||""} onChange={e=>setPat(i,{corretivas:e.target.value})} style={{width:50,fontSize:12,fontWeight:700,color:"#C62828",padding:"4px 6px",border:"1px solid transparent",borderRadius:6,textAlign:"center",fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px"}}><input type="text" value={p.motivo||""} onChange={e=>setPat(i,{motivo:e.target.value})} style={{width:160,fontSize:12,padding:"4px 6px",border:"1px solid transparent",borderRadius:6,fontFamily:"inherit"}} onFocus={e=>e.target.style.border="1px solid #E0E0E0"} onBlur={e=>e.target.style.border="1px solid transparent"}/></td>
+                                  <td style={{padding:"5px 10px"}}><button onClick={()=>rmPat(i)} title="Remover máquina" style={{background:"#FFF0F0",border:"none",borderRadius:6,color:"#C62828",cursor:"pointer",padding:"3px 7px",fontSize:10}}>✕</button></td>
+                                </tr>
+                              ))}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -13468,7 +13481,7 @@ export default function App(){
                 porCliente.forEach(grupo=>{
                   const existing=(operacoes||[]).find(o=>norm(o.cliente)===norm(grupo.cliente));
                   const novosPatrimonios=grupo.itens.map(it=>({
-                    pat:it.pat,modelo:it.modelo,mediaHoras:"",corretivas:"",motivo:"",
+                    pat:it.pat,modelo:it.modelo,mediaHoras:"",horimetro:"",corretivas:"",motivo:"",
                     marca:it.marca,numeroSerie:it.numeroSerie,equipamento:it.equipamento,status:it.status,ativo:it.ativo,servico:it.servico,
                   }));
                   if(existing){
