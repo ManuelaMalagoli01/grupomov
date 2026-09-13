@@ -3698,7 +3698,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","dashboard_clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "dificuldades_tecnicos", "banco_horas", "carros", "solicitacao_pecas_manutencao", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "dificuldades_tecnicos", "banco_horas", "carros", "solicitacao_pecas_manutencao", "dashboard_solicitacao_pecas", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -3863,6 +3863,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         </SubFolder>}
 
         <SubBtn k="solicitacao_pecas_manutencao" l="🔧 Solicitação Peças Manutenção"/>
+        <SubBtn k="dashboard_solicitacao_pecas" l="📊 KPIs Solicitação Peças"/>
 
         <SubFolder label="Externos" icon="👷" open={subExtOpen} setOpen={setSubExtOpen} ativa={SUB_EXTERNOS.includes(tab)} color="#15803D">
           <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
@@ -8636,6 +8637,165 @@ export default function App(){
                 </table></div>
                 {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqSPM?"arquivado":""}</div>}
               </div>
+            </div>
+          );
+        })()}
+
+        {/* ── DASHBOARD SOLICITAÇÃO PEÇAS MANUTENÇÃO — padrão BI escuro do Mau Uso ── */}
+        {tab==="dashboard_solicitacao_pecas"&&(()=>{
+          const lista=(solicitacaoPecas||[]).filter(p=>p&&!p.arquivado);
+          const total=lista.length;
+          const atendidas=lista.filter(p=>p.status==="atendido").length;
+          const rupturas=lista.filter(p=>p.status==="ruptura");
+          const aplicadas=lista.filter(p=>p.aplicacao==="sim").length;
+          const pendAplicacao=lista.filter(p=>p.status==="atendido"&&p.aplicacao!=="sim").length;
+          // Por empresa
+          const empCount={};
+          lista.forEach(p=>{const e=p.empresa||"Sem empresa";empCount[e]=(empCount[e]||0)+1;});
+          const topEmpresas=Object.entries(empCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+          // Por técnico solicitante
+          const tecCount={};
+          lista.forEach(p=>{const t=p.tecnicoSolicitante||"Sem técnico";tecCount[t]=(tecCount[t]||0)+1;});
+          const topTecnicos=Object.entries(tecCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+          // Peças mais solicitadas
+          const pecaCount={};
+          lista.forEach(p=>{const nome=p.pecaSolicitada||"";if(nome)pecaCount[nome]=(pecaCount[nome]||0)+1;});
+          const topPecas=Object.entries(pecaCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+          // Evolução por mês
+          const getMes=(dateStr)=>{if(!dateStr)return null;const d=new Date(dateStr);if(isNaN(d))return null;return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;};
+          const mesAtendido={},mesRuptura={};
+          lista.forEach(p=>{const m=getMes(p.data);if(!m)return; if(p.status==="ruptura")mesRuptura[m]=(mesRuptura[m]||0)+1; else mesAtendido[m]=(mesAtendido[m]||0)+1;});
+          const allMeses=[...new Set([...Object.keys(mesAtendido),...Object.keys(mesRuptura)])].sort().slice(-6);
+          const nomesMes=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+          const mesesLabel=allMeses.map(m=>{const[y,mo]=m.split("-");return`${nomesMes[parseInt(mo)-1]}/${y.slice(2)}`;});
+          const chartEvolucao={labels:mesesLabel,datasets:[
+            {label:"Atendido",data:allMeses.map(m=>mesAtendido[m]||0),backgroundColor:"#0D9488",borderRadius:4},
+            {label:"Ruptura",data:allMeses.map(m=>mesRuptura[m]||0),backgroundColor:"#F5C200",borderRadius:4},
+          ]};
+          // Atendimento (preventivo/corretivo/os)
+          const atCount={preventivo:0,corretivo:0,os:0};
+          lista.forEach(p=>{const a=p.atendimento||"preventivo";if(atCount[a]!==undefined)atCount[a]++;});
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📊 KPIs Solicitação Peças</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{total} registro(s) — espelha Solicitação Peças Manutenção</div></div>
+              </div>
+
+              {/* KPIs */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,margin:"18px 0 22px"}}>
+                {[
+                  {l:"Total",v:total,i:"🔧",bg:"#F1F5F9",fg:"#334155"},
+                  {l:"Atendidas",v:atendidas,i:"✅",bg:"#F0FDF4",fg:"#166534"},
+                  {l:"Ruptura",v:rupturas.length,i:"🔴",bg:"#FFF0F0",fg:"#C62828"},
+                  {l:"Aplicadas",v:aplicadas,i:"🔩",bg:"#EFF6FF",fg:"#1565C0"},
+                  {l:"Aguard. Aplicação",v:pendAplicacao,i:"⏳",bg:"#FFF8F0",fg:"#E67E00"},
+                ].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"18px 20px",display:"flex",alignItems:"center",gap:14,border:"1px solid #EEF1F5"}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{k.i}</div>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{k.l}</div>
+                      <div style={{fontSize:26,fontWeight:900,color:k.fg,marginTop:2}}>{k.v}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Painel BI */}
+              <div style={{background:"#0B1220",borderRadius:16,padding:"26px 30px",marginBottom:22,color:"#FFF"}}>
+                <div style={{marginBottom:22}}>
+                  <span style={{fontSize:13,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                  <span style={{fontSize:12,fontWeight:700,color:"#CBD5E1"}}> — Solicitação Peças Manutenção</span>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1.1fr",gap:26,marginBottom:26}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Status</div>
+                    {total===0?<div style={{color:"#475569",fontSize:12,padding:20}}>Sem dados</div>:
+                    <ChartCanvas type="doughnut" height={150} data={{
+                      labels:["Atendido","Ruptura"],
+                      datasets:[{data:[atendidas,rupturas.length],backgroundColor:["#0D9488","#F5C200"],borderWidth:2,borderColor:"#0B1220"}]
+                    }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:10},boxWidth:8}}}}}/>}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Empresas</div>
+                    {topEmpresas.length===0?<div style={{color:"#475569",fontSize:12,padding:12}}>Sem dados</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                      {topEmpresas.map(([emp,qtd],i)=>(
+                        <div key={emp} style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{width:22,height:22,borderRadius:"50%",background:"#1E293B",color:"#F5C200",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:"#FFF",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp}</div>
+                          <div style={{fontSize:13,fontWeight:900,color:"#F5C200"}}>{qtd}</div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top 5 Técnicos Solicitantes</div>
+                    {topTecnicos.length===0?<div style={{color:"#475569",fontSize:12,padding:12}}>Sem dados</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                      {topTecnicos.map(([tec,qtd],i)=>(
+                        <div key={tec} style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{width:22,height:22,borderRadius:"50%",background:"#1E293B",color:"#F5C200",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:"#FFF",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tec}</div>
+                          <div style={{fontSize:13,fontWeight:900,color:"#F5C200"}}>{qtd}</div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Peças Mais Solicitadas</div>
+                    {topPecas.length===0?<div style={{color:"#475569",fontSize:12,padding:12}}>Sem dados</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                      {topPecas.map(([peca,qtd])=>(
+                        <div key={peca} style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{fontSize:12,color:"#FFF",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{peca}</div>
+                          <div style={{fontSize:12,fontWeight:900,color:"#F5C200"}}>{qtd}</div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                </div>
+                <div style={{height:1,background:"#1E293B",margin:"0 0 22px"}}/>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:28}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Atendido × Ruptura por Mês</div>
+                    {allMeses.length===0?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:12}}>Sem dados</div>:
+                    <ChartCanvas type="bar" height={220} data={chartEvolucao} options={{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:11},boxWidth:9}},barLabels:{mode:"value",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#94A3B8",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#94A3B8",precision:0,font:{size:10}},grid:{color:"#1E293B"}}}}}/>}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Por Tipo de Atendimento</div>
+                    {total===0?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:12}}>Sem dados</div>:
+                    <ChartCanvas type="bar" height={220} data={{
+                      labels:["Preventivo","Corretivo","OS"],
+                      datasets:[{label:"Solicitações",data:[atCount.preventivo,atCount.corretivo,atCount.os],backgroundColor:["#0D9488","#F5C200","#1565C0"],borderRadius:5}]
+                    }} options={{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{display:false},barLabels:{mode:"value",color:"#FFFFFF"}},scales:{x:{grid:{display:false},ticks:{color:"#94A3B8",font:{size:10}}},y:{beginAtZero:true,ticks:{color:"#94A3B8",precision:0,font:{size:10}},grid:{color:"#1E293B"}}}}}/>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rupturas em aberto */}
+              {rupturas.length>0&&(
+                <div className="card" style={{padding:18,borderLeft:"4px solid #C62828"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Rupturas em Aberto ({rupturas.length})</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>Data</th><th>Empresa</th><th>Peça</th><th>Técnico Solic.</th><th>Nº REQ</th></tr></thead>
+                    <tbody>{rupturas.map((r,i)=>(
+                      <tr key={i}>
+                        <td style={{fontSize:11,color:"#888"}}>{fmtDataBR(r.data)||"—"}</td>
+                        <td>{r.empresa||"—"}</td>
+                        <td style={{fontWeight:700}}>{r.pecaSolicitada||"—"}</td>
+                        <td style={{fontSize:11}}>{r.tecnicoSolicitante||"—"}</td>
+                        <td style={{fontSize:11,color:"#1565C0",fontWeight:600}}>{r.numReq||"—"}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+              {total===0&&(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                  Nenhuma solicitação cadastrada ainda.
+                </div>
+              )}
             </div>
           );
         })()}
