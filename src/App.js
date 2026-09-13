@@ -8561,12 +8561,12 @@ export default function App(){
 
         {/* ── SOLICITAÇÃO PEÇAS MANUTENÇÃO ── */}
         {tab==="solicitacao_pecas_manutencao"&&(()=>{
-          const STATUS_SPM={atendido:{l:"✅ Atendido",c:"#166534",bg:"#F0FDF4"},ruptura:{l:"🔴 Ruptura",c:"#C62828",bg:"#FFF0F0"}};
+          const STATUS_SPM={atendido:{l:"✅ Atendido",c:"#166534",bg:"#F0FDF4"},ruptura:{l:"🔴 Ruptura",c:"#C62828",bg:"#FFF0F0"},consumo_gilberto:{l:"📦 Consumo Estoque Sr. Gilberto",c:"#B45309",bg:"#FFFBEB"},peca_retirada_frota:{l:"🔄 Peça Retirada Frota Interna",c:"#7E22CE",bg:"#F5F3FF"}};
           const lista=(solicitacaoPecas||[]).filter(p=>p&&(showArqSPM?p.arquivado:!p.arquivado)).sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")));
           const totalAtendido=lista.filter(p=>p.status==="atendido").length;
           const totalRuptura=lista.filter(p=>p.status==="ruptura").length;
-          const totalAplicado=lista.filter(p=>p.aplicacao==="sim").length;
-          const pendAplicacao=lista.filter(p=>p.status==="atendido"&&p.aplicacao!=="sim").length;
+          const totalAplicado=lista.filter(p=>(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina")).length;
+          const pendAplicacao=lista.filter(p=>p.status==="atendido"&&!(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina")).length;
           const abrirNovo=()=>{setEditSPM({data:TODAY_STR,atendimento:"preventivo",tipoSolicitacao:"relatorio",numero:"",tecnicoSolicitante:"",empresa:"",maquina:"",pat:"",pecas:[{pecaSolicitada:"",codigoPeca:"",quantidade:"1"}],numReq:"",dataReq:"",status:"ruptura",aplicacao:"nao",dataAplicacao:"",relatorioAplicacao:"",tecnico:"",observacoes:""});setModalSPM(true);};
           const abrirEditar=(p)=>{setEditSPM({...p,pecas:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada||"",codigoPeca:p.codigoPeca||"",quantidade:p.quantidade||"1"}])});setModalSPM(true);};
           return(
@@ -8575,7 +8575,7 @@ export default function App(){
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🔧 Solicitação Peças Manutenção</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqSPM(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqSPM?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:p.aplicacao==="sim"?"Sim":"Não",pecasFmt:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada).map(x=>`${x.pecaSolicitada}${x.codigoPeca?` (${x.codigoPeca})`:""} x${x.quantidade||1}`).join(" · ")})),"solicitacao_pecas_manutencao",[
+                  <BtnExcel onClick={()=>exportCSV(lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:p.aplicacao==="sim_vale_maquina"?"Sim - Vale Máquina":p.aplicacao==="sim"?"Sim":"Não",pecasFmt:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada).map(x=>`${x.pecaSolicitada}${x.codigoPeca?` (${x.codigoPeca})`:""} x${x.quantidade||1}`).join(" · ")})),"solicitacao_pecas_manutencao",[
                     {key:"dataFmt",label:"Data"},{key:"atendimento",label:"Atendimento"},{key:"tipoSolicitacao",label:"Solicitação"},{key:"numero",label:"Número"},
                     {key:"tecnicoSolicitante",label:"Técnico Solicitante"},{key:"empresa",label:"Empresa"},{key:"maquina",label:"Máquina"},{key:"pat",label:"PAT"},
                     {key:"pecasFmt",label:"Peças Solicitadas"},
@@ -8628,7 +8628,7 @@ export default function App(){
                           <td style={{padding:"7px 9px",fontSize:11,color:"#1565C0",fontWeight:600}}>{p.numReq||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11,color:"#64748B",whiteSpace:"nowrap"}}>{fmtDataBR(p.dataReq)||"—"}</td>
                           <td style={{padding:"7px 9px"}}><span style={{fontSize:10,fontWeight:700,color:st.c,background:st.bg,borderRadius:20,padding:"3px 8px",whiteSpace:"nowrap"}}>{st.l}</span></td>
-                          <td style={{padding:"7px 9px",fontSize:11,fontWeight:700,color:p.aplicacao==="sim"?"#166534":"#94A3B8"}}>{p.aplicacao==="sim"?"Sim":"Não"}</td>
+                          <td style={{padding:"7px 9px",fontSize:11,fontWeight:700,color:(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina")?"#166534":"#94A3B8"}}>{p.aplicacao==="sim_vale_maquina"?"Sim - Vale Máquina":p.aplicacao==="sim"?"Sim":"Não"}</td>
                           <td style={{padding:"7px 9px",fontSize:11,color:"#64748B",whiteSpace:"nowrap"}}>{fmtDataBR(p.dataAplicacao)||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.relatorioAplicacao||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.tecnico||"—"}</td>
@@ -8654,8 +8654,8 @@ export default function App(){
           const total=lista.length;
           const atendidas=lista.filter(p=>p.status==="atendido").length;
           const rupturas=lista.filter(p=>p.status==="ruptura");
-          const aplicadas=lista.filter(p=>p.aplicacao==="sim").length;
-          const pendAplicacao=lista.filter(p=>p.status==="atendido"&&p.aplicacao!=="sim").length;
+          const aplicadas=lista.filter(p=>(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina")).length;
+          const pendAplicacao=lista.filter(p=>p.status==="atendido"&&!(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina")).length;
           // Por empresa
           const empCount={};
           lista.forEach(p=>{const e=p.empresa||"Sem empresa";empCount[e]=(empCount[e]||0)+1;});
@@ -8860,10 +8860,10 @@ export default function App(){
                     <div><label style={lbl}>Nº REQ</label><input type="text" value={editSPM.numReq||""} onChange={e=>upd("numReq",e.target.value)} style={inp}/></div>
                     <div><label style={lbl}>Data da REQ</label><input type="date" value={editSPM.dataReq||""} onChange={e=>upd("dataReq",e.target.value)} style={inp}/></div>
                   </div>
-                  <div><label style={lbl}>Status</label><select value={editSPM.status||"ruptura"} onChange={e=>upd("status",e.target.value)} style={inp}><option value="atendido">Atendido</option><option value="ruptura">Ruptura</option></select></div>
+                  <div><label style={lbl}>Status</label><select value={editSPM.status||"ruptura"} onChange={e=>upd("status",e.target.value)} style={inp}><option value="atendido">Atendido</option><option value="ruptura">Ruptura</option><option value="consumo_gilberto">Consumo Estoque Sr. Gilberto</option><option value="peca_retirada_frota">Peça Retirada Frota Interna</option></select></div>
                   <div style={{height:1,background:"#F0F0F0"}}/>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                    <div><label style={lbl}>Aplicação</label><select value={editSPM.aplicacao||"nao"} onChange={e=>upd("aplicacao",e.target.value)} style={inp}><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+                    <div><label style={lbl}>Aplicação</label><select value={editSPM.aplicacao||"nao"} onChange={e=>upd("aplicacao",e.target.value)} style={inp}><option value="nao">Não</option><option value="sim">Sim</option><option value="sim_vale_maquina">Sim - Vale Máquina</option></select></div>
                     <div><label style={lbl}>Data Aplicação</label><input type="date" value={editSPM.dataAplicacao||""} onChange={e=>upd("dataAplicacao",e.target.value)} style={inp}/></div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
