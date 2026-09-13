@@ -13186,9 +13186,23 @@ export default function App(){
               setModalOp(false);setEditOp(null);setOpForm(OP_FORM_EMPTY);
               notify("✅ Operação atualizada!");
             } else {
-              opCrud.add({...clean,arquivado:false});
+              // Se já existe uma operação pra essa empresa, as máquinas entram nela — nunca cria uma
+              // segunda linha/grupo pra mesma empresa.
+              const norm=s=>String(s||"").trim().toLowerCase();
+              const existente=(operacoes||[]).find(o=>o&&norm(o.cliente)===norm(clean.cliente));
+              if(existente){
+                opCrud.update(existente.id,{
+                  patrimonios:[...(existente.patrimonios||[]),...clean.patrimonios],
+                  responsaveis:[...(existente.responsaveis||[]),...clean.responsaveis],
+                  baterias:[...(existente.baterias||[]),...clean.baterias],
+                  carregadores:[...(existente.carregadores||[]),...clean.carregadores],
+                });
+                notify(`✅ ${clean.cliente} já existia — máquinas adicionadas na mesma operação!`);
+              } else {
+                opCrud.add({...clean,arquivado:false});
+                notify("✅ Operação cadastrada!");
+              }
               setModalOp(false);setOpForm(OP_FORM_EMPTY);
-              notify("✅ Operação cadastrada!");
             }
           };
           const abrirEditarOp=(o)=>{setEditOp(o);setOpForm({
