@@ -3711,10 +3711,12 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_oficina_manuela"];
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios","pendencias_checklist"];
+  const SUB_PECAS=["solicitacao_pecas_manutencao","dashboard_solicitacao_pecas"];
   const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria","dificuldades_tecnicos"];
   const SUB_FROTA=["pendencias_frota"];
   const [subOfiOpen,setSubOfiOpen]=useState(false);
   const [subExtOpen,setSubExtOpen]=useState(false);
+  const [subPecasOpen,setSubPecasOpen]=useState(false);
   const [subAdmOpen,setSubAdmOpen]=useState(false);
   const [subFrotaOpen,setSubFrotaOpen]=useState(false);
   const [subAlmoxOpen,setSubAlmoxOpen]=useState(false);
@@ -3862,8 +3864,10 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
           <SubBtn k="pendencias_oficina_manuela" l="🗓 Pendências Oficina - Manuela"/>
         </SubFolder>}
 
-        <SubBtn k="solicitacao_pecas_manutencao" l="🔧 Solicitação Peças Manutenção"/>
-        <SubBtn k="dashboard_solicitacao_pecas" l="📊 KPIs Solicitação Peças"/>
+        <SubFolder label="Peças Manutenção" icon="🔧" open={subPecasOpen} setOpen={setSubPecasOpen} ativa={SUB_PECAS.includes(tab)} color="#9333EA">
+          <SubBtn k="solicitacao_pecas_manutencao" l="🔧 Solicitação Peças Manutenção"/>
+          <SubBtn k="dashboard_solicitacao_pecas" l="📊 KPIs Solicitação Peças"/>
+        </SubFolder>
 
         <SubFolder label="Externos" icon="👷" open={subExtOpen} setOpen={setSubExtOpen} ativa={SUB_EXTERNOS.includes(tab)} color="#15803D">
           <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
