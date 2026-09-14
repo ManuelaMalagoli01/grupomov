@@ -8606,7 +8606,7 @@ export default function App(){
 
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap" style={{overflowX:"auto"}}><table style={{minWidth:1600}}>
-                  <thead><tr><th>Data</th><th>Atendimento</th><th>Solicitação</th><th>Técnico Solic.</th><th>Empresa</th><th>Máquina</th><th>PAT</th><th>Peças (até 5)</th><th>Nº REQ</th><th>Data REQ</th><th>Status</th><th>Aplicação</th><th>Data Apl.</th><th>Rel. Apl.</th><th>Técnico</th><th></th></tr></thead>
+                  <thead><tr><th>Data</th><th>Atendimento</th><th>Solicitação</th><th>Técnico Solic.</th><th>Empresa</th><th>Máquina</th><th>PAT</th><th>Peça</th><th>Código</th><th>Quantidade</th><th>Nº REQ</th><th>Data REQ</th><th>Status</th><th>Aplicação</th><th>Data Apl.</th><th>Rel. Apl.</th><th>Técnico</th><th></th></tr></thead>
                   <tbody>
                     {lista.map(p=>{
                       const st=STATUS_SPM[p.status]||STATUS_SPM.ruptura;
@@ -8621,9 +8621,19 @@ export default function App(){
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.empresa||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.maquina||"—"}</td>
                           <td style={{padding:"7px 9px",fontSize:11}}>{p.pat||"—"}</td>
-                          <td style={{padding:"7px 9px",fontSize:11,minWidth:180}}>
+                          <td style={{padding:"7px 9px",fontSize:11,minWidth:140}}>
                             {pecasList.length===0?"—":pecasList.map((x,i)=>(
-                              <div key={i} style={{whiteSpace:"nowrap"}}><span style={{fontWeight:700,color:"#1A1A1A"}}>{x.pecaSolicitada}</span>{x.codigoPeca&&<span style={{color:"#94A3B8"}}> ({x.codigoPeca})</span>} <span style={{color:"#64748B"}}>x{x.quantidade||1}</span></div>
+                              <div key={i} style={{whiteSpace:"nowrap",fontWeight:700,color:"#1A1A1A",lineHeight:1.7}}>{x.pecaSolicitada||"—"}</div>
+                            ))}
+                          </td>
+                          <td style={{padding:"7px 9px",fontSize:11,color:"#94A3B8",minWidth:80}}>
+                            {pecasList.length===0?"—":pecasList.map((x,i)=>(
+                              <div key={i} style={{whiteSpace:"nowrap",lineHeight:1.7}}>{x.codigoPeca||"—"}</div>
+                            ))}
+                          </td>
+                          <td style={{padding:"7px 9px",fontSize:11,color:"#334155",fontWeight:700,textAlign:"center",minWidth:60}}>
+                            {pecasList.length===0?"—":pecasList.map((x,i)=>(
+                              <div key={i} style={{lineHeight:1.7}}>{x.quantidade||1}</div>
                             ))}
                           </td>
                           <td style={{padding:"7px 9px",fontSize:11,color:"#1565C0",fontWeight:600}}>{p.numReq||"—"}</td>
