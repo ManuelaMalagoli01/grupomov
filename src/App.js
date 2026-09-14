@@ -10209,6 +10209,7 @@ export default function App(){
                                 const color=techColor(it.tech);
                                 const st=escSt(it.s.status);
                                 const editarClick=(ev)=>{ev.stopPropagation();const key=`${it.tech}__${dt}`;setEditSlot({key,si:it.si,slot:it.s,tipo:"tecnico",tech:it.tech});setEditSlotForm({...it.s,tecnico:it.tech});};
+                                const excluirClick=(ev)=>{ev.stopPropagation();if(window.confirm(`Excluir o atendimento de ${it.tech} em ${it.s.client||"—"}?`)){const key=`${it.tech}__${dt}`;const arr=(schedule[key]||[]).filter((_,j)=>j!==it.si);saveSched(key,arr);}};
                                 return(
                                   <div key={ii} style={{padding:10,borderRadius:12,background:color+"14",borderLeft:`4px solid ${color}`,flexShrink:0}}>
                                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
@@ -10217,7 +10218,10 @@ export default function App(){
                                         <b style={{color,fontSize:11,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{it.tech}</b>
                                         {(it.s.tecnicosAdicionais||[]).length>0&&<span title={it.s.tecnicosAdicionais.join(", ")} style={{fontSize:8.5,fontWeight:700,color:"#FFF",background:"#475569",borderRadius:10,padding:"1px 6px",flexShrink:0}}>+{it.s.tecnicosAdicionais.length}</span>}
                                       </div>
-                                      <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${color}55`,borderRadius:6,color,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700,flexShrink:0}}>✏️ Editar</button>
+                                      <div style={{display:"flex",gap:3,flexShrink:0}}>
+                                        <button onClick={editarClick} title="Editar" style={{background:"#FFF",border:`1px solid ${color}55`,borderRadius:6,color,cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700}}>✏️</button>
+                                        {!isReadOnlyAgenda(user)&&<button onClick={excluirClick} title="Excluir" style={{background:"#FFF",border:"1px solid #FCA5A5",borderRadius:6,color:"#DC2626",cursor:"pointer",padding:"2px 7px",fontSize:9,fontWeight:700}}>✕</button>}
+                                      </div>
                                     </div>
                                     <div onClick={()=>setAgpSelectedDay(dt)} style={{cursor:"pointer"}}>
                                       <div style={{color:"#1A1A1A",fontWeight:800,fontSize:13,marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{it.s.client||"—"}</div>
