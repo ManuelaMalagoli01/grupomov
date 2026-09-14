@@ -4090,6 +4090,7 @@ export default function App(){
   const [editPC,setEditPC]=useState(null);
   const [modalImportPC,setModalImportPC]=useState(false);
   const [showArqSPM,setShowArqSPM]=useState(false);
+  const [spmSearch,setSpmSearch]=useState(""); const [spmFrom,setSpmFrom]=useState(""); const [spmTo,setSpmTo]=useState(""); const [spmMes,setSpmMes]=useState(""); const [spmAno,setSpmAno]=useState(""); const [spmStatus,setSpmStatus]=useState("todos"); const [spmAtendimento,setSpmAtendimento]=useState("todos"); const [spmAplicacao,setSpmAplicacao]=useState("todos"); const [showFiltrosSPM,setShowFiltrosSPM]=useState(false);
   const [modalSPM,setModalSPM]=useState(false);
   const [editSPM,setEditSPM]=useState(null);
   const [showArqFO,setShowArqFO]=useState(false);
@@ -8569,13 +8570,31 @@ export default function App(){
           const pendAplicacao=lista.filter(p=>p.status==="atendido"&&!(p.aplicacao==="sim"||p.aplicacao==="sim_vale_maquina"||p.aplicacao==="executado_frota"||p.aplicacao==="executado_oficina_150")).length;
           const abrirNovo=()=>{setEditSPM({data:TODAY_STR,atendimento:"preventivo",tipoSolicitacao:"relatorio",numero:"",tecnicoSolicitante:"",empresa:"",maquina:"",pat:"",pecas:[{pecaSolicitada:"",codigoPeca:"",quantidade:"1"}],numReq:"",dataReq:"",status:"ruptura",aplicacao:"nao",dataAplicacao:"",relatorioAplicacao:"",tecnico:"",observacoes:""});setModalSPM(true);};
           const abrirEditar=(p)=>{setEditSPM({...p,pecas:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada||"",codigoPeca:p.codigoPeca||"",quantidade:p.quantidade||"1"}])});setModalSPM(true);};
+          const inclui=(campo,q)=>String(campo||"").toLowerCase().includes(q.toLowerCase());
+          const listaFil=lista.filter(p=>{
+            if(spmSearch){
+              const q=spmSearch.toLowerCase();
+              const pecasTxt=(p.pecas||[]).map(x=>`${x.pecaSolicitada||""} ${x.codigoPeca||""}`).join(" ");
+              if(!(inclui(p.empresa,q)||inclui(p.maquina,q)||inclui(p.pat,q)||inclui(p.tecnicoSolicitante,q)||inclui(p.numero,q)||inclui(p.numReq,q)||inclui(pecasTxt,q)||inclui(p.observacoes,q)))return false;
+            }
+            if(spmFrom&&(p.data||"")<spmFrom)return false;
+            if(spmTo&&(p.data||"")>spmTo)return false;
+            if(spmMes&&!(p.data||"").slice(5,7).startsWith(spmMes))return false;
+            if(spmAno&&!(p.data||"").startsWith(spmAno))return false;
+            if(spmStatus!=="todos"&&p.status!==spmStatus)return false;
+            if(spmAtendimento!=="todos"&&p.atendimento!==spmAtendimento)return false;
+            if(spmAplicacao!=="todos"&&(p.aplicacao||"nao")!==spmAplicacao)return false;
+            return true;
+          });
+          const hasFilterSPM=spmSearch||spmFrom||spmTo||spmMes||spmAno||spmStatus!=="todos"||spmAtendimento!=="todos"||spmAplicacao!=="todos";
+          const limparFiltrosSPM=()=>{setSpmSearch("");setSpmFrom("");setSpmTo("");setSpmMes("");setSpmAno("");setSpmStatus("todos");setSpmAtendimento("todos");setSpmAplicacao("todos");};
           return(
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
                 <div><div style={{fontWeight:900,fontSize:24,color:"#1A1A1A"}}>🔧 Solicitação Peças Manutenção</div><div style={{fontSize:12,color:"#94A3B8"}}>{lista.length} registro(s)</div></div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>setShowArqSPM(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqSPM?"📤 Ativos":"🗄️ Arquivados"}</button>
-                  <BtnExcel onClick={()=>exportCSV(lista.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:({sim:"Sim",sim_vale_maquina:"Sim - Vale Máquina",aguardando_frota:"Aguardando Frota",aguardando_oficina_150:"Aguardando Oficina 150",executado_frota:"Executado Frota",executado_oficina_150:"Executado Oficina 150"})[p.aplicacao]||"Não",pecasFmt:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada).map(x=>`${x.pecaSolicitada}${x.codigoPeca?` (${x.codigoPeca})`:""} x${x.quantidade||1}`).join(" · ")})),"solicitacao_pecas_manutencao",[
+                  <BtnExcel onClick={()=>exportCSV(listaFil.map(p=>({...p,dataFmt:fmtDataBR(p.data)||"",dataReqFmt:fmtDataBR(p.dataReq)||"",dataAplicacaoFmt:fmtDataBR(p.dataAplicacao)||"",statusFmt:(STATUS_SPM[p.status]||{}).l?.replace(/^\S+\s/,"")||p.status||"",aplicacaoFmt:({sim:"Sim",sim_vale_maquina:"Sim - Vale Máquina",aguardando_frota:"Aguardando Frota",aguardando_oficina_150:"Aguardando Oficina 150",executado_frota:"Executado Frota",executado_oficina_150:"Executado Oficina 150"})[p.aplicacao]||"Não",pecasFmt:(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada).map(x=>`${x.pecaSolicitada}${x.codigoPeca?` (${x.codigoPeca})`:""} x${x.quantidade||1}`).join(" · ")})),"solicitacao_pecas_manutencao",[
                     {key:"dataFmt",label:"Data"},{key:"atendimento",label:"Atendimento"},{key:"tipoSolicitacao",label:"Solicitação"},{key:"numero",label:"Número"},
                     {key:"tecnicoSolicitante",label:"Técnico Solicitante"},{key:"empresa",label:"Empresa"},{key:"maquina",label:"Máquina"},{key:"pat",label:"PAT"},
                     {key:"pecasFmt",label:"Peças Solicitadas"},
@@ -8604,11 +8623,29 @@ export default function App(){
                 ))}
               </div>
 
+              <button onClick={()=>setShowFiltrosSPM(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosSPM?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
+                <span style={{fontSize:11}}>🔍</span>
+                <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {hasFilterSPM&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosSPM?"▲":"▼"}</span>
+              </button>
+              {showFiltrosSPM&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={spmSearch} onChange={e=>setSpmSearch(e.target.value)} placeholder="Buscar empresa, máquina, PAT, técnico, peça..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>De</span><input type="date" value={spmFrom} onChange={e=>setSpmFrom(e.target.value)}/></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#888",fontWeight:600}}>Até</span><input type="date" value={spmTo} onChange={e=>setSpmTo(e.target.value)}/></div>
+                <select value={spmMes} onChange={e=>setSpmMes(e.target.value)}><option value="">Mês</option>{["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m,i)=><option key={i} value={String(i+1).padStart(2,"0")}>{m}</option>)}</select>
+                <select value={spmAno} onChange={e=>setSpmAno(e.target.value)}><option value="">Ano</option>{[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}</select>
+                <select value={spmAtendimento} onChange={e=>setSpmAtendimento(e.target.value)}><option value="todos">Atendimento: Todos</option><option value="preventivo">Preventivo</option><option value="corretivo">Corretivo</option><option value="os">OS</option></select>
+                <select value={spmStatus} onChange={e=>setSpmStatus(e.target.value)}><option value="todos">Status: Todos</option>{Object.entries(STATUS_SPM).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
+                <select value={spmAplicacao} onChange={e=>setSpmAplicacao(e.target.value)}><option value="todos">Aplicação: Todas</option><option value="nao">Não</option><option value="sim">Sim</option><option value="sim_vale_maquina">Sim - Vale Máquina</option><option value="aguardando_frota">Aguardando Frota</option><option value="aguardando_oficina_150">Aguardando Oficina 150</option><option value="executado_frota">Executado Frota</option><option value="executado_oficina_150">Executado Oficina 150</option></select>
+                {hasFilterSPM&&<button onClick={limparFiltrosSPM} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>}
+
               <div className="card" style={{overflow:"hidden"}}>
                 <div className="tbl-wrap" style={{overflowX:"auto"}}><table style={{minWidth:1600}}>
                   <thead><tr><th>Data</th><th>Atendimento</th><th>Solicitação</th><th>Técnico Solic.</th><th>Empresa</th><th>Máquina</th><th>PAT</th><th>Peça</th><th>Código</th><th>Quantidade</th><th>Nº REQ</th><th>Data REQ</th><th>Status</th><th>Aplicação</th><th>Data Apl.</th><th>Rel. Apl.</th><th>Técnico</th><th></th></tr></thead>
                   <tbody>
-                    {lista.map(p=>{
+                    {listaFil.map(p=>{
                       const st=STATUS_SPM[p.status]||STATUS_SPM.ruptura;
                       const APLICACAO_LABEL={sim:"Sim",sim_vale_maquina:"Sim - Vale Máquina",aguardando_frota:"Aguardando Frota",aguardando_oficina_150:"Aguardando Oficina 150",executado_frota:"Executado Frota",executado_oficina_150:"Executado Oficina 150"};
                       const pecasList=(p.pecas&&p.pecas.length?p.pecas:[{pecaSolicitada:p.pecaSolicitada,codigoPeca:p.codigoPeca,quantidade:p.quantidade}]).filter(x=>x.pecaSolicitada);
@@ -8653,7 +8690,7 @@ export default function App(){
                     })}
                   </tbody>
                 </table></div>
-                {lista.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>Nenhum registro {showArqSPM?"arquivado":""}</div>}
+                {listaFil.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>{hasFilterSPM?"Nenhum resultado para os filtros aplicados":`Nenhum registro ${showArqSPM?"arquivado":""}`}</div>}
               </div>
             </div>
           );
