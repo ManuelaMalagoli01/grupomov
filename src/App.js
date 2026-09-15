@@ -1158,9 +1158,9 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     const linha=(colunas,yTop,altura)=>{
       let x=M;
       colunas.forEach((c,i)=>{
-        doc.setFont(undefined,"bold"); doc.setFontSize(8.5); doc.setTextColor(20,20,20);
+        doc.setFont(undefined,"bold"); doc.setFontSize(9.5); doc.setTextColor(20,20,20);
         doc.text(c.label+":",x+2,yTop+5);
-        doc.setFont(undefined,"normal"); doc.setFontSize(9);
+        doc.setFont(undefined,"normal"); doc.setFontSize(10.5);
         const lines=doc.splitTextToSize(String(c.valor||"—"),c.w-4);
         doc.text(lines,x+2,yTop+10);
         x+=c.w;
@@ -1182,9 +1182,9 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     // verdade no tamanho de fonte candidato, em vez de assumir 1 linha por peça.
     const numPecas=(o.pecas||[]).length||1;
     const espacoDisponivelParaTabela=195-y-8-56-34; // reserva pro resumo financeiro (com mao de obra/deslocamento), observação e condições gerais
-    const alturaLinhaPadrao=7.2;
+    const alturaLinhaPadrao=8.4;
     const alturaTotalNaEscala=(esc)=>{
-      const fonte=8.5*esc, altLinha=alturaLinhaPadrao*esc;
+      const fonte=10*esc, altLinha=alturaLinhaPadrao*esc;
       doc.setFont(undefined,"normal"); doc.setFontSize(Math.max(fonte,4));
       let total=0;
       (o.pecas||[]).forEach(p=>{
@@ -1194,16 +1194,16 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
       });
       return total;
     };
-    let escala=Math.min(1,Math.max(0.55,espacoDisponivelParaTabela/(numPecas*alturaLinhaPadrao)));
+    let escala=Math.min(1,Math.max(0.7,espacoDisponivelParaTabela/(numPecas*alturaLinhaPadrao)));
     // refina em até 3 passadas, medindo a altura real (com quebra de linha) no tamanho de fonte candidato
     for(let tentativa=0;tentativa<3;tentativa++){
       const alturaReal=alturaTotalNaEscala(escala);
-      if(alturaReal<=espacoDisponivelParaTabela||escala<=0.4)break;
-      escala=Math.max(0.4,escala*(espacoDisponivelParaTabela/alturaReal));
+      if(alturaReal<=espacoDisponivelParaTabela||escala<=0.65)break;
+      escala=Math.max(0.65,escala*(espacoDisponivelParaTabela/alturaReal));
     }
-    const fonteBase=8.5*escala, alturaLinhaBase=alturaLinhaPadrao*escala;
+    const fonteBase=10*escala, alturaLinhaBase=alturaLinhaPadrao*escala;
     // Título tabela de peças
-    doc.setFont(undefined,"bold"); doc.setFontSize(12);
+    doc.setFont(undefined,"bold"); doc.setFontSize(13);
     doc.text(versaoCliente?"Peças do orçamento":"Peças do orçamento — detalhamento completo",CX,y+7,{align:"center"});
     y+=10;
     doc.line(M,y,M+W,y);
@@ -1211,7 +1211,7 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
       ? [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Unitário",COLW.cons],["Valor Total",COLW.venda]]
       : [["Nome",COLW.nome],["Código",COLW.cod],["Qtd",COLW.qtd],["Preço Cotação",COLW.cot],["Data Cot.",COLW.dataCot],["Local Cotação",COLW.local],["Preço Consumidor",COLW.cons],["Valor Venda",COLW.venda],["Margem",COLW.margem]];
     let xh=M;
-    doc.setFontSize(Math.max(fonteBase,7));
+    doc.setFontSize(Math.max(fonteBase,8.5));
     heads.forEach(([l,w])=>{ doc.text(l,xh+w/2,y+5,{align:"center"}); xh+=w; });
     y+=7; doc.line(M,y,M+W,y);
     let totalCons=0, totalCot=0;
@@ -1265,17 +1265,17 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     const desloc=(parseFloat(o.deslocamentoKm)||0)*3.5;
     const horaDesloc=(parseFloat(o.horaDeslocamentoQtd)||0)*70;
     const qtdLinhasExtras=(mdo>0?1:0)+(desloc>0?1:0)+(horaDesloc>0?1:0);
-    const alturaResumo=(versaoCliente?14:32)+qtdLinhasExtras*6;
+    const alturaResumo=(versaoCliente?16:36)+qtdLinhasExtras*7;
     if(y+8+alturaResumo>195){doc.addPage("landscape");y=20;}
     y+=8;
-    const resumoW=76, resumoX=M+W-resumoW;
-    doc.setFontSize(9); doc.setFont(undefined,"normal");
+    const resumoW=84, resumoX=M+W-resumoW;
+    doc.setFontSize(10.5); doc.setFont(undefined,"normal");
     const linhaResumo=(label,valor,destaque)=>{
       doc.setFont(undefined,destaque?"bold":"normal");
       doc.setTextColor(destaque?200:60,destaque?20:60,destaque?20:60);
       doc.text(label,resumoX,y);
       doc.text(`R$ ${valor.toLocaleString("pt-BR",{minimumFractionDigits:2})}`,M+W,y,{align:"right"});
-      y+=6;
+      y+=7;
     };
     if(versaoCliente){
       if(mdo>0) linhaResumo(`Mão de Obra (${o.maoDeObraTipo==="externa"?"Externa":"Interna"}):`,mdo,false);
@@ -1291,19 +1291,19 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
     }
     doc.setDrawColor(20,20,20); doc.line(resumoX,y-2,M+W,y-2);
     y+=2;
-    doc.setFontSize(11);
+    doc.setFontSize(13);
     linhaResumo("Total:",totalCons+mdo+desloc+horaDesloc,true);
     doc.setTextColor(20,20,20);
     y+=4;
     // Observação
     if(y+20>195){doc.addPage("landscape");y=20;}
-    doc.setFont(undefined,"bold"); doc.setFontSize(10);
+    doc.setFont(undefined,"bold"); doc.setFontSize(11);
     doc.text("Observação:",M,y);
     y+=6;
-    doc.setFont(undefined,"normal"); doc.setFontSize(9.5);
+    doc.setFont(undefined,"normal"); doc.setFontSize(10.5);
     const obsLines=doc.splitTextToSize(o.observacao||"—",W-90);
     doc.text(obsLines,M,y);
-    y+=obsLines.length*4.2+6;
+    y+=obsLines.length*4.6+6;
     // Condições gerais — texto muda conforme o tipo do orçamento (Peça Única usa o texto de "Peças", os demais tipos usam o texto genérico)
     const CONDICOES_PECAS=[
       "Este orçamento é válido por 07 dias a contar da data de emissão.",
@@ -1316,11 +1316,12 @@ const gerarPDFOrcamentoPecas = async (o, versaoCliente=false)=>{
       "Qualquer serviço não especificado neste orçamento será cobrado separadamente mediante aprovação prévia.",
     ];
     const condicoes=o.tipo==="unica"?CONDICOES_PECAS:CONDICOES_GERAIS;
-    if(y+condicoes.length*4>198){doc.addPage("landscape");y=20;}
-    doc.setDrawColor(210,210,210); doc.setLineWidth(0.2); doc.line(M,y,M+W,y); y+=5;
-    doc.setFont(undefined,"italic"); doc.setFontSize(7.5); doc.setTextColor(110,110,110);
-    condicoes.forEach(linha=>{ doc.text(`• ${linha}`,M,y); y+=4; });
-    doc.setTextColor(160,160,160);
+    if(y+condicoes.length*4.5>198){doc.addPage("landscape");y=20;}
+    doc.setDrawColor(210,210,210); doc.setLineWidth(0.2); doc.line(M,y,M+W,y); y+=5.5;
+    doc.setFont(undefined,"italic"); doc.setFontSize(8.5); doc.setTextColor(100,100,100);
+    condicoes.forEach(linha=>{ doc.text(`• ${linha}`,M,y); y+=4.5; });
+    doc.setTextColor(150,150,150);
+    doc.setFontSize(8);
     doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`,M,203);
     doc.save(`Orcamento_${(o.orcamentoNum||"pecas").replace(/[^a-zA-Z0-9.]+/g,"_")}${versaoCliente?"_Cliente":""}.pdf`);
   }catch(e){ alert("Não foi possível gerar o PDF: "+(e?.message||e)); }
@@ -9291,7 +9292,7 @@ export default function App(){
           };
           return(
             <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>{setModalOrc(false);setEditOrc(null);}}>
-              <div style={{background:"#FFF",borderRadius:14,maxWidth:720,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+              <div style={{background:"#FFF",borderRadius:14,maxWidth:1120,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
                 <div style={{background:"#1A1A1A",padding:"16px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:2}}>
                   <div style={{fontWeight:900,fontSize:17,color:"#F5C200"}}>{isNovo?"📋 Novo":"✏️ Editar"} Orçamento — {editOrc.orcamentoNum}</div>
                   <button onClick={()=>{setModalOrc(false);setEditOrc(null);}} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#FFF",fontSize:20,cursor:"pointer",width:32,height:32}}>✕</button>
