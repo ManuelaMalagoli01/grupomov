@@ -10072,6 +10072,102 @@ export default function App(){
                 </label>
                 <BtnImport onClick={()=>setModalImportAgenda(true)}/>
                 <BtnExcel onClick={()=>{const allAtend=Object.entries(schedule).flatMap(([k,v])=>{const[tech,dt]=k.split("__");return(v||[]).map(s=>({tecnico:tech,data:dt,cliente:s.client,cidade:s.cidade,patrimonio:s.patrimonio,horimetro:s.horimetro,entrada:s.horaEntrada,saida:s.horaSaida,horas:s.horasTrabalhadas||"",relatorio:s.relatorio,obs:s.obs,status:s.status,servicos:(s.servicos||[]).join(", "),obsServico:s.obsServico}));});exportCSV(allAtend,"agenda_tecnicos",[{key:"tecnico",label:"Técnico"},{key:"data",label:"Data"},{key:"cliente",label:"Cliente"},{key:"cidade",label:"Cidade"},{key:"patrimonio",label:"PAT"},{key:"horimetro",label:"Horímetro"},{key:"entrada",label:"Entrada"},{key:"saida",label:"Saída"},{key:"horas",label:"Horas"},{key:"relatorio",label:"Relatório"},{key:"obs",label:"Obs"},{key:"status",label:"Status"},{key:"servicos",label:"Serviços"},{key:"obsServico",label:"Obs Serviço"}]);}}/>
+                <button onClick={async()=>{
+                  try{
+                    const ExcelJS=await loadExcelJS();
+                    const workbook=new ExcelJS.Workbook();
+                    workbook.creator="Grupo MOV"; workbook.created=new Date();
+                    const PRETO="FF1A1A1A", DOURADO="FFF5C200", BRANCO="FFFFFFFF", CINZA_BORDA="FFE2E8F0", CINZA_TEXTO="FF64748B", CINZA_CLARO="FFF8FAFC", CINZA_VAZIO="FFFAFAFA";
+                    const ws=workbook.addWorksheet(`${MESES[agpMonth]} ${agpYear}`,{views:[{showGridLines:false}]});
+                    ws.columns=[{width:3},{width:34},{width:34},{width:34},{width:34},{width:34},{width:3}];
+                    ws.mergeCells("B2:F3");
+                    const t=ws.getCell("B2"); t.value=`GRUPO MOV — Agenda Externa — ${MESES[agpMonth]} ${agpYear}`;
+                    t.font={name:"Calibri",bold:true,size:16,color:{argb:DOURADO}};
+                    t.fill={type:"pattern",pattern:"solid",fgColor:{argb:PRETO}};
+                    t.alignment={vertical:"middle",horizontal:"left",indent:1};
+                    for(const c of ["B","C","D","E","F"]) ws.getCell(`${c}2`).fill={type:"pattern",pattern:"solid",fgColor:{argb:PRETO}};
+                    ws.getRow(2).height=24; ws.getRow(3).height=24;
+                    ws.mergeCells("B4:F4");
+                    const sub=ws.getCell("B4");
+                    const filtrosTxt=[agpTech!=="todos"?`Técnico: ${agpTech}`:null,agpTipo!=="todos"?`Tipo: ${agpTipo}`:null,agpStatus!=="todos"?`Status: ${(ESCALA_STATUS[agpStatus]||{}).l||agpStatus}`:null,agpCidade!=="todas"?`Cidade: ${agpCidade}`:null,agpCliente?`Cliente: ${agpCliente}`:null].filter(Boolean).join(" · ");
+                    sub.value=`Gerado em ${new Date().toLocaleString("pt-BR")}${filtrosTxt?" · Filtros: "+filtrosTxt:""}`;
+                    sub.font={name:"Calibri",italic:true,size:9,color:{argb:CINZA_TEXTO}};
+                    ws.getRow(4).height=16;
+
+                    const diasSemanaLbl=["Segunda","Terça","Quarta","Quinta","Sexta"];
+                    const rowHead=6;
+                    diasSemanaLbl.forEach((lbl,i)=>{
+                      const col=String.fromCharCode(66+i);
+                      const c=ws.getCell(`${col}${rowHead}`);
+                      c.value=lbl; c.font={name:"Calibri",bold:true,size:11,color:{argb:DOURADO}};
+                      c.fill={type:"pattern",pattern:"solid",fgColor:{argb:PRETO}};
+                      c.alignment={vertical:"middle",horizontal:"center"};
+                    });
+                    ws.getRow(rowHead).height=20;
+                    let row=rowHead+1;
+
+                    const diasNoMesLocal=new Date(agpYear,agpMonth+1,0).getDate();
+                    const ymLocal=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
+                    const diasUteisL=[];
+                    for(let d=1; d<=diasNoMesLocal; d++){
+                      const dow=new Date(agpYear,agpMonth,d).getDay();
+                      if(dow>=1&&dow<=5) diasUteisL.push({dayNum:d,col:dow-1});
+                    }
+                    const leadingPad=diasUteisL.length>0?diasUteisL[0].col:0;
+                    const cellsL=[...Array(leadingPad).fill(null),...diasUteisL.map(x=>x.dayNum)];
+                    while(cellsL.length%5!==0) cellsL.push(null);
+
+                    for(let i=0;i<cellsL.length;i+=5){
+                      const semanaRow=cellsL.slice(i,i+5);
+                      const conteudos=semanaRow.map(dn=>{
+                        if(!dn) return null;
+                        const dt=`${ymLocal}-${String(dn).padStart(2,"0")}`;
+                        let items=[];
+                        techsList.forEach(tech=>{
+                          const key=`${tech}__${dt}`;
+                          (schedule[key]||[]).forEach(s=>{if(matchSt(s)&&matchTipo(s)&&matchCidade(s)&&matchCliente(s))items.push({tech,s});});
+                        });
+                        return{dn,items};
+                      });
+                      const maxLinhas=Math.max(1,...conteudos.map(c=>c?c.items.length:0));
+                      ws.getRow(row).height=Math.max(42, maxLinhas*26+16);
+                      semanaRow.forEach((dn,ci)=>{
+                        const col=String.fromCharCode(66+ci);
+                        const cell=ws.getCell(`${col}${row}`);
+                        const info=conteudos[ci];
+                        cell.border={top:{style:"thin",color:{argb:CINZA_BORDA}},bottom:{style:"thin",color:{argb:CINZA_BORDA}},left:{style:"thin",color:{argb:CINZA_BORDA}},right:{style:"thin",color:{argb:CINZA_BORDA}}};
+                        if(!dn){ cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:CINZA_VAZIO}}; return; }
+                        const runs=[{text:`Dia ${dn}`,font:{name:"Calibri",bold:true,size:10.5,color:{argb:"FF334155"}}}];
+                        if(info.items.length===0){
+                          runs.push({text:"\n(sem atendimento)",font:{name:"Calibri",italic:true,size:8.5,color:{argb:"FFCBD5E1"}}});
+                        } else {
+                          info.items.forEach(it=>{
+                            const hex="FF"+techColor(it.tech).replace("#","").toUpperCase();
+                            const st=ESCALA_STATUS[it.s.status]||{};
+                            runs.push({text:`\n● ${it.tech}: `,font:{name:"Calibri",bold:true,size:9,color:{argb:hex}}});
+                            runs.push({text:`${it.s.client||"—"}`,font:{name:"Calibri",bold:true,size:9,color:{argb:"FF1A1A1A"}}});
+                            runs.push({text:` (PAT ${it.s.patrimonio||"—"})`,font:{name:"Calibri",size:8.5,color:{argb:"FF64748B"}}});
+                            runs.push({text:` — ${st.l||it.s.status||""}`,font:{name:"Calibri",italic:true,size:8.5,color:{argb:"FF"+(st.c||"#64748B").replace("#","").toUpperCase()}}});
+                          });
+                        }
+                        cell.value={richText:runs};
+                        cell.alignment={vertical:"top",horizontal:"left",wrapText:true,indent:1};
+                        cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:info.items.length>0?CINZA_CLARO:BRANCO}};
+                      });
+                      row++;
+                    }
+                    row+=1;
+                    const legRow=ws.getCell(`B${row}`);
+                    legRow.value="🎨 As cores por técnico e status são as mesmas usadas na tela do sistema.";
+                    legRow.font={name:"Calibri",italic:true,size:8.5,color:{argb:CINZA_TEXTO}};
+
+                    const buf=await workbook.xlsx.writeBuffer();
+                    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+                    const url=URL.createObjectURL(blob);
+                    const a=document.createElement("a"); a.href=url; a.download=`Agenda_Externa_${MESES[agpMonth]}_${agpYear}.xlsx`; a.click();
+                    URL.revokeObjectURL(url);
+                  }catch(e){ alert("Não foi possível exportar o calendário: "+(e?.message||e)); }
+                }} style={{padding:"9px 16px",borderRadius:8,border:"1px solid #166534",background:"transparent",color:"#166534",fontSize:12,cursor:"pointer",fontWeight:600}}>📅 Exportar Calendário</button>
                 <button onClick={()=>{
                   // Nomes canônicos = como aparecem na Conferência de Relatórios
                   const canonicos=[...new Set((reports||[]).map(r=>r.tecnico).filter(Boolean))];
