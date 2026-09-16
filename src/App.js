@@ -1981,6 +1981,212 @@ function ImportChecklistModal({onClose,onImport}){
     </div>
   );
 }
+// ── Urgência do Plano de Manutenção Preventiva, por horímetro ──
+const URGENCIA_MAQUINA = {
+  critico:{l:"🔴 Crítico",c:"#C62828",bg:"#FFF0F0"},
+  atencao:{l:"🟠 Atenção",c:"#E67E00",bg:"#FFF8F0"},
+  ok:{l:"🟢 Ok",c:"#166534",bg:"#F0FDF4"},
+  sem_dados:{l:"⚪ Sem dados",c:"#94A3B8",bg:"#F1F5F9"},
+};
+const calcUrgenciaMaquina=(m)=>{
+  const hor=parseFloat(m.horimetro);
+  const intervalo=parseFloat(m.intervaloBase);
+  if(!hor||!intervalo||isNaN(hor)||isNaN(intervalo)) return {status:"sem_dados",faltam:null};
+  const resto=hor%intervalo;
+  const faltam=intervalo-resto;
+  let status="ok";
+  if(faltam<=100) status="critico";
+  else if(faltam<=300) status="atencao";
+  return {status,faltam};
+};
+
+// Modal de importação do Plano de Manutenção Preventiva — cruza duas planilhas:
+// 1) "Controle de Frota": lista de TODAS as máquinas (PAT/Descrição/Marca/Modelo/Série/Tipo).
+// 2) "Plano de Manutenção" (opcional, um sheet por modelo): traz, por modelo, os itens do plano
+//    preventivo por intervalo de horímetro, e (quando disponível) PAT/Cliente/Status/Horímetro
+//    de cada máquina daquele modelo. Faz o cruzamento por Modelo (e por PAT quando disponível)
+//    e devolve a lista de máquinas já com o plano preenchido.
+function ImportFrotaModal({onClose,onImport}){
+  const [fileFrota,setFileFrota]=useState(null);
+  const [filePlano,setFilePlano]=useState(null);
+  const [preview,setPreview]=useState(null);
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const norm=s=>String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const normModelo=s=>norm(s).replace(/[\s/\-.]+/g,"");
+  const pick=(o,k)=>{const keys=Object.keys(o);const alvo=norm(k);const found=keys.find(x=>norm(x)===alvo)||keys.find(x=>norm(x).includes(alvo));return found?o[found]:"";};
+
+  const processar=async()=>{
+    if(!fileFrota){setErr("Selecione ao menos a planilha Controle de Frota.");return;}
+    setErr(""); setLoading(true); setPreview(null);
+    try{
+      const XLSX=await loadXLSX();
+
+      // ── 1) Controle de Frota ──
+      const bufFrota=await fileFrota.arrayBuffer();
+      const wbFrota=XLSX.read(bufFrota,{type:"array"});
+      let sheetFrota=wbFrota.SheetNames.find(n=>norm(n).includes("controle")&&norm(n).includes("frota"))||wbFrota.SheetNames[0];
+      let linhasFrota=[];
+      for(const sname of wbFrota.SheetNames){
+        const data=XLSX.utils.sheet_to_json(wbFrota.Sheets[sname],{defval:""});
+        const ok=data.length&&Object.keys(data[0]).some(k=>norm(k).includes("patrimonio"))&&Object.keys(data[0]).some(k=>norm(k).includes("modelo"));
+        if(ok){ linhasFrota=data; sheetFrota=sname; break; }
+      }
+      if(!linhasFrota.length){setErr("Não encontrei a planilha de máquinas (preciso de colunas Patrimônio e Modelo).");setLoading(false);return;}
+      const maquinas=linhasFrota.map(o=>({
+        pat:String(pick(o,"Patrimônio")||"").trim(),
+        descricao:String(pick(o,"Descrição")||"").trim(),
+        marca:String(pick(o,"Marca")||"").trim(),
+        modelo:String(pick(o,"Modelo")||"").trim(),
+        serie:String(pick(o,"Série")||"").trim(),
+        tipo:String(pick(o,"Tipo")||"").trim(),
+        cliente:"",status:"",horimetro:"",intervaloBase:"",planoItens:[],
+      })).filter(m=>m.pat||m.modelo);
+
+      // ── 2) Plano de Manutenção (opcional) — um sheet por modelo ──
+      let catalogPorModelo={}; // modeloNorm -> {planoItens:[...], intervaloBase}
+      let dadosPorPat={}; // pat -> {cliente, status, horimetro}
+      if(filePlano){
+        const bufPlano=await filePlano.arrayBuffer();
+        const wbPlano=XLSX.read(bufPlano,{type:"array"});
+        for(const sname of wbPlano.SheetNames){
+          const ws=wbPlano.Sheets[sname];
+          const raw=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:""});
+          // título "PLANO PREVENTIVO — MODELO"
+          let modeloSheet=sname;
+          for(const linha of raw.slice(0,4)){
+            const txt=String((linha||[]).find(c=>c)||"");
+            const m=txt.match(/PLANO PREVENTIVO\s*[—-]\s*(.+)/i);
+            if(m){ modeloSheet=m[1].trim(); break; }
+          }
+          const modeloKey=normModelo(modeloSheet);
+          // acha "MÁQUINAS DA FROTA"
+          let iMaq=raw.findIndex(l=>norm((l||[]).find(c=>c)||"").includes("maquinas da frota"));
+          if(iMaq>=0){
+            const header=(raw[iMaq+1]||[]).map(c=>String(c||"").trim());
+            const iPat=header.findIndex(h=>norm(h)==="pat");
+            const iSerie=header.findIndex(h=>norm(h).includes("serie"));
+            const iCliente=header.findIndex(h=>norm(h).includes("cliente"));
+            const iStatus=header.findIndex(h=>norm(h)==="status");
+            const iHor=header.findIndex(h=>norm(h).includes("horimetro"));
+            for(let r=iMaq+2;r<raw.length;r++){
+              const linha=raw[r]||[];
+              if(linha.every(c=>c===""||c===undefined||c===null))break;
+              const pat=String(linha[iPat]||"").trim();
+              if(!pat)continue;
+              dadosPorPat[pat]={
+                cliente:String(linha[iCliente]||"").trim(),
+                status:String(linha[iStatus]||"").trim(),
+                horimetro:iHor>=0?String(linha[iHor]||"").trim():"",
+              };
+            }
+          }
+          // acha "PLANO DE MANUTENÇÃO PREVENTIVA"
+          let iPlano=raw.findIndex(l=>norm((l||[]).find(c=>c)||"").includes("plano de manutencao preventiva"));
+          if(iPlano>=0){
+            const itens=[];
+            let intervaloAtual="Sem intervalo definido";
+            for(let r=iPlano+1;r<raw.length;r++){
+              const linha=raw[r]||[];
+              const c0=String(linha[0]||"").trim();
+              const c1=String(linha[1]||"").trim();
+              if(/^A cada/i.test(c1)){ intervaloAtual=c1; continue; }
+              if(norm(c1)==="codigo"&&norm(String(linha[2]||""))==="qtde")continue; // header da sub-tabela
+              const descricao=String(linha[3]||linha[2]||"").trim();
+              if(!descricao)continue;
+              itens.push({
+                intervalo:intervaloAtual,
+                codigo:String(linha[1]||"").trim(),
+                qtde:String(linha[2]||"1").trim(),
+                descricao,
+                observacao:String(linha[4]||"").trim(),
+              });
+            }
+            const numeros=itens.map(it=>{const m=String(it.intervalo).match(/(\d+)/);return m?parseInt(m[1]):null;}).filter(Boolean);
+            const intervaloBase=numeros.length?Math.min(...numeros):"";
+            catalogPorModelo[modeloKey]={planoItens:itens,intervaloBase};
+          }
+        }
+      }
+
+      // ── 3) Cruzamento ──
+      let comPlano=0, comHorimetro=0;
+      maquinas.forEach(m=>{
+        const dadoPat=dadosPorPat[m.pat];
+        if(dadoPat){
+          m.cliente=dadoPat.cliente||m.cliente;
+          m.status=dadoPat.status||m.status;
+          if(dadoPat.horimetro){ m.horimetro=dadoPat.horimetro; comHorimetro++; }
+        }
+        const mk=normModelo(m.modelo);
+        const catalogo=catalogPorModelo[mk]||Object.entries(catalogPorModelo).find(([k])=>k.includes(mk)||mk.includes(k))?.[1];
+        if(catalogo){
+          m.planoItens=catalogo.planoItens;
+          m.intervaloBase=catalogo.intervaloBase;
+          comPlano++;
+        }
+      });
+
+      setPreview({maquinas,total:maquinas.length,comPlano,semPlano:maquinas.length-comPlano,comHorimetro,sheetFrota});
+    }catch(e){ setErr("Não consegui ler os arquivos. Use .xlsx ou .xls. Detalhe: "+(e?.message||e)); }
+    setLoading(false);
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:680,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+        <div style={{padding:"12px 16px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF"}}>
+          <div style={{fontWeight:800,fontSize:15}}>📥 Importar Frota + Plano de Manutenção</div>
+          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888",lineHeight:1}}>✕</button>
+        </div>
+        <div style={{padding:16,display:"flex",flexDirection:"column",gap:14}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A",marginBottom:4}}>1. Controle de Frota (obrigatório)</div>
+            <div style={{fontSize:11,color:"#666",marginBottom:6}}>Planilha com todas as máquinas (colunas Patrimônio, Descrição, Marca, Modelo, Série, Tipo).</div>
+            <input type="file" accept=".xlsx,.xls" onChange={e=>setFileFrota(e.target.files[0])} style={{fontSize:12}}/>
+          </div>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A",marginBottom:4}}>2. Plano de Manutenção por Modelo (opcional)</div>
+            <div style={{fontSize:11,color:"#666",marginBottom:6}}>Planilha com um sheet por modelo (ex: "STILL EGV 14-16"), cada um com a lista de máquinas e o plano preventivo por intervalo. Uso pra preencher o plano das máquinas cujo modelo bater.</div>
+            <input type="file" accept=".xlsx,.xls" onChange={e=>setFilePlano(e.target.files[0])} style={{fontSize:12}}/>
+          </div>
+          <BtnY onClick={processar}>{loading?"Lendo...":"Processar planilhas"}</BtnY>
+          {err&&<div style={{fontSize:12,color:"#C62828",padding:"8px 12px",background:"#FFF0F0",borderRadius:8}}>{err}</div>}
+          {preview&&<>
+            <div style={{fontSize:12,fontWeight:700,color:"#1A1A1A",background:"#F8FAFC",borderRadius:8,padding:"10px 12px"}}>
+              {preview.total} máquina(s) encontrada(s) — <span style={{color:"#166534"}}>{preview.comPlano} com plano preenchido</span> · <span style={{color:"#B45309"}}>{preview.semPlano} sem catálogo pro modelo</span> · <span style={{color:"#1565C0"}}>{preview.comHorimetro} com horímetro conhecido</span>
+            </div>
+            <div style={{maxHeight:260,overflowY:"auto",border:"1px solid #EEE",borderRadius:8}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                <thead><tr style={{background:"#F8FAFC"}}>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>PAT</th>
+                  <th style={{padding:"6px 10px",textAlign:"left",position:"sticky",top:0,background:"#F8FAFC"}}>Modelo</th>
+                  <th style={{padding:"6px 10px",textAlign:"center",position:"sticky",top:0,background:"#F8FAFC"}}>Plano</th>
+                  <th style={{padding:"6px 10px",textAlign:"center",position:"sticky",top:0,background:"#F8FAFC"}}>Horímetro</th>
+                </tr></thead>
+                <tbody>
+                  {preview.maquinas.slice(0,200).map((m,i)=>(
+                    <tr key={i} style={{borderTop:"1px solid #F1F5F9"}}>
+                      <td style={{padding:"5px 10px",fontWeight:600}}>{m.pat||"—"}</td>
+                      <td style={{padding:"5px 10px"}}>{m.modelo||"—"}</td>
+                      <td style={{padding:"5px 10px",textAlign:"center",fontWeight:700,color:m.planoItens.length?"#166534":"#B45309"}}>{m.planoItens.length?`${m.planoItens.length} itens`:"—"}</td>
+                      <td style={{padding:"5px 10px",textAlign:"center"}}>{m.horimetro||"—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {preview.maquinas.length>200&&<div style={{padding:8,fontSize:11,color:"#888",textAlign:"center"}}>+{preview.maquinas.length-200} outra(s)...</div>}
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <BtnG onClick={onClose}>Cancelar</BtnG>
+              <BtnY onClick={()=>onImport(preview.maquinas)}>Importar {preview.total} máquina(s)</BtnY>
+            </div>
+          </>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── MODAL RELATÓRIO (Conferência de Relatórios — Técnicos Externos) ─────────
 function RelatorioModal({initial,onClose,onSave}){
@@ -3699,7 +3905,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const COMERCIAL_TABS = ["comercial","dashboard_comercial","dashboard_prospeccao"];
   const CLIENTES_TABS = ["operacoes"];
   const SAS_TABS = ["sas","entrega_tecnica","clientes_sas","dashboard_clientes_sas","sas_manutencao","sas_vendas","sas_pecas","dashboard_sas_financeiro","planilha_comissao_sas","documentos_obrigatorios_sas"];
-  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "dificuldades_tecnicos", "banco_horas", "carros", "solicitacao_pecas_manutencao", "dashboard_solicitacao_pecas", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
+  const AREA_TEC_TABS = [...OFICINAS_TABS, ...TECEXT_TABS, "pendencias_frota", "plano_preventivo", "dashboard_plano_preventivo", "vale_tecnico_maquinas", "ferias_colaboradores", "treinamentos_reunioes", "ponto_diario", "escala_diaria", "dificuldades_tecnicos", "banco_horas", "carros", "solicitacao_pecas_manutencao", "dashboard_solicitacao_pecas", ...ADMIN_TABS, ...ALMOX_TABS, ...CLIENTES_TABS];
 
   const [areaTecOpen, setAreaTecOpen] = useState(AREA_TEC_TABS.includes(tab));
   const [servicosOpen,setServicosOpen]=useState(SERVICOS_TABS.includes(tab));
@@ -3714,7 +3920,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios","pendencias_checklist"];
   const SUB_PECAS=["solicitacao_pecas_manutencao","dashboard_solicitacao_pecas"];
   const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria","dificuldades_tecnicos"];
-  const SUB_FROTA=["pendencias_frota"];
+  const SUB_FROTA=["pendencias_frota","plano_preventivo","dashboard_plano_preventivo"];
   const [subOfiOpen,setSubOfiOpen]=useState(false);
   const [subExtOpen,setSubExtOpen]=useState(false);
   const [subPecasOpen,setSubPecasOpen]=useState(false);
@@ -3892,6 +4098,8 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
 
         <SubFolder label="Frota" icon="🔋" open={subFrotaOpen} setOpen={setSubFrotaOpen} ativa={SUB_FROTA.includes(tab)} color="#C2410C">
           <SubBtn k="pendencias_frota" l="🔋 Substituição Bateria, Carregador e Máquina"/>
+          <SubBtn k="plano_preventivo" l="🛠️ Plano de Manutenção Preventiva"/>
+          <SubBtn k="dashboard_plano_preventivo" l="📊 KPIs Plano Preventivo"/>
         </SubFolder>
 
         <SubFolder label="Almoxarifado" icon="📦" open={subAlmoxOpen} setOpen={setSubAlmoxOpen} ativa={ALMOX_TABS.includes(tab)} color="#7E22CE">
@@ -4096,6 +4304,11 @@ export default function App(){
   const [editSPM,setEditSPM]=useState(null);
   const [showArqFO,setShowArqFO]=useState(false);
   const [modalFO,setModalFO]=useState(false);
+  const [showArqMF,setShowArqMF]=useState(false);
+  const [modalMF,setModalMF]=useState(false);
+  const [editMF,setEditMF]=useState(null);
+  const [modalImportMF,setModalImportMF]=useState(false);
+  const [mfSearch,setMfSearch]=useState(""); const [mfUrgencia,setMfUrgencia]=useState("todas"); const [mfModelo,setMfModelo]=useState("todos"); const [showFiltrosMF,setShowFiltrosMF]=useState(false);
   const [editFO,setEditFO]=useState(null);
   const [modalPP,setModalPP]=useState(false);
   const [editPP,setEditPP]=useState(null);
@@ -4139,6 +4352,7 @@ export default function App(){
   const [pendManuela,setPendManuela]=useState([]);
   const [solicitacaoPecas,setSolicitacaoPecas]=useState([]);
   const [frotaOficina,setFrotaOficina]=useState([]);
+  const [maquinasFrota,setMaquinasFrota]=useState([]);
   const [modalCarroRevisao,setModalCarroRevisao]=useState(null);
   const [carroFiltroPlaca,setCarroFiltroPlaca]=useState("todas");
   const [carroFiltroData,setCarroFiltroData]=useState("");
@@ -4608,6 +4822,8 @@ export default function App(){
       if(solicitacaoPecasRows.length>0) setSolicitacaoPecas(solicitacaoPecasRows);
       const frotaOficinaRows=await safeGet("frota_oficina_pendencias");
       if(frotaOficinaRows.length>0) setFrotaOficina(frotaOficinaRows);
+      const maquinasFrotaRows=await safeGet("maquinas_frota");
+      if(maquinasFrotaRows.length>0) setMaquinasFrota(maquinasFrotaRows);
       if(feriasRows.length>0){ setFerias(feriasRows); }
       else{
         // primeira vez: popular com o seed da planilha 2026
@@ -4662,7 +4878,7 @@ export default function App(){
       saida_entrada:setSaidaEntrada, requisicoes:setRequisicoes, carros:setCarros,
       operacoes:setOperacoes, pendencias_frota:setFrota, rupturas_alm:setRupturas,
       sas:setSas, uber_pedidos:setUberPedidos, financeiro:setFinanceiro, cotacoes_pecas:setCotacoesPecas, envio_pecas_fornecedor:setEnvioPecas, orcamento_pecas:setOrcamentoPecas, pendencias_portal:setPendenciasPortal, pendencias_checklist:setPendenciasChecklist,
-      solicitacao_pecas_manutencao:setSolicitacaoPecas, frota_oficina_pendencias:setFrotaOficina,
+      solicitacao_pecas_manutencao:setSolicitacaoPecas, frota_oficina_pendencias:setFrotaOficina, maquinas_frota:setMaquinasFrota,
     };
     const applyChange=(table,eventType,rec,oldRec)=>{
       const setter=setters[table]; if(!setter)return;
@@ -4804,6 +5020,7 @@ export default function App(){
   const pendenciaChecklistCrud=mkCrud("pendencias_checklist",setPendenciasChecklist);
   const solicitacaoPecasCrud=mkCrud("solicitacao_pecas_manutencao",setSolicitacaoPecas);
   const frotaOficinaCrud=mkCrud("frota_oficina_pendencias",setFrotaOficina);
+  const maquinasFrotaCrud=mkCrud("maquinas_frota",setMaquinasFrota);
   const servFechCrud=mkCrud("servicos_fechados",setServicosFechados);
   const saveAgendaOfi=(key,slots)=>{ setAgendaOfi(p=>({...p,[key]:slots})); db.save("agenda_oficina", key, {key, slots}); };
   const updateApon=(id,changes,fallbackRow)=>{
@@ -9052,6 +9269,313 @@ export default function App(){
                   <BtnY onClick={salvar}>Salvar</BtnY>
                 </div>
               </div>
+            </div>
+          );
+        })()}
+
+        {/* ── PLANO DE MANUTENÇÃO PREVENTIVA (Frota) ── */}
+        {tab==="plano_preventivo"&&(()=>{
+          const lista=(maquinasFrota||[]).filter(m=>m&&(showArqMF?m.arquivado:!m.arquivado));
+          const modelos=[...new Set(lista.map(m=>m.modelo).filter(Boolean))].sort();
+          const inclui=(campo,q)=>String(campo||"").toLowerCase().includes(q.toLowerCase());
+          const listaFil=lista.filter(m=>{
+            if(mfSearch){const q=mfSearch.toLowerCase();if(!(inclui(m.pat,q)||inclui(m.modelo,q)||inclui(m.cliente,q)||inclui(m.descricao,q)||inclui(m.serie,q)))return false;}
+            if(mfModelo!=="todos"&&m.modelo!==mfModelo)return false;
+            if(mfUrgencia!=="todas"&&calcUrgenciaMaquina(m).status!==mfUrgencia)return false;
+            return true;
+          }).sort((a,b)=>{
+            const ua=calcUrgenciaMaquina(a), ub=calcUrgenciaMaquina(b);
+            const ordem={critico:0,atencao:1,ok:2,sem_dados:3};
+            if(ordem[ua.status]!==ordem[ub.status])return ordem[ua.status]-ordem[ub.status];
+            return (ua.faltam??99999)-(ub.faltam??99999);
+          });
+          const contagem={critico:0,atencao:0,ok:0,sem_dados:0};
+          lista.forEach(m=>{contagem[calcUrgenciaMaquina(m).status]++;});
+          const hasFilterMF=mfSearch||mfModelo!=="todos"||mfUrgencia!=="todas";
+          const abrirNovo=()=>{setEditMF({pat:"",descricao:"",marca:"",modelo:"",serie:"",tipo:"",cliente:"",status:"",horimetro:"",intervaloBase:"",planoItens:[]});setModalMF(true);};
+          const abrirEditar=(m)=>{setEditMF({...m,planoItens:m.planoItens||[]});setModalMF(true);};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4,flexWrap:"wrap",gap:10}}>
+                <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>🛠️ Plano de Manutenção Preventiva</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{lista.length} máquina(s) na frota</div></div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <button onClick={()=>setShowArqMF(p=>!p)} style={{padding:"9px 16px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:12,fontWeight:700,color:"#64748B",cursor:"pointer"}}>{showArqMF?"📤 Ativos":"🗄️ Arquivados"}</button>
+                  <button onClick={()=>setModalImportMF(true)} style={{padding:"9px 16px",borderRadius:10,border:"1px solid #0D9488",background:"#F0FDFA",fontSize:12,fontWeight:700,color:"#0D9488",cursor:"pointer"}}>📥 Importar Frota + Plano</button>
+                  <BtnExcel onClick={()=>exportCSV(listaFil.map(m=>{const u=calcUrgenciaMaquina(m);return{...m,urgenciaFmt:URGENCIA_MAQUINA[u.status].l.replace(/^\S+\s/,""),faltamFmt:u.faltam!==null?`${u.faltam}h`:"—",planoQtd:(m.planoItens||[]).length};}),"plano_manutencao_preventiva",[
+                    {key:"pat",label:"PAT"},{key:"descricao",label:"Descrição"},{key:"marca",label:"Marca"},{key:"modelo",label:"Modelo"},{key:"serie",label:"Série"},{key:"tipo",label:"Tipo"},
+                    {key:"cliente",label:"Cliente"},{key:"status",label:"Status"},{key:"horimetro",label:"Horímetro"},{key:"intervaloBase",label:"Intervalo Base (h)"},
+                    {key:"faltamFmt",label:"Faltam"},{key:"urgenciaFmt",label:"Urgência"},{key:"planoQtd",label:"Itens no Plano"},
+                  ])}/>
+                  <BtnY onClick={abrirNovo}>+ Nova Máquina</BtnY>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,margin:"16px 0 20px"}}>
+                {[
+                  {l:"Total",v:lista.length,i:"🚜",bg:"#F1F5F9",fg:"#334155"},
+                  {l:"Crítico",v:contagem.critico,i:"🔴",bg:"#FFF0F0",fg:"#C62828"},
+                  {l:"Atenção",v:contagem.atencao,i:"🟠",bg:"#FFF8F0",fg:"#E67E00"},
+                  {l:"Ok",v:contagem.ok,i:"🟢",bg:"#F0FDF4",fg:"#166534"},
+                  {l:"Sem dados",v:contagem.sem_dados,i:"⚪",bg:"#F1F5F9",fg:"#94A3B8"},
+                ].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"16px 18px",display:"flex",alignItems:"center",gap:12,border:"1px solid #EEF1F5"}}>
+                    <div style={{width:40,height:40,borderRadius:11,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{k.i}</div>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                      <div style={{fontSize:22,fontWeight:900,color:k.fg,marginTop:1}}>{k.v}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={()=>setShowFiltrosMF(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosMF?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit"}}>
+                <span style={{fontSize:11}}>🔍</span><span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
+                {hasFilterMF&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                <span style={{fontSize:8,color:"#94A3B8"}}>{showFiltrosMF?"▲":"▼"}</span>
+              </button>
+              {showFiltrosMF&&<div className="card" style={{padding:"8px 10px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                <div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"#AAA",fontSize:11}}>🔍</span><input type="text" value={mfSearch} onChange={e=>setMfSearch(e.target.value)} placeholder="Buscar PAT, modelo, cliente..." style={{width:"100%",padding:"7px 10px 7px 30px",fontSize:12,boxSizing:"border-box"}}/></div>
+                <select value={mfModelo} onChange={e=>setMfModelo(e.target.value)}><option value="todos">Modelo: Todos</option>{modelos.map(m=><option key={m}>{m}</option>)}</select>
+                <select value={mfUrgencia} onChange={e=>setMfUrgencia(e.target.value)}><option value="todas">Urgência: Todas</option>{Object.entries(URGENCIA_MAQUINA).map(([v,s])=><option key={v} value={v}>{s.l}</option>)}</select>
+                {hasFilterMF&&<button onClick={()=>{setMfSearch("");setMfModelo("todos");setMfUrgencia("todas");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+              </div>}
+
+              <div className="card" style={{overflow:"hidden"}}>
+                <div className="tbl-wrap" style={{overflowX:"auto"}}><table style={{minWidth:1200}}>
+                  <thead><tr><th>PAT</th><th>Descrição</th><th>Marca/Modelo</th><th>Cliente</th><th>Horímetro</th><th>Intervalo Base</th><th>Faltam</th><th>Urgência</th><th>Plano</th><th></th></tr></thead>
+                  <tbody>
+                    {listaFil.map(m=>{
+                      const u=calcUrgenciaMaquina(m);
+                      const ui=URGENCIA_MAQUINA[u.status];
+                      return(
+                        <tr key={m.id} style={{opacity:m.arquivado?0.55:1}}>
+                          <td style={{padding:"7px 9px",fontWeight:700,color:"#1A1A1A"}}>{m.pat||"—"}</td>
+                          <td style={{padding:"7px 9px",fontSize:11,maxWidth:220,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={m.descricao}>{m.descricao||"—"}</td>
+                          <td style={{padding:"7px 9px",fontSize:11}}>{m.marca} {m.modelo}</td>
+                          <td style={{padding:"7px 9px",fontSize:11,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={m.cliente}>{m.cliente||"—"}</td>
+                          <td style={{padding:"7px 9px"}}><input type="text" value={m.horimetro||""} onChange={e=>maquinasFrotaCrud.update(m.id,{horimetro:e.target.value})} placeholder="0h" style={{width:80,fontSize:12,fontWeight:800,color:"#0D9488",padding:"4px 6px",border:"1.5px solid #CCFBF1",background:"#F0FDFA",borderRadius:6,textAlign:"center",fontFamily:"inherit"}}/></td>
+                          <td style={{padding:"7px 9px",fontSize:11,textAlign:"center"}}>{m.intervaloBase?`${m.intervaloBase}h`:"—"}</td>
+                          <td style={{padding:"7px 9px",fontSize:11,fontWeight:700,textAlign:"center",color:ui.c}}>{u.faltam!==null?`${Math.round(u.faltam)}h`:"—"}</td>
+                          <td style={{padding:"7px 9px"}}><span style={{fontSize:10,fontWeight:700,color:ui.c,background:ui.bg,borderRadius:20,padding:"3px 8px",whiteSpace:"nowrap"}}>{ui.l}</span></td>
+                          <td style={{padding:"7px 9px",fontSize:11,textAlign:"center"}}>{(m.planoItens||[]).length>0?`${m.planoItens.length} itens`:"—"}</td>
+                          <td style={{padding:"7px 9px",whiteSpace:"nowrap"}}>
+                            <button onClick={()=>abrirEditar(m)} title="Editar" style={{background:"#1565C0",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>✏️</button>
+                            <button onClick={()=>maquinasFrotaCrud.update(m.id,{arquivado:!m.arquivado})} title={m.arquivado?"Desarquivar":"Arquivar"} style={{background:"#64748B",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10,marginRight:3}}>{m.arquivado?"📤":"🗄️"}</button>
+                            <button onClick={()=>{if(window.confirm("Excluir esta máquina?"))maquinasFrotaCrud.del(m.id);}} title="Excluir" style={{background:"#DC2626",border:"none",borderRadius:6,color:"#FFF",cursor:"pointer",padding:"4px 7px",fontSize:10}}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table></div>
+                {listaFil.length===0&&<div style={{textAlign:"center",color:"#CCC",padding:40,fontSize:12}}>{hasFilterMF?"Nenhum resultado para os filtros aplicados":"Nenhuma máquina cadastrada — use Importar Frota + Plano ou + Nova Máquina"}</div>}
+              </div>
+
+              {modalImportMF&&<ImportFrotaModal onClose={()=>setModalImportMF(false)} onImport={(maquinas)=>{
+                const existentesPorPat={}; (maquinasFrota||[]).forEach(m=>{if(m.pat)existentesPorPat[m.pat]=m;});
+                let novos=0, atualizados=0;
+                maquinas.forEach(m=>{
+                  const existente=m.pat?existentesPorPat[m.pat]:null;
+                  if(existente){
+                    const changes={descricao:m.descricao,marca:m.marca,modelo:m.modelo,serie:m.serie,tipo:m.tipo};
+                    if(m.cliente)changes.cliente=m.cliente;
+                    if(m.status)changes.status=m.status;
+                    if(m.horimetro&&!existente.horimetro)changes.horimetro=m.horimetro; // nao sobrescreve horimetro ja preenchido manualmente
+                    if((m.planoItens||[]).length&&!(existente.planoItens||[]).length){changes.planoItens=m.planoItens;changes.intervaloBase=m.intervaloBase;}
+                    maquinasFrotaCrud.update(existente.id,changes);
+                    atualizados++;
+                  } else {
+                    maquinasFrotaCrud.add({...m,arquivado:false});
+                    novos++;
+                  }
+                });
+                notify(`✅ ${novos} máquina(s) nova(s) · ${atualizados} já existente(s) atualizada(s)!`);
+                setModalImportMF(false);
+              }}/>}
+            </div>
+          );
+        })()}
+
+        {modalMF&&editMF&&(()=>{
+          const upd=(k,v)=>setEditMF(p=>({...p,[k]:v}));
+          const updPlano=(i,changes)=>{const np=[...(editMF.planoItens||[])];np[i]={...np[i],...changes};upd("planoItens",np);};
+          const addPlano=()=>upd("planoItens",[...(editMF.planoItens||[]),{intervalo:"",codigo:"",qtde:"1",descricao:"",observacao:""}]);
+          const rmPlano=(i)=>upd("planoItens",(editMF.planoItens||[]).filter((_,idx)=>idx!==i));
+          const salvar=()=>{
+            if(editMF.id) maquinasFrotaCrud.update(editMF.id,editMF);
+            else maquinasFrotaCrud.add(editMF);
+            setModalMF(false); setEditMF(null);
+          };
+          const lbl={display:"block",fontSize:10,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5,marginBottom:4};
+          const inp={width:"100%",fontSize:13,padding:"9px 11px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FAFAFA",boxSizing:"border-box",fontFamily:"inherit"};
+          const u=calcUrgenciaMaquina(editMF);
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+              <div style={{background:"#FFF",borderRadius:12,width:"100%",maxWidth:900,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.25)"}}>
+                <div style={{padding:"14px 18px",borderBottom:"1px solid #F0F0F0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:"#FFF",zIndex:2}}>
+                  <div style={{fontWeight:800,fontSize:15}}>{editMF.id?"✏️ Editar":"➕ Nova"} Máquina — PAT {editMF.pat||"?"}</div>
+                  <button onClick={()=>{setModalMF(false);setEditMF(null);}} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#888"}}>✕</button>
+                </div>
+                <div style={{padding:18,display:"flex",flexDirection:"column",gap:12}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>PAT</label><input type="text" value={editMF.pat||""} onChange={e=>upd("pat",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Marca</label><input type="text" value={editMF.marca||""} onChange={e=>upd("marca",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Modelo</label><input type="text" value={editMF.modelo||""} onChange={e=>upd("modelo",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div><label style={lbl}>Descrição</label><input type="text" value={editMF.descricao||""} onChange={e=>upd("descricao",e.target.value)} style={inp}/></div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Série</label><input type="text" value={editMF.serie||""} onChange={e=>upd("serie",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Tipo</label><input type="text" value={editMF.tipo||""} onChange={e=>upd("tipo",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Cliente</label><input type="text" value={editMF.cliente||""} onChange={e=>upd("cliente",e.target.value)} style={inp}/></div>
+                    <div><label style={lbl}>Status</label><input type="text" value={editMF.status||""} onChange={e=>upd("status",e.target.value)} style={inp}/></div>
+                  </div>
+                  <div style={{background:"#F0FDFA",border:"1.5px solid #CCFBF1",borderRadius:10,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                    <div><label style={lbl}>Horímetro atual</label><input type="text" value={editMF.horimetro||""} onChange={e=>upd("horimetro",e.target.value)} placeholder="0" style={inp}/></div>
+                    <div><label style={lbl}>Intervalo base (h)</label><input type="text" value={editMF.intervaloBase||""} onChange={e=>upd("intervaloBase",e.target.value)} placeholder="Ex: 2000" style={inp}/></div>
+                    <div><label style={lbl}>Urgência</label><div style={{fontSize:13,fontWeight:800,color:URGENCIA_MAQUINA[u.status].c,padding:"9px 0"}}>{URGENCIA_MAQUINA[u.status].l}{u.faltam!==null?` — faltam ${Math.round(u.faltam)}h`:""}</div></div>
+                  </div>
+
+                  <div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                      <div style={{fontSize:13,fontWeight:800,color:"#1A1A1A"}}>🔧 Plano de Manutenção ({(editMF.planoItens||[]).length} itens)</div>
+                      <button onClick={addPlano} style={{fontSize:11,fontWeight:700,color:"#1565C0",background:"#EFF6FF",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer"}}>+ Item</button>
+                    </div>
+                    <div style={{maxHeight:280,overflowY:"auto",border:"1px solid #EEE",borderRadius:8}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                        <thead><tr style={{background:"#F8FAFC",position:"sticky",top:0}}>
+                          <th style={{padding:"5px 7px",textAlign:"left"}}>Intervalo</th><th style={{padding:"5px 7px",textAlign:"left"}}>Código</th><th style={{padding:"5px 7px",textAlign:"center"}}>Qtd</th><th style={{padding:"5px 7px",textAlign:"left"}}>Descrição</th><th style={{padding:"5px 7px",textAlign:"left"}}>Observação</th><th></th>
+                        </tr></thead>
+                        <tbody>
+                          {(editMF.planoItens||[]).map((pi,i)=>(
+                            <tr key={i} style={{borderTop:"1px solid #F1F5F9"}}>
+                              <td style={{padding:"3px 5px"}}><input type="text" value={pi.intervalo||""} onChange={e=>updPlano(i,{intervalo:e.target.value})} style={{width:100,fontSize:10.5,padding:"4px 5px",border:"1px solid #E0E0E0",borderRadius:5}}/></td>
+                              <td style={{padding:"3px 5px"}}><input type="text" value={pi.codigo||""} onChange={e=>updPlano(i,{codigo:e.target.value})} style={{width:80,fontSize:10.5,padding:"4px 5px",border:"1px solid #E0E0E0",borderRadius:5}}/></td>
+                              <td style={{padding:"3px 5px"}}><input type="text" value={pi.qtde||""} onChange={e=>updPlano(i,{qtde:e.target.value})} style={{width:36,fontSize:10.5,padding:"4px 5px",border:"1px solid #E0E0E0",borderRadius:5,textAlign:"center"}}/></td>
+                              <td style={{padding:"3px 5px"}}><input type="text" value={pi.descricao||""} onChange={e=>updPlano(i,{descricao:e.target.value})} style={{width:180,fontSize:10.5,padding:"4px 5px",border:"1px solid #E0E0E0",borderRadius:5}}/></td>
+                              <td style={{padding:"3px 5px"}}><input type="text" value={pi.observacao||""} onChange={e=>updPlano(i,{observacao:e.target.value})} style={{width:140,fontSize:10.5,padding:"4px 5px",border:"1px solid #E0E0E0",borderRadius:5}}/></td>
+                              <td style={{padding:"3px 5px"}}><button onClick={()=>rmPlano(i)} style={{background:"#FFF0F0",border:"none",borderRadius:5,color:"#C62828",cursor:"pointer",padding:"3px 6px",fontSize:9}}>✕</button></td>
+                            </tr>
+                          ))}
+                          {(editMF.planoItens||[]).length===0&&<tr><td colSpan={6} style={{padding:12,textAlign:"center",color:"#CCC"}}>Nenhum item — use Importar ou + Item</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div style={{padding:"14px 18px",borderTop:"1px solid #F0F0F0",display:"flex",justifyContent:"flex-end",gap:8,position:"sticky",bottom:0,background:"#FFF"}}>
+                  <button onClick={()=>{setModalMF(false);setEditMF(null);}} style={{padding:"9px 18px",borderRadius:10,border:"1.5px solid #E0E0E0",background:"#FFF",fontSize:13,fontWeight:700,color:"#64748B",cursor:"pointer"}}>Cancelar</button>
+                  <BtnY onClick={salvar}>Salvar</BtnY>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── DASHBOARD PLANO PREVENTIVO — padrão BI escuro do Mau Uso ── */}
+        {tab==="dashboard_plano_preventivo"&&(()=>{
+          const lista=(maquinasFrota||[]).filter(m=>m&&!m.arquivado);
+          const total=lista.length;
+          const contagem={critico:0,atencao:0,ok:0,sem_dados:0};
+          lista.forEach(m=>{contagem[calcUrgenciaMaquina(m).status]++;});
+          const modeloCount={};
+          lista.forEach(m=>{const mo=m.modelo||"Sem modelo";modeloCount[mo]=(modeloCount[mo]||0)+1;});
+          const topModelos=Object.entries(modeloCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+          const criticas=lista.map(m=>({m,u:calcUrgenciaMaquina(m)})).filter(x=>x.u.status==="critico").sort((a,b)=>(a.u.faltam??0)-(b.u.faltam??0)).slice(0,10);
+          // urgencia por modelo (top 8 modelos)
+          const urgPorModelo=topModelos.map(([mo])=>{
+            const items=lista.filter(m=>(m.modelo||"Sem modelo")===mo);
+            const c={critico:0,atencao:0,ok:0,sem_dados:0};
+            items.forEach(m=>{c[calcUrgenciaMaquina(m).status]++;});
+            return {modelo:mo,...c};
+          });
+          const chartUrgModelo={labels:urgPorModelo.map(x=>x.modelo),datasets:[
+            {label:"Crítico",data:urgPorModelo.map(x=>x.critico),backgroundColor:"#C62828",borderRadius:4},
+            {label:"Atenção",data:urgPorModelo.map(x=>x.atencao),backgroundColor:"#E67E00",borderRadius:4},
+            {label:"Ok",data:urgPorModelo.map(x=>x.ok),backgroundColor:"#166534",borderRadius:4},
+          ]};
+          return(
+            <div style={{animation:"fadeIn .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                <div><div style={{fontWeight:900,fontSize:26,letterSpacing:-.5}}>📊 KPIs Plano Preventivo</div><div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{total} máquina(s) na frota</div></div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,margin:"18px 0 22px"}}>
+                {[
+                  {l:"Total Frota",v:total,i:"🚜",bg:"#F1F5F9",fg:"#334155"},
+                  {l:"Crítico",v:contagem.critico,i:"🔴",bg:"#FFF0F0",fg:"#C62828"},
+                  {l:"Atenção",v:contagem.atencao,i:"🟠",bg:"#FFF8F0",fg:"#E67E00"},
+                  {l:"Ok",v:contagem.ok,i:"🟢",bg:"#F0FDF4",fg:"#166534"},
+                  {l:"Sem dados",v:contagem.sem_dados,i:"⚪",bg:"#F1F5F9",fg:"#94A3B8"},
+                ].map((k,i)=>(
+                  <div key={i} className="card" style={{padding:"18px 20px",display:"flex",alignItems:"center",gap:14,border:"1px solid #EEF1F5"}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:k.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{k.i}</div>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.5}}>{k.l}</div>
+                      <div style={{fontSize:26,fontWeight:900,color:k.fg,marginTop:2}}>{k.v}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{background:"#0B1220",borderRadius:16,padding:"26px 30px",marginBottom:22,color:"#FFF"}}>
+                <div style={{marginBottom:22}}>
+                  <span style={{fontSize:13,fontWeight:900,color:"#F5C200",letterSpacing:1}}>🚚 GRUPO MOV</span>
+                  <span style={{fontSize:12,fontWeight:700,color:"#CBD5E1"}}> — Plano de Manutenção Preventiva</span>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1.2fr",gap:28,marginBottom:26}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Urgência da Frota</div>
+                    {total===0?<div style={{color:"#475569",fontSize:12,padding:20}}>Sem dados</div>:
+                    <ChartCanvas type="doughnut" height={170} data={{
+                      labels:["Crítico","Atenção","Ok","Sem dados"],
+                      datasets:[{data:[contagem.critico,contagem.atencao,contagem.ok,contagem.sem_dados],backgroundColor:["#C62828","#E67E00","#166534","#334155"],borderWidth:2,borderColor:"#0B1220"}]
+                    }} options={{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{position:"bottom",labels:{color:"#CBD5E1",font:{size:10},boxWidth:8}}}}}/>}
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Top Modelos na Frota</div>
+                    {topModelos.length===0?<div style={{color:"#475569",fontSize:12,padding:12}}>Sem dados</div>:
+                    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                      {topModelos.map(([mo,qtd],i)=>(
+                        <div key={mo} style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{width:22,height:22,borderRadius:"50%",background:"#1E293B",color:"#F5C200",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+                          <div style={{fontSize:13,fontWeight:700,color:"#FFF",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{mo}</div>
+                          <div style={{fontSize:13,fontWeight:900,color:"#F5C200"}}>{qtd}</div>
+                        </div>
+                      ))}
+                    </div>}
+                  </div>
+                </div>
+                <div style={{height:1,background:"#1E293B",margin:"0 0 22px"}}/>
+                <div style={{fontSize:11,fontWeight:700,color:"#94A3B8",textTransform:"uppercase",letterSpacing:.6,marginBottom:10}}>Urgência por Modelo (Top 8)</div>
+                {topModelos.length===0?<div style={{textAlign:"center",color:"#475569",padding:40,fontSize:12}}>Sem dados</div>:
+                <ChartCanvas type="bar" height={240} data={chartUrgModelo} options={{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},plugins:{legend:{position:"bottom",labels:{color:"#94A3B8",font:{size:11},boxWidth:9}},barLabels:{mode:"value",color:"#FFFFFF"}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:"#94A3B8",font:{size:9}}},y:{stacked:true,beginAtZero:true,ticks:{color:"#94A3B8",precision:0,font:{size:10}},grid:{color:"#1E293B"}}}}}/>}
+              </div>
+
+              {criticas.length>0&&(
+                <div className="card" style={{padding:18,borderLeft:"4px solid #C62828"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#C62828",marginBottom:10}}>🔴 Mais Urgentes — Top 10 ({contagem.critico} crítico(s) no total)</div>
+                  <div className="tbl-wrap"><table>
+                    <thead><tr><th>PAT</th><th>Modelo</th><th>Cliente</th><th>Horímetro</th><th>Faltam</th></tr></thead>
+                    <tbody>{criticas.map(({m,u},i)=>(
+                      <tr key={i}>
+                        <td style={{fontWeight:700}}>{m.pat||"—"}</td>
+                        <td style={{fontSize:11}}>{m.modelo||"—"}</td>
+                        <td style={{fontSize:11}}>{m.cliente||"—"}</td>
+                        <td style={{fontSize:11,color:"#888"}}>{m.horimetro||"—"}h</td>
+                        <td style={{fontWeight:700,color:"#C62828"}}>{Math.round(u.faltam)}h</td>
+                      </tr>
+                    ))}</tbody>
+                  </table></div>
+                </div>
+              )}
+              {total===0&&(
+                <div className="card" style={{padding:48,textAlign:"center",color:"#CCC"}}>
+                  <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                  Nenhuma máquina cadastrada — importe a frota na aba Plano de Manutenção Preventiva.
+                </div>
+              )}
             </div>
           );
         })()}
