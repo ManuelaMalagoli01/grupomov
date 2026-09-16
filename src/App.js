@@ -2028,11 +2028,25 @@ function ImportFrotaModal({onClose,onImport}){
       let sheetFrota=wbFrota.SheetNames.find(n=>norm(n).includes("controle")&&norm(n).includes("frota"))||wbFrota.SheetNames[0];
       let linhasFrota=[];
       for(const sname of wbFrota.SheetNames){
-        const data=XLSX.utils.sheet_to_json(wbFrota.Sheets[sname],{defval:""});
-        const ok=data.length&&Object.keys(data[0]).some(k=>norm(k).includes("patrimonio"))&&Object.keys(data[0]).some(k=>norm(k).includes("modelo"));
-        if(ok){ linhasFrota=data; sheetFrota=sname; break; }
+        // procura a linha de cabeçalho de verdade (pode ter titulo/linhas em branco antes, como "Frota Master")
+        const raw=XLSX.utils.sheet_to_json(wbFrota.Sheets[sname],{header:1,raw:true,defval:""});
+        let header=null, linhasDeDados=null;
+        for(let i=0;i<Math.min(raw.length,10);i++){
+          const linha=(raw[i]||[]).map(c=>norm(c));
+          if(linha.some(c=>c.includes("patrimonio"))&&linha.some(c=>c.includes("modelo"))){
+            header=raw[i].map(c=>String(c||"").trim());
+            linhasDeDados=raw.slice(i+1);
+            break;
+          }
+        }
+        if(header){
+          const data=linhasDeDados.filter(l=>l.some(c=>c!==""&&c!==undefined&&c!==null)).map(l=>{
+            const obj={}; header.forEach((h,ci)=>{if(h)obj[h]=l[ci]!==undefined?l[ci]:"";}); return obj;
+          });
+          if(data.length){ linhasFrota=data; sheetFrota=sname; break; }
+        }
       }
-      if(!linhasFrota.length){setErr("Não encontrei a planilha de máquinas (preciso de colunas Patrimônio e Modelo).");setLoading(false);return;}
+      if(!linhasFrota.length){setErr("Não encontrei a planilha de máquinas (preciso de colunas Patrimônio e Modelo em alguma linha de cabeçalho).");setLoading(false);return;}
       const maquinas=linhasFrota.map(o=>({
         pat:String(pick(o,"Patrimônio")||"").trim(),
         descricao:String(pick(o,"Descrição")||"").trim(),
