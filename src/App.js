@@ -10148,6 +10148,9 @@ export default function App(){
                             runs.push({text:`${it.s.client||"—"}`,font:{name:"Calibri",bold:true,size:9,color:{argb:"FF1A1A1A"}}});
                             runs.push({text:` (PAT ${it.s.patrimonio||"—"})`,font:{name:"Calibri",size:8.5,color:{argb:"FF64748B"}}});
                             runs.push({text:` — ${st.l||it.s.status||""}`,font:{name:"Calibri",italic:true,size:8.5,color:{argb:"FF"+(st.c||"#64748B").replace("#","").toUpperCase()}}});
+                            if((it.s.status==="preventiva_concluida"||it.s.status==="corretiva_concluida")&&it.s.relatorio){
+                              runs.push({text:` · Rel. ${it.s.relatorio}`,font:{name:"Calibri",bold:true,size:8.5,color:{argb:"FF166534"}}});
+                            }
                           });
                         }
                         cell.value={richText:runs};
