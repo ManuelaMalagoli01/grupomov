@@ -3912,7 +3912,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   );
 
   const OFICINAS_TABS = ["apontamentos_oficina","agenda_ofi","agenda_ofi_matheus","dashboard_ofi","apontamentos_150","agenda_ofi_150","dashboard_ofi_150","pendencias_hebert","pendencias_matheus","pendencias_oficina_manuela"];
-  const TECEXT_TABS = ["agenda_prev","dashboard","relatorios","pendencias_checklist"];
+  const TECEXT_TABS = ["agenda_prev","agenda_prev_roca","agenda_prev_centro_oeste","dashboard","relatorios","pendencias_checklist"];
   const SERVICOS_TABS = ["mau_uso","execucao_mau_uso","a_faturar","cotacao_pecas","envio_pecas_fornecedor","orcamento_pecas","pendencias_portal","dashboard_mau_uso","dashboard_a_faturar"];
   const ADMIN_TABS = ["uber","financeiro"];
   const ALMOX_TABS = ["emprestimos","saida_entrada","ruptura_almox","dashboard_req"];
@@ -3931,7 +3931,7 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
   const prospAlertaCount=prospAlerta||0;
   // Subpastas dentro de Manutenção
   const SUB_OFICINA=["apontamentos_oficina","agenda_ofi","dashboard_ofi","pendencias_oficina_manuela"];
-  const SUB_EXTERNOS=["agenda_prev","dashboard","relatorios","pendencias_checklist"];
+  const SUB_EXTERNOS=["agenda_prev","agenda_prev_roca","agenda_prev_centro_oeste","dashboard","relatorios","pendencias_checklist"];
   const SUB_PECAS=["solicitacao_pecas_manutencao","dashboard_solicitacao_pecas"];
   const SUB_ADMIN=["financeiro","uber","vale_tecnico_maquinas","ferias_colaboradores","banco_horas","treinamentos_reunioes","carros","ponto_diario","escala_diaria","dificuldades_tecnicos"];
   const SUB_FROTA=["pendencias_frota","plano_preventivo","dashboard_plano_preventivo"];
@@ -4091,7 +4091,9 @@ function AppSidebar({tab, setTab, user, empAlerta, prospAlerta=0, badges={}, col
         </SubFolder>
 
         <SubFolder label="Externos" icon="👷" open={subExtOpen} setOpen={setSubExtOpen} ativa={SUB_EXTERNOS.includes(tab)} color="#15803D">
-          <SubBtn k="agenda_prev" l="🗓 Agenda - Preventivas e Corretivas Externas"/>
+          <SubBtn k="agenda_prev" l="🗓 Agenda Preventiva - Região Metropolitana"/>
+          <SubBtn k="agenda_prev_roca" l="🗓 Agenda Preventiva - Roça"/>
+          <SubBtn k="agenda_prev_centro_oeste" l="🗓 Agenda Preventiva - Centro-Oeste"/>
           <SubBtn k="dashboard" l="📊 KPIs - Técnicos Externos"/>
           <SubBtn k="relatorios" l="📋 Base KPIs"/>
           <SubBtn k="pendencias_checklist" l="📋 Pendências Checklist Preventivo"/>
@@ -10369,7 +10371,8 @@ export default function App(){
 
         {/* ── REQUISIÇÕES ── */}
         {/* ── AGENDA (mensal, todos os técnicos) ── */}
-        {tab==="agenda_prev"&&(()=>{
+        {(tab==="agenda_prev"||tab==="agenda_prev_roca"||tab==="agenda_prev_centro_oeste")&&(()=>{
+          const regiaoAtual=tab==="agenda_prev_roca"?"roca":tab==="agenda_prev_centro_oeste"?"centroOeste":"metropolitana";
           const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
           const ym=`${agpYear}-${String(agpMonth+1).padStart(2,"0")}`;
           const diasNoMes=new Date(agpYear,agpMonth+1,0).getDate();
@@ -10378,9 +10381,8 @@ export default function App(){
           const matchTipo=s=>agpTipo==="todos"||(s.type||"preventivo")===agpTipo;
           const matchCidade=s=>agpCidade==="todas"||s.cidade===agpCidade;
           const matchCliente=s=>!agpCliente||(s.client||"").toLowerCase().includes(agpCliente.toLowerCase());
-          const techsComDados=Array.from(new Set(Object.keys(schedule).map(k=>{const i=k.indexOf("__");return i<0?null:k.slice(0,i).trim();}).filter(Boolean)));
-          const baseTechs=agpRegion==="todas"?ALL_TECHS:(REGIONS[agpRegion]?.techs||ALL_TECHS);
-          const techs=Array.from(new Set([...baseTechs,...(agpRegion==="todas"?techsComDados:[])]));
+          const baseTechs=REGIONS[regiaoAtual]?.techs||ALL_TECHS;
+          const techs=baseTechs;
           const techsList=techs.filter(t=>agpTech==="todos"||t===agpTech);
           const getTipoCor=t=>(t||"preventivo")==="corretivo"?"#C62828":"#1565C0";
           const addAtend=async()=>{
@@ -10403,7 +10405,7 @@ export default function App(){
             <div style={{animation:"fadeIn .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:12}}>
                 <div>
-                  <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🗓 Agenda — Técnicos Externos</div>
+                  <div style={{fontWeight:900,fontSize:24,letterSpacing:-.5,color:"#1A1A1A"}}>🗓 Agenda Preventiva — {REGIONS[regiaoAtual].label}</div>
                   <div style={{fontSize:12,color:"#94A3B8",marginTop:2}}>{techsList.length} técnico(s)</div>
                 </div>
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -10563,17 +10565,11 @@ export default function App(){
               <button onClick={()=>setShowFiltrosAgp(p=>!p)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:10,border:"1.5px solid #E2E8F0",background:showFiltrosAgp?"#FFF":"#F8FAFC",cursor:"pointer",marginBottom:12,fontFamily:"inherit",boxShadow:"0 1px 4px rgba(0,0,0,.04)"}}>
                 <span style={{fontSize:11}}>🔍</span>
                 <span style={{fontSize:10,fontWeight:700,color:"#1E293B"}}>Filtros</span>
-                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
+                {(agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<span style={{fontSize:8,fontWeight:700,color:"#1565C0",background:"#EFF6FF",borderRadius:10,padding:"1px 6px"}}>ativo</span>}
                 <span style={{fontSize:8,color:"#94A3B8",marginLeft:"auto"}}>{showFiltrosAgp?"▲":"▼"}</span>
               </button>
               {showFiltrosAgp&&<div className="card" style={{padding:"6px 10px",marginBottom:14,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                <select value={agpRegion} onChange={e=>setAgpRegion(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}>
-                  <option value="todas">🌐 Todas Regiões</option>
-                  <option value="metropolitana">Metropolitana</option>
-                  <option value="roca">Roça</option>
-                  <option value="centroOeste">Centro-Oeste</option>
-                </select>
-                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos técnicos</option>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select>
+                <select value={agpTech} onChange={e=>setAgpTech(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos técnicos</option>{techs.map(t=><option key={t}>{t}</option>)}</select>
                 <select value={agpTipo} onChange={e=>setAgpTipo(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos tipos</option><option value="preventivo">🔵 Preventivo</option><option value="corretivo">🔧 Corretivo</option></select>
                 <select value={agpStatus} onChange={e=>setAgpStatus(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todos">Todos status</option>{ESCALA_STATUS_KEYS.map(k=><option key={k} value={k}>{ESCALA_STATUS[k].l}</option>)}</select>
                 <select value={agpCidade} onChange={e=>setAgpCidade(e.target.value)} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}><option value="todas">📍 Todas cidades</option>{CIDADES_TECNICOS.map(c=><option key={c} value={c}>{c}</option>)}</select>
@@ -10581,7 +10577,7 @@ export default function App(){
                 <div style={{display:"flex",alignItems:"center",gap:5}}><span style={{fontSize:11,color:"#888",fontWeight:700}}>📅 Ir para data</span><input type="date" value={agpData} onChange={e=>{const v=e.target.value;setAgpData(v);if(v){const dt=new Date(v+"T12:00:00");setAgpMonth(dt.getMonth());setAgpYear(dt.getFullYear());}}} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB"}}/></div>
                 <select value={agpMonth} onChange={e=>setAgpMonth(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                 <select value={agpYear} onChange={e=>setAgpYear(Number(e.target.value))} style={{fontSize:12,padding:"7px 10px",borderRadius:8,border:"1.5px solid #E5E7EB",fontWeight:700}}>{[2025,2026,2027,2028].map(y=><option key={y}>{y}</option>)}</select>
-                {(agpRegion!=="todas"||agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<button onClick={()=>{setAgpRegion("todas");setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");setAgpData("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
+                {(agpTech!=="todos"||agpTipo!=="todos"||agpStatus!=="todos"||agpCidade!=="todas"||agpCliente||agpData)&&<button onClick={()=>{setAgpTech("todos");setAgpTipo("todos");setAgpStatus("todos");setAgpCidade("todas");setAgpCliente("");setAgpData("");}} style={{padding:"6px 12px",borderRadius:20,background:"#1A1A1A",color:"#FFF",border:"none",fontSize:11,cursor:"pointer",fontWeight:600}}>✕ Limpar</button>}
               </div>}
 
               {/* Ler PDF */}
@@ -10754,7 +10750,7 @@ export default function App(){
                     <button onClick={()=>setShowNovoAtend(false)} style={{background:"none",border:"none",color:"#888",fontSize:22,cursor:"pointer"}}>✕</button>
                   </div>
                   <div style={{padding:"22px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{ALL_TECHS.map(t=><option key={t}>{t}</option>)}</select></div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Técnico</label><select value={agTech} onChange={e=>setAgTech(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",fontWeight:600}}>{techs.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Data</label><input type="date" value={agDate||`${ym}-01`} onChange={e=>setAgDate(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF"}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Empresa</label><input type="text" placeholder="Cliente" value={agEmpresa} onChange={e=>setAgEmpresa(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",minWidth:130}}/></div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}><label style={{fontSize:9,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Cidade</label><select value={agCidade||""} onChange={e=>setAgCidade(e.target.value)} style={{fontSize:12,padding:"7px 9px",borderRadius:8,border:"1.5px solid #E0E0E0",background:"#FFF",width:140}}><option value="">Selecione...</option>{CIDADES_TECNICOS.map(c=><option key={c}>{c}</option>)}</select></div>
