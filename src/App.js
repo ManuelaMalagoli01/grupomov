@@ -7899,7 +7899,7 @@ export default function App(){
                       },
                     });
                   }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
-                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
+                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:11,cursor:"pointer",fontWeight:700}}>📊 Painel BI (Excel)</button>
                 <BtnY onClick={()=>{setEditMU(null);setModalMU(true);}}>+ Novo Processo</BtnY>
               </div>
             </div>
@@ -12260,40 +12260,117 @@ export default function App(){
                     const porTecnico={};
                     filtrada.forEach(x=>{const t=x.tecnico||"Sem técnico"; (porTecnico[t]=porTecnico[t]||[]).push(x);});
                     const tecnicosOrdenados=Object.keys(porTecnico).sort((a,b)=>porTecnico[b].reduce((s,x)=>s+recEntregaTec(x),0)-porTecnico[a].reduce((s,x)=>s+recEntregaTec(x),0));
+                    const liqTotal=totRecEntrega+totPrevExecValor-totalCustoAtend;
+                    const nomesAlerta=[...new Set(alertasPrev.map(x=>x.cliente||x.nome||"Cliente"))];
+                    const statusPrevLbl={completa:"Completa (100/500/1000h)",aguarda1000:"Aguarda 1000h",aguarda500:"Aguarda 500h",pendente100:"Pendente 100h"};
+                    const colunasBase=[
+                      {key:"data", label:"Data Solicitação", width:15, get:x=>fmtDataBR(x.dataSolicitacao)||""},
+                      {key:"cliente", label:"Cliente", width:28, get:x=>x.cliente||""},
+                      {key:"nome", label:"Contato", width:20, get:x=>x.nome||""},
+                      {key:"tecnico", label:"Técnico", width:20, get:x=>x.tecnico||""},
+                      {key:"nf", label:"NF", width:12, get:x=>x.nf||""},
+                      {key:"valor", label:"Valor NF (R$)", width:16, get:x=>pv(x.valor), money:true},
+                      {key:"comissao1", label:"1% Entrega (R$)", width:16, get:x=>recEntregaTec(x), money:true},
+                      {key:"recGar", label:"1% Garantia (R$)", width:16, get:x=>recGarantia(x), money:true},
+                      {key:"recPrev", label:"Preventivas previstas (R$)", width:20, get:x=>recPreventivas(x), money:true},
+                      {key:"prevExec", label:"Preventivas executadas (R$)", width:22, get:x=>recPreventivasExecutadas(x), money:true},
+                      {key:"prevQtd", label:"Qtd prev. exec.", width:14, get:x=>qtdPreventivasExecutadas(x)},
+                      {key:"statusPrev", label:"Situação preventiva garantia", width:26, get:x=>statusPrevLbl[statusPreventiva(x).k]},
+                      {key:"dataEntrega", label:"Data Entrega", width:14, get:x=>fmtDataBR(x.dataEntrega)||""},
+                      {key:"garantia", label:"Fim Garantia", width:14, get:x=>fmtDataBR(x.fimGarantia)||""},
+                      {key:"mov", label:"Rel. MOV", width:14, get:x=>x.mov||""},
+                      {key:"chamado", label:"Chamado", width:14, get:x=>x.chamado||""},
+                      {key:"comb", label:"Combustível (R$)", width:16, get:x=>custoCombustivel(x), money:true},
+                      {key:"alim", label:"Alimentação (R$)", width:16, get:x=>gastoAlimSan(x), money:true},
+                      {key:"retrab", label:"Gastos retrabalho (R$)", width:20, get:x=>gastosRetrabalhos(x), money:true},
+                      {key:"horas", label:"Horas totais", width:12, get:x=>Math.round(horasCaso(x)*10)/10},
+                      {key:"mo", label:"Mão de obra (R$)", width:16, get:x=>custoMaoObra(x), money:true},
+                      {key:"custo", label:"Custo atendimento (R$)", width:20, get:x=>custoAtendimento(x), money:true},
+                      {key:"liquido", label:"1% Líquido (R$)", width:16, get:x=>comissaoLiquida(x), money:true},
+                      {key:"retrabSimNao", label:"Retrabalho", width:12, get:x=>((x.retrabalhos||[]).length>0||x.retrabalho)?"Sim":"Não"},
+                      {key:"placa", label:"Placa", width:12, get:x=>x.placa||""},
+                      {key:"distKm", label:"Distância (km)", width:14, get:x=>x.distanciaKm||""},
+                      {key:"ticket", label:"Ticket", width:14, get:x=>x.ticket||""},
+                      {key:"email", label:"E-mail", width:24, get:x=>x.email||""},
+                      {key:"equip", label:"Equipamento(s)", width:30, get:x=>(x.equipamentos||[]).filter(Boolean).join(" | ")},
+                      {key:"bat", label:"Bateria(s)", width:30, get:x=>(x.baterias||[]).filter(b=>b&&(b.modelo||b.serie)).map(b=>`${b.tipo||""} ${b.modelo||""} ${b.serie?`(SN ${b.serie})`:""}`.trim()).join(" | ")},
+                      {key:"carr", label:"Carregador(es)", width:26, get:x=>(x.carregadores||[]).filter(cg=>cg&&(cg.modelo||cg.serie)).map(cg=>`${cg.modelo||""} ${cg.serie?`(SN ${cg.serie})`:""}`.trim()).join(" | ")},
+                      {key:"dataEnvioFat", label:"Data Envio Faturamento", width:18, get:x=>fmtDataBR(x.dataEnvioFat)||""},
+                      {key:"prev100", label:"100h aprov./data/rel.", width:24, get:x=>x.prev100Aprov?`Sim ${fmtDataBR(x.prev100Data)||""} ${x.prev100Rel||""}`.trim():"Não"},
+                      {key:"prev500", label:"500h aprov./data/rel.", width:24, get:x=>x.prev500Aprov?`Sim ${fmtDataBR(x.prev500Data)||""} ${x.prev500Rel||""}`.trim():"Não"},
+                      {key:"prev1000", label:"1000h aprov./data/rel.", width:24, get:x=>x.prev1000Aprov?`Sim ${fmtDataBR(x.prev1000Data)||""} ${x.prev1000Rel||""}`.trim():"Não"},
+                      {key:"ultContatoPrev", label:"Último contato preventiva", width:18, get:x=>fmtDataBR(x.ultimoContatoPrev)||""},
+                      {key:"comissaoRec", label:"Comissão recebida", width:16, get:x=>x.comissaoRecebida?`Sim ${fmtDataBR(x.comissaoRecebData)||""}`.trim():"Não"},
+                      {key:"obs", label:"Observações", width:40, get:x=>x.obs||""},
+                    ];
+                    const mesLbl=m=>{const[y,mo]=m.split("-");return `${MESN[parseInt(mo)-1]}/${y.slice(2)}`;};
+                    const porMes=(fn)=>meses.map(m=>filtrada.filter(x=>(x.dataEntrega||x.dataSolicitacao||"").startsWith(m)).reduce((a,x)=>a+fn(x),0));
+                    const porCliente={};
+                    filtrada.forEach(x=>{const k=x.cliente||"Sem cliente";porCliente[k]=(porCliente[k]||0)+recEntregaTec(x);});
+                    const topClientes=Object.entries(porCliente).sort((a,b)=>b[1]-a[1]).slice(0,8);
+                    const contStatusPrev={completa:0,aguarda1000:0,aguarda500:0,pendente100:0};
+                    filtrada.forEach(x=>{contStatusPrev[statusPreventiva(x).k]++;});
                     await gerarDashboardExcelProfissional({
-                      titulo:"Dashboard Entrega Técnica",
+                      titulo:"Painel BI — Entrega Técnica SAS",
                       periodoLabel:janLabelET,
                       kpis:[
-                        {label:"Receita Realizada", valor:fmtR(totRecEntrega), cor:"#1A7A3C"},
+                        {label:"Entregas no período", valor:filtrada.length, cor:"#1565C0"},
+                        {label:"Entregas este mês", valor:doMes.length, cor:"#0369A1"},
+                        {label:"Receita Realizada (1%)", valor:fmtR(totRecEntrega), cor:"#1A7A3C"},
+                        {label:"1% Líquido", valor:fmtR(liqTotal), cor:liqTotal>=0?"#15803D":"#C62828"},
                         {label:"A Receber — Garantia", valor:fmtR(totRecGarantia), cor:"#0D9488"},
-                        {label:"1% Líquido", valor:fmtR(totRecEntrega+totPrevExecValor-totalCustoAtend), cor:(totRecEntrega+totPrevExecValor-totalCustoAtend)>=0?"#15803D":"#C62828"},
-                        {label:"Garantia Ativa", valor:garantiaAtiva, cor:"#0D9488"},
+                        {label:"A Receber — Preventivas", valor:fmtR(totRecPreventiva), cor:"#7E22CE"},
+                        {label:"Preventivas executadas", valor:`${totPrevExecQtd} (${fmtR(totPrevExecValor)})`, cor:"#5B21B6"},
+                        {label:"Garantia ativa", valor:garantiaAtiva, cor:"#0D9488"},
+                        {label:"Custo de atendimento", valor:fmtR(totalCustoAtend), cor:"#C62828"},
+                        {label:"Combustível + Alimentação", valor:fmtR(totalCustoLogistico), cor:"#C2410C"},
+                        {label:"Mão de obra (R$280/h)", valor:fmtR(totalMaoObra), cor:"#7E22CE"},
+                        {label:"Com retrabalho / Contatar prev.", valor:`${comRetrabalho} / ${nomesAlerta.length}`, cor:"#B45309"},
                       ],
-                      abas:tecnicosOrdenados.map(t=>({
-                        nome:t.slice(0,31),
-                        registros:porTecnico[t],
-                        colunas:[
-                          {key:"data", label:"Data", width:14, get:x=>fmtDataBR(x.dataSolicitacao)||""},
-                          {key:"cliente", label:"Cliente", width:24, get:x=>x.cliente||""},
-                          {key:"nf", label:"NF", width:12, get:x=>x.nf||""},
-                          {key:"valor", label:"Valor NF (R$)", width:16, get:x=>pv(x.valor), money:true},
-                          {key:"comissao1", label:"1% Entrega (R$)", width:16, get:x=>recEntregaTec(x), money:true},
-                          {key:"dataEntrega", label:"Data Entrega", width:14, get:x=>fmtDataBR(x.dataEntrega)||""},
-                          {key:"garantia", label:"Fim Garantia", width:14, get:x=>fmtDataBR(x.fimGarantia)||""},
-                        ],
-                      })),
-                      grafico:{
-                        titulo:"Receita por Técnico",
-                        type:"bar",
-                        data:{
-                          labels:tecnicosOrdenados.slice(0,8),
-                          datasets:[{label:"Receita (R$)", data:tecnicosOrdenados.slice(0,8).map(t=>porTecnico[t].reduce((s,x)=>s+recEntregaTec(x),0)), backgroundColor:"#1565C0"}],
+                      graficos:[
+                        {
+                          titulo:"Receita x Custo por mês (últimos 6 meses)",
+                          type:"bar",
+                          data:{labels:meses.map(mesLbl),datasets:[
+                            {label:"1% Entrega",data:porMes(recEntregaTec),backgroundColor:"#0369A1",stack:"rec"},
+                            {label:"1% Garantia (futuro)",data:porMes(recGarantia),backgroundColor:"#0D9488",stack:"rec"},
+                            {label:"Preventivas (futuro)",data:porMes(recPreventivas),backgroundColor:"#7E22CE",stack:"rec"},
+                            {label:"Custo atendimento",data:porMes(custoAtendimento),backgroundColor:"#C62828",stack:"gasto"},
+                          ]},
+                          options:{plugins:{legend:{position:"bottom"}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},
                         },
-                        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}},
-                      },
+                        {
+                          titulo:"Receita (1% entrega) por técnico",
+                          type:"bar",
+                          data:{labels:tecnicosOrdenados.slice(0,8),datasets:[{label:"Receita (R$)",data:tecnicosOrdenados.slice(0,8).map(t=>porTecnico[t].reduce((s,x)=>s+recEntregaTec(x),0)),backgroundColor:"#1565C0"}]},
+                          options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}},
+                        },
+                        {
+                          titulo:"Top 8 clientes por receita (1% entrega)",
+                          type:"bar",
+                          data:{labels:topClientes.map(c=>c[0].slice(0,28)),datasets:[{label:"Receita (R$)",data:topClientes.map(c=>c[1]),backgroundColor:"#334155"}]},
+                          options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}},
+                        },
+                        {
+                          titulo:"Situação das preventivas de garantia (100h / 500h / 1000h)",
+                          type:"doughnut",
+                          data:{labels:["Completa","Aguarda 1000h","Aguarda 500h","Pendente 100h"],datasets:[{data:[contStatusPrev.completa,contStatusPrev.aguarda1000,contStatusPrev.aguarda500,contStatusPrev.pendente100],backgroundColor:["#15803D","#0D9488","#1565C0","#E67E00"]}]},
+                          options:{plugins:{legend:{position:"right"}},cutout:"55%"},
+                        },
+                        {
+                          titulo:"1% líquido x custo de atendimento",
+                          type:"doughnut",
+                          data:{labels:["1% líquido","Custo de atendimento"],datasets:[{data:[Math.max(liqTotal,0),totalCustoAtend],backgroundColor:["#15803D","#C62828"]}]},
+                          options:{plugins:{legend:{position:"right"}},cutout:"55%"},
+                        },
+                      ],
+                      abas:[
+                        {nome:"Base Completa", registros:filtrada, colunas:colunasBase},
+                        ...tecnicosOrdenados.map(t=>({nome:t.slice(0,31), registros:porTecnico[t], colunas:colunasBase})),
+                      ],
                     });
                   }catch(err){ alert("Erro ao gerar o Excel: "+(err.message||err)); }
-                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:12,cursor:"pointer",fontWeight:700}}>📊 Dashboard Excel</button>
+                }} style={{padding:"8px 14px",borderRadius:8,border:"1px solid #1A7A3C",background:"#F0FFF5",color:"#1A7A3C",fontSize:12,cursor:"pointer",fontWeight:700}}>📊 Painel BI (Excel)</button>
                 <BtnY onClick={()=>{setEntregaEdit({id:null,dataSolicitacao:TODAY_STR,nf:"",nfPdf:null,valor:"",comissao:"",cliente:"",nome:"",email:"",equipamentos:[""],baterias:[{tipo:"Chumbo",modelo:"",serie:""}],carregadores:[{modelo:"",serie:""}],dataEntrega:"",mov:"",chamado:"",dataEnvioFat:"",fimGarantia:"",comissaoData:"",comissaoValor:"",comissaoRecebPrev:"",comissaoRecebida:false,comissaoRecebData:"",placa:"",tecnico:ALL_TECHS[0],distanciaKm:"",horasTrab:"",gastoCombustivel:"",gastoAlimentacao:"",ticket:"",retrabalho:false,retrabalhos:[],prev100Aprov:false,prev100Data:"",prev100Valor:"",prev100Rel:"",prev500Aprov:false,prev500Data:"",prev500Valor:"",prev500Rel:"",prev1000Aprov:false,prev1000Data:"",prev1000Valor:"",prev1000Rel:"",ultimoContatoPrev:"",obs:""});setEntregaModal(true);}}>+ Nova Solicitação</BtnY>
               </div>
             </div>
